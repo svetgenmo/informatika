@@ -1,0 +1,589 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Системы счисления — шесть переводов</title>
+<meta name="description" content="Теория систем счисления и разбор шести переводов по шагам: непозиционные системы, основание, развёрнутая форма, деление с остатком.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E10%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#16181d; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);overflow:hidden;
+     font:24px/1.45 "Segoe UI",system-ui,sans-serif}
+.mono{font-family:Consolas,"Courier New",monospace}
+
+.deck{height:100vh;display:flex;flex-direction:column}
+.stage{flex:1 1 auto;overflow-y:auto;padding:34px 56px 12px}
+.slide{display:none;max-width:1100px;margin:0 auto}
+.slide.on{display:block}
+
+h1{font-size:52px;line-height:1.1;margin:0 0 18px;text-wrap:balance}
+h2{font-size:37px;line-height:1.15;margin:0 0 20px;text-wrap:balance}
+.eyebrow{font-size:16px;letter-spacing:.1em;text-transform:uppercase;
+         color:var(--accent);font-weight:700;margin:0 0 8px}
+.lead{font-size:26px;color:var(--muted);margin:0 0 24px}
+.lead b{color:var(--ink)}
+p.note{margin-top:22px;color:var(--muted);font-size:21px}
+
+.bar{flex:0 0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+     border-top:1px solid var(--line);background:var(--card);padding:12px 24px}
+.bar .spacer{flex:1 1 auto}
+.count{color:var(--muted);font-size:17px;font-variant-numeric:tabular-nums}
+.keys{color:var(--muted);font-size:15px}
+.keys kbd{font:600 13px/1 Consolas,monospace;border:1px solid var(--line);
+     border-bottom-width:2px;border-radius:5px;padding:2px 6px;
+     background:#fff;color:var(--ink)}
+button{font:600 18px/1 inherit;padding:12px 20px;border-radius:10px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);
+       cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.35;cursor:default;border-color:var(--line);
+                color:var(--muted);background:#fff}
+button:focus-visible{outline:3px solid #a9c6e8;outline-offset:2px}
+
+.task{border:3px solid var(--accent);border-radius:16px;padding:20px 26px;
+      background:var(--card);font-size:31px;margin:0 0 22px}
+.task .num{font-size:43px;font-weight:700;color:var(--accent)}
+.steps{display:flex;flex-direction:column;gap:14px}
+.step{border:1px solid var(--line);border-radius:12px;padding:16px 22px;
+      background:#fff}
+.step.hint{background:var(--hi-bg);border-color:var(--hi-line);color:var(--hi)}
+.step.answer{background:var(--ok-bg);border-color:var(--ok-line);
+             color:var(--ok);font-size:31px;font-weight:700}
+.step .cap{display:block;font-size:15px;letter-spacing:.08em;
+           text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.step.hint .cap{color:var(--hi)}
+.calc{font:25px/1.6 Consolas,"Courier New",monospace;white-space:pre;
+      overflow-x:auto}
+.big{font-size:30px}
+
+table{border-collapse:collapse}
+table.div{font:24px/1.35 Consolas,monospace}
+table.div td{padding:4px 14px;border:0}
+table.div td.rem{color:var(--accent);font-weight:700}
+table.div tr td:last-child{color:var(--muted);font-size:19px}
+
+table.grid{font-size:21px;width:100%}
+table.grid td,table.grid th{border:1px solid var(--line);padding:9px 16px;
+     text-align:left;vertical-align:top}
+table.grid th{background:var(--card);color:var(--muted);font-size:17px;
+     letter-spacing:.05em;text-transform:uppercase;font-weight:600}
+table.grid td.k{font-family:Consolas,monospace;font-weight:700;
+     color:var(--accent);white-space:nowrap}
+
+table.hex{font:21px/1.3 Consolas,monospace;margin-top:6px}
+table.hex td,table.hex th{border:1px solid var(--line);padding:5px 14px;
+     text-align:center}
+table.hex th{background:var(--card);color:var(--muted);font-family:inherit;
+     font-size:16px}
+
+ul.six{list-style:none;padding:0;margin:0;display:grid;
+       grid-template-columns:repeat(2,1fr);gap:12px 26px}
+ul.six li{border:1px solid var(--line);border-radius:12px;padding:14px 20px;
+          font-size:26px;background:#fff}
+ul.six li b{font-family:Consolas,monospace;color:var(--accent)}
+ul.plain{margin:0;padding-left:26px;font-size:24px}
+ul.plain li{margin:8px 0}
+
+@media (max-width:760px){
+  body{font-size:18px}
+  .stage{padding:20px 18px 8px}
+  h1{font-size:34px} h2{font-size:26px} .lead{font-size:20px}
+  .task{font-size:23px} .task .num{font-size:30px}
+  .calc{font-size:17px} table.div{font-size:17px}
+  ul.six{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="deck">
+<div class="stage" id="stage">
+
+  <!-- 1 ------------------------------------------------------------- -->
+  <section class="slide on">
+    <h1>Системы счисления</h1>
+    <p class="lead">Как люди записывают числа — и почему компьютер
+       делает это иначе, чем мы.</p>
+    <ul class="plain">
+      <li>чем запись числа отличается от самого числа;</li>
+      <li>непозиционные системы — и чем они плохи;</li>
+      <li>позиционные системы и основание;</li>
+      <li>шесть переводов, которые надо уметь делать.</li>
+    </ul>
+  </section>
+
+  <!-- 2 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">с чего всё начинается</p>
+    <h2>Число и его запись — не одно и то же</h2>
+    <p class="lead">Одно и то же количество можно записать по-разному.
+       Меняется <b>запись</b>, количество не меняется.</p>
+    <div class="steps">
+      <div class="step" hidden>
+        <span class="cap">четырнадцать</span>
+        <div class="calc big">14      XIV      1110₂      E₁₆</div>
+      </div>
+      <div class="step" hidden>
+        <span class="cap">вывод</span>
+        <div>Спорить, «какая запись правильная», бессмысленно —
+             правильны все. Вопрос только в том, <b>по какому правилу</b>
+             она сделана и удобно ли с ней работать.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">определение</p>
+    <h2>Система счисления — способ записи чисел</h2>
+    <p class="lead">У любой системы счисления есть две части:</p>
+    <table class="grid">
+      <tr><td class="k">алфавит</td>
+          <td>набор цифр, которыми пользуемся</td></tr>
+      <tr><td class="k">правило</td>
+          <td>как из этих цифр складывается значение числа</td></tr>
+    </table>
+    <div class="steps" style="margin-top:20px">
+      <div class="step" hidden>
+        <span class="cap">две семьи систем</span>
+        <table class="grid">
+          <tr><th>непозиционные</th>
+              <td>вклад цифры <b>не зависит</b> от её места в записи</td></tr>
+          <tr><th>позиционные</th>
+              <td>вклад цифры <b>зависит от места</b> (позиции)</td></tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">непозиционные</p>
+    <h2>Единичная и римская</h2>
+    <div class="steps">
+      <div class="step" hidden>
+        <span class="cap">единичная (унарная)</span>
+        <div class="calc big">||||| = 5</div>
+        <div style="margin-top:8px">Одна палочка — одна единица. Самая
+             древняя: так считают на пальцах и ставят зарубки. Годится,
+             пока чисел мало.</div>
+      </div>
+      <div class="step" hidden>
+        <span class="cap">римская: алфавит</span>
+        <div class="calc big">I=1  V=5  X=10  L=50  C=100  D=500  M=1000</div>
+      </div>
+      <div class="step" hidden>
+        <span class="cap">правило</span>
+        <div>Значение — <b>сумма</b>. Но если меньшая цифра стоит
+             <b>перед</b> большей, она <b>вычитается</b>.</div>
+      </div>
+      <div class="step" hidden>
+        <span class="cap">разбор</span>
+        <table class="grid">
+          <tr><td class="k">XXVII</td><td>10 + 10 + 5 + 1 + 1</td>
+              <td class="k">27</td></tr>
+          <tr><td class="k">XIV</td><td>10 + (5 − 1)</td>
+              <td class="k">14</td></tr>
+          <tr><td class="k">MCMXCIV</td>
+              <td>1000 + (1000 − 100) + (100 − 10) + (5 − 1)</td>
+              <td class="k">1994</td></tr>
+        </table>
+      </div>
+      <div class="step hint" hidden>
+        <span class="cap">две оговорки</span>
+        <div>Вычитаются только <b>I</b> (перед V, X), <b>X</b> (перед L, C)
+             и <b>C</b> (перед D, M). Одна и та же цифра подряд —
+             не больше трёх раз.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">зачем понадобились другие</p>
+    <h2>Почему от римских цифр отказались</h2>
+    <p class="lead">Попробуйте сложить в столбик:</p>
+    <div class="task"><span class="num mono">XXVII + XIV</span></div>
+    <div class="steps">
+      <div class="step" hidden>
+        <span class="cap">не получается</span>
+        <div>Столбик требует <b>разрядов</b>: единицы под единицами,
+             десятки под десятками. В римской записи разрядов нет —
+             складывать и умножать приходится «переводя в уме».</div>
+      </div>
+      <div class="step" hidden>
+        <span class="cap">как считают на самом деле</span>
+        <div class="calc big">XXVII + XIV → 27 + 14 = 41 → XLI</div>
+      </div>
+      <div class="step answer" hidden>
+        Нет нуля и нет разрядов — значит, нет и удобной арифметики.
+        Ради неё и придумали позиционные системы.
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">позиционные</p>
+    <h2>Место цифры решает всё</h2>
+    <p class="lead">Количество цифр в алфавите называется
+       <b>основанием</b> системы.</p>
+    <div class="steps">
+      <div class="step" hidden>
+        <span class="cap">развёрнутая форма записи</span>
+        <div class="calc">число:   4 4 3₆
+позиции: 2 1 0
+
+443₆ = 4·6² + 4·6¹ + 3·6⁰ = 144 + 24 + 3 = 171</div>
+      </div>
+      <div class="step" hidden>
+        <span class="cap">отсюда сразу два следствия</span>
+        <ul class="plain" style="margin:0">
+          <li>цифры системы с основанием <i>q</i> — это <b>0 … q−1</b>:
+              в шестеричной нет цифры 6, в двоичной только 0 и 1;</li>
+          <li>перевод в десятичную = посчитать развёрнутую форму.
+              <b>Отдельного правила учить не надо.</b></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">позиционные</p>
+    <h2>Три системы, важные для компьютера</h2>
+    <table class="grid">
+      <tr><th>система</th><th>основание</th><th>алфавит</th><th>зачем</th></tr>
+      <tr><td class="k">двоичная</td><td class="k">2</td><td class="k">0, 1</td>
+          <td>есть ток / нет тока — то, что умеет техника</td></tr>
+      <tr><td class="k">восьмеричная</td><td class="k">8</td><td class="k">0–7</td>
+          <td>короткая запись двоичного</td></tr>
+      <tr><td class="k">шестнадцатеричная</td><td class="k">16</td>
+          <td class="k">0–9, A–F</td>
+          <td>ещё короче: цвет <span class="mono">#FF8800</span>,
+              адреса памяти</td></tr>
+    </table>
+    <div class="steps" style="margin-top:18px">
+      <div class="step" hidden>
+        <span class="cap">в шестнадцатеричной буквы — это числа</span>
+        <table class="hex">
+          <tr><th>16</th><td>A</td><td>B</td><td>C</td><td>D</td>
+              <td>E</td><td>F</td></tr>
+          <tr><th>10</th><td>10</td><td>11</td><td>12</td><td>13</td>
+              <td>14</td><td>15</td></tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">что будем уметь</p>
+    <h2>Шесть переводов</h2>
+    <ul class="six">
+      <li><b>2 → 10</b></li><li><b>10 → 2</b></li>
+      <li><b>8 → 10</b></li><li><b>10 → 8</b></li>
+      <li><b>16 → 10</b></li><li><b>10 → 16</b></li>
+    </ul>
+    <p class="note">Слева — «прочитать» число, справа — «записать».
+       Приём для всей левой колонки один, и для всей правой тоже один.
+       То есть учить надо <b>два приёма, а не шесть</b>.</p>
+  </section>
+
+  <!-- 9 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">приём первый</p>
+    <h2>Прочитать число: развёрнутая форма</h2>
+    <p class="lead">Каждую цифру умножаем на основание в степени её
+       позиции. Позиции считаем <b>справа налево, с нуля</b>.</p>
+    <div class="step">
+      <span class="cap">общее правило</span>
+      <div class="calc">число:   a a a a<sub>q</sub>
+позиции: 3 2 1 0
+
+= a·q³ + a·q² + a·q¹ + a·q⁰</div>
+    </div>
+    <p class="note">Один приём на все три перевода в десятичную —
+       меняется только основание <i>q</i>.</p>
+  </section>
+
+  <!-- 10 --><section class="slide" data-ex="toDec" data-base="2"></section>
+  <!-- 11 --><section class="slide" data-ex="toDec" data-base="8"></section>
+  <!-- 12 --><section class="slide" data-ex="toDec" data-base="16"></section>
+
+  <!-- 13 ------------------------------------------------------------ -->
+  <section class="slide">
+    <p class="eyebrow">приём второй</p>
+    <h2>Записать число: деление с остатком</h2>
+    <p class="lead">Делим на основание, пока не получится <b>0</b>.
+       Остатки читаем <b>снизу вверх</b>.</p>
+    <div class="step">
+      <span class="cap">почему так</span>
+      <div class="calc">остаток от деления на q — это последняя цифра
+частное — то, что осталось записать слева</div>
+    </div>
+    <p class="note">Тоже один приём на все три перевода из десятичной.
+       В шестнадцатеричной остаток 10–15 записываем буквой A–F.</p>
+  </section>
+
+  <!-- 14 --><section class="slide" data-ex="fromDec" data-base="2"></section>
+  <!-- 15 --><section class="slide" data-ex="fromDec" data-base="8"></section>
+  <!-- 16 --><section class="slide" data-ex="fromDec" data-base="16"></section>
+
+  <!-- 17 ------------------------------------------------------------ -->
+  <section class="slide">
+    <h2>Итого — два приёма на шесть переводов</h2>
+    <ul class="six">
+      <li><b>2 → 10</b><br><span class="note">развёрнутая форма</span></li>
+      <li><b>10 → 2</b><br><span class="note">деление с остатком</span></li>
+      <li><b>8 → 10</b><br><span class="note">развёрнутая форма</span></li>
+      <li><b>10 → 8</b><br><span class="note">деление с остатком</span></li>
+      <li><b>16 → 10</b><br><span class="note">развёрнутая форма</span></li>
+      <li><b>10 → 16</b><br><span class="note">деление с остатком</span></li>
+    </ul>
+    <div class="steps" style="margin-top:20px">
+      <div class="step hint" hidden>
+        <span class="cap">где обычно спотыкаются</span>
+        <ul class="plain" style="margin:0;font-size:21px">
+          <li>читают остатки сверху вниз — ответ выходит задом наперёд;</li>
+          <li>забывают, что <b>A–F — это числа</b>, а не буквы;</li>
+          <li>теряют нули в середине: <span class="mono">1000001₂</span>
+              — не <span class="mono">100001₂</span>.</li>
+        </ul>
+      </div>
+    </div>
+    <p class="note">Теперь открываем тренажёр из общей папки.
+       У каждого свои числа; на «5» нужно освоить все шесть переводов.</p>
+  </section>
+
+</div>
+
+<div class="bar">
+  <button id="prev">← Назад</button>
+  <button id="next">Вперёд →</button>
+  <span class="count" id="count"></span>
+  <span class="spacer"></span>
+  <button id="step" class="primary" hidden>Показать</button>
+  <button id="reroll" hidden>Другой пример</button>
+  <span class="keys"><kbd>→</kbd> слайд &middot;
+        <kbd>Пробел</kbd> шаг &middot; <kbd>F11</kbd> во весь экран</span>
+</div>
+</div>
+
+<script>
+"use strict";
+
+const DIGITS = "0123456789ABCDEF";
+const NAMES = {2:"двоичное", 8:"восьмеричное", 16:"шестнадцатеричное"};
+const NAMES_ACC = {2:"двоичную", 8:"восьмеричную", 16:"шестнадцатеричную"};
+const SUP = {0:"⁰",1:"¹",2:"²",3:"³",4:"⁴",5:"⁵",6:"⁶",7:"⁷"};
+
+const toBase = (n, b) => {
+  if (n === 0) return "0";
+  let s = "";
+  while (n > 0){ s = DIGITS[n % b] + s; n = Math.floor(n / b); }
+  return s;
+};
+const randInt = (lo, hi) => lo + Math.floor(Math.random() * (hi - lo + 1));
+const pad = (s, w) => String(s).padStart(w, " ");
+
+/* ------------------------------------------------------------------
+   Пример «прочитать число»: развёрнутая форма по шагам.
+   Числа держим короткими — разложение должно читаться с проектора.
+------------------------------------------------------------------ */
+function buildToDec(base){
+  const n = base === 2 ? randInt(21, 61)
+          : base === 8 ? randInt(80, 500)
+          : randInt(40, 250);
+  const src = toBase(n, base);
+  const d = [...src];
+  const L = d.length;
+
+  const terms = d.map((ch, k) => {
+    const p = L - 1 - k, v = DIGITS.indexOf(ch);
+    return {ch, p, v, val: v * Math.pow(base, p)};
+  });
+
+  const positions = "позиции: " + d.map((ch, k) =>
+        pad(L - 1 - k, ch.length)).join(" ");
+  const line = "число:   " + d.join(" ");
+
+  const expand = terms.map(t => `${t.v}·${base}${SUP[t.p]}`).join(" + ");
+  const values = terms.map(t => t.val).join(" + ");
+  const sum = terms.reduce((a, t) => a + t.val, 0);
+
+  const hex = base === 16
+    ? `<table class="hex"><tr><th>16</th><td>A</td><td>B</td><td>C</td>
+       <td>D</td><td>E</td><td>F</td></tr><tr><th>10</th><td>10</td>
+       <td>11</td><td>12</td><td>13</td><td>14</td><td>15</td></tr></table>`
+    : "";
+
+  return {
+    title: `Прочитать: ${base} → 10`,
+    task: `Переведите ${NAMES[base]} число ` +
+          `<span class="num mono">${src}<sub>${base}</sub></span> ` +
+          `в десятичную систему счисления.`,
+    steps: [
+      {cap: "1. подписываем позиции — справа налево, с нуля",
+       html: `<div class="calc">${line}\n${positions}</div>${hex}`},
+      {cap: "2. каждую цифру умножаем на основание в степени позиции",
+       html: `<div class="calc">${expand}</div>`},
+      {cap: "3. считаем слагаемые",
+       html: `<div class="calc">${values}</div>`},
+      {answer: true, html: `${src}<sub>${base}</sub> = ${sum}<sub>10</sub>`}
+    ],
+    answer: sum
+  };
+}
+
+/* ------------------------------------------------------------------
+   Пример «записать число»: деление с остатком.
+   Таблица делений — один шаг: построчно на проекторе теряется темп.
+------------------------------------------------------------------ */
+function buildFromDec(base){
+  const n = base === 2 ? randInt(19, 60) : randInt(90, 500);
+  const rows = [];
+  let x = n;
+  while (x > 0){
+    const r = x % base;
+    rows.push({from: x, q: Math.floor(x / base), r,
+               ch: DIGITS[r], letter: r > 9});
+    x = Math.floor(x / base);
+  }
+  const w = String(n).length;
+  const body = rows.map(r =>
+    `<tr><td>${pad(r.from, w)}</td><td>:</td><td>${base}</td><td>=</td>` +
+    `<td>${pad(r.q, w)}</td><td>ост.</td>` +
+    `<td class="rem">${pad(r.r, 2)}</td>` +
+    `<td>${r.letter ? "&rarr; " + r.ch : ""}</td></tr>`).join("");
+
+  const digits = rows.map(r => r.ch).reverse().join("");
+  const letters = rows.some(r => r.letter);
+
+  const steps = [
+    {cap: `1. делим на ${base}, пока не получится 0`,
+     html: `<table class="div">${body}</table>`}
+  ];
+  if (letters){
+    steps.push({cap: "2. остатки больше девяти записываем буквой",
+                hint: true,
+                html: `<div class="calc">10→A  11→B  12→C  ` +
+                      `13→D  14→E  15→F</div>`});
+  }
+  steps.push({cap: `${letters ? 3 : 2}. читаем остатки снизу вверх`,
+              html: `<div class="calc">${rows.map(r => r.ch)
+                     .reverse().join("  ")}</div>`});
+  steps.push({answer: true,
+              html: `${n}<sub>10</sub> = ${digits}<sub>${base}</sub>`});
+
+  return {
+    title: `Записать: 10 → ${base}`,
+    task: `Переведите десятичное число ` +
+          `<span class="num mono">${n}</span> в ${NAMES_ACC[base]} ` +
+          `систему счисления.`,
+    steps, answer: digits
+  };
+}
+
+/* ------------------------------------------------------------------ показ
+   Шаги есть и у примеров (собираются программой), и у теории (лежат
+   в разметке скрытыми). Механизм раскрытия для них общий.
+------------------------------------------------------------------ */
+
+const slides = [...document.querySelectorAll(".slide")];
+let cur = 0;
+let shown = 0;
+const state = new Map();
+
+const isExample = i => slides[i].hasAttribute("data-ex");
+// Раскрываются только шаги внутри .steps. Блок .step сам по себе (как
+// «общее правило» на слайдах-приёмах) виден всегда и шагом не считается.
+const stepsOf = i => [...slides[i].querySelectorAll(".steps > .step")];
+
+function buildExample(i){
+  const el = slides[i];
+  const base = +el.dataset.base;
+  const ex = el.dataset.ex === "toDec" ? buildToDec(base) : buildFromDec(base);
+  state.set(i, ex);
+  el.innerHTML =
+    `<p class="eyebrow">пример</p>
+     <h2>${ex.title}</h2>
+     <div class="task">${ex.task}</div>
+     <div class="steps">${ex.steps.map(s =>
+        `<div class="step${s.answer ? " answer" : ""}${s.hint ? " hint" : ""}"
+              hidden>${s.cap ? `<span class="cap">${s.cap}</span>` : ""}${
+              s.html}</div>`).join("")}</div>`;
+  shown = 0;
+}
+
+function show(i){
+  slides[cur].classList.remove("on");
+  cur = Math.max(0, Math.min(slides.length - 1, i));
+  slides[cur].classList.add("on");
+  if (isExample(cur) && !state.has(cur)) buildExample(cur);
+  shown = stepsOf(cur).filter(el => !el.hidden).length;
+  document.getElementById("stage").scrollTop = 0;
+  sync();
+}
+
+function sync(){
+  const total = stepsOf(cur).length;
+  const ex = isExample(cur);
+  document.getElementById("count").textContent =
+      `${cur + 1} / ${slides.length}`;
+  document.getElementById("prev").disabled = cur === 0;
+  document.getElementById("next").disabled = cur === slides.length - 1;
+
+  const stepBtn = document.getElementById("step");
+  stepBtn.hidden = total === 0;
+  document.getElementById("reroll").hidden = !ex;
+  if (total){
+    stepBtn.disabled = shown >= total;
+    stepBtn.textContent =
+        shown === 0 ? (ex ? "Показать решение" : "Раскрыть")
+      : shown >= total ? (ex ? "Решение разобрано" : "Всё открыто")
+      : `Дальше (${shown}/${total})`;
+  }
+}
+
+function nextStep(){
+  const steps = stepsOf(cur);
+  if (shown >= steps.length) return false;
+  steps[shown].hidden = false;
+  steps[shown].scrollIntoView({block: "nearest", behavior: "smooth"});
+  shown++;
+  sync();
+  return true;
+}
+
+document.getElementById("prev").addEventListener("click", () => show(cur - 1));
+document.getElementById("next").addEventListener("click", () => show(cur + 1));
+document.getElementById("step").addEventListener("click", nextStep);
+document.getElementById("reroll").addEventListener("click", () => {
+  buildExample(cur); sync();
+});
+
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowRight" || e.key === "PageDown"){ show(cur + 1); }
+  else if (e.key === "ArrowLeft" || e.key === "PageUp"){ show(cur - 1); }
+  else if (e.key === " " || e.key === "Enter"){
+    // пробел ведёт урок: шаг за шагом, потом на следующий слайд
+    if (!nextStep()) show(cur + 1);
+  } else return;
+  e.preventDefault();
+});
+
+show(0);
+</script>
+</body>
+</html>
