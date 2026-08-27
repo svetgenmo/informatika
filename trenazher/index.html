@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Системы счисления — тренажёр переводов</title>
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{margin:0;padding:20px 16px 60px;
+     font:17px/1.5 "Segoe UI",system-ui,sans-serif}
+.wrap{max-width:900px;margin:0 auto}
+
+h1{font-size:22px;margin:0 0 4px}
+.sub{color:var(--muted);font-size:15px;margin:0 0 18px}
+
+/* ---- панель оценки ---- */
+.panel{display:flex;align-items:center;gap:18px;flex-wrap:wrap;
+       border:2px solid var(--accent);border-radius:12px;
+       padding:12px 18px;background:var(--card);margin-bottom:20px;
+       position:sticky;top:0;z-index:5}
+.mark{display:flex;align-items:baseline;gap:10px}
+.mark span{color:var(--muted);font-size:15px}
+.mark b{font:700 40px/1 "Segoe UI",system-ui,sans-serif;min-width:44px;
+        text-align:center;border-radius:8px;padding:2px 10px;
+        background:#fff;border:2px solid var(--line)}
+.m5{color:var(--ok);border-color:var(--ok-line)!important}
+.m4{color:var(--accent);border-color:#a9c6e8!important}
+.m3{color:#8a5a00;border-color:#e6c98a!important}
+.m2{color:var(--err);border-color:var(--err-line)!important}
+.stats{color:var(--muted);font-size:14px;line-height:1.35}
+.spacer{flex:1 1 auto}
+button{font:600 15px/1 inherit;padding:11px 16px;border-radius:9px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);
+       cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);
+                color:var(--muted);background:#fff}
+
+/* ---- задачи ---- */
+.task{border:1px solid var(--line);border-radius:12px;padding:14px 16px;
+      margin-bottom:12px;background:#fff}
+.task.ok{border-color:var(--ok-line);background:var(--ok-bg)}
+.task.err{border-color:var(--err-line);background:var(--err-bg)}
+.task .q{display:flex;gap:12px;align-items:flex-start}
+.num{flex:0 0 28px;height:28px;border-radius:50%;background:var(--accent);
+     color:#fff;font:700 15px/28px sans-serif;text-align:center}
+.task.ok .num{background:var(--ok)}
+.task.err .num{background:var(--err)}
+.text{flex:1 1 auto;padding-top:3px}
+.text b{font-family:Consolas,"Courier New",monospace;font-size:1.08em}
+sub{font-size:.75em}
+.extra{display:inline-block;margin-left:8px;font-size:12px;font-weight:600;
+       color:var(--accent);border:1px solid #a9c6e8;border-radius:20px;
+       padding:1px 8px;vertical-align:2px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+     margin:12px 0 0 40px}
+input[type=text]{font:600 19px/1 Consolas,"Courier New",monospace;
+     padding:10px 12px;width:220px;border:2px solid var(--line);
+     border-radius:9px;background:#fff;color:var(--ink)}
+input[type=text]:focus{outline:none;border-color:var(--accent)}
+input[type=text]:disabled{background:#f1f2f6;color:var(--muted)}
+.verdict{font-weight:700}
+.verdict.ok{color:var(--ok)}
+.verdict.err{color:var(--err)}
+.verdict small{display:block;font-weight:400;color:var(--muted);
+               margin-top:2px}
+.verdict small b{color:var(--ink);font-family:Consolas,monospace}
+
+/* ---- подсказка ---- */
+details{margin-top:26px;border:1px solid var(--line);border-radius:12px;
+        padding:12px 18px;background:var(--card)}
+summary{cursor:pointer;font-weight:600;font-size:17px}
+details h3{font-size:16px;margin:18px 0 6px}
+details p{margin:6px 0}
+pre{background:#fff;border:1px solid var(--line);border-radius:8px;
+    padding:10px 12px;overflow-x:auto;font:14px/1.45 Consolas,monospace;
+    margin:6px 0}
+table{border-collapse:collapse;font:14px/1.4 Consolas,monospace;margin:6px 0}
+td,th{border:1px solid var(--line);padding:3px 9px;text-align:center}
+th{background:#fff;font-family:inherit;color:var(--muted)}
+.done{margin:18px 0 0;padding:12px 16px;border-radius:10px;
+      background:var(--ok-bg);border:1px solid var(--ok-line);
+      color:var(--ok);font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Системы счисления — тренажёр переводов</h1>
+<p class="sub">Шесть заданий: по одному на каждый перевод.
+   Числа при каждом запуске новые.</p>
+
+<div class="panel">
+  <div class="mark">
+    <span>Оценка</span><b id="mark">—</b>
+  </div>
+  <div class="stats" id="stats"></div>
+  <div class="spacer"></div>
+  <button id="add" class="primary" disabled>Добавить задачи</button>
+  <button id="again">Начать заново</button>
+</div>
+
+<div id="tasks"></div>
+<div id="done"></div>
+
+<details>
+  <summary>Подсказка: как переводить</summary>
+
+  <h3>Из любой системы в десятичную — развёрнутая форма</h3>
+  <p>Каждую цифру умножаем на основание в степени её позиции.
+     Позиции считаем справа налево, начиная с нуля.</p>
+<pre>1 1 0 1₂ = 1·2³ + 1·2² + 0·2¹ + 1·2⁰ = 8 + 4 + 0 + 1 = <b>13</b>
+3 5 7₈  = 3·8² + 5·8¹ + 7·8⁰  = 192 + 40 + 7    = <b>239</b>
+A 4₁₆   = 10·16¹ + 4·16⁰      = 160 + 4         = <b>164</b></pre>
+
+  <h3>Из десятичной в любую — деление с остатком</h3>
+  <p>Делим на основание, пока не получится 0.
+     Остатки читаем <b>снизу вверх</b>.</p>
+<pre>94 : 2 = 47  ост. 0   ↑
+47 : 2 = 23  ост. 1   │
+23 : 2 = 11  ост. 1   │  читаем
+11 : 2 =  5  ост. 1   │  в эту
+ 5 : 2 =  2  ост. 1   │  сторону
+ 2 : 2 =  1  ост. 0   │
+ 1 : 2 =  0  ост. 1   │      94 = 1011110₂</pre>
+<pre>350 : 16 = 21  ост. 14 -> E   ↑
+ 21 : 16 =  1  ост.  5 -> 5   │
+  1 : 16 =  0  ост.  1 -> 1   │   350 = 15E₁₆</pre>
+
+  <h3>Шестнадцатеричные цифры</h3>
+  <table>
+    <tr><th>16</th><td>A</td><td>B</td><td>C</td><td>D</td><td>E</td><td>F</td></tr>
+    <tr><th>10</th><td>10</td><td>11</td><td>12</td><td>13</td><td>14</td><td>15</td></tr>
+  </table>
+
+  <h3>Степени двойки — пригодятся всегда</h3>
+  <table>
+    <tr><th>2ⁿ</th><td>1</td><td>2</td><td>4</td><td>8</td><td>16</td>
+        <td>32</td><td>64</td><td>128</td><td>256</td></tr>
+    <tr><th>n</th><td>0</td><td>1</td><td>2</td><td>3</td><td>4</td>
+        <td>5</td><td>6</td><td>7</td><td>8</td></tr>
+  </table>
+
+  <h3>Помни</h3>
+  <p>— В системе с основанием <i>q</i> используются цифры от 0 до
+     <i>q</i>−1. В двоичной нет цифры 2, в восьмеричной нет 8 и 9.</p>
+  <p>— Основание в ответе писать не нужно: просто <b>1011110</b>.</p>
+</details>
+
+</div>
+
+<script>
+"use strict";
+
+/* ------------------------------------------------------------------
+   Шесть типов заданий — ровно шесть переводов, по образцу задания 1
+   ВПР-8. Каждый тип умеет придумать себе число и знает точный ответ.
+------------------------------------------------------------------ */
+
+const DIGITS = "0123456789ABCDEF";
+const NAMES = {2:"двоичное", 8:"восьмеричное", 16:"шестнадцатеричное"};
+const NAMES_ACC = {2:"двоичную", 8:"восьмеричную", 16:"шестнадцатеричную"};
+
+function toBase(n, base){
+  if (n === 0) return "0";
+  let out = "";
+  while (n > 0){ out = DIGITS[n % base] + out; n = Math.floor(n / base); }
+  return out;
+}
+function randInt(lo, hi){            // включительно
+  return lo + Math.floor(Math.random() * (hi - lo + 1));
+}
+
+// Из q-ичной в десятичную.
+function makeToDec(base, lo, hi){
+  return () => {
+    let n;
+    do {
+      n = randInt(lo, hi);
+      // для 16-ричной пусть в записи почти всегда будет буква:
+      // иначе задача вырождается в «прочитай двузначное число»
+    } while (base === 16 && n % 16 < 10 && Math.floor(n / 16) % 16 < 10
+             && Math.random() < 0.8);
+    const src = toBase(n, base);
+    return {
+      html: `Переведите ${NAMES[base]} число <b>${src}<sub>${base}</sub></b> ` +
+            `в десятичную систему счисления.`,
+      answer: String(n),
+      answerBase: 10
+    };
+  };
+}
+
+// Из десятичной в q-ичную.
+function makeFromDec(base, lo, hi){
+  return () => {
+    const n = randInt(lo, hi);
+    return {
+      html: `Переведите десятичное число <b>${n}</b> в ` +
+            `${NAMES_ACC[base]} систему счисления. ` +
+            `Основание системы писать не нужно.`,
+      answer: toBase(n, base),
+      answerBase: base
+    };
+  };
+}
+
+const TYPES = [
+  {id:0, name:"из 2 в 10",  gen: makeToDec(2,  37, 250)},
+  {id:1, name:"из 8 в 10",  gen: makeToDec(8,  40, 500)},
+  {id:2, name:"из 16 в 10", gen: makeToDec(16, 40, 255)},
+  {id:3, name:"из 10 в 2",  gen: makeFromDec(2,  37, 250)},
+  {id:4, name:"из 10 в 8",  gen: makeFromDec(8,  60, 500)},
+  {id:5, name:"из 10 в 16", gen: makeFromDec(16, 60, 500)}
+];
+
+/* ------------------------------------------------------------------
+   Оценка: сколько переводов освоено, столько и считаем.
+   Шесть освоенных -> «5», пять -> «4», четыре -> «3», меньше -> «2».
+   Добор поднимает оценку, потому что чинит именно непокорившийся тип.
+------------------------------------------------------------------ */
+const SCALE = {6:5, 5:4, 4:3};
+function markFor(mastered){ return SCALE[mastered] || 2; }
+
+/* ---------------------------------------------------------- состояние */
+
+let tasks = [];          // {type, html, answer, answerBase, status, extra}
+let firstRoundRight = 0; // верных с первой попытки (из шести первых)
+
+function newRun(){
+  tasks = TYPES.map(t => Object.assign({type: t.id, status: "open",
+                                        extra: false}, t.gen()));
+  firstRoundRight = 0;
+  render();
+  const first = document.querySelector("input[type=text]");
+  if (first) first.focus();
+}
+
+function masteredTypes(){
+  const set = new Set();
+  tasks.forEach(t => { if (t.status === "ok") set.add(t.type); });
+  return set;
+}
+function failedTypes(){
+  const ok = masteredTypes();
+  const set = new Set();
+  tasks.forEach(t => { if (t.status === "err" && !ok.has(t.type))
+                         set.add(t.type); });
+  return set;
+}
+const allAnswered = () => tasks.every(t => t.status !== "open");
+
+/* ------------------------------------------------------- нормализация */
+
+function normalize(raw){
+  let s = String(raw).trim().toUpperCase().replace(/[\s ]/g, "");
+  s = s.replace(/[₀₁₂₃₄₅₆₇₈₉]+$/, "");     // 1001₂
+  s = s.replace(/\((?:2|8|10|16)\)$/, "");  // 1001(2)
+  s = s.replace(/_.*$/, "");                // 1001_2
+  return s.replace(/^\+/, "");
+}
+
+// Цифра, которой в этой системе быть не может, — отдельный разговор:
+// это не описка, а непонимание, и назвать его полезнее, чем молча
+// поставить минус.
+function badDigit(s, base){
+  for (const ch of s){
+    const v = DIGITS.indexOf(ch);
+    if (v < 0 || v >= base) return ch;
+  }
+  return null;
+}
+
+/* ------------------------------------------------------------ проверка */
+
+function check(i){
+  const t = tasks[i];
+  if (t.status !== "open") return;
+  const input = document.getElementById("in" + i);
+  const raw = input.value;
+  if (!normalize(raw)) return;             // пустое — не считаем ответом
+
+  const given = normalize(raw);
+  captureDrafts();
+  t.given = raw.trim();
+  t.status = (given === t.answer) ? "ok" : "err";
+  if (t.status === "err") t.bad = badDigit(given, t.answerBase);
+  if (t.status === "ok" && !t.extra) firstRoundRight++;
+
+  render();
+  focusNextOpen(i + 1);
+}
+
+// Следующее открытое поле после только что закрытого; если сзади всё
+// решено — первое открытое сверху.
+function focusNextOpen(from){
+  let idx = tasks.findIndex((t, k) => k >= from && t.status === "open");
+  if (idx < 0) idx = tasks.findIndex(t => t.status === "open");
+  if (idx < 0) return null;
+  const el = document.getElementById("in" + idx);
+  if (el) el.focus();
+  return el;
+}
+
+function addTasks(){
+  captureDrafts();
+  const need = [...failedTypes()];
+  if (!need.length) return;
+  need.forEach(id => {
+    const t = TYPES.find(x => x.id === id);
+    tasks.push(Object.assign({type: id, status: "open", extra: true},
+                             t.gen()));
+  });
+  render();
+  const el = focusNextOpen(0);
+  if (el) el.scrollIntoView({block: "center", behavior: "smooth"});
+}
+
+/* -------------------------------------------------------------- вывод */
+
+// Перерисовка собирает карточки заново, поэтому набранное в ещё не
+// проверенных полях надо сначала забрать в состояние — иначе ученик
+// теряет ответы, которые уже вписал, но пока не проверил.
+function captureDrafts(){
+  tasks.forEach((t, i) => {
+    if (t.status !== "open") return;
+    const el = document.getElementById("in" + i);
+    if (el) t.draft = el.value;
+  });
+}
+
+const esc = v => String(v == null ? "" : v).replace(/"/g, "&quot;");
+
+function render(){
+  const box = document.getElementById("tasks");
+  box.innerHTML = "";
+
+  tasks.forEach((t, i) => {
+    const card = document.createElement("div");
+    card.className = "task" + (t.status === "open" ? "" : " " + t.status);
+
+    let verdict = "";
+    if (t.status === "ok"){
+      verdict = `<span class="verdict ok">Правильно</span>`;
+    } else if (t.status === "err"){
+      const why = t.bad
+        ? `<small>В этой системе счисления нет цифры
+             <b>${t.bad}</b>. Правильный ответ: <b>${t.answer}</b></small>`
+        : `<small>Правильный ответ: <b>${t.answer}</b></small>`;
+      verdict = `<span class="verdict err">Ошибка${why}</span>`;
+    }
+
+    card.innerHTML = `
+      <div class="q">
+        <div class="num">${i + 1}</div>
+        <div class="text">${t.html}${
+          t.extra ? '<span class="extra">добор</span>' : ""}</div>
+      </div>
+      <div class="row">
+        <input type="text" id="in${i}" autocomplete="off"
+               spellcheck="false" placeholder="ответ"
+               value="${esc(t.status === "open" ? t.draft : t.given)}"
+               ${t.status === "open" ? "" : "disabled"}>
+        ${t.status === "open"
+            ? `<button data-check="${i}">Проверить</button>`
+            : verdict}
+      </div>`;
+    box.appendChild(card);
+  });
+
+  box.querySelectorAll("button[data-check]").forEach(b => {
+    b.addEventListener("click", () => check(+b.dataset.check));
+  });
+  box.querySelectorAll("input[type=text]").forEach(inp => {
+    inp.addEventListener("keydown", e => {
+      if (e.key === "Enter"){ e.preventDefault();
+                              check(+inp.id.slice(2)); }
+    });
+  });
+
+  updatePanel();
+}
+
+function updatePanel(){
+  const mastered = masteredTypes().size;
+  const mark = markFor(mastered);
+  const started = tasks.some(t => t.status !== "open");
+  const el = document.getElementById("mark");
+  // до первого ответа показываем прочерк: двойка на чистом листе никого
+  // ещё не характеризует, а урок только начался
+  el.textContent = started ? mark : "—";
+  el.className = started ? "m" + mark : "";
+
+  const extras = tasks.filter(t => t.extra).length;
+  document.getElementById("stats").innerHTML =
+    `освоено переводов: <b>${mastered}</b> из 6<br>` +
+    `верно с первой попытки: <b>${firstRoundRight}</b> из 6` +
+    (extras ? ` &middot; добрано задач: <b>${extras}</b>` : "");
+
+  const need = failedTypes().size;
+  const btn = document.getElementById("add");
+  btn.disabled = !(allAnswered() && need > 0);
+  btn.textContent = need && allAnswered()
+      ? `Добавить задачи (${need})` : "Добавить задачи";
+
+  const done = document.getElementById("done");
+  done.innerHTML = (allAnswered() && need === 0)
+    ? `<div class="done">Все шесть переводов освоены. Оценка ${mark}.</div>`
+    : "";
+}
+
+document.getElementById("again").addEventListener("click", newRun);
+document.getElementById("add").addEventListener("click", addTasks);
+newRun();
+</script>
+</body>
+</html>

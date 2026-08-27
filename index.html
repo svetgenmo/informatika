@@ -1,0 +1,559 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Домашнее задание — системы счисления</title>
+<meta name="description" content="Тренажёр по переводам между системами счисления: шесть переводов, разбор при ошибке, код работы для сдачи.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E10%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{margin:0;padding:20px 16px 60px;
+     font:17px/1.5 "Segoe UI",system-ui,sans-serif}
+.wrap{max-width:820px;margin:0 auto}
+.mono{font-family:Consolas,"Courier New",monospace}
+
+h1{font-size:23px;margin:0 0 4px}
+.sub{color:var(--muted);font-size:15px;margin:0 0 20px}
+
+/* ------------------------------------------------------- как это устроено */
+.howto{border:1px solid var(--line);border-left:5px solid var(--accent);
+       border-radius:10px;padding:14px 18px;margin-bottom:18px;
+       background:var(--card);font-size:16px;line-height:1.5}
+.howto dl{margin:0;display:grid;grid-template-columns:auto 1fr;
+          gap:8px 14px;align-items:baseline}
+.howto dt{font-weight:700;white-space:nowrap;color:var(--accent)}
+.howto dd{margin:0}
+.howto a{color:var(--accent);font-weight:600;word-break:break-all}
+table.steps{border-collapse:collapse;margin:8px 0;font-size:15px}
+table.steps th,table.steps td{border:1px solid var(--line);padding:4px 12px;
+     text-align:center;background:#fff}
+table.steps th{background:var(--card);color:var(--muted);font-size:13px;
+     font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+table.steps td.m{font-weight:700;color:var(--accent);font-size:17px}
+@media (max-width:560px){ .howto dl{grid-template-columns:1fr;gap:2px 0}
+                          .howto dd{margin-bottom:8px} }
+
+/* ------------------------------------------------- прогресс по типам */
+.progress{border:2px solid var(--accent);border-radius:12px;
+          background:var(--card);padding:14px 18px;margin-bottom:20px}
+.progress h2{font-size:15px;margin:0;color:var(--muted);
+             font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.ptop{display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+      margin-bottom:14px}
+.ptop .sp{flex:1 1 auto}
+.score{display:flex;align-items:center;gap:10px}
+.score span{color:var(--muted);font-size:15px}
+.score b{font:700 30px/1 "Segoe UI",system-ui,sans-serif;min-width:38px;
+         text-align:center;border-radius:8px;padding:3px 9px;background:#fff;
+         border:2px solid var(--line);color:var(--muted)}
+.score b.m5{color:var(--ok);border-color:var(--ok-line)}
+.score b.m4{color:var(--accent);border-color:#a9c6e8}
+.score b.m3{color:#8a5a00;border-color:var(--hi-line)}
+.need{margin:12px 0 0;font-size:15px;color:var(--muted)}
+.need b{color:var(--ink)}
+.types{display:grid;grid-template-columns:repeat(2,1fr);gap:8px 22px}
+.type{display:flex;align-items:center;gap:10px;font-size:16px}
+.type .nm{font-family:Consolas,monospace;font-weight:700;min-width:74px}
+.dots{display:flex;gap:5px}
+.dot{width:13px;height:13px;border-radius:50%;border:2px solid var(--line);
+     background:#fff}
+.dot.full{background:var(--ok);border-color:var(--ok)}
+.type.done .nm{color:var(--ok)}
+.type.done::after{content:"готово";font-size:13px;color:var(--ok);
+                  font-weight:600}
+
+/* ------------------------------------------------------------ задача */
+.card{border:1px solid var(--line);border-radius:12px;padding:18px 20px;
+      margin-bottom:14px;background:#fff}
+.card .kicker{font-size:13px;letter-spacing:.08em;text-transform:uppercase;
+              color:var(--muted);margin-bottom:8px}
+.q{font-size:21px;margin-bottom:16px}
+.q b{font-family:Consolas,monospace;font-size:1.1em}
+sub{font-size:.75em}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+input[type=text]{font:600 20px/1 Consolas,"Courier New",monospace;
+     padding:11px 13px;width:230px;border:2px solid var(--line);
+     border-radius:9px;background:#fff;color:var(--ink)}
+input[type=text]:focus{outline:none;border-color:var(--accent)}
+button{font:600 16px/1 inherit;padding:12px 18px;border-radius:9px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);
+       cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:focus-visible{outline:3px solid #a9c6e8;outline-offset:2px}
+
+.verdict{margin-top:14px;border-radius:10px;padding:14px 18px;
+         font-weight:600}
+.verdict.ok{background:var(--ok-bg);border:1px solid var(--ok-line);
+            color:var(--ok)}
+.verdict.err{background:var(--err-bg);border:1px solid var(--err-line);
+             color:var(--err)}
+.solution{margin-top:12px;border:1px solid var(--hi-line);
+          background:var(--hi-bg);border-radius:10px;padding:14px 18px;
+          color:var(--ink)}
+.solution .cap{display:block;font-size:13px;letter-spacing:.06em;
+     text-transform:uppercase;color:var(--hi);margin-bottom:8px;
+     font-weight:700}
+.calc{font:17px/1.6 Consolas,"Courier New",monospace;white-space:pre;
+      overflow-x:auto}
+table.div{border-collapse:collapse;font:17px/1.4 Consolas,monospace}
+table.div td{padding:2px 10px;border:0}
+table.div td.rem{color:var(--accent);font-weight:700}
+
+/* ------------------------------------------------------------- финал */
+.finish{border:3px solid var(--ok-line);background:var(--ok-bg);
+        border-radius:14px;padding:22px 24px;margin-bottom:16px}
+.finish h2{margin:0 0 6px;font-size:22px;color:var(--ok)}
+.code{font:700 34px/1.1 Consolas,monospace;letter-spacing:3px;
+      color:var(--ink);background:#fff;border:2px solid var(--ok-line);
+      border-radius:10px;padding:14px 18px;margin:14px 0;
+      display:inline-block;user-select:all}
+.stats{color:var(--muted);font-size:15px;line-height:1.5}
+.stats b{color:var(--ink)}
+ol.todo{margin:14px 0 0;padding-left:22px}
+ol.todo li{margin:6px 0}
+
+details{margin-top:24px;border:1px solid var(--line);border-radius:12px;
+        padding:12px 18px;background:var(--card)}
+summary{cursor:pointer;font-weight:600}
+details h3{font-size:16px;margin:16px 0 6px}
+pre{background:#fff;border:1px solid var(--line);border-radius:8px;
+    padding:10px 12px;overflow-x:auto;font:14px/1.45 Consolas,monospace}
+table.hex{border-collapse:collapse;font:14px/1.4 Consolas,monospace}
+table.hex td,table.hex th{border:1px solid var(--line);padding:3px 9px;
+     text-align:center}
+table.hex th{background:#fff;color:var(--muted);font-family:inherit}
+@media (max-width:620px){ .types{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Домашнее задание: системы счисления</h1>
+<p class="sub">Шесть переводов. Перевод считается закрытым, когда ты дал
+   по нему <b>два верных ответа подряд</b>. Ошибся — счёт по этому
+   переводу начинается заново, зато сразу показываю, как надо было.</p>
+
+<div class="howto">
+  <dl>
+    <dt>Сколько решать</dt>
+    <dd><b>Сколько хочешь — на какую оценку наработаешь, такую и
+        получишь.</b>
+        <table class="steps">
+          <tr><th>закрыто переводов</th><th>оценка</th><th>задач минимум</th></tr>
+          <tr><td>4 из 6</td><td class="m">3</td><td>8</td></tr>
+          <tr><td>5 из 6</td><td class="m">4</td><td>10</td></tr>
+          <tr><td>6 из 6</td><td class="m">5</td><td>12</td></tr>
+        </table>
+        Задач будет больше, если ошибаться. Остановиться можно в любой
+        момент — кнопка «Закончить и получить код».</dd>
+
+    <dt>Что получишь</dt>
+    <dd><b>Код работы</b> — в нём записано, сколько переводов ты закрыл,
+        сколько решил задач и сколько было ошибок.</dd>
+
+    <dt>Как сдать</dt>
+    <dd>Отправить <b>код</b> и <b>фото страницы тетради</b> через форму:<br>
+        <a href="https://forms.gle/gKBZNb5rVbcv65Ls5"
+           target="_blank" rel="noopener">forms.gle/gKBZNb5rVbcv65Ls5</a><br>
+        В форме заполнить фамилию, класс, код и приложить фото.
+        Поля «Ответ 1…10» — не для этого задания, их пропусти.</dd>
+
+    <dt>Без чего не зачтётся</dt>
+    <dd>Без фото тетради: код показывает результат, а тетрадь — что
+        считал ты сам.</dd>
+  </dl>
+</div>
+
+<div class="progress">
+  <div class="ptop">
+    <h2>Что осталось закрыть</h2>
+    <span class="sp"></span>
+    <div class="score">
+      <span>наработано на</span><b id="mark">—</b>
+    </div>
+    <button id="finish" class="primary" disabled>Закончить и получить код</button>
+  </div>
+  <div class="types" id="types"></div>
+  <p class="need" id="need"></p>
+</div>
+
+<div id="main"></div>
+
+<details>
+  <summary>Подсказка: как переводить</summary>
+
+  <h3>Прочитать число — развёрнутая форма</h3>
+  <p>Каждую цифру умножаем на основание в степени её позиции.
+     Позиции справа налево, с нуля.</p>
+<pre>1 1 0 1₂ = 1·2³ + 1·2² + 0·2¹ + 1·2⁰ = 8 + 4 + 0 + 1 = 13
+3 5 7₈  = 3·8² + 5·8¹ + 7·8⁰  = 192 + 40 + 7 = 239
+A 4₁₆   = 10·16¹ + 4·16⁰      = 160 + 4      = 164</pre>
+
+  <h3>Записать число — деление с остатком</h3>
+  <p>Делим на основание, пока не выйдет 0. Остатки читаем снизу вверх.</p>
+<pre>94 : 2 = 47  ост. 0   ↑
+47 : 2 = 23  ост. 1   │
+23 : 2 = 11  ост. 1   │  читаем
+11 : 2 =  5  ост. 1   │  в эту
+ 5 : 2 =  2  ост. 1   │  сторону
+ 2 : 2 =  1  ост. 0   │
+ 1 : 2 =  0  ост. 1   │   94 = 1011110₂</pre>
+
+  <h3>Шестнадцатеричные цифры</h3>
+  <table class="hex">
+    <tr><th>16</th><td>A</td><td>B</td><td>C</td><td>D</td><td>E</td><td>F</td></tr>
+    <tr><th>10</th><td>10</td><td>11</td><td>12</td><td>13</td><td>14</td><td>15</td></tr>
+  </table>
+
+  <h3>Степени двойки</h3>
+  <table class="hex">
+    <tr><th>2ⁿ</th><td>1</td><td>2</td><td>4</td><td>8</td><td>16</td>
+        <td>32</td><td>64</td><td>128</td><td>256</td></tr>
+    <tr><th>n</th><td>0</td><td>1</td><td>2</td><td>3</td><td>4</td>
+        <td>5</td><td>6</td><td>7</td><td>8</td></tr>
+  </table>
+</details>
+
+</div>
+
+<script>
+"use strict";
+
+const DIGITS = "0123456789ABCDEF";
+const NAMES = {2:"двоичное", 8:"восьмеричное", 16:"шестнадцатеричное"};
+const NAMES_ACC = {2:"двоичную", 8:"восьмеричную", 16:"шестнадцатеричную"};
+const SUP = {0:"⁰",1:"¹",2:"²",3:"³",4:"⁴",5:"⁵",6:"⁶",7:"⁷"};
+// Два верных подряд, а не три: случайное попадание они всё равно
+// отсекают, но объём укладывается в норматив времени на домашнюю работу.
+const STREAK = 2;
+
+// Ступени. Домашнее задание добровольное — ученик набирает столько,
+// сколько ему нужно, и останавливается. Шкала та же, что в практикуме.
+const MARKS = {6: 5, 5: 4, 4: 3};
+const MIN_TO_FINISH = 4;                // ниже сдавать нечего
+const markFor = done => MARKS[done] || 2;
+
+const toBase = (n, b) => {
+  if (n === 0) return "0";
+  let s = "";
+  while (n > 0){ s = DIGITS[n % b] + s; n = Math.floor(n / b); }
+  return s;
+};
+const randInt = (lo, hi) => lo + Math.floor(Math.random() * (hi - lo + 1));
+const pad = (s, w) => String(s).padStart(w, " ");
+
+/* --------------------------------------------------------- шесть типов */
+
+function genToDec(base){
+  const n = base === 2 ? randInt(21, 61)
+          : base === 8 ? randInt(80, 500) : randInt(40, 250);
+  const src = toBase(n, base);
+  const d = [...src], L = d.length;
+  const terms = d.map((ch, k) => {
+    const p = L - 1 - k, v = DIGITS.indexOf(ch);
+    return {p, v, val: v * Math.pow(base, p)};
+  });
+  return {
+    base, answerBase: 10, answer: String(n),
+    q: `Переведите ${NAMES[base]} число <b>${src}<sub>${base}</sub></b> ` +
+       `в десятичную систему счисления.`,
+    solution:
+      `<div class="calc">число:   ${d.join(" ")}\n` +
+      `позиции: ${d.map((ch,k)=>pad(L-1-k, ch.length)).join(" ")}\n\n` +
+      `${terms.map(t=>`${t.v}·${base}${SUP[t.p]}`).join(" + ")}\n` +
+      `= ${terms.map(t=>t.val).join(" + ")}\n= ${n}</div>`
+  };
+}
+
+function genFromDec(base){
+  const n = base === 2 ? randInt(19, 60) : randInt(90, 500);
+  const rows = [];
+  let x = n;
+  while (x > 0){
+    const r = x % base;
+    rows.push({from:x, q:Math.floor(x/base), r, ch:DIGITS[r], letter:r>9});
+    x = Math.floor(x / base);
+  }
+  const w = String(n).length;
+  const table = rows.map(r =>
+    `<tr><td>${pad(r.from,w)}</td><td>:</td><td>${base}</td><td>=</td>` +
+    `<td>${pad(r.q,w)}</td><td>ост.</td><td class="rem">${pad(r.r,2)}</td>` +
+    `<td>${r.letter ? "&rarr; " + r.ch : ""}</td></tr>`).join("");
+  const digits = rows.map(r => r.ch).reverse().join("");
+  return {
+    base, answerBase: base, answer: digits,
+    q: `Переведите десятичное число <b>${n}</b> в ${NAMES_ACC[base]} ` +
+       `систему счисления. Основание системы писать не нужно.`,
+    solution: `<table class="div">${table}</table>` +
+      `<div class="calc">\nчитаем снизу вверх:  ` +
+      `${rows.map(r=>r.ch).reverse().join("  ")}\n${n} = ${digits}` +
+      `<sub>${base}</sub></div>`
+  };
+}
+
+const TYPES = [
+  {id:0, name:"2 → 10",  gen:() => genToDec(2)},
+  {id:1, name:"8 → 10",  gen:() => genToDec(8)},
+  {id:2, name:"16 → 10", gen:() => genToDec(16)},
+  {id:3, name:"10 → 2",  gen:() => genFromDec(2)},
+  {id:4, name:"10 → 8",  gen:() => genFromDec(8)},
+  {id:5, name:"10 → 16", gen:() => genFromDec(16)}
+];
+
+/* ------------------------------------------------------- нормализация */
+
+function normalize(raw){
+  let s = String(raw).trim().toUpperCase().replace(/[\s ]/g, "");
+  s = s.replace(/[₀₁₂₃₄₅₆₇₈₉]+$/, "");
+  s = s.replace(/\((?:2|8|10|16)\)$/, "");
+  s = s.replace(/_.*$/, "");
+  return s.replace(/^\+/, "");
+}
+function badDigit(s, base){
+  for (const ch of s){
+    const v = DIGITS.indexOf(ch);
+    if (v < 0 || v >= base) return ch;
+  }
+  return null;
+}
+
+/* ------------------------------------------------------------ квитанция
+   Код несёт цифры работы и контрольную сумму. Ключа нигде нет — иначе
+   страницу нельзя было бы просто положить на школьную платформу. Смысл
+   кода не в том, чтобы его нельзя было подделать, а в том, что подделать
+   его дольше, чем решить.
+------------------------------------------------------------------ */
+const ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+const EPOCH = Date.UTC(2026, 0, 1);
+
+const bin = (v, w) => v.toString(2).padStart(w, "0");
+
+function checksum(bits31){
+  let v = parseInt(bits31, 2), cs = 0x0AB;
+  for (let i = 0; i < 31; i += 9) cs ^= (v >> i) & 0x1FF;
+  return cs & 0x1FF;
+}
+
+function makeCode(st){
+  const day = Math.max(0, Math.min(2047, Math.floor(
+      (Date.now() - EPOCH) / 86400000)));
+  const payload = bin(day, 11) + bin(Math.min(7, st.typesDone), 3) +
+                  bin(Math.min(7, st.cleanTypes), 3) +
+                  bin(Math.min(127, st.solved), 7) +
+                  bin(Math.min(127, st.wrong), 7);
+  const bits = payload + bin(checksum(payload), 9);
+  let out = "";
+  for (let i = 0; i < 40; i += 5) out += ALPHABET[parseInt(bits.substr(i, 5), 2)];
+  return "NS-" + out.slice(0, 4) + "-" + out.slice(4);
+}
+
+/* --------------------------------------------------------- состояние */
+
+const st = {
+  streak: [0,0,0,0,0,0],     // текущая серия по каждому типу
+  done:   [false,false,false,false,false,false],
+  clean:  [true,true,true,true,true,true],  // закрыт без единой ошибки
+  solved: 0, wrong: 0,
+  cur: null, answered: false
+};
+Object.defineProperty(st, "typesDone",
+  {get(){ return st.done.filter(Boolean).length; }});
+Object.defineProperty(st, "cleanTypes",
+  {get(){ return st.done.filter((d,i) => d && st.clean[i]).length; }});
+
+function pickType(){
+  const open = TYPES.filter(t => !st.done[t.id]);
+  if (!open.length) return null;
+  // берём тот, где серия длиннее нуля — не бросаем начатое на полпути
+  const started = open.filter(t => st.streak[t.id] > 0);
+  const pool = started.length ? started : open;
+  return pool[randInt(0, pool.length - 1)];
+}
+
+function nextTask(){
+  const t = pickType();
+  if (!t){ renderFinish(); return; }
+  st.cur = Object.assign({type: t.id, name: t.name}, t.gen());
+  st.answered = false;
+  render();
+}
+
+function answer(){
+  const inp = document.getElementById("ans");
+  const given = normalize(inp.value);
+  if (!given || st.answered) return;
+  const t = st.cur, ok = given === t.answer;
+  t.given = inp.value.trim();   // чтобы после проверки было видно, что ввёл
+  st.answered = true;
+  if (ok){
+    st.solved++;
+    st.streak[t.type]++;
+    if (st.streak[t.type] >= STREAK) st.done[t.type] = true;
+  } else {
+    st.wrong++;
+    st.streak[t.type] = 0;
+    st.clean[t.type] = false;
+    t.bad = badDigit(given, t.answerBase);
+  }
+  t.ok = ok;
+  render();
+}
+
+/* ------------------------------------------------------------- вывод */
+
+function renderTypes(){
+  document.getElementById("types").innerHTML = TYPES.map(t => {
+    const dots = Array.from({length: STREAK}, (_, k) =>
+      `<span class="dot${k < st.streak[t.id] || st.done[t.id]
+         ? " full" : ""}"></span>`).join("");
+    return `<div class="type${st.done[t.id] ? " done" : ""}">
+              <span class="nm">${t.name}</span>
+              <span class="dots">${dots}</span></div>`;
+  }).join("");
+
+  const done = st.typesDone;
+  const mark = markFor(done);
+  const el = document.getElementById("mark");
+  // до первого закрытого перевода оценки ещё нет — прочерк, не двойка
+  el.textContent = done >= MIN_TO_FINISH ? mark : "—";
+  el.className = done >= MIN_TO_FINISH ? "m" + mark : "";
+
+  const btn = document.getElementById("finish");
+  btn.disabled = done < MIN_TO_FINISH;
+  btn.textContent = done >= MIN_TO_FINISH
+      ? `Закончить и получить код (на ${mark})`
+      : "Закончить и получить код";
+
+  const need = document.getElementById("need");
+  if (done >= 6){
+    need.innerHTML = "Закрыты все шесть — выше уже некуда. " +
+                     "Забирай код и сдавай.";
+  } else if (done >= MIN_TO_FINISH){
+    need.innerHTML = `Можно остановиться прямо сейчас — это <b>${mark}</b>. ` +
+        `Ещё один закрытый перевод — <b>${markFor(done + 1)}</b>.`;
+  } else {
+    const left = MIN_TO_FINISH - done;
+    need.innerHTML = `Закрой ещё <b>${left}</b> ` +
+        `${left === 1 ? "перевод" : left < 5 ? "перевода" : "переводов"}, ` +
+        `чтобы получить код на <b>3</b>.`;
+  }
+}
+
+function render(){
+  renderTypes();
+  const t = st.cur;
+  const main = document.getElementById("main");
+  if (!t) return;
+
+  let tail = "";
+  if (st.answered){
+    tail = t.ok
+      ? `<div class="verdict ok">Правильно${
+          st.done[t.type] ? ` — перевод ${t.name} закрыт`
+                          : `, подряд: ${st.streak[t.type]} из ${STREAK}`}</div>`
+      : `<div class="verdict err">Ошибка${t.bad
+          ? `. В этой системе счисления нет цифры ${t.bad}` : ""}.
+           Правильный ответ: ${t.answer}. Серия по ${t.name} начинается
+           заново.</div>
+         <div class="solution"><span class="cap">как надо было</span>
+           ${t.solution}</div>`;
+  }
+
+  main.innerHTML = `
+    <div class="card">
+      <div class="kicker">перевод ${t.name} &middot; решено задач:
+           ${st.solved}</div>
+      <div class="q">${t.q}</div>
+      <div class="row">
+        <input type="text" id="ans" autocomplete="off" spellcheck="false"
+               placeholder="ответ" value="${
+                 (t.given || "").replace(/"/g, "&quot;")}"
+               ${st.answered ? "disabled" : ""}>
+        ${st.answered
+          ? `<button class="primary" id="go">Следующая задача</button>`
+          : `<button class="primary" id="go">Проверить</button>`}
+      </div>
+      ${tail}
+    </div>`;
+
+  const btn = document.getElementById("go");
+  btn.addEventListener("click", () => st.answered ? nextTask() : answer());
+  const inp = document.getElementById("ans");
+  if (inp && !st.answered){
+    inp.addEventListener("keydown", e => {
+      if (e.key === "Enter"){ e.preventDefault(); answer(); }
+    });
+    inp.focus();
+  } else btn.focus();
+}
+
+function renderFinish(){
+  renderTypes();
+  const done = st.typesDone, mark = markFor(done);
+  const all = done >= 6;
+  const code = makeCode(st);
+
+  // Остановиться можно на любой ступени, поэтому «дальше» — не подачка,
+  // а обычный ход: закрыл ещё один перевод, забрал код получше.
+  const more = all
+    ? `<button id="more">Потренироваться ещё</button>
+       <span class="stats">оценку это уже не изменит,
+             но перед контрольной полезно</span>`
+    : `<button id="back" class="primary">Решать дальше — до ${
+         markFor(done + 1)}</button>
+       <span class="stats">код останется, просто получишь новый,
+             когда закроешь ещё один перевод</span>`;
+
+  document.getElementById("main").innerHTML = `
+    <div class="finish">
+      <h2>${all ? "Готово — закрыты все шесть переводов"
+                : `Готово — наработано на ${mark}`}</h2>
+      <p class="stats">Закрыто переводов: <b>${done}</b> из 6 &middot;
+         решено задач: <b>${st.solved}</b> &middot;
+         ошибок: <b>${st.wrong}</b> &middot;
+         переводов без единой ошибки: <b>${st.cleanTypes}</b></p>
+      <div class="code">${code}</div>
+      <p class="stats">Это код твоей работы. Он у каждого свой и зависит
+         от того, сколько и как ты решал.</p>
+      <ol class="todo">
+        <li>Открой форму сдачи:<br>
+            <a href="https://forms.gle/gKBZNb5rVbcv65Ls5"
+               target="_blank" rel="noopener"
+               >forms.gle/gKBZNb5rVbcv65Ls5</a></li>
+        <li>Впиши <b>фамилию</b>, <b>класс</b> и <b>код</b> отсюда.
+            Поля «Ответ 1…10» в домашнем задании заполнять не нужно.</li>
+        <li>Сфотографируй страницу тетради с решениями и приложи
+            фото к той же форме.</li>
+      </ol>
+      <p class="stats">Без фото работа не засчитывается: код показывает
+         результат, а тетрадь — что считал ты сам.</p>
+    </div>
+    <div class="card"><div class="row">${more}</div></div>`;
+
+  const back = document.getElementById("back");
+  if (back) back.addEventListener("click", nextTask);
+  const btn = document.getElementById("more");
+  if (btn) btn.addEventListener("click", () => {
+    st.done = [false,false,false,false,false,false];
+    st.streak = [0,0,0,0,0,0];
+    nextTask();
+  });
+}
+
+document.getElementById("finish").addEventListener("click", renderFinish);
+nextTask();
+</script>
+</body>
+</html>
