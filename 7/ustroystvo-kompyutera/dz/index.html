@@ -139,6 +139,13 @@ button:focus-visible{outline:3px solid #a9c6e8;outline-offset:2px}
 .stats b{color:var(--ink)}
 ol.todo{margin:14px 0 0;padding-left:22px}
 ol.todo li{margin:6px 0}
+.send{margin:14px 0 0;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.send label{display:flex;flex-direction:column;gap:4px;
+            font:600 13px/1 inherit;color:var(--muted)}
+.send input{font:600 17px/1 inherit;padding:10px 12px;border-radius:9px;
+            border:2px solid var(--line);background:#fff;width:200px}
+.send input:focus{outline:none;border-color:var(--accent)}
+.send .note{flex-basis:100%;margin:2px 0 0}
 
 details{margin-top:24px;border:1px solid var(--line);border-radius:12px;
         padding:12px 18px;background:var(--card)}
@@ -190,12 +197,10 @@ table.hex th{background:#fff;color:var(--muted);font-size:14px}
         закрыл, сколько решил задач и сколько было ошибок.</dd>
 
     <dt>Как сдать</dt>
-    <dd>Отправить <b>код</b> через форму:<br>
-        <a href="https://forms.gle/gKBZNb5rVbcv65Ls5"
-           target="_blank" rel="noopener">forms.gle/gKBZNb5rVbcv65Ls5</a><br>
-        Заполнить фамилию, класс и код. Поля «Ответ 1…10» — не для
-        этого задания, их пропусти. Фото прикладывать не нужно:
-        в этой теме считать в тетради нечего.</dd>
+    <dd>В конце появится кнопка <b>«Сдать работу»</b>: впишешь фамилию
+        и класс, кнопка сама откроет форму с уже вписанным кодом.
+        Останется нажать «Отправить». Переписывать код руками не надо —
+        именно на этом чаще всего и ошибаются.</dd>
   </dl>
 </div>
 
@@ -382,6 +387,12 @@ function markFor(done){
    кода не в том, чтобы его нельзя было подделать, а в том, что подделать
    его дольше, чем решить.
 ------------------------------------------------------------------ */
+/* Ссылку на форму ставит скрипт set_form_link.py из корня
+   кабинета: в ней зашиты номера полей формы, на глаз их не
+   подобрать. Пусто — страница показывает старый порядок
+   «открой форму и впиши код руками». */
+const FORM = "https://docs.google.com/forms/d/e/1FAIpQLSfQyhaxcnzn4ZaKSe_ZMsluw7qRQnrw_80H6SfrnYB5EThUIA/viewform?usp=pp_url&entry.853601231=ФАМИЛИЯ&entry.1091635917=КЛАСС&entry.487188307=КОД";
+
 const ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
 const EPOCH = Date.UTC(2026, 0, 1);
 
@@ -628,6 +639,41 @@ function render(){
   } else btn.focus();
 }
 
+/* Кнопка «Сдать»: фамилию и класс страница помнит между заходами, код
+   подставляет сам. Переписывать код руками больше не нужно — именно на
+   переписывании и брались «код не разобрался». */
+function wireSend(code){
+  const fam = document.getElementById("fam");
+  if (!fam) return;
+  const kls = document.getElementById("kls");
+  const note = document.getElementById("sendnote");
+  // Класс страница не подставляет: одну и ту же страницу открывают
+  // разные классы параллели. Но что вписали в прошлый раз — помнит.
+  try {
+    fam.value = localStorage.getItem("hw-fam") || "";
+    kls.value = localStorage.getItem("hw-kls") || "";
+  } catch (e) {}
+  document.getElementById("send").addEventListener("click", () => {
+    const f = fam.value.trim(), k = kls.value.trim();
+    if (!f || !k){
+      note.textContent = "Впиши фамилию и класс — иначе непонятно, "
+                       + "чья это работа.";
+      (f ? kls : fam).focus();
+      return;
+    }
+    try {
+      localStorage.setItem("hw-fam", f);
+      localStorage.setItem("hw-kls", k);
+    } catch (e) {}
+    const url = FORM.replace("ФАМИЛИЯ", encodeURIComponent(f))
+                    .replace("КЛАСС", encodeURIComponent(k))
+                    .replace("КОД", encodeURIComponent(code));
+    window.open(url, "_blank", "noopener");
+    note.textContent = "Форма открылась в новой вкладке. Не забудь нажать "
+                     + "в ней «Отправить».";
+  });
+}
+
 function renderFinish(){
   renderTypes();
   const done = st.typesDone, mark = markFor(done);
@@ -656,16 +702,25 @@ function renderFinish(){
       <div class="code">${code}</div>
       <p class="stats">Это код твоей работы. Он у каждого свой и зависит
          от того, сколько и как ты решал.</p>
-      <ol class="todo">
+            ${FORM ? `<div class="send">
+        <label>Фамилия
+          <input id="fam" autocomplete="off" placeholder="как в журнале"></label>
+        <label>Класс
+          <input id="kls" autocomplete="off" placeholder="7б"
+                 style="width:110px"></label>
+        <button id="send" class="primary">Сдать работу</button>
+        <p class="stats note" id="sendnote">Кнопка откроет форму: фамилия,
+           класс и код уже будут вписаны — останется нажать
+           «Отправить».</p>
+      </div>` : `<ol class="todo">
         <li>Открой форму сдачи:<br>
-            <a href="https://forms.gle/gKBZNb5rVbcv65Ls5"
-               target="_blank" rel="noopener">forms.gle/gKBZNb5rVbcv65Ls5</a></li>
+            <a href="https://forms.gle/gKBZNb5rVbcv65Ls5" target="_blank" rel="noopener">https://forms.gle/gKBZNb5rVbcv65Ls5</a></li>
         <li>Впиши фамилию, класс и этот код — <b>ровно как здесь</b>.</li>
-        <li>Отправь. Поля «Ответ 1…10» пропусти.</li>
-      </ol>
+      </ol>`}
     </div>
     <div class="row">${more}</div>`;
 
+  wireSend(code);
   const back = document.getElementById("back") || document.getElementById("more");
   if (back) back.addEventListener("click", () => {
     // закрыто всё до единой — открываем счёт заново, иначе просто
