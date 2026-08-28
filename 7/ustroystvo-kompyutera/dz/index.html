@@ -1,0 +1,685 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Домашнее задание — устройство компьютера</title>
+<meta name="description" content="Домашний тренажёр к заданию 1 ВПР: двенадцать формулировок отбора устройств, разбор при ошибке, код работы для сдачи.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E10%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{margin:0;padding:20px 16px 60px;
+     font:17px/1.5 "Segoe UI",system-ui,sans-serif}
+.wrap{max-width:860px;margin:0 auto}
+
+h1{font-size:23px;margin:0 0 4px}
+.sub{color:var(--muted);font-size:15px;margin:0 0 20px}
+
+/* ------------------------------------------------------ как это устроено */
+.howto{border:1px solid var(--line);border-left:5px solid var(--accent);
+       border-radius:10px;padding:14px 18px;margin-bottom:18px;
+       background:var(--card);font-size:16px;line-height:1.5}
+.howto dl{margin:0;display:grid;grid-template-columns:auto 1fr;
+          gap:8px 14px;align-items:baseline}
+.howto dt{font-weight:700;white-space:nowrap;color:var(--accent)}
+.howto dd{margin:0}
+.howto a{color:var(--accent);font-weight:600;word-break:break-all}
+table.steps{border-collapse:collapse;margin:8px 0;font-size:15px}
+table.steps th,table.steps td{border:1px solid var(--line);padding:4px 12px;
+     text-align:center;background:#fff}
+table.steps th{background:var(--card);color:var(--muted);font-size:13px;
+     font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+table.steps td.m{font-weight:700;color:var(--accent);font-size:17px}
+@media (max-width:560px){ .howto dl{grid-template-columns:1fr;gap:2px 0}
+                          .howto dd{margin-bottom:8px} }
+
+/* ------------------------------------------------- прогресс по типам */
+.progress{border:2px solid var(--accent);border-radius:12px;
+          background:var(--card);padding:14px 18px;margin-bottom:20px}
+.progress h2{font-size:15px;margin:0;color:var(--muted);
+             font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.ptop{display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+      margin-bottom:14px}
+.ptop .sp{flex:1 1 auto}
+.score{display:flex;align-items:center;gap:10px}
+.score span{color:var(--muted);font-size:15px}
+.score b{font:700 30px/1 "Segoe UI",system-ui,sans-serif;min-width:38px;
+         text-align:center;border-radius:8px;padding:3px 9px;background:#fff;
+         border:2px solid var(--line);color:var(--muted)}
+.score b.m5{color:var(--ok);border-color:var(--ok-line)}
+.score b.m4{color:var(--accent);border-color:#a9c6e8}
+.score b.m3{color:#8a5a00;border-color:var(--hi-line)}
+.need{margin:12px 0 0;font-size:15px;color:var(--muted)}
+.need b{color:var(--ink)}
+.types{display:grid;grid-template-columns:repeat(3,1fr);gap:8px 20px}
+.type{display:flex;align-items:center;gap:8px;font-size:15px}
+.type .nm{min-width:112px}
+.dots{display:flex;gap:5px}
+.dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--line);
+     background:#fff}
+.dot.full{background:var(--ok);border-color:var(--ok)}
+.type.done .nm{color:var(--ok);font-weight:600}
+@media (max-width:820px){ .types{grid-template-columns:repeat(2,1fr)} }
+@media (max-width:560px){ .types{grid-template-columns:1fr} }
+
+/* ------------------------------------------------------------ задача */
+.card{border:1px solid var(--line);border-radius:12px;padding:18px 20px;
+      margin-bottom:14px;background:#fff}
+.card .kicker{font-size:13px;letter-spacing:.08em;text-transform:uppercase;
+              color:var(--muted);margin-bottom:8px}
+.q{font-size:20px;margin-bottom:6px;font-weight:600}
+.q small{display:block;font-size:14px;font-weight:400;color:var(--muted);
+         margin-top:4px}
+
+/* список устройств: один столбец, как в бланке ВПР */
+ol.devs{list-style:none;margin:14px 0;padding:0}
+ol.devs li{display:flex;gap:10px;align-items:baseline;padding:3px 8px;
+           border-left:4px solid transparent;border-radius:4px;
+           font-size:17px}
+ol.devs li .k{flex:0 0 26px}
+ol.devs li.right{border-left-color:var(--ok);background:var(--ok-bg)}
+ol.devs li.missed{border-left-color:var(--hi);background:var(--hi-bg)}
+ol.devs li.plus{border-left-color:var(--err);background:var(--err-bg)}
+ol.devs li .tag{font-size:13px;font-weight:600;margin-left:auto;
+                padding-left:12px;white-space:nowrap}
+ol.devs li.right .tag{color:var(--ok)}
+ol.devs li.missed .tag{color:var(--hi)}
+ol.devs li.plus .tag{color:var(--err)}
+
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+input[type=text]{font:700 20px/1 Consolas,"Courier New",monospace;
+     letter-spacing:2px;padding:11px 14px;width:180px;
+     border:2px solid var(--line);border-radius:9px;background:#fff;
+     color:var(--ink)}
+input[type=text]:focus{outline:none;border-color:var(--accent)}
+input[type=text]:disabled{background:#f1f2f6;color:var(--muted)}
+button{font:600 16px/1 inherit;padding:12px 18px;border-radius:9px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);
+       cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);
+                color:var(--muted);background:#fff}
+button:focus-visible{outline:3px solid #a9c6e8;outline-offset:2px}
+
+.verdict{margin-top:14px;border-radius:10px;padding:14px 18px;
+         font-weight:600}
+.verdict.ok{background:var(--ok-bg);border:1px solid var(--ok-line);
+            color:var(--ok)}
+.verdict.err{background:var(--err-bg);border:1px solid var(--err-line);
+             color:var(--err)}
+.solution{margin-top:12px;border:1px solid var(--hi-line);
+          background:var(--hi-bg);border-radius:10px;padding:14px 18px;
+          color:var(--ink);font-size:16px}
+.solution .cap{display:block;font-size:13px;letter-spacing:.06em;
+     text-transform:uppercase;color:var(--hi);margin-bottom:8px;
+     font-weight:700}
+.solution div{margin:4px 0}
+.solution .rule{margin-top:10px;font-weight:600}
+
+/* ------------------------------------------------------------- финал */
+.finish{border:3px solid var(--ok-line);background:var(--ok-bg);
+        border-radius:14px;padding:22px 24px;margin-bottom:16px}
+.finish h2{margin:0 0 6px;font-size:22px;color:var(--ok)}
+.code{font:700 34px/1.1 Consolas,monospace;letter-spacing:3px;
+      color:var(--ink);background:#fff;border:2px solid var(--ok-line);
+      border-radius:10px;padding:14px 18px;margin:14px 0;
+      display:inline-block;user-select:all}
+.stats{color:var(--muted);font-size:15px;line-height:1.5}
+.stats b{color:var(--ink)}
+ol.todo{margin:14px 0 0;padding-left:22px}
+ol.todo li{margin:6px 0}
+
+details{margin-top:24px;border:1px solid var(--line);border-radius:12px;
+        padding:12px 18px;background:var(--card)}
+summary{cursor:pointer;font-weight:600}
+details h3{font-size:16px;margin:16px 0 6px}
+details p{margin:6px 0}
+table.hex{border-collapse:collapse;font-size:15px;margin:6px 0}
+table.hex td,table.hex th{border:1px solid var(--line);padding:5px 10px;
+     text-align:left}
+table.hex th{background:#fff;color:var(--muted);font-size:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Домашнее задание — устройство компьютера</h1>
+<p class="sub">Задание 1 ВПР: выбрать из списка устройства нужного вида.
+   Двенадцать формулировок — от «устройств ввода» до «долговременной
+   памяти».</p>
+
+<div class="howto">
+  <dl>
+    <dt>Зачем</dt>
+    <dd>Это <b>не обязаловка</b>, а способ поднять оценку за тему:
+        сколько наработаешь, столько и прибавится.</dd>
+
+    <dt>Как устроено</dt>
+    <dd>Задачи идут по одной, ответ набирается с клавиатуры — только
+        цифры, подряд, по возрастанию. Формулировка считается <b>закрытой</b>,
+        когда ответишь на неё верно <b>два раза подряд</b>. Ошибся —
+        счёт по этой формулировке начинается заново, зато сразу
+        увидишь разбор.</dd>
+
+    <dt>Сколько решать</dt>
+    <dd><b>Сколько хочешь — на какую оценку наработаешь, такую и
+        получишь.</b>
+        <table class="steps">
+          <tr><th>закрыто формулировок</th><th>оценка</th>
+              <th>задач минимум</th></tr>
+          <tr><td>7 из 12</td><td class="m">3</td><td>14</td></tr>
+          <tr><td>9 из 12</td><td class="m">4</td><td>18</td></tr>
+          <tr><td>11 из 12</td><td class="m">5</td><td>22</td></tr>
+        </table>
+        Задач будет больше, если ошибаться. Остановиться можно в любой
+        момент — кнопка «Закончить и получить код».</dd>
+
+    <dt>Что получишь</dt>
+    <dd><b>Код работы</b> — в нём записано, сколько формулировок ты
+        закрыл, сколько решил задач и сколько было ошибок.</dd>
+
+    <dt>Как сдать</dt>
+    <dd>Отправить <b>код</b> через форму:<br>
+        <a href="https://forms.gle/gKBZNb5rVbcv65Ls5"
+           target="_blank" rel="noopener">forms.gle/gKBZNb5rVbcv65Ls5</a><br>
+        Заполнить фамилию, класс и код. Поля «Ответ 1…10» — не для
+        этого задания, их пропусти. Фото прикладывать не нужно:
+        в этой теме считать в тетради нечего.</dd>
+  </dl>
+</div>
+
+<div class="progress">
+  <div class="ptop">
+    <h2>Что осталось закрыть</h2>
+    <span class="sp"></span>
+    <div class="score">
+      <span>наработано на</span><b id="mark">—</b>
+    </div>
+    <button id="finish" class="primary" disabled>Закончить и получить код</button>
+  </div>
+  <div class="types" id="types"></div>
+  <p class="need" id="need"></p>
+</div>
+
+<div id="main"></div>
+
+<details>
+  <summary>Подсказка: как устроен компьютер</summary>
+
+  <h3>Четыре работы, которые делает компьютер</h3>
+  <table class="hex">
+    <tr><th>работа</th><th>кто её делает</th></tr>
+    <tr><td>принять информацию</td>
+        <td>устройства <b>ввода</b>: клавиатура, мышь, сканер, микрофон</td></tr>
+    <tr><td>обработать</td>
+        <td>процессор, видеокарта, звуковая карта</td></tr>
+    <tr><td>сохранить</td>
+        <td>память: оперативная и долговременная</td></tr>
+    <tr><td>отдать человеку</td>
+        <td>устройства <b>вывода</b>: монитор, принтер, колонки</td></tr>
+  </table>
+
+  <h3>Два вида памяти — их и путают чаще всего</h3>
+  <p><b>Оперативная память</b> хранит данные, пока идёт работа.
+     Выключил компьютер — всё пропало. Это память, но не долговременная.</p>
+  <p><b>Долговременная память</b> — жёсткий диск, SSD, флешка, карта
+     памяти, DVD. Данные остаются и после выключения.</p>
+
+  <h3>Внутри или снаружи</h3>
+  <p><b>Внутренние</b> устройства стоят в системном блоке: процессор,
+     материнская плата, оперативная память, видеокарта, звуковая карта,
+     блок питания, охлаждение, жёсткий диск, сетевая карта.</p>
+  <p><b>Внешние</b> (периферийные) подключаются снаружи и их можно
+     отсоединить: всё, что на столе, плюс флешка и роутер.</p>
+
+  <h3>Как записывают ответ</h3>
+  <p>Номера подряд, <b>по возрастанию</b>, без пробелов, запятых и
+     точек: <b>1258</b>. На экзамене бланки читает машина и сравнивает
+     запись знак в знак: «1, 2, 5, 8» и «8521» для неё — не тот ответ,
+     даже если устройства выбраны верно.</p>
+
+  <h3>Есть и такие, что работают в обе стороны</h3>
+  <p>Гарнитура — микрофон (ввод) плюс наушники (вывод).
+     МФУ — принтер (вывод) плюс сканер (ввод).
+     Сенсорный экран показывает изображение и принимает касания.
+     Такие устройства верны сразу в двух категориях.</p>
+</details>
+
+</div>
+
+<script>
+"use strict";
+
+/* ==== БАЗА: вставлено gen.py, руками не править ==== */
+const DEVICES = [
+  {"n": "клавиатура", "t": ["in", "ext"], "w": "вводит в компьютер текст и команды"},
+  {"n": "мышь", "t": ["in", "ext"], "w": "вводит команды: указывает и щёлкает"},
+  {"n": "тачпад", "t": ["in", "ext"], "w": "сенсорная площадка вместо мыши — тоже ввод"},
+  {"n": "джойстик", "t": ["in", "ext"], "w": "вводит команды управления в играх"},
+  {"n": "сканер", "t": ["in", "gin", "ext"], "w": "переносит изображение с бумаги в компьютер"},
+  {"n": "веб-камера", "t": ["in", "gin", "ext"], "w": "вводит изображение с объектива в компьютер"},
+  {"n": "цифровой фотоаппарат", "t": ["in", "gin", "ext"], "w": "снимает изображение и передаёт его в компьютер"},
+  {"n": "графический планшет", "t": ["in", "gin", "ext"], "w": "рисунок пером вводится прямо в компьютер"},
+  {"n": "микрофон", "t": ["in", "sin", "ext"], "w": "превращает звук в сигнал для компьютера"},
+  {"n": "диктофон", "t": ["in", "sin", "ext"], "w": "записывает звук и передаёт запись в компьютер"},
+  {"n": "гарнитура (наушники с микрофоном)", "t": ["in", "out", "sin", "sout", "ext"], "w": "микрофон вводит звук, наушники выводят — работает в обе стороны"},
+  {"n": "монитор", "t": ["out", "screen", "ext"], "w": "выводит изображение на экран"},
+  {"n": "проектор", "t": ["out", "screen", "ext"], "w": "выводит изображение на большой экран"},
+  {"n": "принтер", "t": ["out", "paper", "ext"], "w": "выводит информацию на бумагу"},
+  {"n": "плоттер (графопостроитель)", "t": ["out", "paper", "ext"], "w": "печатает на бумаге чертежи большого формата"},
+  {"n": "МФУ (принтер + сканер)", "t": ["in", "out", "gin", "paper", "ext"], "w": "печатает как принтер и сканирует как сканер — и ввод, и вывод"},
+  {"n": "колонки", "t": ["out", "sout", "ext"], "w": "выводят звук на всю комнату"},
+  {"n": "наушники", "t": ["out", "sout", "ext"], "w": "выводят звук лично слушателю"},
+  {"n": "Bluetooth-динамик", "t": ["out", "sout", "ext"], "w": "беспроводная колонка: выводит звук"},
+  {"n": "сенсорный экран", "t": ["in", "out", "screen", "ext"], "w": "показывает изображение и принимает касания — и вывод, и ввод"},
+  {"n": "процессор", "t": ["int", "proc"], "w": "обрабатывает данные: выполняет команды программы"},
+  {"n": "видеокарта", "t": ["int", "proc"], "w": "обрабатывает изображение и готовит его для монитора"},
+  {"n": "звуковая карта", "t": ["int", "proc"], "w": "обрабатывает звук: сигнал в данные и обратно"},
+  {"n": "оперативная память", "t": ["int", "stor"], "w": "хранит данные, пока компьютер включён; выключили — всё пропало"},
+  {"n": "материнская плата", "t": ["int"], "w": "плата, к которой подключены все остальные части"},
+  {"n": "блок питания", "t": ["int"], "w": "даёт остальным частям электричество"},
+  {"n": "система охлаждения (кулер)", "t": ["int"], "w": "отводит тепло от процессора"},
+  {"n": "жёсткий диск", "t": ["int", "stor", "long"], "w": "хранит файлы и не теряет их при выключении"},
+  {"n": "твердотельный накопитель (SSD)", "t": ["int", "stor", "long"], "w": "то же хранение, что жёсткий диск, только быстрее"},
+  {"n": "сетевая карта", "t": ["int", "net"], "w": "подключает компьютер к сети по кабелю"},
+  {"n": "USB-флеш-накопитель (флешка)", "t": ["ext", "stor", "long"], "w": "переносной носитель: данные остаются и после выключения"},
+  {"n": "карта памяти (SD)", "t": ["ext", "stor", "long"], "w": "носитель для фотоаппарата и телефона"},
+  {"n": "DVD-диск", "t": ["ext", "stor", "long"], "w": "оптический носитель информации"},
+  {"n": "внешний жёсткий диск", "t": ["ext", "stor", "long"], "w": "то же хранение, но подключается снаружи"},
+  {"n": "Wi-Fi-адаптер", "t": ["ext", "net"], "w": "подключает компьютер к сети без провода"},
+  {"n": "модем", "t": ["ext", "net"], "w": "связывает компьютер с интернетом через линию связи"},
+  {"n": "роутер (маршрутизатор)", "t": ["ext", "net"], "w": "раздаёт сеть сразу нескольким устройствам"},
+  {"n": "Bluetooth-адаптер", "t": ["ext", "net"], "w": "связывает компьютер с устройствами рядом без проводов"}
+];
+
+const TYPES = [
+  {"id": 0, "tag": "in", "near": ["out"], "name": "ввод", "q": "Выберите устройства ввода информации", "rule": "Ввод — это всё, чем информация попадает в компьютер: текст, изображение, звук, команды."},
+  {"id": 1, "tag": "out", "near": ["in"], "name": "вывод", "q": "Выберите устройства вывода информации", "rule": "Вывод — это всё, чем компьютер показывает результат человеку: экран, бумага, звук."},
+  {"id": 2, "tag": "gin", "near": ["in", "out"], "name": "ввод изображения", "q": "Выберите устройства ввода графической информации", "rule": "Графическая информация — изображение. Клавиатура и микрофон тоже вводят, но не изображение."},
+  {"id": 3, "tag": "sin", "near": ["in", "sout"], "name": "ввод звука", "q": "Выберите устройства ввода звуковой информации", "rule": "Звук в компьютер вводит микрофон — сам по себе или в составе другого устройства."},
+  {"id": 4, "tag": "sout", "near": ["out", "sin"], "name": "вывод звука", "q": "Выберите устройства вывода звуковой информации", "rule": "Звук из компьютера выводят динамики: в колонках, наушниках, гарнитуре."},
+  {"id": 5, "tag": "paper", "near": ["out"], "name": "печать на бумаге", "q": "Выберите устройства вывода информации на бумагу", "rule": "На бумагу выводят принтер, плоттер и МФУ. Монитор и проектор тоже выводят — но на экран."},
+  {"id": 6, "tag": "int", "near": ["ext"], "name": "внутренние", "q": "Выберите внутренние устройства компьютера", "rule": "Внутренние устройства стоят в системном блоке. Всё, что подключают снаружи кабелем, — внешнее."},
+  {"id": 7, "tag": "ext", "near": ["int"], "name": "внешние", "q": "Выберите внешние (периферийные) устройства", "rule": "Периферия — то, что подключается к системному блоку снаружи и может быть отключено."},
+  {"id": 8, "tag": "stor", "near": ["int", "proc"], "bait": "процессор", "name": "хранение данных", "q": "Выберите устройства хранения данных", "rule": "Хранение — и долговременное (диски, флешки), и временное (оперативная память). Процессор не хранит, он обрабатывает."},
+  {"id": 9, "tag": "long", "near": ["stor", "int"], "bait": "оперативная память", "name": "долговременная память", "q": "Выберите устройства долговременной памяти", "rule": "Долговременная память сохраняет данные после выключения. Оперативная — нет: она чистится каждый раз."},
+  {"id": 10, "tag": "proc", "near": ["int", "stor"], "name": "обработка информации", "q": "Выберите устройства обработки информации", "rule": "Обрабатывают — процессор и специальные платы: видеокарта считает изображение, звуковая карта — звук."},
+  {"id": 11, "tag": "net", "near": ["int", "ext"], "name": "передача по сети", "q": "Выберите устройства для подключения компьютера к сети", "rule": "За связь отвечают сетевая карта, Wi-Fi-адаптер, модем, роутер: они передают данные, а не хранят их."}
+];
+
+const TYPES_TOTAL = TYPES.length;
+const has = (d, tag) => d.t.indexOf(tag) >= 0;
+const randInt = (lo, hi) => lo + Math.floor(Math.random() * (hi - lo + 1));
+
+function sample(arr, k){
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a.slice(0, k);
+}
+
+// Одно задание: восемь устройств и точный ключ. Отвлекающие берём в
+// основном из близких категорий — на них и ошибаются.
+function makeTask(typeId){
+  const t = TYPES[typeId];
+  const rightPool = DEVICES.filter(d => has(d, t.tag));
+  const wrongPool = DEVICES.filter(d => !has(d, t.tag));
+
+  const k = Math.min(randInt(2, 4), rightPool.length);
+  const right = sample(rightPool, k);
+
+  const near = wrongPool.filter(d => t.near.some(n => has(d, n)));
+  const need = 8 - k;
+  let chosen = [];
+
+  const bait = wrongPool.find(d => d.n === t.bait);
+  if (bait && Math.random() < 0.7) chosen.push(bait);
+
+  const poolNear = near.filter(d => chosen.indexOf(d) < 0);
+  chosen = chosen.concat(
+      sample(poolNear, Math.min(poolNear.length,
+                                Math.max(0, need - chosen.length - 1))));
+  const rest = wrongPool.filter(d => chosen.indexOf(d) < 0);
+  chosen = chosen.concat(sample(rest, need - chosen.length));
+
+  const items = sample(right.concat(chosen), 8);
+  const answer = items.map((d, i) => right.indexOf(d) >= 0 ? i + 1 : 0)
+                      .filter(Boolean);
+  return {type: typeId, q: t.q, rule: t.rule, items: items,
+          right: right.map(d => d.n), answer: answer.join("")};
+}
+/* ==== /БАЗА ==== */
+
+// Два верных подряд, а не три: случайное попадание они всё равно
+// отсекают, но объём укладывается в норматив времени на домашнюю работу.
+const STREAK = 2;
+
+// Ступени. Домашнее задание добровольное — ученик набирает столько,
+// сколько ему нужно, и останавливается. Шкала та же, что в тренажёре.
+const SCALE = [[11, 5], [9, 4], [7, 3]];
+const MIN_TO_FINISH = 7;                 // ниже сдавать нечего
+function markFor(done){
+  for (const s of SCALE) if (done >= s[0]) return s[1];
+  return 2;
+}
+
+/* ------------------------------------------------------------ квитанция
+   Код несёт цифры работы и контрольную сумму. Ключа нигде нет — иначе
+   страницу нельзя было бы просто положить на школьную платформу. Смысл
+   кода не в том, чтобы его нельзя было подделать, а в том, что подделать
+   его дольше, чем решить.
+------------------------------------------------------------------ */
+const ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+const EPOCH = Date.UTC(2026, 0, 1);
+
+const bin = (v, w) => v.toString(2).padStart(w, "0");
+
+// Считаем по семибитным кускам строки, а не через parseInt всей нагрузки:
+// в ней 33 бита, а побитовые операции в JS работают с 32-битными числами
+// и старший бит молча потерялся бы.
+function checksum(bits){
+  let cs = 0x5B;
+  for (let i = 0; i < bits.length; i += 7)
+    cs ^= parseInt(bits.substr(i, 7).padEnd(7, "0"), 2);
+  return cs & 0x7F;
+}
+
+function makeCode(st){
+  const day = Math.max(0, Math.min(2047, Math.floor(
+      (Date.now() - EPOCH) / 86400000)));
+  const payload = bin(day, 11) + bin(Math.min(15, st.typesDone), 4) +
+                  bin(Math.min(15, st.cleanTypes), 4) +
+                  bin(Math.min(127, st.solved), 7) +
+                  bin(Math.min(127, st.wrong), 7);
+  const bits = payload + bin(checksum(payload), 7);
+  let out = "";
+  for (let i = 0; i < 40; i += 5) out += ALPHABET[parseInt(bits.substr(i, 5), 2)];
+  return "US-" + out.slice(0, 4) + "-" + out.slice(4);
+}
+
+/* --------------------------------------------------------- состояние */
+
+const st = {
+  streak: TYPES.map(() => 0),
+  done:   TYPES.map(() => false),
+  clean:  TYPES.map(() => true),   // закрыт без единой ошибки
+  solved: 0, wrong: 0,
+  cur: null, answered: false, given: "", picked: []
+};
+Object.defineProperty(st, "typesDone",
+  {get(){ return st.done.filter(Boolean).length; }});
+Object.defineProperty(st, "cleanTypes",
+  {get(){ return st.done.filter((d, i) => d && st.clean[i]).length; }});
+
+function pickType(){
+  const open = TYPES.filter(t => !st.done[t.id]);
+  if (!open.length) return null;
+  // берём тот, где серия длиннее нуля — не бросаем начатое на полпути
+  const started = open.filter(t => st.streak[t.id] > 0);
+  const pool = started.length ? started : open;
+  return pool[randInt(0, pool.length - 1)];
+}
+
+function nextTask(){
+  const t = pickType();
+  if (!t){ renderFinish(); return; }
+  st.cur = makeTask(t.id);
+  st.cur.name = t.name;
+  st.answered = false;
+  st.given = "";
+  st.picked = [];
+  render();
+}
+
+/* --------------------------------------------------- проверка записи
+   Ответ принимается строго: только цифры, подряд, по возрастанию.
+   Пробел и запятая — уже ошибка. Причина не в придирчивости: на
+   экзамене ответ читает машина, и она такую запись не засчитает.
+   Привыкать к регламенту надо здесь, а не на ОГЭ.
+
+   Но ошибку записи всегда называем своим именем — иначе ученик решит,
+   что не знает материал, хотя он просто поставил запятую.
+------------------------------------------------------------------ */
+
+const digitsOf = raw => String(raw).replace(/[^0-9]/g, "");
+
+function complain(raw){
+  if (/[^0-9]/.test(raw))
+    return `Ответ записывают <b>только цифрами, подряд</b> — без
+            пробелов, запятых и точек. На экзамене ответы читает
+            машина: пробел или запятая, и работа не засчитана.`;
+  const bad = [...raw].find(ch => ch < "1" || ch > "8");
+  if (bad) return `В списке всего восемь номеров, а в ответе есть
+                   <b>${bad}</b>.`;
+  const dup = [...raw].find((ch, i) => raw.indexOf(ch) !== i);
+  if (dup) return `Номер <b>${dup}</b> записан дважды.`;
+  return null;
+}
+
+function answer(){
+  if (st.answered) return;
+  const given = document.getElementById("ans").value.trim();
+  if (!given) return;                    // пустое — не считаем ответом
+  const t = st.cur, ok = given === t.answer;
+  st.given = given;
+  st.picked = [...new Set([...digitsOf(given)])].map(Number);
+  st.answered = true;
+  t.hint = null;
+  if (!ok){
+    t.hint = complain(given);
+    // тот же набор, но не по возрастанию — ошибка записи, не знания
+    if (!t.hint && [...given].sort().join("") === t.answer)
+      t.hint = `Устройства выбраны верно, но номера записаны не по
+                возрастанию. В ВПР ответ пишут <b>${t.answer}</b>.`;
+  }
+  if (ok){
+    st.solved++;
+    st.streak[t.type]++;
+    if (st.streak[t.type] >= STREAK) st.done[t.type] = true;
+  } else {
+    st.wrong++;
+    st.streak[t.type] = 0;
+    st.clean[t.type] = false;
+  }
+  t.ok = ok;
+  render();
+}
+
+/* ------------------------------------------------------------- вывод */
+
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
+                          .replace(/>/g, "&gt;");
+
+// Разбор называет обе стороны: что пропустил и что взял лишнего.
+// «Правильный ответ 258» ничему не учит — цифры сами по себе пусты.
+function explain(t){
+  const miss = t.items.filter((d, i) => t.right.indexOf(d.n) >= 0
+                                     && st.picked.indexOf(i + 1) < 0);
+  const plus = t.items.filter((d, i) => t.right.indexOf(d.n) < 0
+                                     && st.picked.indexOf(i + 1) >= 0);
+  return `<div class="solution"><span class="cap">разбор</span>` +
+    miss.map(d => `<div>пропустил: <b>${esc(d.n)}</b> — ${esc(d.w)}</div>`)
+        .join("") +
+    plus.map(d => `<div>лишнее: <b>${esc(d.n)}</b> — ${esc(d.w)}</div>`)
+        .join("") +
+    `<div class="rule">${esc(t.rule)}</div></div>`;
+}
+
+function renderTypes(){
+  document.getElementById("types").innerHTML = TYPES.map(t => {
+    const dots = Array.from({length: STREAK}, (_, k) =>
+      `<span class="dot${k < st.streak[t.id] || st.done[t.id]
+         ? " full" : ""}"></span>`).join("");
+    return `<div class="type${st.done[t.id] ? " done" : ""}">
+              <span class="nm">${esc(t.name)}</span>
+              <span class="dots">${dots}</span></div>`;
+  }).join("");
+
+  const done = st.typesDone;
+  const mark = markFor(done);
+  const el = document.getElementById("mark");
+  // до первой ступени оценки ещё нет — прочерк, не двойка
+  el.textContent = done >= MIN_TO_FINISH ? mark : "—";
+  el.className = done >= MIN_TO_FINISH ? "m" + mark : "";
+
+  const btn = document.getElementById("finish");
+  btn.disabled = done < MIN_TO_FINISH;
+  btn.textContent = done >= MIN_TO_FINISH
+      ? `Закончить и получить код (на ${mark})`
+      : "Закончить и получить код";
+
+  const need = document.getElementById("need");
+  const up = SCALE.filter(s => s[0] > done).pop();
+  // «ещё 2 формулировок» режет глаз сильнее, чем кажется: текст читают
+  // дети, и корявость они замечают раньше смысла
+  const forms = n => {
+    const a = n % 100, b = a % 10;
+    if (a > 4 && a < 21) return "формулировок";
+    if (b === 1) return "формулировку";
+    if (b > 1 && b < 5) return "формулировки";
+    return "формулировок";
+  };
+  if (!up){
+    need.innerHTML = "Закрыто всё, что нужно на пятёрку. " +
+                     "Забирай код и сдавай.";
+  } else if (done >= MIN_TO_FINISH){
+    need.innerHTML = `Можно остановиться прямо сейчас — это <b>${mark}</b>. ` +
+        `Закрой ещё <b>${up[0] - done}</b> ${forms(up[0] - done)} — ` +
+        `и будет <b>${up[1]}</b>.`;
+  } else {
+    const left = MIN_TO_FINISH - done;
+    need.innerHTML = `Закрой ещё <b>${left}</b> ${forms(left)}, ` +
+        `чтобы получить код на <b>3</b>.`;
+  }
+}
+
+function render(){
+  renderTypes();
+  const t = st.cur;
+  const main = document.getElementById("main");
+  if (!t) return;
+
+  const list = t.items.map((d, k) => {
+    const n = k + 1;
+    let cls = "", tag = "";
+    if (st.answered){
+      const isRight = t.right.indexOf(d.n) >= 0;
+      const picked = st.picked.indexOf(n) >= 0;
+      if (isRight && picked){ cls = "right"; tag = "верно"; }
+      else if (isRight){ cls = "missed"; tag = "пропущено"; }
+      else if (picked){ cls = "plus"; tag = "лишнее"; }
+    }
+    return `<li class="${cls}"><span class="k">${n})</span>` +
+           `<span>${esc(d.n)}</span>` +
+           (tag ? `<span class="tag">${tag}</span>` : "") + `</li>`;
+  }).join("");
+
+  let tail = "";
+  if (st.answered){
+    tail = t.ok
+      ? `<div class="verdict ok">Правильно${
+          st.done[t.type] ? ` — «${esc(t.name)}» закрыто`
+                          : `, подряд: ${st.streak[t.type]} из ${STREAK}`}</div>`
+      : `<div class="verdict err">Ошибка. ${t.hint
+           ? t.hint + " " : `Верный ответ: ${t.answer}. `}
+           Серия по этой формулировке начинается заново.</div>` + explain(t);
+  }
+
+  main.innerHTML = `
+    <div class="card">
+      <div class="kicker">${esc(t.name)} &middot; решено задач:
+           ${st.solved}</div>
+      <div class="q">${esc(t.q)} и запишите в ответе их номера в порядке
+        возрастания.<small>Верных здесь больше одного. Только цифры,
+        подряд: пробелы и запятые не принимаются.</small></div>
+      <ol class="devs">${list}</ol>
+      <div class="row">
+        <input type="text" id="ans" autocomplete="off" inputmode="numeric"
+               spellcheck="false" placeholder="ответ" maxlength="20"
+               value="${esc(st.given || "")}"
+               ${st.answered ? "disabled" : ""}>
+        <button class="primary" id="go">${
+          st.answered ? "Следующая задача" : "Проверить"}</button>
+      </div>
+      ${tail}
+    </div>`;
+
+  const btn = document.getElementById("go");
+  btn.addEventListener("click", () => st.answered ? nextTask() : answer());
+  const inp = document.getElementById("ans");
+  if (!st.answered){
+    inp.addEventListener("keydown", e => {
+      if (e.key === "Enter"){ e.preventDefault(); answer(); }
+    });
+    inp.focus();
+  } else btn.focus();
+}
+
+function renderFinish(){
+  renderTypes();
+  const done = st.typesDone, mark = markFor(done);
+  const all = done >= TYPES_TOTAL;
+  const code = makeCode(st);
+  const up = SCALE.filter(s => s[0] > done).pop();
+
+  // Остановиться можно на любой ступени, поэтому «дальше» — не подачка,
+  // а обычный ход: закрыл ещё одну формулировку, забрал код получше.
+  const more = !up
+    ? `<button id="more">Потренироваться ещё</button>
+       <span class="stats">оценку это уже не изменит,
+             но перед ВПР полезно</span>`
+    : `<button id="back" class="primary">Решать дальше — до ${up[1]}</button>
+       <span class="stats">код останется, просто получишь новый,
+             когда закроешь ещё ${up[0] - done}</span>`;
+
+  document.getElementById("main").innerHTML = `
+    <div class="finish">
+      <h2>${all ? "Готово — закрыты все двенадцать формулировок"
+                : `Готово — наработано на ${mark}`}</h2>
+      <p class="stats">Закрыто формулировок: <b>${done}</b> из
+         ${TYPES_TOTAL} &middot; решено задач: <b>${st.solved}</b> &middot;
+         ошибок: <b>${st.wrong}</b> &middot;
+         закрыто без единой ошибки: <b>${st.cleanTypes}</b></p>
+      <div class="code">${code}</div>
+      <p class="stats">Это код твоей работы. Он у каждого свой и зависит
+         от того, сколько и как ты решал.</p>
+      <ol class="todo">
+        <li>Открой форму сдачи:<br>
+            <a href="https://forms.gle/gKBZNb5rVbcv65Ls5"
+               target="_blank" rel="noopener">forms.gle/gKBZNb5rVbcv65Ls5</a></li>
+        <li>Впиши фамилию, класс и этот код — <b>ровно как здесь</b>.</li>
+        <li>Отправь. Поля «Ответ 1…10» пропусти.</li>
+      </ol>
+    </div>
+    <div class="row">${more}</div>`;
+
+  const back = document.getElementById("back") || document.getElementById("more");
+  if (back) back.addEventListener("click", () => {
+    // закрыто всё до единой — открываем счёт заново, иначе просто
+    // продолжаем с оставшимися формулировками
+    if (all) TYPES.forEach(t => { st.done[t.id] = false; st.streak[t.id] = 0; });
+    nextTask();
+  });
+}
+
+document.getElementById("finish").addEventListener("click", () => {
+  if (st.typesDone >= MIN_TO_FINISH) renderFinish();
+});
+
+nextTask();
+</script>
+</body>
+</html>

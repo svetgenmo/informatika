@@ -1,0 +1,646 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Компьютер — универсальное вычислительное устройство</title>
+<meta name="description" content="Разбор темы: почему компьютер универсален, четыре работы с информацией, устройства ввода и вывода, память и обработка, внутреннее и внешнее. С разбором задания 1 ВПР.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E10%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#16181d; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);overflow:hidden;
+     font:24px/1.45 "Segoe UI",system-ui,sans-serif}
+.mono{font-family:Consolas,"Courier New",monospace}
+
+.deck{height:100vh;display:flex;flex-direction:column}
+.stage{flex:1 1 auto;overflow-y:auto;padding:34px 56px 12px}
+.slide{display:none;max-width:1100px;margin:0 auto}
+.slide.on{display:block}
+
+h1{font-size:50px;line-height:1.1;margin:0 0 18px;text-wrap:balance}
+h2{font-size:36px;line-height:1.15;margin:0 0 20px;text-wrap:balance}
+.eyebrow{font-size:16px;letter-spacing:.1em;text-transform:uppercase;
+         color:var(--accent);font-weight:700;margin:0 0 8px}
+.lead{font-size:26px;color:var(--muted);margin:0 0 24px}
+.lead b{color:var(--ink)}
+p.note{margin-top:22px;color:var(--muted);font-size:21px}
+
+.bar{flex:0 0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+     border-top:1px solid var(--line);background:var(--card);padding:12px 24px}
+.bar .spacer{flex:1 1 auto}
+.count{color:var(--muted);font-size:17px;font-variant-numeric:tabular-nums}
+.keys{color:var(--muted);font-size:15px}
+.keys kbd{font:600 13px/1 Consolas,monospace;border:1px solid var(--line);
+     border-bottom-width:2px;border-radius:5px;padding:2px 6px;
+     background:#fff;color:var(--ink)}
+button{font:600 18px/1 inherit;padding:12px 20px;border-radius:10px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);
+       cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.35;cursor:default;border-color:var(--line);
+                color:var(--muted);background:#fff}
+button:focus-visible{outline:3px solid #a9c6e8;outline-offset:2px}
+
+/* ---- блоки разбора ---- */
+.task{border:3px solid var(--accent);border-radius:16px;padding:18px 24px;
+      background:var(--card);font-size:27px;margin:0 0 20px}
+.steps{display:flex;flex-direction:column;gap:14px}
+.step{border:1px solid var(--line);border-radius:12px;padding:16px 22px;
+      background:#fff;font-size:23px}
+.step.hint{background:var(--hi-bg);border-color:var(--hi-line);color:var(--hi)}
+.step.answer{background:var(--ok-bg);border-color:var(--ok-line);
+             color:var(--ok);font-size:29px;font-weight:700}
+.step .cap{display:block;font-size:15px;letter-spacing:.08em;
+           text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.step.hint .cap{color:var(--hi)}
+.step.answer .cap{color:var(--ok)}
+.step div{margin:6px 0}
+.step b{color:var(--ink)}
+
+/* список устройств в примере */
+ol.devs{list-style:none;counter-reset:d;margin:8px 0 0;padding:0;
+        display:grid;grid-template-columns:repeat(2,1fr);gap:8px 26px;
+        font-size:24px}
+ol.devs li{counter-increment:d;display:flex;gap:12px;align-items:baseline}
+ol.devs li::before{content:counter(d) ")";color:var(--accent);
+        font-weight:700;font-family:Consolas,monospace;min-width:30px}
+ol.devs li.hit{color:var(--ok);font-weight:600}
+
+/* карточки-схемы */
+ul.cards{list-style:none;padding:0;margin:0;display:grid;
+         grid-template-columns:repeat(2,1fr);gap:14px 24px}
+ul.cards li{border:1px solid var(--line);border-radius:12px;
+            padding:14px 20px;font-size:23px;background:#fff}
+ul.cards li b{color:var(--accent)}
+ul.cards li small{display:block;font-size:19px;color:var(--muted);
+                  margin-top:4px}
+ul.cards.four li{border-left:5px solid var(--accent)}
+ul.plain{margin:0;padding-left:26px;font-size:24px}
+ul.plain li{margin:8px 0}
+
+table.grid{border-collapse:collapse;font-size:22px;width:100%}
+table.grid td,table.grid th{border:1px solid var(--line);padding:10px 16px;
+     text-align:left;vertical-align:top}
+table.grid th{background:var(--card);color:var(--muted);font-size:17px;
+     letter-spacing:.05em;text-transform:uppercase;font-weight:600}
+table.grid td.k{font-weight:700;color:var(--accent);white-space:nowrap}
+
+.two{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.box{border:1px solid var(--line);border-radius:14px;padding:18px 22px;
+     background:#fff}
+.box.warm{background:var(--hi-bg);border-color:var(--hi-line)}
+.box h3{margin:0 0 8px;font-size:26px;color:var(--accent)}
+.box.warm h3{color:var(--hi)}
+.box p{margin:6px 0;font-size:21px}
+.box ul{margin:6px 0 0;padding-left:22px;font-size:21px}
+
+@media (max-width:820px){
+  body{font-size:18px}
+  .stage{padding:20px 18px 8px}
+  h1{font-size:32px} h2{font-size:25px} .lead{font-size:20px}
+  .task{font-size:21px} .step{font-size:19px}
+  ol.devs,ul.cards,.two{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="deck">
+<div class="stage" id="stage">
+
+  <!-- 1 ------------------------------------------------------------- -->
+  <section class="slide on">
+    <h1>Компьютер — универсальное вычислительное устройство</h1>
+    <p class="lead">Одна машина умеет тысячи разных дел. Разберёмся,
+       почему так — и из чего она собрана.</p>
+    <ul class="plain">
+      <li>что значит «универсальное» и при чём тут программа;</li>
+      <li>четыре работы, которые компьютер делает с информацией;</li>
+      <li>какие устройства за какую работу отвечают;</li>
+      <li>как это спрашивают в ВПР — задание 1.</li>
+    </ul>
+  </section>
+
+  <!-- 2 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">с чего всё начинается</p>
+    <h2>Машина, которая умеет одно</h2>
+    <p class="lead">Почти каждая машина рассчитана на одну работу.
+       Переделать её на другую нельзя — надо строить новую.</p>
+    <ul class="cards">
+      <li><b>Калькулятор</b><small>считает — и только считает</small></li>
+      <li><b>Стиральная машина</b><small>стирает; печатать она
+          не научится</small></li>
+      <li><b>Часы</b><small>показывают время</small></li>
+      <li><b>Фотоаппарат</b><small>снимает изображение</small></li>
+    </ul>
+    <p class="note">Что умеет такая машина, решил её создатель — раз и
+       навсегда, на заводе.</p>
+  </section>
+
+  <!-- 3 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">главная мысль темы</p>
+    <h2>Компьютер работает по программе</h2>
+    <p class="lead">Он не умеет ничего конкретного — и именно поэтому
+       умеет <b>всё</b>. Что он делает сейчас, решает <b>программа</b>.</p>
+    <div class="two">
+      <div class="box">
+        <h3>Программа</h3>
+        <p>План работы, записанный так, что машина может его выполнить:
+           шаг за шагом, без «догадайся сам».</p>
+        <p>Сменили программу — та же самая машина стала другим
+           инструментом.</p>
+      </div>
+      <div class="box warm">
+        <h3>Один и тот же компьютер</h3>
+        <ul>
+          <li>утром — пишущая машинка;</li>
+          <li>днём — музыкальная студия;</li>
+          <li>вечером — кинотеатр и игровая приставка;</li>
+          <li>и всё это без единой отвёртки.</li>
+        </ul>
+      </div>
+    </div>
+    <p class="note">Отсюда и слово <b>универсальное</b>: пригодное для
+       любой работы с информацией.</p>
+  </section>
+
+  <!-- 4 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">опора всей темы</p>
+    <h2>Четыре работы с информацией</h2>
+    <p class="lead">Что бы компьютер ни делал, он делает эти четыре
+       вещи. Под каждую — своя группа устройств.</p>
+    <ul class="cards four">
+      <li><b>1. Принять</b><small>устройства ввода: клавиатура, мышь,
+          сканер, микрофон</small></li>
+      <li><b>2. Обработать</b><small>процессор, видеокарта,
+          звуковая карта</small></li>
+      <li><b>3. Сохранить</b><small>память: оперативная и
+          долговременная</small></li>
+      <li><b>4. Отдать человеку</b><small>устройства вывода: монитор,
+          принтер, колонки</small></li>
+    </ul>
+    <p class="note">Запомнить эти четыре строки — значит решить
+       задание 1 ВПР, какой бы формулировка ни была.</p>
+  </section>
+
+  <!-- 5 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">работа первая</p>
+    <h2>Ввод — чем информация попадает внутрь</h2>
+    <p class="lead">Устройство ввода превращает то, что есть у человека,
+       в сигнал, понятный компьютеру.</p>
+    <table class="grid">
+      <tr><th>что вводим</th><th>чем</th></tr>
+      <tr><td class="k">текст и команды</td>
+          <td>клавиатура, мышь, тачпад, джойстик</td></tr>
+      <tr><td class="k">изображение</td>
+          <td>сканер, веб-камера, цифровой фотоаппарат,
+              графический планшет</td></tr>
+      <tr><td class="k">звук</td>
+          <td>микрофон, диктофон</td></tr>
+    </table>
+    <p class="note">В ВПР спрашивают и общее «устройства ввода», и
+       частное — «ввода <b>графической</b> информации». Это разные
+       ответы: клавиатура вводит, но не изображение.</p>
+  </section>
+
+  <!-- 6 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">работа четвёртая</p>
+    <h2>Вывод — как компьютер отвечает</h2>
+    <p class="lead">Устройство вывода превращает данные обратно в то,
+       что человек видит или слышит.</p>
+    <table class="grid">
+      <tr><th>куда выводим</th><th>чем</th></tr>
+      <tr><td class="k">на экран</td><td>монитор, проектор</td></tr>
+      <tr><td class="k">на бумагу</td>
+          <td>принтер, плоттер (чертежи), МФУ</td></tr>
+      <tr><td class="k">звуком</td>
+          <td>колонки, наушники, Bluetooth-динамик</td></tr>
+    </table>
+    <p class="note">Монитор и принтер оба выводят — но спросят
+       «на бумагу», и монитор в ответ уже не пойдёт.</p>
+  </section>
+
+  <!-- 7 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">работа вторая</p>
+    <h2>Обработка — здесь всё и происходит</h2>
+    <div class="two">
+      <div class="box">
+        <h3>Процессор</h3>
+        <p>Выполняет команды программы одну за другой — миллиарды команд
+           в секунду. Всё, что компьютер «делает», делает он.</p>
+      </div>
+      <div class="box">
+        <h3>Помощники</h3>
+        <p><b>Видеокарта</b> считает изображение и готовит его для
+           монитора.</p>
+        <p><b>Звуковая карта</b> превращает звук в данные и обратно.</p>
+      </div>
+    </div>
+    <p class="note">Обрабатывать — не то же самое, что хранить.
+       Процессор ничего не запоминает надолго: посчитал и отдал.</p>
+  </section>
+
+  <!-- 8 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">работа третья, часть первая</p>
+    <h2>Память бывает двух видов</h2>
+    <div class="two">
+      <div class="box warm">
+        <h3>Оперативная</h3>
+        <p>Хранит то, с чем работаем <b>прямо сейчас</b>: открытые
+           программы и документы.</p>
+        <p>Быстрая — но при выключении питания <b>очищается
+           полностью</b>.</p>
+        <p>Это рабочий стол: удобно, пока сидишь за ним.</p>
+      </div>
+      <div class="box">
+        <h3>Долговременная</h3>
+        <p>Хранит файлы <b>между включениями</b>: фотографии, документы,
+           программы.</p>
+        <p>Медленнее, зато выключение ей не страшно.</p>
+        <p>Это шкаф: убрал — и лежит.</p>
+      </div>
+    </div>
+    <p class="note">Обе — память, обе хранят данные. Но «устройства
+       <b>долговременной</b> памяти» — только вторая колонка.
+       На этом в ВПР спотыкаются чаще всего.</p>
+  </section>
+
+  <!-- 9 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">работа третья, часть вторая</p>
+    <h2>Носители долговременной памяти</h2>
+    <ul class="cards">
+      <li><b>Жёсткий диск</b><small>основное хранилище внутри
+          системного блока</small></li>
+      <li><b>SSD</b><small>то же самое, только быстрее и без движущихся
+          частей</small></li>
+      <li><b>Флешка</b><small>переносной носитель в кармане</small></li>
+      <li><b>Карта памяти (SD)</b><small>для фотоаппарата и
+          телефона</small></li>
+      <li><b>DVD-диск</b><small>оптический носитель</small></li>
+      <li><b>Внешний жёсткий диск</b><small>то же хранение, но
+          подключается снаружи</small></li>
+    </ul>
+    <p class="note">Общее у них одно: выключили питание — данные
+       остались.</p>
+  </section>
+
+  <!-- 10 ------------------------------------------------------------ -->
+  <section class="slide">
+    <p class="eyebrow">где что стоит</p>
+    <h2>Внутри системного блока</h2>
+    <p class="lead">Внутренние устройства — те, что спрятаны в корпусе.
+       Чтобы их увидеть, блок надо открыть.</p>
+    <ul class="cards">
+      <li><b>Материнская плата</b><small>к ней подключено всё
+          остальное</small></li>
+      <li><b>Процессор</b><small>выполняет команды</small></li>
+      <li><b>Оперативная память</b><small>хранит текущую работу</small></li>
+      <li><b>Видеокарта и звуковая карта</b><small>считают изображение
+          и звук</small></li>
+      <li><b>Жёсткий диск или SSD</b><small>хранит файлы</small></li>
+      <li><b>Блок питания и охлаждение</b><small>электричество и
+          отвод тепла</small></li>
+    </ul>
+  </section>
+
+  <!-- 11 ------------------------------------------------------------ -->
+  <section class="slide">
+    <p class="eyebrow">где что стоит</p>
+    <h2>Снаружи — периферия</h2>
+    <p class="lead">Внешние (периферийные) устройства подключаются к
+       системному блоку и могут быть отсоединены. Компьютер без них
+       работает, просто общаться с ним нечем.</p>
+    <div class="two">
+      <div class="box">
+        <h3>На столе</h3>
+        <ul>
+          <li>клавиатура, мышь, монитор;</li>
+          <li>принтер, сканер, МФУ;</li>
+          <li>колонки, наушники, микрофон;</li>
+          <li>флешка, внешний диск.</li>
+        </ul>
+      </div>
+      <div class="box">
+        <h3>Связь с сетью</h3>
+        <ul>
+          <li>сетевая карта — по кабелю, стоит внутри;</li>
+          <li>Wi-Fi-адаптер — без провода;</li>
+          <li>модем — выход в интернет;</li>
+          <li>роутер — раздаёт сеть нескольким сразу.</li>
+        </ul>
+      </div>
+    </div>
+    <p class="note">Сетевые устройства ничего не хранят и не
+       обрабатывают — они <b>передают</b>.</p>
+  </section>
+
+  <!-- 12 ------------------------------------------------------------ -->
+  <section class="slide">
+    <p class="eyebrow">осторожно</p>
+    <h2>Есть устройства, работающие в обе стороны</h2>
+    <ul class="cards">
+      <li><b>Гарнитура</b><small>микрофон вводит звук, наушники
+          выводят</small></li>
+      <li><b>МФУ</b><small>принтер печатает (вывод), сканер сканирует
+          (ввод)</small></li>
+      <li><b>Сенсорный экран</b><small>показывает изображение и
+          принимает касания</small></li>
+    </ul>
+    <p class="note">Такое устройство верно сразу в двух категориях —
+       и в «ввод», и в «вывод». Ошибка тут не в знании устройства, а в
+       спешке: прочитал «наушники» и не дочитал «с микрофоном».</p>
+  </section>
+
+  <!-- 13 ------------------------------------------------------------ -->
+  <section class="slide">
+    <p class="eyebrow">зачем мы это учили</p>
+    <h2>Задание 1 ВПР — всегда одно и то же</h2>
+    <p class="lead">Даётся список из <b>восьми</b> устройств. Надо выбрать
+       подходящие под названную категорию и записать их номера
+       <b>по возрастанию</b>, без пробелов и запятых: <span
+       class="mono">1258</span>.</p>
+    <table class="grid">
+      <tr><th>меняется только это</th><th>формулировки</th></tr>
+      <tr><td class="k">ввод и вывод</td>
+          <td>ввода · вывода · ввода графической · ввода звуковой ·
+              вывода звуковой · вывода на бумагу</td></tr>
+      <tr><td class="k">где стоит</td>
+          <td>внутренние · внешние (периферийные)</td></tr>
+      <tr><td class="k">что делает</td>
+          <td>хранения данных · долговременной памяти ·
+              обработки информации · подключения к сети</td></tr>
+    </table>
+    <p class="note">Двенадцать формулировок — и все они про одни и те же
+       устройства, спрошенные с разных сторон.</p>
+  </section>
+
+  <!-- 14 --><section class="slide" data-ex data-type="1"></section>
+  <!-- 15 --><section class="slide" data-ex data-type="9"></section>
+  <!-- 16 --><section class="slide" data-ex data-type="6"></section>
+
+  <!-- 17 ------------------------------------------------------------ -->
+  <section class="slide">
+    <p class="eyebrow">итог</p>
+    <h2>Что нужно помнить</h2>
+    <ul class="plain">
+      <li>Компьютер универсален, потому что работает <b>по программе</b>.</li>
+      <li>Четыре работы: принять — обработать — сохранить — отдать.</li>
+      <li>Ввод бывает разный: текст, изображение, звук. Вывод тоже:
+          экран, бумага, звук.</li>
+      <li>Оперативная память при выключении очищается,
+          долговременная — нет.</li>
+      <li>Внутреннее — в системном блоке, внешнее — подключается
+          снаружи.</li>
+      <li>Есть устройства «в обе стороны»: гарнитура, МФУ,
+          сенсорный экран.</li>
+    </ul>
+    <p class="note">Дальше — тренажёр. Двенадцать формулировок,
+       устройства у каждого свои; на «5» надо закрыть одиннадцать.</p>
+  </section>
+
+</div>
+
+<div class="bar">
+  <button id="prev">← Назад</button>
+  <button id="next">Вперёд →</button>
+  <span class="count" id="count"></span>
+  <span class="spacer"></span>
+  <button id="step" class="primary" hidden>Показать</button>
+  <button id="reroll" hidden>Другой пример</button>
+  <span class="keys"><kbd>→</kbd> слайд &middot;
+        <kbd>Пробел</kbd> шаг &middot; <kbd>F11</kbd> во весь экран</span>
+</div>
+</div>
+
+<script>
+"use strict";
+
+/* ==== БАЗА: вставлено gen.py, руками не править ==== */
+const DEVICES = [
+  {"n": "клавиатура", "t": ["in", "ext"], "w": "вводит в компьютер текст и команды"},
+  {"n": "мышь", "t": ["in", "ext"], "w": "вводит команды: указывает и щёлкает"},
+  {"n": "тачпад", "t": ["in", "ext"], "w": "сенсорная площадка вместо мыши — тоже ввод"},
+  {"n": "джойстик", "t": ["in", "ext"], "w": "вводит команды управления в играх"},
+  {"n": "сканер", "t": ["in", "gin", "ext"], "w": "переносит изображение с бумаги в компьютер"},
+  {"n": "веб-камера", "t": ["in", "gin", "ext"], "w": "вводит изображение с объектива в компьютер"},
+  {"n": "цифровой фотоаппарат", "t": ["in", "gin", "ext"], "w": "снимает изображение и передаёт его в компьютер"},
+  {"n": "графический планшет", "t": ["in", "gin", "ext"], "w": "рисунок пером вводится прямо в компьютер"},
+  {"n": "микрофон", "t": ["in", "sin", "ext"], "w": "превращает звук в сигнал для компьютера"},
+  {"n": "диктофон", "t": ["in", "sin", "ext"], "w": "записывает звук и передаёт запись в компьютер"},
+  {"n": "гарнитура (наушники с микрофоном)", "t": ["in", "out", "sin", "sout", "ext"], "w": "микрофон вводит звук, наушники выводят — работает в обе стороны"},
+  {"n": "монитор", "t": ["out", "screen", "ext"], "w": "выводит изображение на экран"},
+  {"n": "проектор", "t": ["out", "screen", "ext"], "w": "выводит изображение на большой экран"},
+  {"n": "принтер", "t": ["out", "paper", "ext"], "w": "выводит информацию на бумагу"},
+  {"n": "плоттер (графопостроитель)", "t": ["out", "paper", "ext"], "w": "печатает на бумаге чертежи большого формата"},
+  {"n": "МФУ (принтер + сканер)", "t": ["in", "out", "gin", "paper", "ext"], "w": "печатает как принтер и сканирует как сканер — и ввод, и вывод"},
+  {"n": "колонки", "t": ["out", "sout", "ext"], "w": "выводят звук на всю комнату"},
+  {"n": "наушники", "t": ["out", "sout", "ext"], "w": "выводят звук лично слушателю"},
+  {"n": "Bluetooth-динамик", "t": ["out", "sout", "ext"], "w": "беспроводная колонка: выводит звук"},
+  {"n": "сенсорный экран", "t": ["in", "out", "screen", "ext"], "w": "показывает изображение и принимает касания — и вывод, и ввод"},
+  {"n": "процессор", "t": ["int", "proc"], "w": "обрабатывает данные: выполняет команды программы"},
+  {"n": "видеокарта", "t": ["int", "proc"], "w": "обрабатывает изображение и готовит его для монитора"},
+  {"n": "звуковая карта", "t": ["int", "proc"], "w": "обрабатывает звук: сигнал в данные и обратно"},
+  {"n": "оперативная память", "t": ["int", "stor"], "w": "хранит данные, пока компьютер включён; выключили — всё пропало"},
+  {"n": "материнская плата", "t": ["int"], "w": "плата, к которой подключены все остальные части"},
+  {"n": "блок питания", "t": ["int"], "w": "даёт остальным частям электричество"},
+  {"n": "система охлаждения (кулер)", "t": ["int"], "w": "отводит тепло от процессора"},
+  {"n": "жёсткий диск", "t": ["int", "stor", "long"], "w": "хранит файлы и не теряет их при выключении"},
+  {"n": "твердотельный накопитель (SSD)", "t": ["int", "stor", "long"], "w": "то же хранение, что жёсткий диск, только быстрее"},
+  {"n": "сетевая карта", "t": ["int", "net"], "w": "подключает компьютер к сети по кабелю"},
+  {"n": "USB-флеш-накопитель (флешка)", "t": ["ext", "stor", "long"], "w": "переносной носитель: данные остаются и после выключения"},
+  {"n": "карта памяти (SD)", "t": ["ext", "stor", "long"], "w": "носитель для фотоаппарата и телефона"},
+  {"n": "DVD-диск", "t": ["ext", "stor", "long"], "w": "оптический носитель информации"},
+  {"n": "внешний жёсткий диск", "t": ["ext", "stor", "long"], "w": "то же хранение, но подключается снаружи"},
+  {"n": "Wi-Fi-адаптер", "t": ["ext", "net"], "w": "подключает компьютер к сети без провода"},
+  {"n": "модем", "t": ["ext", "net"], "w": "связывает компьютер с интернетом через линию связи"},
+  {"n": "роутер (маршрутизатор)", "t": ["ext", "net"], "w": "раздаёт сеть сразу нескольким устройствам"},
+  {"n": "Bluetooth-адаптер", "t": ["ext", "net"], "w": "связывает компьютер с устройствами рядом без проводов"}
+];
+
+const TYPES = [
+  {"id": 0, "tag": "in", "near": ["out"], "name": "ввод", "q": "Выберите устройства ввода информации", "rule": "Ввод — это всё, чем информация попадает в компьютер: текст, изображение, звук, команды."},
+  {"id": 1, "tag": "out", "near": ["in"], "name": "вывод", "q": "Выберите устройства вывода информации", "rule": "Вывод — это всё, чем компьютер показывает результат человеку: экран, бумага, звук."},
+  {"id": 2, "tag": "gin", "near": ["in", "out"], "name": "ввод изображения", "q": "Выберите устройства ввода графической информации", "rule": "Графическая информация — изображение. Клавиатура и микрофон тоже вводят, но не изображение."},
+  {"id": 3, "tag": "sin", "near": ["in", "sout"], "name": "ввод звука", "q": "Выберите устройства ввода звуковой информации", "rule": "Звук в компьютер вводит микрофон — сам по себе или в составе другого устройства."},
+  {"id": 4, "tag": "sout", "near": ["out", "sin"], "name": "вывод звука", "q": "Выберите устройства вывода звуковой информации", "rule": "Звук из компьютера выводят динамики: в колонках, наушниках, гарнитуре."},
+  {"id": 5, "tag": "paper", "near": ["out"], "name": "печать на бумаге", "q": "Выберите устройства вывода информации на бумагу", "rule": "На бумагу выводят принтер, плоттер и МФУ. Монитор и проектор тоже выводят — но на экран."},
+  {"id": 6, "tag": "int", "near": ["ext"], "name": "внутренние", "q": "Выберите внутренние устройства компьютера", "rule": "Внутренние устройства стоят в системном блоке. Всё, что подключают снаружи кабелем, — внешнее."},
+  {"id": 7, "tag": "ext", "near": ["int"], "name": "внешние", "q": "Выберите внешние (периферийные) устройства", "rule": "Периферия — то, что подключается к системному блоку снаружи и может быть отключено."},
+  {"id": 8, "tag": "stor", "near": ["int", "proc"], "bait": "процессор", "name": "хранение данных", "q": "Выберите устройства хранения данных", "rule": "Хранение — и долговременное (диски, флешки), и временное (оперативная память). Процессор не хранит, он обрабатывает."},
+  {"id": 9, "tag": "long", "near": ["stor", "int"], "bait": "оперативная память", "name": "долговременная память", "q": "Выберите устройства долговременной памяти", "rule": "Долговременная память сохраняет данные после выключения. Оперативная — нет: она чистится каждый раз."},
+  {"id": 10, "tag": "proc", "near": ["int", "stor"], "name": "обработка информации", "q": "Выберите устройства обработки информации", "rule": "Обрабатывают — процессор и специальные платы: видеокарта считает изображение, звуковая карта — звук."},
+  {"id": 11, "tag": "net", "near": ["int", "ext"], "name": "передача по сети", "q": "Выберите устройства для подключения компьютера к сети", "rule": "За связь отвечают сетевая карта, Wi-Fi-адаптер, модем, роутер: они передают данные, а не хранят их."}
+];
+
+const TYPES_TOTAL = TYPES.length;
+const has = (d, tag) => d.t.indexOf(tag) >= 0;
+const randInt = (lo, hi) => lo + Math.floor(Math.random() * (hi - lo + 1));
+
+function sample(arr, k){
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a.slice(0, k);
+}
+
+// Одно задание: восемь устройств и точный ключ. Отвлекающие берём в
+// основном из близких категорий — на них и ошибаются.
+function makeTask(typeId){
+  const t = TYPES[typeId];
+  const rightPool = DEVICES.filter(d => has(d, t.tag));
+  const wrongPool = DEVICES.filter(d => !has(d, t.tag));
+
+  const k = Math.min(randInt(2, 4), rightPool.length);
+  const right = sample(rightPool, k);
+
+  const near = wrongPool.filter(d => t.near.some(n => has(d, n)));
+  const need = 8 - k;
+  let chosen = [];
+
+  const bait = wrongPool.find(d => d.n === t.bait);
+  if (bait && Math.random() < 0.7) chosen.push(bait);
+
+  const poolNear = near.filter(d => chosen.indexOf(d) < 0);
+  chosen = chosen.concat(
+      sample(poolNear, Math.min(poolNear.length,
+                                Math.max(0, need - chosen.length - 1))));
+  const rest = wrongPool.filter(d => chosen.indexOf(d) < 0);
+  chosen = chosen.concat(sample(rest, need - chosen.length));
+
+  const items = sample(right.concat(chosen), 8);
+  const answer = items.map((d, i) => right.indexOf(d) >= 0 ? i + 1 : 0)
+                      .filter(Boolean);
+  return {type: typeId, q: t.q, rule: t.rule, items: items,
+          right: right.map(d => d.n), answer: answer.join("")};
+}
+/* ==== /БАЗА ==== */
+
+/* ------------------------------------------------------------------
+   Слайды-примеры собираются тем же генератором, что и тренажёр: значит,
+   на доске разбирается ровно та задача, какая потом достанется ученику.
+   Кнопка «Другой пример» перебрасывает устройства — можно разобрать
+   два-три подряд, не уходя со слайда.
+------------------------------------------------------------------ */
+
+function buildExample(el){
+  const id = +el.dataset.type;
+  const t = makeTask(id);
+  const list = t.items.map(d =>
+      `<li${t.right.indexOf(d.n) >= 0 ? ' data-hit="1"' : ""}>${d.n}</li>`)
+      .join("");
+  const why = t.items.filter(d => t.right.indexOf(d.n) >= 0)
+      .map(d => `<div><b>${d.n}</b> — ${d.w}</div>`).join("");
+
+  el.innerHTML =
+    `<p class="eyebrow">разбираем вместе</p>
+     <h2>Пример: ${TYPES[id].name}</h2>
+     <div class="task">${t.q} и запишите в ответе их номера в порядке
+       возрастания.
+       <ol class="devs">${list}</ol></div>
+     <div class="steps">
+       <div class="step hint" hidden><span class="cap">о чём вопрос</span>
+         ${t.rule}</div>
+       <div class="step" hidden><span class="cap">кто подходит</span>
+         ${why}</div>
+       <div class="step answer" hidden><span class="cap">ответ</span>
+         ${t.answer}</div>
+     </div>`;
+  el.dataset.answer = t.answer;
+}
+
+/* ------------------------------------------------------------------
+   Управление колодой: стрелки листают слайды, пробел раскрывает
+   очередной шаг разбора и только потом уходит дальше.
+------------------------------------------------------------------ */
+
+const slides = [...document.querySelectorAll(".slide")];
+let cur = 0;
+let shown = 0;
+
+const isExample = i => slides[i].hasAttribute("data-ex");
+const stepsOf = i => [...slides[i].querySelectorAll(".steps > .step")];
+
+function show(i){
+  slides[cur].classList.remove("on");
+  cur = Math.max(0, Math.min(slides.length - 1, i));
+  slides[cur].classList.add("on");
+  if (isExample(cur) && !slides[cur].dataset.answer) buildExample(slides[cur]);
+  shown = stepsOf(cur).filter(el => !el.hidden).length;
+  document.getElementById("stage").scrollTop = 0;
+  sync();
+}
+
+function sync(){
+  const total = stepsOf(cur).length;
+  const ex = isExample(cur);
+  document.getElementById("count").textContent =
+      `${cur + 1} / ${slides.length}`;
+  document.getElementById("prev").disabled = cur === 0;
+  document.getElementById("next").disabled = cur === slides.length - 1;
+
+  const stepBtn = document.getElementById("step");
+  stepBtn.hidden = total === 0;
+  document.getElementById("reroll").hidden = !ex;
+  if (total){
+    stepBtn.disabled = shown >= total;
+    stepBtn.textContent =
+        shown === 0 ? (ex ? "Показать разбор" : "Раскрыть")
+      : shown >= total ? (ex ? "Разобрано" : "Всё открыто")
+      : `Дальше (${shown}/${total})`;
+  }
+}
+
+function nextStep(){
+  const steps = stepsOf(cur);
+  if (shown >= steps.length) return false;
+  steps[shown].hidden = false;
+  // подсветку верных даём вместе с разбором, а не раньше времени
+  if (shown === 1)
+    slides[cur].querySelectorAll('ol.devs li[data-hit]')
+               .forEach(li => li.classList.add("hit"));
+  steps[shown].scrollIntoView({block: "nearest", behavior: "smooth"});
+  shown++;
+  sync();
+  return true;
+}
+
+document.getElementById("prev").addEventListener("click", () => show(cur - 1));
+document.getElementById("next").addEventListener("click", () => show(cur + 1));
+document.getElementById("step").addEventListener("click", nextStep);
+document.getElementById("reroll").addEventListener("click", () => {
+  buildExample(slides[cur]); shown = 0; sync();
+});
+
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowRight" || e.key === "PageDown"){ show(cur + 1); }
+  else if (e.key === "ArrowLeft" || e.key === "PageUp"){ show(cur - 1); }
+  else if (e.key === " " || e.key === "Enter"){
+    // пробел ведёт урок: шаг за шагом, потом на следующий слайд
+    if (!nextStep()) show(cur + 1);
+  } else return;
+  e.preventDefault();
+});
+
+show(0);
+</script>
+</body>
+</html>
