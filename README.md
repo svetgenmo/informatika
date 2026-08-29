@@ -10,6 +10,8 @@
 Ссылку на класс удобно класть в заметки и в журнал: темы в
 нём прибавляются, а адрес остаётся прежним.
 
+- **11 класс** — https://svetgenmo.github.io/informatika/11/
+  - [Схема дорог и таблица](https://svetgenmo.github.io/informatika/11/graf-i-tablica/) — Задание 1 ЕГЭ: анализ информационных моделей
 - **7 класс** — https://svetgenmo.github.io/informatika/7/
   - [Устройство компьютера](https://svetgenmo.github.io/informatika/7/ustroystvo-kompyutera/) — Задание 1 ВПР: ввод, вывод, память, обработка, сеть
 - **8 класс** — https://svetgenmo.github.io/informatika/8/

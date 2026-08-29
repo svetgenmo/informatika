@@ -1,0 +1,1091 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Граф и таблица — тренажёр (задание 1 ЕГЭ)</title>
+<meta name="description" content="Тренажёр к заданию 1 ЕГЭ по информатике, 11 класс: семь поворотов задачи о схеме дорог и таблице — длина дороги, сумма, крайние значения, минимальный путь, звёздочки, неоднозначное соотнесение, обратное соответствие.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E11%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{margin:0;padding:20px 16px 60px;
+     font:17px/1.5 "Segoe UI",system-ui,sans-serif}
+.wrap{max-width:900px;margin:0 auto}
+
+h1{font-size:22px;margin:0 0 4px}
+.sub{color:var(--muted);font-size:15px;margin:0 0 18px}
+
+/* ---- панель оценки ---- */
+.panel{display:flex;align-items:center;gap:18px;flex-wrap:wrap;
+       border:2px solid var(--accent);border-radius:12px;
+       padding:12px 18px;background:var(--card);margin-bottom:20px;
+       position:sticky;top:0;z-index:5}
+.mark{display:flex;align-items:baseline;gap:10px}
+.mark span{color:var(--muted);font-size:15px}
+.mark b{font:700 40px/1 "Segoe UI",system-ui,sans-serif;min-width:44px;
+        text-align:center;border-radius:8px;padding:2px 10px;
+        background:#fff;border:2px solid var(--line)}
+.m5{color:var(--ok);border-color:var(--ok-line)!important}
+.m4{color:var(--accent);border-color:#a9c6e8!important}
+.m3{color:#8a5a00;border-color:#e6c98a!important}
+.m2{color:var(--err);border-color:var(--err-line)!important}
+.stats{color:var(--muted);font-size:14px;line-height:1.35}
+.spacer{flex:1 1 auto}
+button{font:600 15px/1 inherit;padding:11px 16px;border-radius:9px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);
+       cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);
+                color:var(--muted);background:#fff}
+button:focus-visible{outline:3px solid #a9c6e8;outline-offset:2px}
+
+/* ---- задачи ---- */
+.task{border:1px solid var(--line);border-radius:12px;padding:14px 18px;
+      margin-bottom:14px;background:#fff}
+.task.ok{border-color:var(--ok-line);background:var(--ok-bg)}
+.task.err{border-color:var(--err-line);background:var(--err-bg)}
+.q{display:flex;gap:12px;align-items:flex-start}
+.num{flex:0 0 28px;height:28px;border-radius:50%;background:var(--accent);
+     color:#fff;font:700 15px/28px sans-serif;text-align:center}
+.task.ok .num{background:var(--ok)}
+.task.err .num{background:var(--err)}
+.text{flex:1 1 auto;padding-top:3px}
+.kind{display:block;font-size:12px;font-weight:600;color:var(--muted);
+      text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px}
+.extra{display:inline-block;margin-left:8px;font-size:12px;font-weight:600;
+       color:var(--accent);border:1px solid #a9c6e8;border-radius:20px;
+       padding:1px 8px;vertical-align:2px;text-transform:none;
+       letter-spacing:0}
+.intro{margin:0}
+.ask{margin:12px 0 0;font-weight:600}
+
+/* ---- схема и таблица ---- */
+.figure{display:flex;gap:20px;align-items:center;flex-wrap:wrap;
+        margin:14px 0 0 40px;padding:12px 14px;background:var(--card);
+        border:1px solid var(--line);border-radius:10px}
+.graph{flex:1 1 340px;max-width:430px;height:auto}
+.graph .ed line{stroke:#93a9c2;stroke-width:2.5;stroke-linecap:round}
+.graph .nd circle{fill:#fff;stroke:var(--accent);stroke-width:2.5}
+.graph .nd text{font:700 17px/1 "Segoe UI",system-ui,sans-serif;
+                fill:var(--accent);text-anchor:middle}
+table.matrix{border-collapse:collapse;
+             font:15px/1 Consolas,"Courier New",monospace;background:#fff}
+.matrix th,.matrix td{border:1px solid var(--line);min-width:33px;
+                      height:27px;text-align:center;padding:0 3px}
+.matrix th{background:var(--card);color:var(--muted);
+           font:600 12px/1 "Segoe UI",system-ui,sans-serif}
+
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;
+     margin:14px 0 0 40px}
+input[type=text]{font:700 19px/1 Consolas,"Courier New",monospace;
+     padding:11px 14px;width:170px;letter-spacing:2px;
+     border:2px solid var(--line);border-radius:9px;background:#fff;
+     color:var(--ink)}
+input[type=text]:focus{outline:none;border-color:var(--accent)}
+input[type=text]:disabled{background:#f1f2f6;color:var(--muted)}
+.verdict{font-weight:700}
+.verdict.ok{color:var(--ok)}
+.verdict.err{color:var(--err)}
+.verdict small{display:block;font-weight:400;color:var(--muted);
+               margin-top:2px;max-width:56ch}
+.verdict small b{color:var(--ink)}
+
+.why{margin:12px 0 0 40px;border-left:4px solid var(--line);
+     padding:2px 0 2px 14px;color:var(--muted);font-size:15px}
+.why ol{margin:2px 0 0;padding-left:20px}
+.why li{margin:3px 0}
+.why .rule{margin-top:8px;color:var(--ink)}
+details.steps{margin:10px 0 0 40px;border:none;background:none;padding:0}
+details.steps summary{font-size:14px;color:var(--accent);font-weight:600;
+                      cursor:pointer}
+
+.done{margin:18px 0 0;padding:12px 16px;border-radius:10px;
+      background:var(--ok-bg);border:1px solid var(--ok-line);
+      color:var(--ok);font-weight:600}
+
+details.help{margin-top:26px;border:1px solid var(--line);border-radius:12px;
+        padding:12px 18px;background:var(--card)}
+details.help summary{cursor:pointer;font-weight:600;font-size:17px}
+details.help h3{font-size:16px;margin:18px 0 6px}
+details.help p{margin:6px 0}
+details.help ol,details.help ul{margin:6px 0;padding-left:22px}
+details.help li{margin:4px 0}
+code{font:600 15px/1.4 Consolas,"Courier New",monospace;
+     background:#fff;border:1px solid var(--line);border-radius:4px;
+     padding:1px 5px}
+
+@media (max-width:760px){
+  .figure,.row,.why,details.steps{margin-left:0}
+  .matrix th,.matrix td{min-width:27px;height:24px;font-size:13px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Схема дорог и таблица — тренажёр</h1>
+<p class="sub">Задание&nbsp;1 ЕГЭ. Четырнадцать задач — по две на каждый
+   поворот. Задача во всех одна и та же: <b>сначала опознать, какой
+   столбец таблицы какому пункту схемы соответствует</b>, и только потом
+   отвечать. Пункта, который выдаёт себя одним числом дорог, здесь нет
+   ни в одной схеме — как и на экзамене. Ответ набирается как на
+   экзамене: число без единиц измерения (или одна буква, если спрошена
+   буква).</p>
+
+<div class="panel">
+  <div class="mark">
+    <span>Оценка</span><b id="mark">—</b>
+  </div>
+  <div class="stats" id="stats"></div>
+  <div class="spacer"></div>
+  <button id="add" class="primary" disabled>Добавить задачи</button>
+  <button id="again">Начать заново</button>
+</div>
+
+<div id="tasks"></div>
+<div id="done"></div>
+
+<details class="help">
+  <summary>Подсказка: как решается задание 1</summary>
+
+  <h3>Что вообще происходит</h3>
+  <p>Схему и таблицу рисовали независимо, поэтому <b>П1 — это не А</b>,
+     и вообще никакой связи между номерами и буквами нет. Пока
+     соответствие не восстановлено, из таблицы нельзя прочитать ничего.</p>
+
+  <h3>Три хода, и никогда иначе</h3>
+  <ol>
+    <li>посчитать, <b>сколько дорог выходит из каждого пункта</b> схемы
+        (это степень вершины), и то же самое по таблице — сколько
+        заполненных клеток в строке. Одного этого не хватит: пункта с
+        единственным в своём роде числом дорог здесь нет, как и на
+        экзамене;</li>
+    <li>поэтому смотреть на <b>соседей</b>: у пункта не только своё
+        число дорог, но и набор чисел у тех, куда эти дороги ведут.
+        «Три дороги, и ведут они в пункты с 2, 2 и 4 дорогами» — такой
+        столбец в таблице обычно уже один;</li>
+    <li>дальше опознавать <b>по связям с уже найденными</b>: как только
+        один пункт опознан, его соседи находятся почти сразу.</li>
+  </ol>
+  <p>Считать в уме нечего: выписывайте <code>А — 3 (2,2,4)</code>,
+     <code>Б — 2 (3,4)</code>… и рядом такой же список по таблице. Это
+     дольше, чем «на глаз», но на глаз в этом задании и ошибаются.
+     На экзамене всё это делается на компьютере — как показывает
+     учитель.</p>
+
+  <h3>Чем отличаются повороты</h3>
+  <ul>
+    <li><b>длина дороги</b> — ответ читается из одной клетки;</li>
+    <li><b>сумма дорог из пункта</b> — складывается вся строка;</li>
+    <li><b>самая длинная или короткая</b> — выбирается из строки;</li>
+    <li><b>минимальное время в пути</b> — прямой дороги нет вовсе,
+        нужно перебрать пути; надпишите числа прямо на схеме;</li>
+    <li><b>звёздочки</b> — длин нет, и два пункта с одинаковыми связями
+        различить нельзя. Это не ошибка условия: спрашивают именно
+        <b>оба возможных номера</b>, и записать их надо по возрастанию,
+        подряд, без пробелов;</li>
+    <li><b>неоднозначное соотнесение</b> — схема снова распутывается не
+        до конца, но спрашивают про обычную дорогу. Хитрость в том, что
+        <b>неразличимая пара к ней не относится</b>, и ответ один при
+        любой из двух расстановок. Бросать задачу из-за того, что «два
+        пункта не различаются», — самая частая потеря балла;</li>
+    <li><b>буква по номеру</b> — тот же разбор, но ответ буква.</li>
+  </ul>
+
+  <h3>Как записывают ответ</h3>
+  <p>Целое число без единиц измерения: <code>34</code>, а не «34 км».
+     Два номера — подряд и по возрастанию: <code>25</code>, а не
+     «5 и 2». Буква — одна, заглавная: <code>Г</code>.</p>
+  <p>Это не придирка. ЕГЭ по информатике сдают за компьютером: ответ
+     набирается в экзаменационной программе, и сверяет его машина —
+     знак в знак. Привыкать надо здесь.</p>
+
+  <h3>Откуда эти задачи</h3>
+  <p>Формулировки — те же, что в открытых вариантах и в банке
+     <b>kompege.ru</b>. Сами задачи не скачаны, а собраны генератором:
+     у каждого своя схема, и ответ у соседа другой. Схема каждый раз
+     проверяется на то, что распутывается она единственным способом, —
+     кроме звёздочек, где неоднозначность и есть вопрос.</p>
+</details>
+
+</div>
+
+<script>
+"use strict";
+
+/* ==== БАЗА: вставлено gen.py, руками не править ==== */
+const TYPES = [
+  {"id": 0, "key": "len", "unit": "km", "kind": "num", "name": "длина одной дороги", "rule": "Как только соответствие восстановлено, ответ просто читается из таблицы: на пересечении строки и столбца нужных пунктов."},
+  {"id": 1, "key": "sum", "unit": "km", "kind": "num", "name": "сумма дорог из пункта", "rule": "Все дороги пункта — это заполненные клетки его строки. Опознали строку — сложили, что в ней стоит."},
+  {"id": 2, "key": "extreme", "unit": "km", "kind": "num", "name": "самая длинная или самая короткая дорога", "rule": "И здесь работает строка таблицы: сначала опознать её, потом выбрать из чисел строки нужное — наибольшее или наименьшее."},
+  {"id": 3, "key": "path", "unit": "min", "kind": "num", "name": "минимальное время в пути", "rule": "Прямая дорога не обязана быть самой быстрой. Перебираются все пути между пунктами, из них берётся самый короткий; проще всего надписать числа прямо на схеме."},
+  {"id": 4, "key": "stars", "unit": "star", "kind": "pair", "name": "таблица со звёздочками", "rule": "Здесь длин нет, и два пункта с одинаковыми связями различить невозможно — это не недосмотр, а условие. Ответ — оба номера, что им могут достаться."},
+  {"id": 5, "key": "letter", "unit": "km", "kind": "letter", "name": "какой букве соответствует номер", "rule": "Обратный ход: опознаётся не буква по номеру, а номер по букве, и ответом служит сама буква. Соответствие восстанавливается ровно так же."},
+  {"id": 6, "key": "ambig", "unit": "km", "kind": "num", "name": "неоднозначное соотнесение", "rule": "Схема распутывается не до конца — два пункта с одинаковыми связями остаются неразличимыми. Это не повод сдаваться: спрошенная дорога их не касается, и ответ у неё один при любой из двух расстановок."}
+];
+
+const TYPES_TOTAL = TYPES.length;
+const LETTERS = ["А","Б","В","Г","Д","Е","Ж","З","И"];
+
+const randInt = (lo, hi) => lo + Math.floor(Math.random() * (hi - lo + 1));
+const pick = a => a[randInt(0, a.length - 1)];
+
+function shuffle(arr){
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+const range = n => Array.from({length: n}, (_, i) => i);
+
+function plural(n, one, few, many){
+  const d = n % 10, dd = n % 100;
+  if (d === 1 && dd !== 11) return one;
+  if (d >= 2 && d <= 4 && (dd < 10 || dd >= 20)) return few;
+  return many;
+}
+const roads = n => n + " " + plural(n, "дорога", "дороги", "дорог");
+
+/* --------------------------------------------------------------- схема
+   Схему рисуем не «как выйдет», а по узлам сетки: тогда рёбра выходят
+   короткими, а пересечений почти нет — читать такую схему можно, не
+   распутывая клубок. Диагонали одного квадрата пересекаются, поэтому из
+   каждого квадрата остаётся не больше одной.
+--------------------------------------------------------------------- */
+
+const COLS = 4, ROWS = 3, DX = 126, DY = 100, X0 = 60, Y0 = 58, JIT = 11;
+
+function pickSlots(n){
+  const all = [];
+  for (let r = 0; r < ROWS; r++)
+    for (let c = 0; c < COLS; c++) all.push({c: c, r: r});
+  const chosen = [pick(all)];
+  const has = s => chosen.some(t => t.c === s.c && t.r === s.r);
+  const near = s => chosen.some(t => Math.abs(t.c - s.c) <= 1 &&
+                                     Math.abs(t.r - s.r) <= 1);
+  while (chosen.length < n){
+    const free = all.filter(s => !has(s) && near(s));
+    if (!free.length) return null;
+    chosen.push(pick(free));
+  }
+  return chosen;
+}
+
+function layout(slots){
+  return slots.map(s => ({c: s.c, r: s.r,
+                          x: X0 + s.c * DX + randInt(-JIT, JIT),
+                          y: Y0 + s.r * DY + randInt(-JIT, JIT)}));
+}
+
+function candidates(pos){
+  const out = [];
+  for (let i = 0; i < pos.length; i++)
+    for (let j = i + 1; j < pos.length; j++){
+      const dc = Math.abs(pos[i].c - pos[j].c);
+      const dr = Math.abs(pos[i].r - pos[j].r);
+      if (dc <= 1 && dr <= 1)
+        out.push({i: i, j: j, diag: dc === 1 && dr === 1,
+                  key: Math.min(pos[i].c, pos[j].c) + ":" +
+                       Math.min(pos[i].r, pos[j].r)});
+    }
+  return out;
+}
+
+function dropCrossings(cand){
+  const seen = {};
+  return shuffle(cand).filter(e => {
+    if (!e.diag) return true;
+    if (seen[e.key]) return false;
+    seen[e.key] = 1;
+    return true;
+  });
+}
+
+function connected(n, edges){
+  const adj = range(n).map(() => []);
+  edges.forEach(e => { adj[e.i].push(e.j); adj[e.j].push(e.i); });
+  const seen = range(n).map(() => false);
+  const stack = [0];
+  seen[0] = true;
+  let cnt = 1;
+  while (stack.length){
+    const v = stack.pop();
+    adj[v].forEach(u => { if (!seen[u]){ seen[u] = true; cnt++; stack.push(u); } });
+  }
+  return cnt === n;
+}
+
+function thin(n, edges, target, fixed){
+  let cur = edges.slice();
+  for (const e of shuffle(edges)){
+    if (cur.length <= target) break;
+    if (fixed && fixed(e)) continue;
+    const rest = cur.filter(x => x !== e);
+    if (connected(n, rest)) cur = rest;
+  }
+  return cur;
+}
+
+function matrix(n, edges){
+  const m = range(n).map(() => range(n).map(() => 0));
+  edges.forEach(e => { m[e.i][e.j] = 1; m[e.j][e.i] = 1; });
+  return m;
+}
+
+/* Пара «близнецов» для типа со звёздочками: две вершины на диагонали
+   одного квадрата, соединённые с двумя другими его углами и больше ни с
+   чем. Их связи совпадают в точности, значит различить их по таблице
+   нельзя — а именно это и спрашивают. */
+function twinPair(pos){
+  const at = (c, r) => pos.findIndex(p => p.c === c && p.r === r);
+  const out = [];
+  for (let r = 0; r < ROWS - 1; r++)
+    for (let c = 0; c < COLS - 1; c++){
+      const p00 = at(c, r), p10 = at(c + 1, r);
+      const p01 = at(c, r + 1), p11 = at(c + 1, r + 1);
+      if (p00 < 0 || p10 < 0 || p01 < 0 || p11 < 0) continue;
+      out.push({u: p00, v: p11, a: p10, b: p01});
+      out.push({u: p10, v: p01, a: p00, b: p11});
+    }
+  return out.length ? pick(out) : null;
+}
+
+/* Автоморфизмы: перестановки вершин, сохраняющие связи. Если такая
+   перестановка есть кроме тождественной — схему и таблицу можно
+   совместить двумя способами, и у задачи два ответа. */
+function automorphisms(adj, limit){
+  const n = adj.length;
+  const deg = adj.map(row => row.reduce((a, b) => a + b, 0));
+  const res = [], map = range(n).map(() => -1), used = range(n).map(() => false);
+  (function rec(i){
+    if (res.length >= limit) return;
+    if (i === n){ res.push(map.slice()); return; }
+    for (let j = 0; j < n; j++){
+      if (used[j] || deg[j] !== deg[i]) continue;
+      let ok = true;
+      for (let k = 0; k < i; k++)
+        if (adj[i][k] !== adj[j][map[k]]){ ok = false; break; }
+      if (!ok) continue;
+      map[i] = j; used[j] = true;
+      rec(i + 1);
+      used[j] = false; map[i] = -1;
+    }
+  })(0);
+  return res;
+}
+
+function buildGraph(n, twin){
+  for (let attempt = 0; attempt < 500; attempt++){
+    const slots = pickSlots(n);
+    if (!slots) continue;
+    const pos = layout(slots);
+    let tw = null, touches = null;
+    if (twin){
+      tw = twinPair(pos);
+      if (!tw) continue;
+    }
+    let base = dropCrossings(candidates(pos));
+    if (tw){
+      const keep = [[tw.u, tw.a], [tw.u, tw.b], [tw.v, tw.a], [tw.v, tw.b]];
+      const isKeep = e => keep.some(k => (e.i === k[0] && e.j === k[1]) ||
+                                         (e.i === k[1] && e.j === k[0]));
+      touches = e => e.i === tw.u || e.j === tw.u ||
+                     e.i === tw.v || e.j === tw.v;
+      base = base.filter(e => !touches(e) || isKeep(e));
+      if (base.filter(isKeep).length !== 4) continue;
+    }
+    if (!connected(n, base)) continue;
+
+    // Разрежаем одну и ту же расстановку несколько раз: рёбра выбывают
+    // случайно, и годная схема обычно находится на второй-третьей
+    // попытке — заново раскладывать пункты ради этого незачем.
+    for (let k = 0; k < 15; k++){
+      const edges = thin(n, base, n + randInt(1, 3), touches);
+      if (!connected(n, edges)) continue;
+      if (edges.length > n + 4) continue;
+
+      const adj = matrix(n, edges);
+      const deg = adj.map(row => row.reduce((a, b) => a + b, 0));
+      if (Math.min.apply(null, deg) < 1) continue;
+      if (Math.max.apply(null, deg) > 5) continue;
+
+      // Пункт, у которого число дорог единственное в своём роде,
+      // опознаётся взглядом, и дальше схема сыплется сама. На реальном
+      // ЕГЭ таких не бывает — и здесь не будет: каждое число дорог
+      // обязано встречаться хотя бы дважды.
+      if (deg.some(d => deg.filter(x => x === d).length < 2)) continue;
+
+      const auts = automorphisms(adj, 4);
+      if (twin){
+        if (auts.length !== 2) continue;
+        const s = auts.find(m => m.some((x, q) => x !== q));
+        const okSwap = s[tw.u] === tw.v && s[tw.v] === tw.u &&
+          s.every((x, q) => (q === tw.u || q === tw.v) ? true : x === q);
+        if (!okSwap) continue;
+      } else if (auts.length !== 1) continue;
+
+      return {n: n, pos: pos, edges: edges, adj: adj, deg: deg, twin: tw};
+    }
+  }
+  return null;
+}
+
+/* ------------------------------------------------- распутывание схемы
+   Ровно тот ход, которым решает ученик, и в том же порядке:
+
+     1. число дорог из пункта (степень вершины);
+     2. если степень не одна такая — на что смотрят дальше: в пункты с
+        каким числом дорог эти дороги ведут;
+     3. связи с уже опознанными пунктами.
+
+   Первый шаг сам по себе почти ничего не даёт: на настоящем ЕГЭ
+   пунктов с уникальным числом дорог не бывает, и схема такого не
+   пропустит (см. buildGraph). Если распутать этими тремя ходами не
+   удаётся, задача бракуется — пусть ответ и единственный формально,
+   решать её нечем.
+--------------------------------------------------------------------- */
+
+function neighbourDegrees(adj, v){
+  const deg = adj.map(r => r.reduce((a, b) => a + b, 0));
+  return range(adj.length).filter(u => adj[v][u]).map(u => deg[u])
+                          .sort((a, b) => a - b);
+}
+
+// «Портрет» пункта: сколько из него дорог и в пункты с каким числом
+// дорог они ведут. Всё, что известно про пункт из одной только схемы,
+// до того как хоть кто-то опознан.
+function portrait(adj){
+  const deg = adj.map(r => r.reduce((a, b) => a + b, 0));
+  return range(adj.length).map(v =>
+    deg[v] + "|" + neighbourDegrees(adj, v).join(","));
+}
+
+function propagate(adj, tadj, letterOf){
+  const n = adj.length;
+  const degG = adj.map(r => r.reduce((a, b) => a + b, 0));
+  const pG = portrait(adj), pT = portrait(tadj);
+  const cand = range(n).map(v => range(n).filter(t => pT[t] === pG[v]));
+  const assign = range(n).map(() => -1);
+  const order = [];
+
+  function known(v){
+    return range(n).filter(u => u !== v && adj[v][u] && assign[u] >= 0);
+  }
+  function put(v, t, byColumn){
+    const before = known(v);
+    assign[v] = t;
+    cand[v] = [t];
+    const L = letterOf(v), P = "П" + (t + 1);
+    const soleDeg = degG.filter(d => d === degG[v]).length === 1;
+    let why;
+    if (byColumn)
+      why = "столбец " + P + " может достаться только пункту " + L +
+            " — остальным он уже не подходит";
+    else if (!before.length && soleDeg)
+      why = "из пункта " + L + " выходит " + roads(degG[v]) +
+            ", и такой столбец в таблице один — " + P;
+    else if (!before.length){
+      const nd = neighbourDegrees(adj, v);
+      why = "из пункта " + L + " выходит " + roads(degG[v]) +
+            (nd.length === 1 ? ", и ведёт она в пункт, где дорог "
+                             : ", и ведут они в пункты, где дорог ") +
+            nd.join(", ") + "; такой столбец в таблице один — " + P;
+    }
+    else
+      why = L + ": " + roads(degG[v]) + ", соединён с " +
+            before.map(u => letterOf(u) + " (П" + (assign[u] + 1) + ")").join(", ") +
+            " — подходит только " + P;
+    order.push({v: v, t: t, why: why});
+  }
+
+  let changed = true;
+  while (changed){
+    changed = false;
+    for (let v = 0; v < n; v++){
+      if (assign[v] >= 0) continue;
+      const before = cand[v].length;
+      cand[v] = cand[v].filter(t => {
+        for (let u = 0; u < n; u++){
+          if (u === v || assign[u] < 0) continue;
+          if (assign[u] === t) return false;
+          if (adj[v][u] !== tadj[t][assign[u]]) return false;
+        }
+        return true;
+      });
+      if (cand[v].length !== before) changed = true;
+    }
+    for (let v = 0; v < n; v++)
+      if (assign[v] < 0 && cand[v].length === 1){ put(v, cand[v][0], false); changed = true; }
+    for (let t = 0; t < n; t++){
+      const owners = range(n).filter(v => assign[v] < 0 && cand[v].indexOf(t) >= 0);
+      if (owners.length === 1){ put(owners[0], t, true); changed = true; }
+    }
+  }
+  return {assign: assign, cand: cand, order: order};
+}
+
+/* ------------------------------------------------------- кратчайший путь */
+
+function dijkstra(n, wadj, src){
+  const INF = Infinity;
+  const dist = range(n).map(() => INF), prev = range(n).map(() => -1);
+  const done = range(n).map(() => false);
+  dist[src] = 0;
+  for (let step = 0; step < n; step++){
+    let v = -1;
+    for (let u = 0; u < n; u++)
+      if (!done[u] && dist[u] < INF && (v < 0 || dist[u] < dist[v])) v = u;
+    if (v < 0) break;
+    done[v] = true;
+    for (let u = 0; u < n; u++){
+      if (!wadj[v][u]) continue;
+      if (dist[v] + wadj[v][u] < dist[u]){
+        dist[u] = dist[v] + wadj[v][u];
+        prev[u] = v;
+      }
+    }
+  }
+  return {dist: dist, prev: prev};
+}
+
+/* ------------------------------------------------------------- рисунок */
+
+function graphSvg(g, letterOf){
+  let minx = 1e9, miny = 1e9, maxx = -1e9, maxy = -1e9;
+  g.pos.forEach(p => {
+    minx = Math.min(minx, p.x); maxx = Math.max(maxx, p.x);
+    miny = Math.min(miny, p.y); maxy = Math.max(maxy, p.y);
+  });
+  const pad = 30;
+  const W = Math.round(maxx - minx + 2 * pad);
+  const H = Math.round(maxy - miny + 2 * pad);
+  const X = p => Math.round(p.x - minx + pad);
+  const Y = p => Math.round(p.y - miny + pad);
+  let s = '<svg class="graph" viewBox="0 0 ' + W + ' ' + H +
+          '" xmlns="http://www.w3.org/2000/svg" role="img" ' +
+          'aria-label="схема дорог"><g class="ed">';
+  g.edges.forEach(e => {
+    s += '<line x1="' + X(g.pos[e.i]) + '" y1="' + Y(g.pos[e.i]) +
+         '" x2="' + X(g.pos[e.j]) + '" y2="' + Y(g.pos[e.j]) + '"/>';
+  });
+  s += '</g><g class="nd">';
+  g.pos.forEach((p, i) => {
+    s += '<circle cx="' + X(p) + '" cy="' + Y(p) + '" r="18"/>' +
+         '<text x="' + X(p) + '" y="' + (Y(p) + 6) + '">' + letterOf(i) + '</text>';
+  });
+  return s + '</g></svg>';
+}
+
+/* Таблица ровно такая, какой её видят на экзамене: никаких полей для
+   пометок. Ученик снимает скриншот и размечает его сам — это и есть
+   решение, которое он потом сдаёт. */
+function tableHtml(g, stars){
+  const n = g.n, inv = [];
+  g.perm.forEach((t, v) => { inv[t] = v; });
+  let s = '<table class="matrix"><tr><th></th>';
+  for (let t = 0; t < n; t++) s += '<th>П' + (t + 1) + '</th>';
+  s += '</tr>';
+  for (let p = 0; p < n; p++){
+    s += '<tr><th>П' + (p + 1) + '</th>';
+    for (let q = 0; q < n; q++){
+      const a = inv[p], b = inv[q];
+      const w = (p === q) ? 0 : g.wadj[a][b];
+      s += '<td>' + (w ? (stars ? "*" : w) : "") + '</td>';
+    }
+    s += '</tr>';
+  }
+  return s + '</table>';
+}
+
+/* ---------------------------------------------------------- условие */
+
+const CAVEAT = "Так как таблицу и схему рисовали независимо друг от " +
+  "друга, нумерация населённых пунктов в таблице никак не связана с " +
+  "буквенными обозначениями на графе.";
+
+function introOf(T){
+  if (T.unit === "star")
+    return "На рисунке схема дорог Н-ского района изображена в виде " +
+           "графа, в таблице звёздочкой обозначено наличие дороги между " +
+           "населёнными пунктами. Отсутствие звёздочки означает, что " +
+           "такой дороги нет.";
+  if (T.unit === "min")
+    return "На рисунке схема дорог Н-ского района изображена в виде " +
+           "графа, в таблице указано время в пути (в минутах) по каждой " +
+           "из этих дорог.";
+  return "На рисунке схема дорог Н-ского района изображена в виде " +
+         "графа, в таблице содержатся сведения о протяжённости каждой " +
+         "из этих дорог (в километрах).";
+}
+
+/* ------------------------------------------------------------- задача */
+
+const NEEDS_TWIN = {stars: 1, ambig: 1};
+
+function makeTask(id){
+  const T = TYPES[id];
+  for (let attempt = 0; attempt < 300; attempt++){
+    const g = buildGraph(randInt(7, 9), !!NEEDS_TWIN[T.key]);
+    if (!g) continue;
+    const n = g.n;
+
+    // длины дорог: все разные, иначе «самая длинная» перестаёт быть одной
+    const used = {};
+    g.edges.forEach(e => {
+      let w;
+      do { w = randInt(8, 97); } while (used[w]);
+      used[w] = 1;
+      e.w = w;
+    });
+    g.wadj = range(n).map(() => range(n).map(() => 0));
+    g.edges.forEach(e => { g.wadj[e.i][e.j] = e.w; g.wadj[e.j][e.i] = e.w; });
+
+    g.perm = shuffle(range(n));            // вершина -> номер в таблице
+    g.lets = shuffle(range(n));            // вершина -> буква
+    const letterOf = v => LETTERS[g.lets[v]];
+    const inv = [];
+    g.perm.forEach((t, v) => { inv[t] = v; });
+
+    const tadj = range(n).map(p => range(n).map(q => g.adj[inv[p]][inv[q]]));
+    const pr = propagate(g.adj, tadj, letterOf);
+
+    if (NEEDS_TWIN[T.key]){
+      const tw = g.twin;
+      const rest = range(n).filter(v => v !== tw.u && v !== tw.v);
+      if (!rest.every(v => pr.assign[v] >= 0)) continue;
+      if (pr.cand[tw.u].length !== 2 || pr.cand[tw.v].length !== 2) continue;
+      if (pr.cand[tw.u].slice().sort().join() !==
+          pr.cand[tw.v].slice().sort().join()) continue;
+    } else {
+      if (!pr.assign.every((t, v) => t === g.perm[v])) continue;
+    }
+
+    const t = compose(T, g, pr, letterOf);
+    if (t) return t;
+  }
+  throw new Error("не удалось собрать задачу типа " + TYPES[id].key);
+}
+
+function compose(T, g, pr, letterOf){
+  const n = g.n;
+  const P = t => "П" + (t + 1);
+  const L = letterOf;
+  const inv = [];
+  g.perm.forEach((t, v) => { inv[t] = v; });
+  const nb = v => range(n).filter(u => g.adj[v][u]);
+
+  let ask = "", answer = "", need = [], finish = "", extra = null;
+
+  if (T.key === "len"){
+    const e = pick(g.edges);
+    const a = e.i, b = e.j;
+    ask = "Определите, какова протяжённость дороги из пункта " + L(a) +
+          " в пункт " + L(b) + ". В ответе запишите целое число — так, " +
+          "как оно указано в таблице.";
+    answer = String(e.w);
+    need = [a, b];
+    finish = "дорога " + L(a) + "—" + L(b) + " стоит на пересечении " +
+             P(g.perm[a]) + " и " + P(g.perm[b]) + ": там " + e.w;
+    extra = {a: a, b: b};
+
+  } else if (T.key === "sum"){
+    const cands = range(n).filter(v => g.deg[v] >= 3);
+    if (!cands.length) return null;
+    const v = pick(cands);
+    const ws = nb(v).map(u => g.wadj[v][u]).sort((x, y) => x - y);
+    ask = "Определите суммарную протяжённость дорог, выходящих из " +
+          "пункта " + L(v) + ". В ответе запишите целое число.";
+    answer = String(ws.reduce((a, b) => a + b, 0));
+    need = [v];
+    finish = "в строке " + P(g.perm[v]) + " стоят числа " + ws.join(", ") +
+             "; их сумма — " + answer;
+    extra = {v: v};
+
+  } else if (T.key === "extreme"){
+    const cands = range(n).filter(v => g.deg[v] >= 3);
+    if (!cands.length) return null;
+    const v = pick(cands);
+    const big = randInt(0, 1) === 1;
+    const ws = nb(v).map(u => g.wadj[v][u]).sort((x, y) => x - y);
+    ask = "Определите протяжённость самой " +
+          (big ? "длинной" : "короткой") + " из дорог, выходящих из " +
+          "пункта " + L(v) + ". В ответе запишите целое число.";
+    answer = String(big ? ws[ws.length - 1] : ws[0]);
+    need = [v];
+    finish = "в строке " + P(g.perm[v]) + " стоят числа " + ws.join(", ") +
+             "; самое " + (big ? "большое" : "маленькое") + " — " + answer;
+    extra = {v: v, big: big};
+
+  } else if (T.key === "path"){
+    // Интересно, только если обход бывает короче прямой дороги: иначе
+    // задача сводится к чтению одной клетки.
+    const pairs = [];
+    for (let a = 0; a < n; a++)
+      for (let b = a + 1; b < n; b++)
+        if (!g.adj[a][b]) pairs.push([a, b]);
+    if (!pairs.length) return null;
+    const pr2 = pairs.map(p => {
+      const d = dijkstra(n, g.wadj, p[0]);
+      return {a: p[0], b: p[1], d: d.dist[p[1]], prev: d.prev};
+    }).filter(x => isFinite(x.d));
+    if (!pr2.length) return null;
+    const ch = pick(pr2);
+    const path = [];
+    for (let v = ch.b; v >= 0; v = ch.prev[v]) path.unshift(v);
+    ask = "Определите минимальное время в пути из пункта " + L(ch.a) +
+          " в пункт " + L(ch.b) + ". В ответе запишите целое число.";
+    answer = String(ch.d);
+    need = range(n);
+    finish = "прямой дороги " + L(ch.a) + "—" + L(ch.b) + " нет; самый " +
+             "быстрый путь — " + path.map(L).join(" → ") + " = " +
+             path.slice(1).map((v, k) => g.wadj[path[k]][v]).join(" + ") +
+             " = " + answer;
+    extra = {a: ch.a, b: ch.b};
+
+  } else if (T.key === "stars"){
+    const tw = g.twin;
+    const two = pr.cand[tw.u].slice().sort((x, y) => x - y);
+    if (two.length !== 2) return null;
+    if (two[0] + 1 > 9 || two[1] + 1 > 9) return null;
+    ask = "Определите, какие номера населённых пунктов в таблице могут " +
+          "соответствовать пунктам " + L(tw.u) + " и " + L(tw.v) +
+          " на схеме. В ответе запишите эти два числа в возрастающем " +
+          "порядке без пробелов, запятых и других дополнительных " +
+          "символов.";
+    answer = String(two[0] + 1) + String(two[1] + 1);
+    need = range(n).filter(v => v !== tw.u && v !== tw.v);
+    finish = "остальные пункты определились однозначно, а " + L(tw.u) +
+             " и " + L(tw.v) + " различить нечем: у них одинаковые связи. " +
+             "Свободными остались " + P(two[0]) + " и " + P(two[1]) +
+             " — это и есть ответ";
+    extra = {u: tw.u, v: tw.v};
+
+  } else if (T.key === "ambig"){
+    // Схема распутывается не до конца: пара близнецов остаётся
+    // неразличимой. Спрашивать поэтому можно только о том, что от их
+    // порядка не зависит, — о дороге, которой они оба не касаются.
+    const tw = g.twin;
+    const far = g.edges.filter(e =>
+      e.i !== tw.u && e.j !== tw.u && e.i !== tw.v && e.j !== tw.v);
+    if (!far.length) return null;
+    const e = pick(far);
+    const a = e.i, b = e.j;
+    ask = "Определите, какова протяжённость дороги из пункта " + L(a) +
+          " в пункт " + L(b) + ". В ответе запишите целое число — так, " +
+          "как оно указано в таблице.";
+    answer = String(e.w);
+    need = [a, b];
+    finish = "различить " + L(tw.u) + " и " + L(tw.v) + " нечем — у них " +
+             "одинаковые связи, и какой из двух столбцов чей, схема не " +
+             "говорит. Но спрошенная дорога их не касается: " + L(a) +
+             "—" + L(b) + " стоит на пересечении " + P(g.perm[a]) + " и " +
+             P(g.perm[b]) + ", там " + e.w + " — и это так при любой из " +
+             "двух расстановок";
+    extra = {a: a, b: b, u: tw.u, v: tw.v};
+
+  } else if (T.key === "letter"){
+    const t = randInt(0, n - 1);
+    const v = inv[t];
+    ask = "Определите, какому пункту схемы соответствует пункт " + P(t) +
+          " в таблице. В ответе запишите букву — обозначение этого " +
+          "пункта на схеме.";
+    answer = L(v);
+    need = [v];
+    finish = "значит, " + P(t) + " — это " + L(v) + "; в ответе пишется " +
+             "буква, а не номер";
+    extra = {t: t};
+  }
+
+  // Разбор обрывается там, где опознано всё нужное: дальше распутывать
+  // схему незачем, и лишние шаги только заслоняют ход решения.
+  const steps = [];
+  const left = need.slice();
+  for (const step of pr.order){
+    steps.push(step.why);
+    const k = left.indexOf(step.v);
+    if (k >= 0) left.splice(k, 1);
+    if (!left.length) break;
+  }
+  if (left.length) return null;
+  steps.push(finish);
+
+  return {
+    id: T.id, type: T.id, key: T.key, name: T.name, rule: T.rule,
+    intro: introOf(T), caveat: CAVEAT, ask: ask,
+    svg: graphSvg(g, L), table: tableHtml(g, T.unit === "star"),
+    answer: answer, answerKind: T.kind, steps: steps,
+    meta: {n: g.n, edges: g.edges.map(e => [e.i, e.j, e.w]),
+           pos: g.pos.map(p => [Math.round(p.x), Math.round(p.y)]),
+           perm: g.perm, lets: g.lets, key: T.key, extra: extra,
+           twin: g.twin ? [g.twin.u, g.twin.v] : null}
+  };
+}
+
+/* ------------------------------------------------------------ проверка
+   Строго, как на экзамене: ответ набирается в поле и сверяется знак в
+   знак. Но там, где строгость касается записи, а не понимания, страница
+   обязана сказать, что именно не так.
+--------------------------------------------------------------------- */
+
+function verdict(t, given){
+  const raw = String(given === null || given === undefined ? "" : given).trim();
+  if (t.answerKind === "letter"){
+    const up = raw.replace(/\s+/g, "").toUpperCase();
+    if (!/^[А-Я]$/.test(up))
+      return {ok: false, hint: "Ответ — одна буква, обозначение пункта " +
+                               "на схеме: <b>А</b>, <b>Б</b>, <b>В</b>…"};
+    return {ok: up === t.answer, hint: null};
+  }
+  const s = raw.replace(/\s+/g, "");
+  if (!/^[0-9]+$/.test(s))
+    return {ok: false, hint: "Ответ — целое число, без единиц измерения " +
+                             "и знаков препинания."};
+  if (t.answerKind === "pair"){
+    if (s.length !== 2)
+      return {ok: false, hint: "Два номера подряд, без пробелов и " +
+                               "запятых: например <b>25</b>."};
+    if (s === t.answer) return {ok: true, hint: null};
+    if (s.split("").reverse().join("") === t.answer)
+      return {ok: false, hint: "Числа те самые, но записываются они " +
+                               "<b>в возрастающем порядке</b>."};
+    return {ok: false, hint: null};
+  }
+  return {ok: s === t.answer, hint: null};
+}
+/* ==== /БАЗА ==== */
+
+/* ------------------------------------------------------------- оценка
+   Семь поворотов задания. Задача по сути одна, поэтому закрыть все
+   семь реально — на «5» и нужны все семь.
+
+   На каждый поворот идут ДВЕ задачи: одна решается «повезло с
+   опознанием», и работа заканчивалась бы раньше, чем ученик успевал
+   поставить себе способ. Поворот считается освоенным, когда обе решены
+   верно.
+
+   Считаем ОСВОЕННЫЕ повороты, а не верные ответы — иначе добор ломает
+   счёт.
+------------------------------------------------------------------ */
+const SCALE = [[7, 5], [6, 4], [5, 3]];
+const PER_TYPE = 2;
+function markFor(mastered){
+  for (const s of SCALE) if (mastered >= s[0]) return s[1];
+  return 2;
+}
+
+/* ---------------------------------------------------------- состояние */
+
+let tasks = [];
+let firstRoundRight = 0;
+
+function newRun(){
+  // Два круга: сначала по одной задаче каждого типа, потом ещё по одной.
+  // Так одинаковые повороты не идут подряд.
+  tasks = [];
+  for (let round = 0; round < PER_TYPE; round++)
+    shuffle(TYPES).forEach(t => tasks.push(
+        Object.assign(makeTask(t.id),
+                      {status: "open", extra: false, draft: ""})));
+  firstRoundRight = 0;
+  render();
+  const first = document.querySelector("input[type=text]");
+  if (first) first.focus();
+}
+
+function rightByType(){
+  const cnt = {};
+  tasks.forEach(t => { if (t.status === "ok")
+                         cnt[t.type] = (cnt[t.type] || 0) + 1; });
+  return cnt;
+}
+function masteredTypes(){
+  const cnt = rightByType();
+  const set = new Set();
+  Object.keys(cnt).forEach(k => { if (cnt[k] >= PER_TYPE) set.add(+k); });
+  return set;
+}
+function failedTypes(){
+  const ok = masteredTypes();
+  const set = new Set();
+  tasks.forEach(t => { if (t.status !== "open" && !ok.has(t.type))
+                         set.add(t.type); });
+  return set;
+}
+function lackCount(){
+  const cnt = rightByType();
+  let n = 0;
+  failedTypes().forEach(id => { n += PER_TYPE - (cnt[id] || 0); });
+  return n;
+}
+const allAnswered = () => tasks.every(t => t.status !== "open");
+
+/* ------------------------------------------------------------ проверка */
+
+function check(i){
+  const t = tasks[i];
+  if (t.status !== "open") return;
+  const given = document.getElementById("in" + i).value.trim();
+  if (!given) return;
+
+  captureDrafts();
+  const v = verdict(t, given);
+  t.given = given;
+  t.hint = v.hint;
+  t.status = v.ok ? "ok" : "err";
+  if (t.status === "ok" && !t.extra) firstRoundRight++;
+
+  render();
+  focusNextOpen(i + 1);
+}
+
+function focusNextOpen(from){
+  let idx = tasks.findIndex((t, k) => k >= from && t.status === "open");
+  if (idx < 0) idx = tasks.findIndex(t => t.status === "open");
+  if (idx < 0) return null;
+  const el = document.getElementById("in" + idx);
+  if (el) el.focus();
+  return el;
+}
+
+function addTasks(){
+  captureDrafts();
+  const need = [...failedTypes()];
+  if (!need.length) return;
+  const cnt = rightByType();
+  need.forEach(id => {
+    for (let i = PER_TYPE - (cnt[id] || 0); i > 0; i--)
+      tasks.push(Object.assign(makeTask(id),
+                               {status: "open", extra: true, draft: ""}));
+  });
+  render();
+  const el = focusNextOpen(0);
+  if (el) el.scrollIntoView({block: "center", behavior: "smooth"});
+}
+
+/* -------------------------------------------------------------- вывод */
+
+function captureDrafts(){
+  tasks.forEach((t, i) => {
+    if (t.status !== "open") return;
+    const el = document.getElementById("in" + i);
+    if (el) t.draft = el.value;
+  });
+}
+
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
+                          .replace(/>/g, "&gt;");
+
+// Разбор — это ход решения, а не объявление ответа. «Правильный ответ
+// 36» не учит ничему: важно, как вышло, что П6 — это А.
+function steps(t, open){
+  const list = t.steps.map(s => `<li>${esc(s)}</li>`).join("");
+  const body = `<ol>${list}</ol><div class="rule">${esc(t.rule)}</div>`;
+  if (open) return `<div class="why">${body}</div>`;
+  return `<details class="steps"><summary>как это решается</summary>
+          <div class="why">${body}</div></details>`;
+}
+
+function render(){
+  const box = document.getElementById("tasks");
+  box.innerHTML = "";
+
+  tasks.forEach((t, i) => {
+    const card = document.createElement("div");
+    card.className = "task" + (t.status === "open" ? "" : " " + t.status);
+
+    let tail;
+    if (t.status === "open"){
+      tail = `<div class="row">
+                <input type="text" id="in${i}" autocomplete="off"
+                       spellcheck="false" placeholder="ответ" maxlength="12"
+                       value="${esc(t.draft || "")}">
+                <button data-check="${i}">Проверить</button>
+              </div>`;
+    } else {
+      const verdictHtml = t.status === "ok"
+        ? `<span class="verdict ok">Правильно</span>`
+        : `<span class="verdict err">Ошибка<small>${t.hint
+             ? t.hint
+             : `Правильный ответ: <b>${esc(t.answer)}</b>`}</small></span>`;
+      tail = `<div class="row">
+                <input type="text" value="${esc(t.given)}" disabled>
+                ${verdictHtml}
+              </div>` + steps(t, t.status === "err");
+    }
+
+    card.innerHTML = `
+      <div class="q">
+        <div class="num">${i + 1}</div>
+        <div class="text"><span class="kind">${esc(t.name)}${
+          t.extra ? '<span class="extra">добор</span>' : ""}</span>
+          <p class="intro">${esc(t.intro)} ${esc(t.caveat)}</p></div>
+      </div>
+      <div class="figure">${t.svg}${t.table}</div>
+      <p class="ask" style="margin-left:40px">${esc(t.ask)}</p>
+      ${tail}`;
+    box.appendChild(card);
+  });
+
+  box.querySelectorAll("button[data-check]").forEach(b => {
+    b.addEventListener("click", () => check(+b.dataset.check));
+  });
+  box.querySelectorAll("input[type=text]:not(:disabled)").forEach(inp => {
+    inp.addEventListener("keydown", e => {
+      if (e.key === "Enter"){ e.preventDefault(); check(+inp.id.slice(2)); }
+    });
+  });
+
+  updatePanel();
+}
+
+function updatePanel(){
+  const mastered = masteredTypes().size;
+  const mark = markFor(mastered);
+  const started = tasks.some(t => t.status !== "open");
+  const el = document.getElementById("mark");
+  // до первого ответа — прочерк: двойка на чистом листе никого ещё не
+  // характеризует, а работа только началась
+  el.textContent = started ? mark : "—";
+  el.className = started ? "m" + mark : "";
+
+  const extras = tasks.filter(t => t.extra).length;
+  const base = TYPES_TOTAL * PER_TYPE;
+  const nextUp = SCALE.filter(s => s[0] > mastered).pop();
+  document.getElementById("stats").innerHTML =
+    `освоено поворотов: <b>${mastered}</b> из ${TYPES_TOTAL} ` +
+    `<span style="opacity:.7">(поворот закрывают две верные задачи)</span><br>` +
+    `верно с первой попытки: <b>${firstRoundRight}</b> из ${base}` +
+    (extras ? ` &middot; добрано задач: <b>${extras}</b>` : "") +
+    (nextUp ? `<br>до оценки ${nextUp[1]} осталось закрыть: ` +
+              `<b>${nextUp[0] - mastered}</b>` : "");
+
+  const lack = lackCount();
+  const btn = document.getElementById("add");
+  btn.disabled = !(allAnswered() && lack > 0);
+  btn.textContent = lack && allAnswered()
+      ? `Добавить задачи (${lack})` : "Добавить задачи";
+
+  const done = document.getElementById("done");
+  done.innerHTML = (allAnswered() && lack === 0)
+    ? `<div class="done">Все ${TYPES_TOTAL} поворотов закрыты. Оценка ${mark}.</div>`
+    : "";
+}
+
+document.getElementById("again").addEventListener("click", newRun);
+document.getElementById("add").addEventListener("click", addTasks);
+newRun();
+</script>
+</body>
+</html>
