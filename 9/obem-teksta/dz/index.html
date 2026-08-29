@@ -1,0 +1,899 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Домашнее задание — информационный объём текста</title>
+<meta name="description" content="Домашний тренажёр к заданию 1 ОГЭ по вариантам Статграда: шесть форм задания, разбор при ошибке, код работы для сдачи.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E10%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{margin:0;padding:20px 16px 60px;
+     font:17px/1.5 "Segoe UI",system-ui,sans-serif}
+.wrap{max-width:860px;margin:0 auto}
+
+h1{font-size:23px;margin:0 0 4px}
+.sub{color:var(--muted);font-size:15px;margin:0 0 20px}
+
+/* ------------------------------------------------------ как это устроено */
+.howto{border:1px solid var(--line);border-left:5px solid var(--accent);
+       border-radius:10px;padding:14px 18px;margin-bottom:18px;
+       background:var(--card);font-size:16px;line-height:1.5}
+.howto dl{margin:0;display:grid;grid-template-columns:auto 1fr;
+          gap:8px 14px;align-items:baseline}
+.howto dt{font-weight:700;white-space:nowrap;color:var(--accent)}
+.howto dd{margin:0}
+.howto a{color:var(--accent);font-weight:600;word-break:break-all}
+table.steps{border-collapse:collapse;margin:8px 0;font-size:15px}
+table.steps th,table.steps td{border:1px solid var(--line);padding:4px 12px;
+     text-align:center;background:#fff}
+table.steps th{background:var(--card);color:var(--muted);font-size:13px;
+     font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+table.steps td.m{font-weight:700;color:var(--accent);font-size:17px}
+@media (max-width:560px){ .howto dl{grid-template-columns:1fr;gap:2px 0}
+                          .howto dd{margin-bottom:8px} }
+
+/* ------------------------------------------------- прогресс по типам */
+.progress{border:2px solid var(--accent);border-radius:12px;
+          background:var(--card);padding:14px 18px;margin-bottom:20px}
+.progress h2{font-size:15px;margin:0;color:var(--muted);
+             font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.ptop{display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+      margin-bottom:14px}
+.ptop .sp{flex:1 1 auto}
+.score{display:flex;align-items:center;gap:10px}
+.score span{color:var(--muted);font-size:15px}
+.score b{font:700 30px/1 "Segoe UI",system-ui,sans-serif;min-width:38px;
+         text-align:center;border-radius:8px;padding:3px 9px;background:#fff;
+         border:2px solid var(--line);color:var(--muted)}
+.score b.m5{color:var(--ok);border-color:var(--ok-line)}
+.score b.m4{color:var(--accent);border-color:#a9c6e8}
+.score b.m3{color:#8a5a00;border-color:var(--hi-line)}
+.need{margin:12px 0 0;font-size:15px;color:var(--muted)}
+.need b{color:var(--ink)}
+.types{display:grid;grid-template-columns:repeat(3,1fr);gap:8px 20px}
+.type{display:flex;align-items:center;gap:8px;font-size:15px}
+.type .nm{min-width:132px}
+.dots{display:flex;gap:5px}
+.dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--line);
+     background:#fff}
+.dot.full{background:var(--ok);border-color:var(--ok)}
+.type.done .nm{color:var(--ok);font-weight:600}
+@media (max-width:820px){ .types{grid-template-columns:repeat(2,1fr)} }
+@media (max-width:560px){ .types{grid-template-columns:1fr} }
+
+/* ------------------------------------------------------------ задача */
+.card{border:1px solid var(--line);border-radius:12px;padding:18px 20px;
+      margin-bottom:14px;background:#fff}
+.card .kicker{font-size:13px;letter-spacing:.08em;text-transform:uppercase;
+              color:var(--muted);margin-bottom:8px}
+.intro{font-size:18px;margin-bottom:4px}
+.quote{margin:12px 0;border-left:4px solid #a9c6e8;background:var(--card);
+       border-radius:0 8px 8px 0;padding:12px 16px;font-size:17px}
+.quote div + div{margin-top:2px}
+.ask{font-size:18px;font-weight:600;margin:12px 0 14px}
+.ask small{display:block;font-size:14px;font-weight:400;color:var(--muted);
+           margin-top:4px}
+
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+input[type=text]{font:700 20px/1 Consolas,"Courier New",monospace;
+     padding:11px 14px;width:240px;
+     border:2px solid var(--line);border-radius:9px;background:#fff;
+     color:var(--ink)}
+input.numeric{width:170px;letter-spacing:2px}
+input[type=text]:focus{outline:none;border-color:var(--accent)}
+input[type=text]:disabled{background:#f1f2f6;color:var(--muted)}
+button{font:600 16px/1 inherit;padding:12px 18px;border-radius:9px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);
+       cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);
+                color:var(--muted);background:#fff}
+button:focus-visible{outline:3px solid #a9c6e8;outline-offset:2px}
+
+.verdict{margin-top:14px;border-radius:10px;padding:14px 18px;
+         font-weight:600}
+.verdict.ok{background:var(--ok-bg);border:1px solid var(--ok-line);
+            color:var(--ok)}
+.verdict.err{background:var(--err-bg);border:1px solid var(--err-line);
+             color:var(--err)}
+.solution{margin-top:12px;border:1px solid var(--hi-line);
+          background:var(--hi-bg);border-radius:10px;padding:14px 18px;
+          color:var(--ink);font-size:16px}
+.solution .cap{display:block;font-size:13px;letter-spacing:.06em;
+     text-transform:uppercase;color:var(--hi);margin-bottom:8px;
+     font-weight:700}
+.solution ol{margin:4px 0;padding-left:20px}
+.solution li{margin:3px 0}
+.solution .rule{margin-top:10px;font-weight:600}
+
+/* ------------------------------------------------------------- финал */
+.finish{border:3px solid var(--ok-line);background:var(--ok-bg);
+        border-radius:14px;padding:22px 24px;margin-bottom:16px}
+.finish h2{margin:0 0 6px;font-size:22px;color:var(--ok)}
+.code{font:700 34px/1.1 Consolas,monospace;letter-spacing:3px;
+      color:var(--ink);background:#fff;border:2px solid var(--ok-line);
+      border-radius:10px;padding:14px 18px;margin:14px 0;
+      display:inline-block;user-select:all}
+.stats{color:var(--muted);font-size:15px;line-height:1.5}
+.stats b{color:var(--ink)}
+ol.todo{margin:14px 0 0;padding-left:22px}
+ol.todo li{margin:6px 0}
+.send{margin:14px 0 0;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.send label{display:flex;flex-direction:column;gap:4px;
+            font:600 13px/1 inherit;color:var(--muted)}
+.send input{font:600 17px/1 inherit;padding:10px 12px;border-radius:9px;
+            border:2px solid var(--line);background:#fff;width:200px}
+.send input:focus{outline:none;border-color:var(--accent)}
+.send .note{flex-basis:100%;margin:2px 0 0}
+
+details{margin-top:24px;border:1px solid var(--line);border-radius:12px;
+        padding:12px 18px;background:var(--card)}
+summary{cursor:pointer;font-weight:600}
+details h3{font-size:16px;margin:16px 0 6px}
+details p{margin:6px 0}
+table.hex{border-collapse:collapse;font-size:15px;margin:6px 0}
+table.hex td,table.hex th{border:1px solid var(--line);padding:5px 10px;
+     text-align:left}
+table.hex th{background:#fff;color:var(--muted);font-size:14px}
+code{font:600 15px/1.4 Consolas,"Courier New",monospace;
+     background:#fff;border:1px solid var(--line);border-radius:4px;
+     padding:1px 5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Домашнее задание — информационный объём текста</h1>
+<p class="sub">Задание 1 ОГЭ. Оно всегда одно и то же: меняются только
+   кодировка (8, 16 или 32 бита на символ) и разделитель, ушедший вместе
+   со словом (запятая с пробелом или один пробел). Здесь все шесть
+   сочетаний.</p>
+
+<div class="howto">
+  <dl>
+    <dt>Зачем</dt>
+    <dd>Это <b>не обязаловка</b>, а способ поднять оценку за тему:
+        сколько наработаешь, столько и прибавится.</dd>
+
+    <dt>Как устроено</dt>
+    <dd>Задачи идут по одной, ответ набирается с клавиатуры — одним
+        словом, как в условии. Тип считается <b>закрытым</b>, когда
+        ответишь по нему верно <b>два раза подряд</b>. Ошибся — счёт по
+        этому типу начинается заново, зато сразу увидишь весь ход
+        решения.</dd>
+
+    <dt>Сколько решать</dt>
+    <dd><b>Сколько хочешь — на какую оценку наработаешь, такую и
+        получишь.</b>
+        <table class="steps">
+          <tr><th>закрыто типов</th><th>оценка</th>
+              <th>задач минимум</th></tr>
+          <tr><td>4 из 6</td><td class="m">3</td><td>8</td></tr>
+          <tr><td>5 из 6</td><td class="m">4</td><td>10</td></tr>
+          <tr><td>6 из 6</td><td class="m">5</td><td>12</td></tr>
+        </table>
+        Задач будет больше, если ошибаться. Остановиться можно в любой
+        момент — кнопка «Закончить и получить код».</dd>
+
+    <dt>Что получишь</dt>
+    <dd><b>Код работы</b> — в нём записано, сколько типов ты закрыл,
+        сколько решил задач и сколько было ошибок.</dd>
+
+    <dt>Как сдать</dt>
+    <dd>В конце появится кнопка <b>«Сдать работу»</b>: впишешь фамилию
+        и класс, кнопка сама откроет форму с уже вписанным кодом.
+        Останется нажать «Отправить». Переписывать код руками не надо —
+        именно на этом чаще всего и ошибаются.</dd>
+  </dl>
+</div>
+
+<div class="progress">
+  <div class="ptop">
+    <h2>Что осталось закрыть</h2>
+    <span class="sp"></span>
+    <div class="score">
+      <span>наработано на</span><b id="mark">—</b>
+    </div>
+    <button id="finish" class="primary" disabled>Закончить и получить код</button>
+  </div>
+  <div class="types" id="types"></div>
+  <p class="need" id="need"></p>
+</div>
+
+<div id="main"></div>
+
+<details>
+  <summary>Подсказка: как решается задание 1</summary>
+
+  <h3>Компьютер хранит текст посимвольно</h3>
+  <table class="hex">
+    <tr><th>кодировка</th><th>на символ</th><th>это в байтах</th></tr>
+    <tr><td>Windows-1251, КОИ-8</td><td>8 битов</td><td>1 байт</td></tr>
+    <tr><td>Unicode, UTF-16</td><td>16 битов</td><td>2 байта</td></tr>
+    <tr><td>UTF-32</td><td>32 бита</td><td>4 байта</td></tr>
+  </table>
+
+  <h3>Символ — это не только буква</h3>
+  <p>Пробел, запятая, точка, дефис — такие же символы и занимают столько
+     же места. «Винни-Пух» — это 9 символов, а не 8.</p>
+
+  <h3>Три шага, и никогда иначе</h3>
+  <ol>
+    <li>перевести разницу <b>из байтов в символы</b>: при 8 битах число
+        то же, при 16 битах делим на 2, при 32 битах — на 4;</li>
+    <li>вычесть <b>разделители</b>: если слово стояло в списке, с ним
+        ушли запятая и пробел — минус 2; если в сплошном тексте — ушёл
+        только пробел, минус 1;</li>
+    <li>найти в тексте слово получившейся длины — оно там одно.</li>
+  </ol>
+  <p>Тире, двоеточие и «Я знаю девять городов» — оформление списка,
+     на счёт они не влияют.</p>
+
+  <h3>Как записывают ответ</h3>
+  <p>Одно слово, буква в букву как в условии, без кавычек и запятых:
+     <code>Волга</code>, а не «река Волга» и не «Волга,».</p>
+  <p>Информатику сдают за компьютером: ответ набирают с клавиатуры в
+     экзаменационной программе, и сверяет его машина — знак в знак.</p>
+</details>
+
+</div>
+
+<script>
+"use strict";
+
+/* ==== БАЗА: вставлено gen.py, руками не править ==== */
+const LISTS = [
+  {"iknow": "Я знаю {N} городов", "dash": "города", "one": "название одного города", "ans": "название города", "items": ["Шуя", "Руза", "Тверь", "Москва", "Коломна", "Кострома", "Ярославль", "Звенигород", "Александров", "Уфа", "Омск", "Пермь", "Казань", "Иркутск", "Новгород", "Астрахань", "Владивосток", "Екатеринбург"]},
+  {"iknow": "Я знаю {N} названий цветов", "dash": "цветы", "one": "название одного цветка", "ans": "название цветка", "items": ["мак", "пион", "лилия", "ландыш", "тюльпан", "гвоздика", "незабудка", "хризантема", "колокольчик", "роза", "ирис", "астра", "мимоза", "фиалка", "подснежник"]},
+  {"iknow": "Я знаю {N} браузеров", "dash": "браузеры", "one": "название одного браузера", "ans": "название браузера", "items": ["Tor", "Edge", "Opera", "Chrome", "Firefox", "Explorer", "SeaMonkey", "ZenBrowser", "SlimBrowser", "Vivaldi", "Safari", "Yandex"]},
+  {"iknow": "Я знаю {N} языков программирования", "dash": "языки программирования", "one": "название одного языка программирования", "ans": "название языка программирования", "items": ["Go", "Lua", "Ruby", "Swift", "Delphi", "Haskell", "Assembler", "JavaScript", "Transact-SQL", "Python", "Pascal", "Kotlin"]},
+  {"colon": "Школьные предметы", "dash": "школьные предметы", "one": "название одного предмета", "ans": "название предмета", "items": ["ОБЖ", "труд", "химия", "физика", "алгебра", "биология", "география", "литература", "информатика", "обществознание", "музыка", "история", "геометрия"]},
+  {"colon": "Мои любимые герои мультфильмов", "one": "имя героя одного мультфильма", "ans": "имя героя мультфильма", "items": ["Шрек", "Пумба", "Маугли", "Рататуй", "Пиноккио", "Винни-Пух", "Белоснежка", "Малефисента", "Человек-паук", "Конёк-Горбунок", "Бэмби", "Балу"]},
+  {"dash": "птицы", "iknow": "Я знаю {N} названий птиц", "one": "название одной птицы", "ans": "название птицы", "items": ["чиж", "грач", "стриж", "гагара", "пингвин", "ласточка", "жаворонок", "свиристель", "буревестник", "вертиголовка", "сыч", "сова", "ворона", "снегирь", "зарянка", "куропатка", "трясогузка"]},
+  {"dash": "реки", "iknow": "Я знаю {N} названий рек", "one": "название одной из рек", "ans": "название реки", "items": ["Обь", "Дон", "Урал", "Лена", "Волга", "Дунай", "Меконг", "Миссури", "Амазонка", "Маккензи", "Миссисипи", "Брахмапутра", "Кубань", "Печора"]},
+  {"dash": "страны", "iknow": "Я знаю {N} названий стран", "one": "название одной из стран", "ans": "название страны", "items": ["Чад", "Куба", "Катар", "Швеция", "Эстония", "Танзания", "Сальвадор", "Люксембург", "Великобритания", "Перу", "Кения", "Норвегия", "Аргентина"]},
+  {"dash": "моря", "iknow": "Я знаю {N} названий морей", "one": "название одного из морей", "ans": "название моря", "items": ["Аки", "Бали", "Банда", "Сибуян", "Камотес", "Лабрадор", "Линкольна", "Балтийское", "Средиземное", "Азовское", "Карское", "Чукотское"]},
+  {"dash": "острова", "iknow": "Я знаю {N} названий островов", "one": "название одного из островов", "ans": "название острова", "items": ["Ява", "Куба", "Лусон", "Маражо", "Суматра", "Сулавеси", "Эспаньола", "Гренландия", "Ньюфаундленд", "Крит", "Сахалин", "Мадагаскар"]},
+  {"dash": "химические элементы", "iknow": "Я знаю {N} названий химических элементов", "one": "название одного элемента", "ans": "название элемента", "items": ["бор", "азот", "гелий", "натрий", "водород", "кислород", "рентгений", "менделевий", "резерфордий", "неон", "железо", "кальций", "алюминий"]},
+  {"dash": "музыкальные инструменты", "iknow": "Я знаю {N} музыкальных инструментов", "one": "название одного из инструментов", "ans": "название инструмента", "items": ["рог", "альт", "гобой", "флейта", "скрипка", "саксофон", "балалайка", "виолончель", "контрафагот", "туба", "домра", "тромбон"]},
+  {"dash": "дикие животные", "iknow": "Я знаю {N} названий диких животных", "one": "название одного из животных", "ans": "название животного", "items": ["лев", "слон", "олень", "тюлень", "носорог", "крокодил", "аллигатор", "броненосец", "рысь", "кабан", "барсук", "леопард", "антилопа", "землеройка", "шимпанзе"]}
+];
+
+const POEMS = [
+  {"lines": ["Белая берёза под моим окном", "Принакрылась снегом, точно серебром."]},
+  {"lines": ["На пушистых ветках снежною каймой", "Распустились кисти белой бахромой."]},
+  {"lines": ["Мой дядя самых честных правил,", "Когда не в шутку занемог,"]},
+  {"lines": ["Он уважать себя заставил", "И лучше выдумать не мог."]},
+  {"lines": ["Белеет парус одинокой", "В тумане моря голубом!"]},
+  {"lines": ["Однажды в студёную зимнюю пору", "Я из лесу вышел; был сильный мороз."]},
+  {"lines": ["Гляжу, поднимается медленно в гору", "Лошадка, везущая хворосту воз."]},
+  {"lines": ["Скользя по утреннему снегу,", "Друг милый, предадимся бегу"]},
+  {"lines": ["Короче становился день,", "Лесов таинственная сень"]},
+  {"lines": ["Гонимы вешними лучами,", "С окрестных гор уже снега"]},
+  {"lines": ["Утром в путь она умчалась рано,", "По лазури весело играя;"]},
+  {"lines": ["Есть в осени первоначальной", "Короткая, но дивная пора —"]},
+  {"lines": ["Весь день стоит как бы хрустальный,", "И лучезарны вечера."]},
+  {"lines": ["Опять весна душистая повеяла крылом,", "Опять кругом тепло и ясно."]},
+  {"lines": ["Я помню чудное мгновенье:", "Передо мной явилась ты,"]},
+  {"lines": ["Как мимолётное виденье,", "Как гений чистой красоты."]},
+  {"lines": ["Роняет лес багряный свой убор,", "Сребрит мороз увянувшее поле,"]},
+  {"lines": ["Тиха украинская ночь.", "Прозрачно небо. Звёзды блещут."]}
+];
+
+const ENC16 = [
+  "В одной из кодировок Unicode каждый символ кодируется 16 битами",
+  "В одной из кодировок Unicode каждый символ кодируется 16 бит"
+];
+const ENC8 = [
+  "В кодировке Windows-1251 каждый символ кодируется 8 битами",
+  "В кодировке Windows-1251 каждый символ кодируется 8 бит"
+];
+const ENC32 = [
+  "В одной из кодировок Unicode (UTF-32) каждый символ кодируется 32 битами",
+  "В кодировке UTF-32 каждый символ кодируется 32 битами"
+];
+const NAMES = [
+  {"n": "Вова"},
+  {"n": "Петя"},
+  {"n": "Дима"},
+  {"n": "Ваня"},
+  {"n": "Егор"},
+  {"n": "Вася"},
+  {"n": "Аня", "f": true},
+  {"n": "Лена", "f": true},
+  {"n": "Оля", "f": true},
+  {"n": "Настя", "f": true},
+  {"n": "Вика", "f": true}
+];
+const NUMERALS = [
+  "",
+  "один",
+  "два",
+  "три",
+  "четыре",
+  "пять",
+  "шесть",
+  "семь",
+  "восемь",
+  "девять",
+  "десять",
+  "одиннадцать",
+  "двенадцать"
+];
+
+const TYPES = [
+  {"id": 0, "key": "list16", "sep": 2, "k": 16, "name": "список, 16 бит", "rule": "Список: со словом ушли запятая и пробел, это 2 символа. Каждый символ — 2 байта, поэтому разницу сначала делим на 2, и только потом убираем разделители."},
+  {"id": 1, "key": "list8", "sep": 2, "k": 8, "name": "список, 8 бит", "rule": "Список: со словом ушли запятая и пробел, это 2 символа. Каждый символ — 1 байт: число байтов и есть число символов, делить не нужно."},
+  {"id": 2, "key": "list32", "sep": 2, "k": 32, "name": "список, 32 бита", "rule": "Список: со словом ушли запятая и пробел, это 2 символа. 32 бита — это 4 байта на символ, поэтому разницу делим на 4."},
+  {"id": 3, "key": "text16", "sep": 1, "k": 16, "name": "сплошной текст, 16 бит", "rule": "Сплошной текст: запятых при слове нет, ушёл только пробел — 1 символ. Разницу так же делим на 2."},
+  {"id": 4, "key": "text8", "sep": 1, "k": 8, "name": "сплошной текст, 8 бит", "rule": "Сплошной текст при 8 битах — самый короткий счёт: число байтов минус один пробел и есть длина слова."},
+  {"id": 5, "key": "text32", "sep": 1, "k": 32, "name": "сплошной текст, 32 бита", "rule": "Сплошной текст: ушли слово и один пробел. 32 бита — 4 байта на символ, значит разницу делим на 4."}
+];
+
+const TYPES_TOTAL = TYPES.length;
+const randInt = (lo, hi) => lo + Math.floor(Math.random() * (hi - lo + 1));
+const pick = arr => arr[randInt(0, arr.length - 1)];
+
+function sample(arr, k){
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a.slice(0, k);
+}
+
+// «1 байт», «2 байта», «5 байт» — условие должно читаться как русский
+// текст, иначе ученик спотыкается о фразу вместо задачи.
+function plural(n, one, few, many){
+  const d = n % 10, dd = n % 100;
+  if (d === 1 && dd !== 11) return one;
+  if (d >= 2 && d <= 4 && (dd < 10 || dd >= 20)) return few;
+  return many;
+}
+const bytes = n => n + " " + plural(n, "байт", "байта", "байт");
+const chars = n => n + " " + plural(n, "символ", "символа", "символов");
+
+// Кто написал текст. Без согласования выходит «Настя написал», и ученик
+// спотыкается о фразу раньше, чем доходит до задачи.
+function person(){
+  const p = pick(NAMES), f = !!p.f;
+  return {name: p.n, wrote: p.n + (f ? " написала" : " написал"),
+          wanted: p.n + (f ? " хотела написать" : " хотел написать"),
+          pupil: f ? "Ученица" : "Ученик", he: f ? "она" : "он",
+          cut: f ? "вычеркнула" : "вычеркнул",
+          del: f ? "удалила" : "удалил",
+          missed: f ? "пропустила" : "пропустил"};
+}
+
+/* ------------------------------------------------------------ списки
+   Названия берутся ПОПАРНО РАЗНОЙ ДЛИНЫ — по одному из каждой группы.
+   Тогда у задачи ровно один ответ: слово нужной длины в списке одно.
+   Порядок — по возрастанию длины, как во всех вариантах Статграда.
+------------------------------------------------------------------ */
+function countLens(topic){
+  const s = {};
+  topic.items.forEach(w => { s[w.length] = 1; });
+  return Object.keys(s).length;
+}
+
+function pickItems(topic, count){
+  const byLen = {};
+  topic.items.forEach(w => { (byLen[w.length] = byLen[w.length] || []).push(w); });
+  const lens = sample(Object.keys(byLen).map(Number), count);
+  return lens.sort((a, b) => a - b).map(L => pick(byLen[L]));
+}
+
+/* -------------------------------------------------------------- текст
+   Кандидат на вычёркивание — слово, длина которого встречается в тексте
+   ровно один раз (иначе ответов два), рядом с которым нет знаков
+   препинания (иначе непонятно, что стало «лишним пробелом»), и не
+   короче трёх букв: ответ «в» или «не» ученик угадает, ничего не считая.
+------------------------------------------------------------------ */
+function poemWords(poem){
+  const clean = s => s.replace(/^[^0-9A-Za-zА-Яа-яЁё-]+/, "")
+                      .replace(/[^0-9A-Za-zА-Яа-яЁё-]+$/, "");
+  const all = [];
+  poem.lines.forEach((line, li) => {
+    line.split(" ").forEach((tok, ti, arr) => {
+      if (!tok) return;
+      all.push({tok: tok, word: clean(tok), line: li, pos: ti,
+                last: ti === arr.length - 1, first: ti === 0});
+    });
+  });
+  const freq = {};
+  all.forEach(w => { freq[w.word.length] = (freq[w.word.length] || 0) + 1; });
+  return all.map(w => Object.assign(w, {unique: freq[w.word.length] === 1,
+                                        pure: w.tok === w.word,
+                                        long: w.word.length >= 3}));
+}
+
+/* --------------------------------------------------------- генератор */
+
+function makeTask(typeId){
+  const t = TYPES[typeId];
+  const per = t.k / 8;                       // байтов на символ: 1, 2 или 4
+  const who = person();
+  const enc = pick(t.k === 16 ? ENC16 : t.k === 32 ? ENC32 : ENC8);
+  const base = {type: typeId, key: t.key, name: t.name, rule: t.rule};
+
+  // Первый шаг разбора у всех типов один и тот же — перевод байтов в
+  // символы. Разница только в том, надо ли делить.
+  const toChars = (dBytes, dChars) => per === 1
+    ? "1 символ = 1 байт, значит это " + chars(dChars) + "."
+    : "Один символ стоит " + per + " байта, поэтому переведём разницу в " +
+      "символы: " + dBytes + " : " + per + " = " + chars(dChars) + ".";
+
+  /* ---------------------------------------------- сплошной текст */
+  if (t.sep === 1){
+    let poem, cand;
+    do {
+      poem = pick(POEMS);
+      cand = poemWords(poem).filter(w => w.unique && w.pure && w.long &&
+                                         !w.first && !w.last);
+    } while (!cand.length);
+    const w = pick(cand);
+    const dChars = w.word.length + 1;          // слово + пробел
+    const dBytes = dChars * per;
+
+    // Два поворота из вариантов Статграда: слово вычеркнули из готового
+    // текста — и слово пропустили, когда текст писали. Арифметика одна,
+    // но узнавать надо оба.
+    const missed = Math.random() < 0.5;
+    return Object.assign(base, {
+      intro: enc + ". " + (missed ? who.wanted : who.wrote) +
+             " текст (в нём нет лишних пробелов):",
+      quote: poem.lines.slice(),
+      tail: missed
+        ? "Одно из слов " + who.pupil.toLowerCase() + " " + who.missed +
+          " (вместе с пробелом), " +
+          "поэтому размер написанного текста в данной кодировке оказался " +
+          "на " + bytes(dBytes) + " меньше, чем размер нужного текста. " +
+          "Напишите в ответе пропущенное слово."
+        : who.pupil + " " + who.cut + " из текста одно слово. Заодно " +
+          who.he + " " + who.cut + " ставший лишним пробел — два пробела " +
+          "не должны идти подряд. При этом размер нового текста в данной " +
+          "кодировке оказался на " + bytes(dBytes) + " меньше, чем размер " +
+          "исходного текста. Напишите в ответе вычеркнутое слово.",
+      answer: w.word,
+      steps: [toChars(dBytes, dChars),
+              "Запятых при слове здесь нет — вместе со словом ушёл только " +
+              "пробел, это 1 символ.",
+              "Значит в слове " + (dChars - 1) + " " +
+              plural(dChars - 1, "буква", "буквы", "букв") + ".",
+              "Такое слово в тексте одно: «" + w.word + "»."],
+      meta: {lines: poem.lines, k: t.k, dBytes: dBytes, sep: 1}
+    });
+  }
+
+  /* ------------------------------------------------------ списки */
+  const topic = pick(LISTS);
+  const count = randInt(8, Math.min(10, countLens(topic)));
+  const items = pickItems(topic, count);
+  const word = pick(items);
+  const dChars = word.length + 2;              // слово + запятая + пробел
+  const dBytes = dChars * per;
+
+  // Тире, двоеточие и «Я знаю девять городов» — оформление, а не тип:
+  // считается везде одинаково, поэтому выбираем из того, что есть у темы.
+  const forms = [];
+  if (topic.dash) forms.push("dash");
+  if (topic.colon) forms.push("colon");
+  if (topic.iknow) forms.push("iknow");
+  const form = pick(forms);
+  const text = form === "dash" ? items.join(", ") + " – " + topic.dash
+    : form === "colon" ? topic.colon + ": " + items.join(", ")
+    : topic.iknow.replace("{N}", NUMERALS[count]) + ": " + items.join(", ");
+
+  // Глагол и вопрос тоже разные в разных вариантах Статграда: где-то
+  // «вычеркнул», где-то «удалил», где-то просят «вычеркнутое слово»,
+  // а где-то «удалённое название города».
+  const deleted = Math.random() < 0.5;
+  const ask = Math.random() < 0.35
+    ? "Напишите в ответе вычеркнутое слово."
+    : "Напишите в ответе " + (deleted ? "удалённое " : "вычеркнутое ") +
+      topic.ans + ".";
+
+  return Object.assign(base, {
+    intro: enc + ". " + who.wrote + " текст (в нём нет лишних пробелов):",
+    quote: ["«" + text + "»."],
+    tail: (deleted
+      ? who.pupil + " " + who.del + " из списка " + topic.one + ", а также " +
+        "лишние запятые и пробелы — два пробела не должны идти подряд."
+      : who.pupil + " " + who.cut + " из списка " + topic.one + ". Заодно " +
+        who.he + " " + who.cut + " ставшие лишними запятую и пробел — два " +
+        "пробела не должны идти подряд.") +
+      " При этом размер нового предложения в данной кодировке оказался на " +
+      bytes(dBytes) + " меньше, чем размер исходного предложения. " + ask,
+    answer: word,
+    steps: [toChars(dBytes, dChars),
+            "Вместе со словом ушли запятая и пробел — это 2 символа.",
+            "Значит в слове " + (dChars - 2) + " " +
+            plural(dChars - 2, "буква", "буквы", "букв") + ".",
+            "В списке такое одно: «" + word + "»."],
+    meta: {items: items, k: t.k, dBytes: dBytes, sep: 2}
+  });
+}
+
+/* -------------------------------------------------- проверка ответа
+   Строго, как на экзамене: лишний символ — ошибка. Но ошибку записи
+   всегда называем своим именем, иначе ученик решит, что не понял тему,
+   хотя он просто написал «река Волга» вместо «Волга».
+------------------------------------------------------------------ */
+function verdict(t, raw){
+  const given = String(raw).trim();
+  if (!given) return null;
+
+  // Регистр не проверяем: набрать слово с большой или маленькой буквы —
+  // не предметная ошибка. А вот «е» вместо «ё» — уже другая запись, и об
+  // этом стоит сказать: сверяет ответ машина, знак в знак.
+  const fold = s => s.toLowerCase();
+  const norm = s => fold(s).replace(/ё/g, "е");
+  if (fold(given) === fold(t.answer)) return {ok: true, hint: null};
+
+  if (/\s/.test(given))
+    return {ok: false, hint: "В ответе пишут <b>одно слово</b>, без " +
+            "пробелов и лишних слов."};
+  if (/[.,;:!?«»"']/.test(given))
+    return {ok: false, hint: "Знаки препинания в ответ не переносят — " +
+            "только само слово."};
+  if (/^\d+$/.test(given))
+    return {ok: false, hint: "В ответе нужно <b>само слово</b>, а не его " +
+            "длина. Длину ты, похоже, посчитал верно — найди слово."};
+  if (norm(given) === norm(t.answer))
+    return {ok: false, hint: "Слово найдено верно, но набрано не как в " +
+            "тексте: там <b>" + t.answer + "</b>. Букву «ё» набирают так " +
+            "же, как она стоит в условии."};
+
+  // Слово из текста, но не то — считать умеет, ошибся в арифметике.
+  // Слова в тексте вовсе нет — скорее всего описка или чужое слово.
+  const inText = taskWords(t).some(w => fold(w) === fold(given));
+  if (inText)
+    return {ok: false, hint: "Это слово из текста, но его длина не сходится " +
+            "с разницей в байтах. Пересчитай: сколько символов ушло и " +
+            "сколько из них пришлось на разделители."};
+  return {ok: false, hint: "Такого слова в тексте нет — проверь написание " +
+          "и перечитай условие."};
+}
+
+// Слова, из которых вообще можно выбирать ответ: список или текст.
+function taskWords(t){
+  if (!t.meta) return [];
+  if (t.meta.items) return t.meta.items;
+  if (t.meta.lines)
+    return t.meta.lines.join(" ").split(" ")
+      .map(s => s.replace(/^[^0-9A-Za-zА-Яа-яЁё-]+/, "")
+                 .replace(/[^0-9A-Za-zА-Яа-яЁё-]+$/, ""))
+      .filter(Boolean);
+  return [];
+}
+/* ==== /БАЗА ==== */
+
+// Два верных подряд, а не три: случайное попадание они всё равно
+// отсекают, но объём укладывается в норматив времени на домашнюю работу.
+const STREAK = 2;
+
+// Ступени. Домашнее задание добровольное — ученик набирает столько,
+// сколько ему нужно, и останавливается. Шкала та же, что в тренажёре.
+const SCALE = [[6, 5], [5, 4], [4, 3]];
+const MIN_TO_FINISH = 4;                 // ниже сдавать нечего
+function markFor(done){
+  for (const s of SCALE) if (done >= s[0]) return s[1];
+  return 2;
+}
+
+/* ------------------------------------------------------------ квитанция
+   Код несёт цифры работы и контрольную сумму. Ключа нигде нет — иначе
+   страницу нельзя было бы просто положить на школьную платформу. Смысл
+   кода не в том, чтобы его нельзя было подделать, а в том, что подделать
+   его дольше, чем решить.
+------------------------------------------------------------------ */
+/* Ссылку на форму ставит скрипт set_form_link.py из корня
+   кабинета: в ней зашиты номера полей формы, на глаз их не
+   подобрать. Пусто — страница показывает старый порядок
+   «открой форму и впиши код руками». */
+const FORM = "https://docs.google.com/forms/d/e/1FAIpQLSfQyhaxcnzn4ZaKSe_ZMsluw7qRQnrw_80H6SfrnYB5EThUIA/viewform?usp=pp_url&entry.853601231=ФАМИЛИЯ&entry.1091635917=КЛАСС&entry.487188307=КОД";
+
+const ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+const EPOCH = Date.UTC(2026, 0, 1);
+
+const bin = (v, w) => v.toString(2).padStart(w, "0");
+
+// Считаем по семибитным кускам строки, а не через parseInt всей нагрузки:
+// в ней 33 бита, а побитовые операции в JS работают с 32-битными числами
+// и старший бит молча потерялся бы.
+function checksum(bitstr){
+  let cs = 0x5B;
+  for (let i = 0; i < bitstr.length; i += 7)
+    cs ^= parseInt(bitstr.substr(i, 7).padEnd(7, "0"), 2);
+  return cs & 0x7F;
+}
+
+function makeCode(st){
+  const day = Math.max(0, Math.min(2047, Math.floor(
+      (Date.now() - EPOCH) / 86400000)));
+  const payload = bin(day, 11) + bin(Math.min(15, st.typesDone), 4) +
+                  bin(Math.min(15, st.cleanTypes), 4) +
+                  bin(Math.min(127, st.solved), 7) +
+                  bin(Math.min(127, st.wrong), 7);
+  const bitstr = payload + bin(checksum(payload), 7);
+  let out = "";
+  for (let i = 0; i < 40; i += 5)
+    out += ALPHABET[parseInt(bitstr.substr(i, 5), 2)];
+  return "TX-" + out.slice(0, 4) + "-" + out.slice(4);
+}
+
+/* --------------------------------------------------------- состояние */
+
+const st = {
+  streak: TYPES.map(() => 0),
+  done:   TYPES.map(() => false),
+  clean:  TYPES.map(() => true),   // закрыт без единой ошибки
+  solved: 0, wrong: 0,
+  cur: null, answered: false, given: ""
+};
+Object.defineProperty(st, "typesDone",
+  {get(){ return st.done.filter(Boolean).length; }});
+Object.defineProperty(st, "cleanTypes",
+  {get(){ return st.done.filter((d, i) => d && st.clean[i]).length; }});
+
+function pickType(){
+  const open = TYPES.filter(t => !st.done[t.id]);
+  if (!open.length) return null;
+  // берём тот, где серия длиннее нуля — не бросаем начатое на полпути
+  const started = open.filter(t => st.streak[t.id] > 0);
+  const pool = started.length ? started : open;
+  return pool[randInt(0, pool.length - 1)];
+}
+
+function nextTask(){
+  const t = pickType();
+  if (!t){ renderFinish(); return; }
+  st.cur = makeTask(t.id);
+  st.answered = false;
+  st.given = "";
+  render();
+}
+
+function answer(){
+  if (st.answered) return;
+  const given = document.getElementById("ans").value.trim();
+  if (!given) return;                    // пустое — не считаем ответом
+  const t = st.cur, v = verdict(t, given);
+  st.given = given;
+  st.answered = true;
+  t.hint = v.hint;
+  t.ok = v.ok;
+  if (v.ok){
+    st.solved++;
+    st.streak[t.type]++;
+    if (st.streak[t.type] >= STREAK) st.done[t.type] = true;
+  } else {
+    st.wrong++;
+    st.streak[t.type] = 0;
+    st.clean[t.type] = false;
+  }
+  render();
+}
+
+/* ------------------------------------------------------------- вывод */
+
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
+                          .replace(/>/g, "&gt;");
+
+// Разбор показывает ход решения целиком. «Верный ответ 151» не учит
+// ничему: важно, откуда взялось 151 и на каком шаге ты свернул не туда.
+function explain(t){
+  return `<div class="solution"><span class="cap">как это решается</span>
+          <ol>${t.steps.map(s => `<li>${esc(s)}</li>`).join("")}</ol>
+          <div class="rule">${esc(t.rule)}</div></div>`;
+}
+
+function renderTypes(){
+  document.getElementById("types").innerHTML = TYPES.map(t => {
+    const dots = Array.from({length: STREAK}, (_, k) =>
+      `<span class="dot${k < st.streak[t.id] || st.done[t.id]
+         ? " full" : ""}"></span>`).join("");
+    return `<div class="type${st.done[t.id] ? " done" : ""}">
+              <span class="nm">${esc(t.name)}</span>
+              <span class="dots">${dots}</span></div>`;
+  }).join("");
+
+  const done = st.typesDone;
+  const mark = markFor(done);
+  const el = document.getElementById("mark");
+  // до первой ступени оценки ещё нет — прочерк, не двойка
+  el.textContent = done >= MIN_TO_FINISH ? mark : "—";
+  el.className = done >= MIN_TO_FINISH ? "m" + mark : "";
+
+  const btn = document.getElementById("finish");
+  btn.disabled = done < MIN_TO_FINISH;
+  btn.textContent = done >= MIN_TO_FINISH
+      ? `Закончить и получить код (на ${mark})`
+      : "Закончить и получить код";
+
+  const need = document.getElementById("need");
+  const up = SCALE.filter(s => s[0] > done).pop();
+  const kinds = n => {
+    const a = n % 100, b = a % 10;
+    if (a > 4 && a < 21) return "типов";
+    if (b === 1) return "тип";
+    if (b > 1 && b < 5) return "типа";
+    return "типов";
+  };
+  if (!up){
+    need.innerHTML = "Закрыто всё, что нужно на пятёрку. " +
+                     "Забирай код и сдавай.";
+  } else if (done >= MIN_TO_FINISH){
+    need.innerHTML = `Можно остановиться прямо сейчас — это <b>${mark}</b>. ` +
+        `Закрой ещё <b>${up[0] - done}</b> ${kinds(up[0] - done)} — ` +
+        `и будет <b>${up[1]}</b>.`;
+  } else {
+    const left = MIN_TO_FINISH - done;
+    need.innerHTML = `Закрой ещё <b>${left}</b> ${kinds(left)}, ` +
+        `чтобы получить код на <b>3</b>.`;
+  }
+}
+
+function render(){
+  renderTypes();
+  const t = st.cur;
+  const main = document.getElementById("main");
+  if (!t) return;
+
+  const quote = t.quote
+    ? `<div class="quote">${t.quote.map(l => `<div>${esc(l)}</div>`)
+                                   .join("")}</div>`
+    : "";
+
+  let tail = "";
+  if (st.answered){
+    tail = t.ok
+      ? `<div class="verdict ok">Правильно${
+          st.done[t.type] ? ` — «${esc(t.name)}» закрыто`
+                          : `, подряд: ${st.streak[t.type]} из ${STREAK}`}</div>`
+      : `<div class="verdict err">Ошибка. ${t.hint
+           ? t.hint + " " : `Верный ответ: ${esc(t.answer)}. `}
+           Серия по этому типу начинается заново.</div>` + explain(t);
+  }
+
+  main.innerHTML = `
+    <div class="card">
+      <div class="kicker">${esc(t.name)} &middot; решено задач:
+           ${st.solved}</div>
+      <div class="intro">${esc(t.intro)}</div>
+      ${quote}
+      <div class="ask">${esc(t.tail)}<small>Одно слово, как в условии:
+        без кавычек и знаков препинания.</small></div>
+      <div class="row">
+        <input type="text" id="ans" autocomplete="off"
+               spellcheck="false" placeholder="ответ" maxlength="24"
+               value="${esc(st.given || "")}"
+               ${st.answered ? "disabled" : ""}>
+        <button class="primary" id="go">${
+          st.answered ? "Следующая задача" : "Проверить"}</button>
+      </div>
+      ${tail}
+    </div>`;
+
+  const btn = document.getElementById("go");
+  btn.addEventListener("click", () => st.answered ? nextTask() : answer());
+  const inp = document.getElementById("ans");
+  if (!st.answered){
+    inp.addEventListener("keydown", e => {
+      if (e.key === "Enter"){ e.preventDefault(); answer(); }
+    });
+    inp.focus();
+  } else btn.focus();
+}
+
+/* Кнопка «Сдать»: фамилию и класс страница помнит между заходами, код
+   подставляет сам. Переписывать код руками больше не нужно — именно на
+   переписывании и брались «код не разобрался». */
+function wireSend(code){
+  const fam = document.getElementById("fam");
+  if (!fam) return;
+  const kls = document.getElementById("kls");
+  const note = document.getElementById("sendnote");
+  // Класс страница не подставляет: одну и ту же страницу открывают
+  // разные классы параллели. Но что вписали в прошлый раз — помнит.
+  try {
+    fam.value = localStorage.getItem("hw-fam") || "";
+    kls.value = localStorage.getItem("hw-kls") || "";
+  } catch (e) {}
+  document.getElementById("send").addEventListener("click", () => {
+    const f = fam.value.trim(), k = kls.value.trim();
+    if (!f || !k){
+      note.textContent = "Впиши фамилию и класс — иначе непонятно, "
+                       + "чья это работа.";
+      (f ? kls : fam).focus();
+      return;
+    }
+    try {
+      localStorage.setItem("hw-fam", f);
+      localStorage.setItem("hw-kls", k);
+    } catch (e) {}
+    const url = FORM.replace("ФАМИЛИЯ", encodeURIComponent(f))
+                    .replace("КЛАСС", encodeURIComponent(k))
+                    .replace("КОД", encodeURIComponent(code));
+    window.open(url, "_blank", "noopener");
+    note.textContent = "Форма открылась в новой вкладке. Не забудь нажать "
+                     + "в ней «Отправить».";
+  });
+}
+
+function renderFinish(){
+  renderTypes();
+  const done = st.typesDone, mark = markFor(done);
+  const all = done >= TYPES_TOTAL;
+  const code = makeCode(st);
+  const up = SCALE.filter(s => s[0] > done).pop();
+
+  // Остановиться можно на любой ступени, поэтому «дальше» — не подачка,
+  // а обычный ход: закрыл ещё один тип, забрал код получше.
+  const more = !up
+    ? `<button id="more">Потренироваться ещё</button>
+       <span class="stats">оценку это уже не изменит,
+             но перед ОГЭ полезно</span>`
+    : `<button id="back" class="primary">Решать дальше — до ${up[1]}</button>
+       <span class="stats">код останется, просто получишь новый,
+             когда закроешь ещё ${up[0] - done}</span>`;
+
+  document.getElementById("main").innerHTML = `
+    <div class="finish">
+      <h2>${all ? "Готово — закрыты все шесть типов"
+                : `Готово — наработано на ${mark}`}</h2>
+      <p class="stats">Закрыто типов: <b>${done}</b> из
+         ${TYPES_TOTAL} &middot; решено задач: <b>${st.solved}</b> &middot;
+         ошибок: <b>${st.wrong}</b> &middot;
+         закрыто без единой ошибки: <b>${st.cleanTypes}</b></p>
+      <div class="code">${code}</div>
+      <p class="stats">Это код твоей работы. Он у каждого свой и зависит
+         от того, сколько и как ты решал.</p>
+      ${FORM ? `<div class="send">
+        <label>Фамилия
+          <input id="fam" autocomplete="off" placeholder="как в журнале"></label>
+        <label>Класс
+          <input id="kls" autocomplete="off" placeholder="9б"
+                 style="width:110px"></label>
+        <button id="send" class="primary">Сдать работу</button>
+        <p class="stats note" id="sendnote">Кнопка откроет форму: фамилия,
+           класс и код уже будут вписаны — останется нажать
+           «Отправить».</p>
+      </div>` : `<ol class="todo">
+        <li>Открой форму сдачи домашнего задания (ссылку даст учитель).</li>
+        <li>Впиши фамилию, класс и этот код — <b>ровно как здесь</b>.</li>
+      </ol>`}
+    </div>
+    <div class="row">${more}</div>`;
+
+  wireSend(code);
+  const back = document.getElementById("back") || document.getElementById("more");
+  if (back) back.addEventListener("click", () => {
+    // закрыто всё до единого — открываем счёт заново, иначе просто
+    // продолжаем с оставшимися типами
+    if (all) TYPES.forEach(t => { st.done[t.id] = false; st.streak[t.id] = 0; });
+    nextTask();
+  });
+}
+
+document.getElementById("finish").addEventListener("click", () => {
+  if (st.typesDone >= MIN_TO_FINISH) renderFinish();
+});
+
+nextTask();
+</script>
+</body>
+</html>
