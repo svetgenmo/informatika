@@ -10,6 +10,8 @@
 Ссылку на класс удобно класть в заметки и в журнал: темы в
 нём прибавляются, а адрес остаётся прежним.
 
+- **10 класс** — https://svetgenmo.github.io/informatika/10/
+  - [Анализ алгоритмов и этапы решения задач](https://svetgenmo.github.io/informatika/10/analiz-algoritmov/) — Первая пара углублённого курса: ввод-вывод, ветвление и обратная задача на сюжете службы доставки
 - **11 класс** — https://svetgenmo.github.io/informatika/11/
   - [Схема дорог и таблица](https://svetgenmo.github.io/informatika/11/graf-i-tablica/) — Задание 1 ЕГЭ: анализ информационных моделей
 - **7 класс** — https://svetgenmo.github.io/informatika/7/

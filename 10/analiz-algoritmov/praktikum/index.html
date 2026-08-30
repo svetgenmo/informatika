@@ -1,0 +1,572 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Служба доставки — практикум по Python</title>
+<meta name="description" content="Практикум 10 класса (углублённый): ввод-вывод, целочисленное деление, вещественные числа, ветвление и обратная задача на сквозном сюжете «служба доставки». Проверка — локальной оболочкой, без интернета.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E10%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{margin:0;padding:20px 16px 60px;font:17px/1.55 "Segoe UI",system-ui,sans-serif}
+.wrap{max-width:860px;margin:0 auto}
+h1{font-size:23px;margin:0 0 4px}
+h2{font-size:19px;margin:34px 0 10px;padding-top:10px;border-top:2px solid var(--line)}
+h3{font-size:17px;margin:18px 0 6px}
+.sub{color:var(--muted);font-size:15px;margin:0 0 18px}
+code,pre{font-family:Consolas,"Cascadia Mono",monospace}
+pre{background:#1e2430;color:#e7ecf5;padding:12px 14px;border-radius:10px;
+    overflow-x:auto;font-size:14.5px;line-height:1.45;margin:8px 0}
+pre .c{color:#8fa6c4}
+code{background:var(--card);border:1px solid var(--line);border-radius:5px;
+     padding:1px 5px;font-size:15px}
+pre code{background:none;border:0;padding:0;font-size:inherit;color:inherit}
+table{border-collapse:collapse;width:100%;margin:10px 0;font-size:16px}
+th,td{border:1px solid var(--line);padding:7px 10px;text-align:left}
+th{background:var(--card)}
+.note{border:1px solid var(--hi-line);background:var(--hi-bg);border-radius:10px;
+      padding:12px 16px;margin:14px 0}
+.note b{color:var(--hi)}
+.card{border:1px solid var(--line);border-radius:12px;padding:14px 18px;
+      margin:14px 0;background:#fff}
+.step{border-left:5px solid var(--accent)}
+.step h3{margin-top:0;display:flex;gap:10px;align-items:baseline}
+.badge{background:var(--accent);color:#fff;border-radius:20px;font-size:13px;
+       padding:2px 10px;font-weight:700;white-space:nowrap}
+.badge.gray{background:var(--muted)}
+.io{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px}
+.io h4{margin:0 0 4px;font-size:14px;color:var(--muted);font-weight:600;
+       text-transform:uppercase;letter-spacing:.04em}
+@media(max-width:640px){.io{grid-template-columns:1fr}}
+details{margin-top:10px;border:1px dashed var(--line);border-radius:9px;padding:8px 12px}
+summary{cursor:pointer;color:var(--accent);font-weight:600}
+button{font:600 15px/1 inherit;padding:10px 15px;border-radius:9px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);cursor:pointer}
+button:hover{background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover{background:#194f8c}
+input[type=text]{font:16px/1 Consolas,monospace;padding:9px 11px;border-radius:8px;
+                 border:1px solid var(--line);width:100%;max-width:320px}
+.panel{display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+       border:2px solid var(--accent);border-radius:12px;padding:10px 16px;
+       background:var(--card);position:sticky;top:0;z-index:5;margin-bottom:18px}
+.panel .spacer{flex:1 1 auto}
+.stats{color:var(--muted);font-size:14px}
+.task{border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin:12px 0}
+.task.ok{border-color:var(--ok-line);background:var(--ok-bg)}
+.task.err{border-color:var(--err-line);background:var(--err-bg)}
+.task .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:8px}
+.verdict{font-size:15px;margin-top:8px}
+.verdict.ok{color:var(--ok)}
+.verdict.err{color:var(--err)}
+.tag{font-size:13px;color:var(--muted)}
+ul.tight{margin:6px 0;padding-left:22px}
+ul.tight li{margin:3px 0}
+.kbd{background:#fff;border:1px solid var(--line);border-bottom-width:2px;
+     border-radius:5px;padding:1px 6px;font-size:14px;font-family:Consolas,monospace}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Служба доставки — практикум</h1>
+<p class="sub">10 класс, углублённый уровень. Python, среда IDLE.
+Пять программ, одна тема: считать стоимость доставки. Каждая следующая
+программа — шаг вперёд от предыдущей.</p>
+
+<div class="note">
+  <b>Как это проверяется.</b> Программы проверяет не учитель глазами, а
+  оболочка <code>Проверка.bat</code> из общей папки: она запускает каждое
+  решение на семи разных наборах данных и сравнивает вывод с правильным.
+  Поэтому программа должна работать при <i>любых</i> входных данных, а не
+  только при тех, что в примере. Интернет для проверки не нужен.
+</div>
+
+<h2>Часть 1. Разминка: предскажи вывод</h2>
+<p>Шесть коротких программ. <b>Сначала напиши, что выведет каждая, и только
+потом, если хочешь, проверь в IDLE.</b> Смысл разминки в том, чтобы читать
+код, а не запускать его. Оценка за неё не ставится — но именно эти шесть
+мест на первой контрольной подводят чаще всего.</p>
+
+<div class="panel">
+  <div><b id="wscore">0</b> <span class="stats">верно из 6</span></div>
+  <div class="stats" id="wfirst"></div>
+  <div class="spacer"></div>
+  <button id="wnew">Новые задачи</button>
+</div>
+<div id="warmup"></div>
+
+<h2>Часть 2. Тариф</h2>
+<p>Все пять программ считают по одному и тому же тарифу. Держи его перед
+глазами — он понадобится в каждом задании.</p>
+<table>
+  <tr><th>Что</th><th>Сколько</th></tr>
+  <tr><td>Подача курьера</td><td>150 руб.</td></tr>
+  <tr><td>За каждый километр</td><td>12 руб.</td></tr>
+  <tr><td>За каждый килограмм</td><td>20 руб.</td></tr>
+  <tr><td>Ночью, с 22:00 до 05:59</td><td>вся сумма умножается на 1,4</td></tr>
+  <tr><td>Если вышло меньше 200 руб.</td><td>доставка всё равно стоит 200 руб.</td></tr>
+</table>
+
+<h3>Правила, одинаковые для всех пяти заданий</h3>
+<ul class="tight">
+  <li>Сохраняй решения в свою папку под именами
+      <code>zadanie1.py</code>, <code>zadanie2.py</code> … <code>zadanie5.py</code>.</li>
+  <li><b>Никаких приглашений в <code>input()</code>.</b> Пиши
+      <code>input()</code>, а не <code>input("Введите вес: ")</code> — вывод
+      программы читает машина, лишний текст ей мешает.</li>
+  <li>Выводи ровно то, что просят: те же слова, тот же порядок строк.
+      Лишняя строка «Программа посчитала стоимость» — это уже другой ответ.</li>
+  <li>Программа читает данные <b>один раз</b> и завершается. Никаких
+      «повторить? да/нет».</li>
+</ul>
+
+<h2>Часть 3. Пять заданий</h2>
+
+<div class="card step">
+  <h3><span class="badge">Задание 1</span> Приветствие клиента</h3>
+  <p>Программа получает две строки: имя клиента и город. Она должна
+  поздороваться и назвать город.</p>
+  <div class="io">
+    <div><h4>Вход</h4><pre>Анна
+Пермь</pre></div>
+    <div><h4>Вывод</h4><pre>Здравствуйте, Анна!
+Доставка в город Пермь.</pre></div>
+  </div>
+  <p class="tag">Проверяется: <code>input()</code>, <code>print()</code>,
+  f-строка, точность вывода до знака препинания.</p>
+  <details><summary>Если застрял</summary>
+    <p>Чтобы подставить значение переменной в текст, перед кавычками ставится
+    буква <code>f</code>, а само значение пишется в фигурных скобках:</p>
+    <pre><code>name = input()
+print(f"Привет, {name}!")</code></pre>
+    <p>Обрати внимание на точку в конце второй строки — она тоже часть ответа.</p>
+  </details>
+</div>
+
+<div class="card step">
+  <h3><span class="badge">Задание 2</span> Время в пути</h3>
+  <p>Диспетчер знает, сколько минут займёт доставка. Программа получает одно
+  целое число — минуты — и переводит его в часы и минуты.</p>
+  <div class="io">
+    <div><h4>Вход</h4><pre>135</pre></div>
+    <div><h4>Вывод</h4><pre>Доставка: 2 ч 15 мин</pre></div>
+  </div>
+  <p>Если часов не набралось, всё равно печатай оба числа:
+  <code>45</code> → <code>Доставка: 0 ч 45 мин</code>.</p>
+  <p class="tag">Проверяется: <code>//</code> и <code>%</code>. Оператор
+  <code>/</code> здесь не подойдёт — он даёт дробное число.</p>
+  <details><summary>Если застрял</summary>
+    <p><code>n // 60</code> — сколько целых часов помещается в <code>n</code>
+    минутах. <code>n % 60</code> — что осталось сверх целых часов.
+    Проверь на бумаге: <code>135 // 60 = 2</code>, <code>135 % 60 = 15</code>.</p>
+  </details>
+</div>
+
+<div class="card step">
+  <h3><span class="badge">Задание 3</span> Стоимость заказа</h3>
+  <p>Программа получает <b>в одной строке через пробел</b> расстояние в
+  километрах (целое) и вес в килограммах (может быть дробным, например
+  <code>3.5</code>). Считает стоимость по тарифу — пока без ночной надбавки
+  и без минимума.</p>
+  <div class="io">
+    <div><h4>Вход</h4><pre>10 3</pre></div>
+    <div><h4>Вывод</h4><pre>Стоимость: 330.00 руб.</pre></div>
+  </div>
+  <p><b>Ровно два знака после точки</b>, даже если копеек нет: не
+  <code>330.0</code> и не <code>330</code>, а <code>330.00</code>. Деньги
+  пишут так всегда.</p>
+  <p class="tag">Проверяется: разбор строки на два значения,
+  <code>int</code> против <code>float</code>, формат <code>:.2f</code>.</p>
+  <details><summary>Если застрял</summary>
+    <p>Два значения из одной строки берутся так:</p>
+    <pre><code>km, kg = input().split()
+km = int(km)
+kg = float(kg)</code></pre>
+    <p>Без <code>int()</code> и <code>float()</code> это останутся строки, и
+    <code>150 + km</code> вызовет ошибку. Два знака после точки:
+    <code>print(f"Стоимость: {cost:.2f} руб.")</code>.</p>
+  </details>
+</div>
+
+<div class="card step">
+  <h3><span class="badge">Задание 4</span> Ночной тариф и минимум</h3>
+  <p>К предыдущей программе добавляется третье число — час отправления
+  (целое от 0 до 23). Ночью, <b>с 22:00 до 05:59</b>, вся сумма умножается на
+  1,4. И какой бы дешёвой ни вышла доставка, меньше 200 руб. она не стоит.
+  Сначала печатается тариф, потом стоимость.</p>
+  <div class="io">
+    <div><h4>Вход</h4><pre>10 3 23</pre></div>
+    <div><h4>Вывод</h4><pre>Тариф: ночной
+Стоимость: 462.00 руб.</pre></div>
+  </div>
+  <div class="io">
+    <div><h4>Вход</h4><pre>1 1 12</pre></div>
+    <div><h4>Вывод</h4><pre>Тариф: дневной
+Стоимость: 200.00 руб.</pre></div>
+  </div>
+  <p>Во втором примере по тарифу вышло 182 руб., но сработал минимум.</p>
+  <p class="tag">Проверяется: <code>if / else</code>, составное условие,
+  порядок действий — надбавка раньше минимума.</p>
+  <details><summary>Если застрял</summary>
+    <p>«Ночь» — это <b>два</b> куска суток сразу, и союз между ними «или»:</p>
+    <pre><code>if hour &gt;= 22 or hour &lt; 6:</code></pre>
+    <p>Запись <code>22 &lt;= hour &lt;= 6</code> не работает: не бывает числа,
+    которое одновременно не меньше 22 и не больше 6. Такое условие никогда не
+    выполнится, и ночного тарифа у тебя просто не будет.</p>
+    <p>И подумай, что идёт раньше: сначала умножить на 1,4, а потом сравнить с
+    200, или наоборот. Ответ есть в условии.</p>
+  </details>
+</div>
+
+<div class="card step">
+  <h3><span class="badge">Задание 5</span> На сколько хватит денег</h3>
+  <p>Задача наоборот. У клиента есть бюджет, и он хочет знать, на какое
+  расстояние его хватит. Программа получает в одной строке бюджет (целое
+  число рублей) и вес (может быть дробным) и печатает <b>наибольшее целое
+  число километров</b>, при котором дневная доставка ещё укладывается в
+  бюджет. Если не хватает даже на минимальную — так и сказать.</p>
+  <div class="io">
+    <div><h4>Вход</h4><pre>1000 5</pre></div>
+    <div><h4>Вывод</h4><pre>Хватит на 62 км</pre></div>
+  </div>
+  <div class="io">
+    <div><h4>Вход</h4><pre>150 1</pre></div>
+    <div><h4>Вывод</h4><pre>Не хватает даже на минимальную доставку</pre></div>
+  </div>
+  <p class="tag">Проверяется то, ради чего затевался урок: подобрать исходные
+  данные под требуемый результат. Ночного тарифа здесь нет — считай по
+  дневному.</p>
+  <details><summary>Если застрял</summary>
+    <p>Разверни формулу. Стоимость — это
+    <code>150 + 12·км + 20·вес</code>. Если она должна уложиться в бюджет, то
+    <code>12·км</code> не больше, чем <code>бюджет − 150 − 20·вес</code>.
+    Отсюда километры и находятся — только их надо округлить <b>вниз</b>: на
+    «62 с половиной километра» никто не поедет.</p>
+    <p>И проверь отдельно случай, когда денег не хватает даже на минимальную
+    доставку в 200 руб. — тогда километров нет вообще.</p>
+  </details>
+</div>
+
+<h2>Часть 4. Когда программа не работает</h2>
+<p>Это нормальная часть работы, а не провал. Порядок действий такой.</p>
+<ol class="tight">
+  <li><b>Прочитай последнюю строку ошибки.</b> Она называет тип:
+      <code>ValueError</code> — не смог превратить в число,
+      <code>TypeError</code> — попытался сложить строку с числом,
+      <code>IndentationError</code> — сбит отступ.</li>
+  <li><b>Проверь, что пришло на вход.</b> Временно вставь
+      <code>print(km, kg)</code> сразу после чтения — увидишь, что программа
+      прочитала на самом деле. Это и есть отладочный вывод; перед сдачей его
+      убирают.</li>
+  <li><b>Посчитай пример руками</b> и сравни с тем, что вывела программа.
+      Расходится — ошибка в формуле, а не в Python.</li>
+  <li><b>Отладчик</b> — когда всё вышеперечисленное не помогло. Инструкция
+      ниже.</li>
+</ol>
+
+<h3>Отладчик IDLE за шесть шагов</h3>
+<p>Отладчик не находит ошибку и не исправляет её. Он делает другое:
+<b>показывает, что происходит на самом деле</b> — какие значения у
+переменных и по какой ветке пошла программа. Вывод делаете вы.</p>
+<ol class="tight">
+  <li>Перейди в <b>главное окно IDLE</b> — то, где приглашение
+      <code>&gt;&gt;&gt;</code>. Отладчик включается там, а не в окне с
+      программой.</li>
+  <li>Меню <span class="kbd">Debug</span> →
+      <span class="kbd">Debugger</span>. Откроется окошко
+      <b>Debug&nbsp;Control</b>, а в Shell появится <code>[DEBUG ON]</code>.</li>
+  <li>Поставь в этом окошке галочки <span class="kbd">Locals</span> и
+      <span class="kbd">Globals</span> — без них значений переменных видно
+      не будет.</li>
+  <li>Вернись в окно с программой и нажми <span class="kbd">F5</span>.
+      Программа остановится на первой строке и будет ждать.</li>
+  <li>Дальше — кнопками в Debug&nbsp;Control:
+      <ul class="tight">
+        <li><b>Step</b> — выполнить одну строку и снова остановиться;</li>
+        <li><b>Over</b> — то же, но не заходя внутрь функции;</li>
+        <li><b>Out</b> — доработать функцию и встать после выхода из неё;</li>
+        <li><b>Go</b> — бежать до точки останова или до конца;</li>
+        <li><b>Quit</b> — прервать программу.</li>
+      </ul>
+      После каждого шага смотри список <b>Locals</b>: там живые значения
+      переменных прямо сейчас.</li>
+  <li>Закончил — выключи: <span class="kbd">Debug</span> →
+      <span class="kbd">Debugger</span> ещё раз. <b>Пока отладчик включён,
+      любой запуск идёт по шагам</b> — забыв про это, легко решить, что
+      «программа сломалась».</li>
+</ol>
+
+<div class="note">
+  <b>Точка останова</b> — чтобы не жать Step по сто раз. Щёлкни по нужной
+  строке <b>правой</b> кнопкой → <code>Set Breakpoint</code>, строка станет
+  жёлтой. Теперь <b>Go</b> домчит программу прямо до неё и остановится
+  <i>перед</i> выполнением этой строки. Убрать — правой кнопкой →
+  <code>Clear Breakpoint</code>.
+</div>
+
+<details><summary>Пример: ищем ошибку в ночном тарифе</summary>
+  <p>Программа считает по дневному тарифу, хотя час ночной. Ставим точку
+  останова на строку с <code>if</code>:</p>
+  <pre><code>km, kg, h = input().split()
+h = int(h)
+cost = 150 + 12 * int(km) + 20 * float(kg)
+if 22 &lt;= h &lt;= 6:        <span class="c"># сюда точку останова</span>
+    cost = cost * 1.4
+print(cost)</code></pre>
+  <p>Запускаем, вводим <code>10 3 23</code>, жмём <b>Go</b>. Программа
+  встаёт на строке <code>if</code>. Смотрим Locals: <code>h = 23</code> —
+  значит час прочитан правильно, и он ночной.</p>
+  <p>Жмём <b>Step</b> — и программа перескакивает сразу на
+  <code>print</code>, минуя умножение. Условие оказалось ложным при
+  правильном <code>h</code>. Вот теперь видно, что дело не в данных, а в
+  самой записи условия — и можно вспомнить, что «ночь» это два куска
+  суток и союз между ними «или».</p>
+  <p class="tag">Данные при отладке набираются в главном окне IDLE — там же,
+  где приглашение <code>&gt;&gt;&gt;</code>.</p>
+</details>
+
+<h2>Часть 5. Сдача</h2>
+<ol class="tight">
+  <li>Проверь, что файлы называются <code>zadanie1.py</code> …
+      <code>zadanie5.py</code> и лежат в твоей папке.</li>
+  <li>В общей папке двойной щелчок по <code>Проверка.bat</code> — откроется
+      окно.</li>
+  <li>Нажми «Найти мои файлы», затем «Проверить всё».</li>
+  <li>Покажи учителю экран с итогом.</li>
+</ol>
+<div class="note">
+  <b>Если вместо окна открылся текст программы</b> — значит файл открылся в
+  IDLE как обычный код. Ничего страшного: нажми <span class="kbd">F5</span>,
+  и окно появится. Так же можно запустить и <code>checker.py</code> напрямую.
+</div>
+<p>Оболочка показывает не только «принято / не принято», но и на каких
+данных программа ошиблась и что должна была вывести. Это подсказка —
+исправляй и запускай проверку снова, попыток сколько угодно.</p>
+
+</div>
+
+<script>
+/* ==== РАЗМИНКА: вставлено gen.py, руками не править ==== */
+/* Разминка «Предскажи вывод» — источник правды.
+   Вставляется скриптом gen.py --sync в practice.html и homework.html.
+   Руками в html не править: следующий --sync затрёт.
+
+   Шесть типов — ровно те места, где после ОГЭ спотыкаются:
+   1 input() возвращает строку, «+» её склеивает
+   2 // и % — целая часть и остаток
+   3 «/» всегда даёт дробное, даже когда делится нацело
+   4 sep и end у print
+   5 elif — срабатывает только одна ветка
+   6 f-строка с :.2f — округление и хвост нулей                             */
+
+const W_TYPES = [
+  'строка или число', 'целая часть и остаток', 'деление даёт дробное',
+  'sep и end', 'ветвление elif', 'формат :.2f'
+];
+
+function wRand(rng, a, b) { return a + Math.floor(rng() * (b - a + 1)); }
+function wPick(rng, arr) { return arr[wRand(rng, 0, arr.length - 1)]; }
+
+function wTask(type, rng) {
+  if (type === 0) {
+    const a = wRand(rng, 10, 49), b = wRand(rng, 10, 49);
+    return {
+      type, code: 'a = input()\nb = input()\nprint(a + b)',
+      input: a + '\n' + b,
+      answer: '' + a + b,
+      explain: 'input() всегда возвращает СТРОКУ. Для строк «+» — это склейка, '
+             + 'а не сложение: получается ' + a + ' и ' + b + ' подряд. Чтобы вышло '
+             + (a + b) + ', нужно int(input()).'
+    };
+  }
+  if (type === 1) {
+    const d = wPick(rng, [3, 4, 6, 7, 10, 60]);
+    const n = wRand(rng, d + 1, d * 9) + wRand(rng, 1, d - 1);
+    return {
+      type, code: 'n = ' + n + '\nprint(n // ' + d + ', n % ' + d + ')',
+      answer: Math.floor(n / d) + ' ' + (n % d),
+      explain: n + ' // ' + d + ' = ' + Math.floor(n / d) + ' — сколько целых раз '
+             + d + ' помещается в ' + n + '. Остаток ' + n + ' % ' + d + ' = ' + (n % d)
+             + '. print через запятую ставит между числами пробел.'
+    };
+  }
+  if (type === 2) {
+    const whole = rng() < 0.5;
+    const b = wPick(rng, [2, 4, 5, 8]);
+    const q = wRand(rng, 2, 12);
+    const a = whole ? q * b : q * b + b / 2;
+    const res = a / b;
+    return {
+      type, code: 'print(' + a + ' / ' + b + ')',
+      answer: Number.isInteger(res) ? res + '.0' : '' + res,
+      explain: whole
+        ? 'Делится нацело, но «/» всё равно даёт вещественное число — ' + res
+          + '.0, а не ' + res + '. Целое дало бы «//».'
+        : a + ' / ' + b + ' = ' + res + '. Оператор «/» всегда возвращает дробное.'
+    };
+  }
+  if (type === 3) {
+    const a = wRand(rng, 1, 9), b = wRand(rng, 1, 9), c = wRand(rng, 1, 9);
+    const sep = wPick(rng, ['-', '*', '+', '.']);
+    const end = wPick(rng, ['', ' ', '!']);
+    return {
+      type,
+      code: 'print(' + a + ', ' + b + ', sep="' + sep + '", end="' + end + '")\nprint('
+          + c + ')',
+      answer: ('' + a + sep + b + end + c).trim(),
+      explain: 'sep="' + sep + '" ставится МЕЖДУ значениями, end="' + (end || '')
+             + '" — в конце вместо перевода строки. Поэтому ' + c
+             + ' печатается в той же строке.'
+    };
+  }
+  if (type === 4) {
+    const a = wRand(rng, 40, 60), b = wRand(rng, 15, 35);
+    const x = wPick(rng, [wRand(rng, a + 1, a + 20), wRand(rng, b + 1, a),
+                          wRand(rng, 0, b)]);
+    const ans = x > a ? 'A' : (x > b ? 'B' : 'C');
+    return {
+      type,
+      code: 'x = ' + x + '\nif x > ' + a + ':\n    print("A")\nelif x > ' + b
+          + ':\n    print("B")\nelse:\n    print("C")',
+      answer: ans,
+      explain: 'x = ' + x + '. Условия проверяются сверху вниз, и как только одно '
+             + 'сработало, остальные пропускаются. ' + (
+               ans === 'A' ? x + ' > ' + a + ' — печатается A.'
+             : ans === 'B' ? x + ' не больше ' + a + ', но больше ' + b + ' — B.'
+             : x + ' не больше ни ' + a + ', ни ' + b + ' — остаётся else, C.')
+    };
+  }
+  const cents = wPick(rng, [0, 5, 25, 50, 75, 40]);
+  const rub = wRand(rng, 3, 40);
+  const val = rub + cents / 100;
+  return {
+    type, code: 'c = ' + val + '\nprint(f"Итого: {c:.2f}")',
+    answer: 'Итого: ' + val.toFixed(2),
+    explain: ':.2f выводит ровно два знака после точки — недостающие нули '
+           + 'дописываются. Поэтому ' + val + ' печатается как ' + val.toFixed(2) + '.'
+  };
+}
+
+/* Простой воспроизводимый генератор — чтобы у соседей числа не совпадали. */
+function wRng(seed) {
+  let s = seed >>> 0;
+  return function () {
+    s = (s * 1664525 + 1013904223) >>> 0;
+    return s / 4294967296;
+  };
+}
+
+function wMake(seed) {
+  const rng = wRng(seed);
+  const order = [0, 1, 2, 3, 4, 5];
+  for (let i = order.length - 1; i > 0; i--) {
+    const j = wRand(rng, 0, i);
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+  return order.map(function (t) { return wTask(t, rng); });
+}
+
+/* Сверка ответа: пробелы схлопываем, запятую в числах прощаем, регистр — нет
+   (A и B — разные ветки, «а» вместо «A» тоже принимаем как раскладку). */
+function wCheck(task, raw) {
+  const norm = function (s) {
+    return String(s).replace(/\s+/g, ' ').trim()
+      .replace(/(\d),(\d)/g, '$1.$2');
+  };
+  let got = norm(raw), want = norm(task.answer);
+  if (got === want) return true;
+  if (/^[A-C]$/.test(want)) {
+    const map = { 'Ф': 'A', 'И': 'B', 'С': 'C', 'ф': 'A', 'и': 'B', 'с': 'C' };
+    got = got.toUpperCase();
+    if (map[raw.trim()]) got = map[raw.trim()];
+    return got === want;
+  }
+  return false;
+}
+/* ==== /РАЗМИНКА ==== */
+
+var tasks = [], answered = [], firstTry = 0;
+
+function esc(s){ return String(s).replace(/[&<>]/g, function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]; }); }
+
+function render(){
+  var box = document.getElementById('warmup');
+  box.innerHTML = '';
+  tasks.forEach(function(t, i){
+    var d = document.createElement('div');
+    d.className = 'task';
+    d.id = 'w' + i;
+    var inputBlock = t.input
+      ? '<p class="tag">На вход подаётся:</p><pre>' + esc(t.input) + '</pre>' : '';
+    d.innerHTML =
+      '<p class="tag">' + (i + 1) + ' из 6 — ' + W_TYPES[t.type] + '</p>' +
+      '<pre>' + esc(t.code) + '</pre>' + inputBlock +
+      '<p class="tag">Что появится на экране?</p>' +
+      '<div class="row">' +
+        '<input type="text" id="in' + i + '" autocomplete="off" spellcheck="false">' +
+        '<button class="primary" data-i="' + i + '">Проверить</button>' +
+      '</div><div class="verdict" id="v' + i + '"></div>';
+    box.appendChild(d);
+  });
+  box.querySelectorAll('button[data-i]').forEach(function(b){
+    b.addEventListener('click', function(){ judge(+b.dataset.i); });
+  });
+  box.querySelectorAll('input[type=text]').forEach(function(inp, i){
+    inp.addEventListener('keydown', function(e){
+      if (e.key === 'Enter') judge(i);
+    });
+  });
+  score();
+}
+
+function judge(i){
+  var raw = document.getElementById('in' + i).value;
+  if (!raw.trim()) return;
+  var ok = wCheck(tasks[i], raw);
+  var card = document.getElementById('w' + i);
+  var v = document.getElementById('v' + i);
+  if (answered[i] === undefined && ok) firstTry++;
+  if (ok) {
+    answered[i] = true;
+    card.className = 'task ok';
+    v.className = 'verdict ok';
+    v.textContent = 'Верно. ' + tasks[i].explain;
+  } else {
+    if (answered[i] === undefined) answered[i] = false;
+    card.className = 'task err';
+    v.className = 'verdict err';
+    v.textContent = 'Пока нет. Прочитай код построчно и попробуй ещё раз — '
+                  + 'разбор появится, когда сойдётся.';
+  }
+  score();
+}
+
+function score(){
+  var n = tasks.filter(function(t, i){ return answered[i] === true; }).length;
+  document.getElementById('wscore').textContent = n;
+  document.getElementById('wfirst').textContent =
+    firstTry ? ('с первой попытки: ' + firstTry) : '';
+}
+
+function fresh(){
+  tasks = wMake(Date.now() % 2147483647);
+  answered = []; firstTry = 0;
+  render();
+}
+
+document.getElementById('wnew').addEventListener('click', fresh);
+fresh();
+</script>
+</body>
+</html>
