@@ -1,0 +1,524 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Среда программирования и отладка — презентация</title>
+<meta name="description" content="Презентация ко второй паре 10 класса (углублённый): компиляция и интерпретация, байт-код и виртуальная машина, интегрированная среда разработки, методы отладки — трассировочная таблица, отладочный вывод, точки останова.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E10%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ink)}
+body{font:20px/1.5 "Segoe UI",system-ui,sans-serif}
+.deck{height:100vh;display:flex;flex-direction:column}
+.stage{flex:1 1 auto;overflow-y:auto;padding:34px 56px 12px}
+.slide{display:none;max-width:1100px;margin:0 auto}
+.slide.on{display:block}
+
+h1{font-size:50px;line-height:1.1;margin:0 0 18px;text-wrap:balance}
+h2{font-size:36px;line-height:1.15;margin:0 0 20px;text-wrap:balance}
+.lead{font-size:24px;color:var(--muted);margin:0 0 26px}
+p{margin:0 0 14px}
+ul{margin:0 0 14px;padding-left:28px}
+li{margin:8px 0}
+code{font-family:Consolas,"Cascadia Mono",monospace;background:var(--card);
+     border:1px solid var(--line);border-radius:6px;padding:1px 7px;font-size:.92em}
+pre{font-family:Consolas,"Cascadia Mono",monospace;background:#1e2430;color:#e7ecf5;
+    padding:16px 20px;border-radius:12px;font-size:22px;line-height:1.45;
+    overflow-x:auto;margin:10px 0}
+pre code{background:none;border:0;padding:0;color:inherit;font-size:inherit}
+pre .c{color:#8fa6c4}
+pre .out{color:#9dd4b4}
+pre .hl{color:#ffd479}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+.box{border:1px solid var(--line);border-radius:14px;padding:16px 20px;background:#fff}
+.box h3{margin:0 0 8px;font-size:22px}
+.good{border-color:var(--ok-line);background:var(--ok-bg)}
+.bad{border-color:var(--err-line);background:var(--err-bg)}
+.warn{border-color:var(--hi-line);background:var(--hi-bg)}
+.big{font-size:26px}
+table{border-collapse:collapse;width:100%;font-size:22px;margin:10px 0}
+th,td{border:1px solid var(--line);padding:9px 14px;text-align:left}
+th{background:var(--card)}
+table.trace td,table.trace th{text-align:center;font-family:Consolas,monospace}
+.step[hidden]{display:none}
+.tag{display:inline-block;background:var(--accent);color:#fff;border-radius:20px;
+     padding:3px 14px;font-size:16px;font-weight:700;margin-bottom:12px}
+.tag.gray{background:var(--muted)}
+.bar{flex:0 0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+     border-top:1px solid var(--line);background:var(--card);padding:12px 24px}
+.bar .spacer{flex:1 1 auto}
+.count{color:var(--muted);font-size:17px;font-variant-numeric:tabular-nums}
+.keys{color:var(--muted);font-size:15px}
+.keys kbd{font:600 13px/1 Consolas,monospace;border:1px solid var(--line);
+          border-bottom-width:2px;border-radius:5px;padding:2px 6px;background:#fff}
+button{font:600 17px/1 inherit;padding:11px 18px;border-radius:10px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="deck">
+<div class="stage" id="stage">
+
+<section class="slide on">
+  <h1>Как программа работает<br>и как её чинить</h1>
+  <p class="lead">Среда программирования. Методы отладки.<br>
+  10 класс, углублённый уровень — занятие второе.</p>
+  <p>В прошлый раз мы писали программы. Сегодня — про то, что происходит
+  между вашим текстом и процессором, и что делать, когда программа работает
+  не так, как задумано.</p>
+</section>
+
+<section class="slide">
+  <h2>Процессор не понимает <code>print</code></h2>
+  <p class="lead">Он понимает только числа — машинный код.</p>
+  <pre><code>print("Привет")           <span class="c"># так пишете вы</span>
+
+<span class="hl">b8 21 0a 00 00 e8 f4 ...</span>  <span class="c"># так это выглядит для процессора</span></code></pre>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="box warn big">
+        Значит, между вашим текстом и процессором обязательно кто-то стоит —
+        программа-переводчик. Вопрос только в том, <b>когда</b> она переводит.
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Два переводчика</h2>
+  <div class="two">
+    <div class="box">
+      <h3>Компилятор</h3>
+      <p>Переводит <b>всю программу заранее</b>, до запуска. На выходе —
+      готовый файл, который дальше работает сам.</p>
+      <p class="big">C, C++, Pascal</p>
+    </div>
+    <div class="box">
+      <h3>Интерпретатор</h3>
+      <p>Переводит и выполняет <b>по ходу дела</b>, строку за строкой.
+      Отдельного файла не остаётся.</p>
+      <p class="big">Python, JavaScript</p>
+    </div>
+  </div>
+  <div class="steps">
+    <div class="step" hidden>
+      <table>
+        <tr><th></th><th>Компилятор</th><th>Интерпретатор</th></tr>
+        <tr><td>Скорость работы</td><td>выше</td><td>ниже</td></tr>
+        <tr><td>Когда видно ошибку</td><td>до запуска, все сразу</td>
+            <td>когда до неё дошло выполнение</td></tr>
+        <tr><td>Перенос на другую систему</td><td>перекомпилировать</td>
+            <td>просто скопировать</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Разницу видно на ошибке</h2>
+  <pre><code>print("первая строка")
+print("вторая строка")
+print(10 / 0)
+print("третья строка")</code></pre>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="two">
+        <div class="box good">
+          <h3>Python выведет</h3>
+          <pre><code><span class="out">первая строка
+вторая строка</span>
+ZeroDivisionError</code></pre>
+          <p>Две строки успели напечататься: интерпретатор дошёл до третьей
+          и только там споткнулся.</p>
+        </div>
+        <div class="box bad">
+          <h3>Компилятор</h3>
+          <p class="big">Не напечатал бы ничего.</p>
+          <p>Он проверяет программу целиком до запуска — до печати дело бы
+          просто не дошло.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>У Python дорога длиннее</h2>
+  <p class="lead">Текст → байт-код → виртуальная машина → процессор</p>
+  <ul>
+    <li>Текст программы переводится не в команды процессора, а в
+        промежуточный <b>байт-код</b>.</li>
+    <li>Байт-код выполняет <b>виртуальная машина</b> — программа, которая
+        притворяется процессором.</li>
+    <li>Готовый байт-код складывается в папку <code>__pycache__</code>, чтобы
+        в следующий раз не переводить заново.</li>
+  </ul>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="box warn">
+        <b>Почему папку видно не всегда.</b> Байт-код сохраняется на диск
+        только для тех файлов, которые подключают к другим программам.
+        Программу, запущенную напрямую, Python переводит в память и после
+        выхода забывает. Внутри <code>__pycache__</code> лежат файлы
+        <code>.pyc</code> — открывать их текстовым редактором бесполезно,
+        они не для людей.
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Зачем такая сложность</h2>
+  <div class="two">
+    <div class="box good">
+      <h3>Что выигрываем</h3>
+      <p>Байт-код одинаков везде, а виртуальные машины написаны под каждую
+      систему. Программа переезжает с Windows на Linux и на телефон
+      <b>без единой правки</b>.</p>
+    </div>
+    <div class="box bad">
+      <h3>Чем платим</h3>
+      <p>Скоростью. Между программой и процессором стоит лишний слой,
+      и тяжёлые вычисления на Python идут в десятки раз медленнее, чем
+      на C++.</p>
+    </div>
+  </div>
+  <div class="steps">
+    <div class="step" hidden>
+      <p>Так же устроены <b>Java</b> (виртуальная машина JVM) и
+      <b>C#</b> (платформа .NET). Это не выдумка Python, а общий приём.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Среда разработки: всё в одном окне</h2>
+  <p class="lead">IDLE, в которой вы работаете, — тоже IDE, просто самая
+  скромная.</p>
+  <ul>
+    <li><b>Редактор</b> — подсветка синтаксиса, автоотступы;</li>
+    <li><b>Запуск</b> — <code>F5</code>, не выходя из редактора;</li>
+    <li><b>Shell</b> — проверить одну строчку, не заводя файла;</li>
+    <li><b>Отладчик</b> — то, ради чего сегодня всё;</li>
+    <li>во взрослых средах ещё <b>профилировщик</b> — меряет, на что
+        программа тратит время.</li>
+  </ul>
+  <div class="steps">
+    <div class="step" hidden>
+      <p>PyCharm, VS Code, Visual Studio отличаются от IDLE удобствами, а не
+      сутью. Программу выполняет всё тот же интерпретатор Python.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h1>Программа работает.<br>Ответ неправильный.</h1>
+  <p class="lead">Самая частая и самая неприятная ситуация.</p>
+</section>
+
+<section class="slide">
+  <h2>Ошибки бывают двух видов</h2>
+  <div class="two">
+    <div class="box bad">
+      <h3>Не запускается</h3>
+      <p>Красный текст, <code>SyntaxError</code>,
+      <code>ValueError</code>, <code>TypeError</code>.</p>
+      <p><b>Лечится чтением.</b> Последняя строка сообщения говорит, что
+      именно случилось и в какой строке.</p>
+    </div>
+    <div class="box warn">
+      <h3>Работает, но врёт</h3>
+      <p>Ошибок нет, программа что-то печатает — и это «что-то» неверное.</p>
+      <p><b>Python здесь молчит.</b> Он выполнил ровно то, что написано.
+      Написано не то, что задумано.</p>
+    </div>
+  </div>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="box big">
+        Три инструмента против второго вида: <b>трассировочная таблица</b>,
+        <b>отладочный вывод</b>, <b>отладчик</b>. Дальше — по порядку.
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Инструмент 1: трассировочная таблица</h2>
+  <p class="lead">Компьютер не нужен. Нужен лист бумаги.</p>
+  <pre><code>s = 0
+for i in range(1, 5):
+    s = s + 2 * i
+print(s)</code></pre>
+  <div class="steps">
+    <div class="step" hidden>
+      <table class="trace">
+        <tr><th>шаг</th><th>i</th><th>s</th></tr>
+        <tr><td>1</td><td>1</td><td>2</td></tr>
+        <tr><td>2</td><td>2</td><td>6</td></tr>
+        <tr><td>3</td><td>3</td><td>12</td></tr>
+        <tr><td>4</td><td>4</td><td>20</td></tr>
+      </table>
+      <p>По столбцам — переменные, по строкам — шаги цикла. Одна строка = один
+      проход. Заполняя её, вы работаете процессором.</p>
+    </div>
+    <div class="step" hidden>
+      <div class="box warn">
+        <b>Почему это первый инструмент, а не последний.</b> Ошибку чаще всего
+        видно уже на второй строке таблицы — раньше, чем вы успеете запустить
+        отладчик.
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Как таблица находит ошибку</h2>
+  <p>Программа должна сложить пробег за смену. А складывает неправильно.</p>
+  <pre><code>n = int(input())
+for i in range(n):
+    <span class="hl">total = 0</span>
+    km = int(input())
+    total = total + km
+print(total)</code></pre>
+  <div class="steps">
+    <div class="step" hidden>
+      <p>Три поездки: 12, 5, 20. Ведём таблицу — и смотрим на
+      <code>total</code> <b>в начале</b> каждого шага:</p>
+      <table class="trace">
+        <tr><th>шаг</th><th>km</th><th>total в начале</th><th>total в конце</th></tr>
+        <tr><td>1</td><td>12</td><td>0</td><td>12</td></tr>
+        <tr><td>2</td><td>5</td><td><b>0</b></td><td>5</td></tr>
+        <tr><td>3</td><td>20</td><td><b>0</b></td><td>20</td></tr>
+      </table>
+    </div>
+    <div class="step" hidden>
+      <div class="box good big">
+        Накопленное пропадает на каждом шаге. Значит, обнуление стоит не там:
+        оно должно случиться <b>один раз до цикла</b>, а не на каждой поездке.
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Инструмент 2: отладочный вывод</h2>
+  <p class="lead">Временный <code>print</code> там, где хочется посмотреть.</p>
+  <pre><code>for i in range(n):
+    km = int(input())
+    total = total + km
+    <span class="c">print("шаг", i, "прочитал", km, "накопил", total)   # временно!</span></code></pre>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="two">
+        <div class="box good">
+          <h3>Плюс</h3>
+          <p>Ничего не надо настраивать. Работает всегда и везде — в любой
+          среде, на любом компьютере.</p>
+        </div>
+        <div class="box bad">
+          <h3>Минус</h3>
+          <p><b>Забытая строка = неверный ответ.</b> Оболочка сравнивает вывод
+          с эталонным; лишняя строка — это уже другой вывод.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Инструмент 3: отладчик</h2>
+  <p class="lead">Он не находит ошибку. Он показывает, что происходит
+  на самом деле.</p>
+  <ul>
+    <li>Главное окно IDLE → <code>Debug</code> → <code>Debugger</code>;</li>
+    <li>галочки <b>Locals</b> и <b>Globals</b> — иначе значений не видно;</li>
+    <li><code>F5</code> в окне программы — она встанет на первой строке;</li>
+    <li><b>Step</b> шаг · <b>Over</b> не заходя в функцию · <b>Out</b> выйти ·
+        <b>Go</b> до точки останова · <b>Quit</b> прервать.</li>
+  </ul>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="box warn">
+        <b>Не забудьте выключить</b> тем же пунктом меню. Пока отладчик
+        включён, <b>любой</b> запуск идёт по шагам — и это пугает сильнее
+        любой ошибки.
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Точка останова: не жать Step сто раз</h2>
+  <p>Правой кнопкой по строке → <code>Set Breakpoint</code>. Строка станет
+  жёлтой. Теперь <b>Go</b> домчит программу до неё и остановится
+  <i>перед</i> этой строкой.</p>
+  <pre><code>n = int(input())
+total = 0
+for i in range(n):
+    km = int(input())
+    <span class="hl">total = total + km      # сюда точку останова</span>
+print(total)</code></pre>
+  <div class="steps">
+    <div class="step" hidden>
+      <p>Жмём <b>Go</b> три раза подряд и каждый раз смотрим в Locals. Видно
+      не одно значение, а <b>как оно меняется</b>: 12 → 17 → 37. Если бы
+      накопитель обнулялся, мы увидели бы 12 → 5 → 20.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Отдельный случай: программа зависла</h2>
+  <p class="lead">Работает и не заканчивается — значит, цикл не может выйти.</p>
+  <ol>
+    <li><b>Останови:</b> <code>Ctrl</code>+<code>C</code> в окне Shell.
+        Python напечатает <code>KeyboardInterrupt</code> и покажет строку,
+        на которой его прервали, — она внутри вечного цикла.</li>
+    <li><b>Найди переменную из условия цикла.</b></li>
+    <li><b>Проверь, меняется ли она внутри.</b> Не меняется — вот и причина.</li>
+  </ol>
+  <div class="steps">
+    <div class="step" hidden>
+      <pre><code>free = limit
+while free >= weight:
+    count = count + 1      <span class="c"># free не меняется никогда</span></code></pre>
+      <div class="box good big">
+        Условие истинно на первом шаге — значит, оно истинно всегда.
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Что делаем сегодня</h2>
+  <div class="two">
+    <div class="box">
+      <h3>Тренажёр</h3>
+      <p>Четыре задачи на трассировку: заполнить таблицу, сказать, сколько
+      раз выполнится цикл, что выведет программа, и найти ошибку в чужой
+      таблице.</p>
+      <p>Считаем <b>в уме и на бумаге</b>. Запустить — значит узнать ответ,
+      но не научиться.</p>
+    </div>
+    <div class="box">
+      <h3>Три сломанные программы</h3>
+      <p><code>broken1.py</code>, <code>broken2.py</code>,
+      <code>broken3.py</code> в общей папке. В каждой описано, что она
+      должна делать, и есть ровно одна ошибка.</p>
+      <p>Чиним и сохраняем в свою папку как <code>zadanie1.py</code> …
+      <code>zadanie3.py</code>.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Как работаем</h2>
+  <table>
+    <tr><th>Что</th><th>Где</th><th>Сколько</th></tr>
+    <tr><td>Тренажёр трассировки</td><td>практикум, наверху страницы</td>
+        <td>20 минут</td></tr>
+    <tr><td>Три починки</td><td>IDLE, файлы из общей папки</td>
+        <td>20 минут</td></tr>
+    <tr><td>Проверка</td><td><code>Проверка.bat</code></td>
+        <td>попыток сколько угодно</td></tr>
+  </table>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="box warn">
+        <b>Файлы в общей папке не править</b> — они нужны всему классу.
+        <code>File → Save As…</code> в свою папку, и работать уже там.
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h1>За работу</h1>
+  <p class="lead">Открывайте практикум. Начинаем с тренажёра.</p>
+  <p>Застряли на починке — не угадывайте. Возьмите лист и пройдите программу
+  по шагам: три строки таблицы обычно решают дело.</p>
+</section>
+
+</div>
+
+<div class="bar">
+  <button id="prev">← Назад</button>
+  <button id="step" class="primary">Раскрыть</button>
+  <button id="next">Вперёд →</button>
+  <span class="count" id="count"></span>
+  <div class="spacer"></div>
+  <span class="keys"><kbd>Пробел</kbd> раскрыть и дальше ·
+    <kbd>←</kbd> <kbd>→</kbd> слайды</span>
+</div>
+</div>
+
+<script>
+const slides = [...document.querySelectorAll(".slide")];
+let cur = 0, shown = 0;
+
+const stepsOf = i => [...slides[i].querySelectorAll(".steps > .step")];
+
+function show(i){
+  slides[cur].classList.remove("on");
+  cur = Math.max(0, Math.min(slides.length - 1, i));
+  slides[cur].classList.add("on");
+  shown = stepsOf(cur).filter(el => !el.hidden).length;
+  document.getElementById("stage").scrollTop = 0;
+  sync();
+}
+
+function sync(){
+  const total = stepsOf(cur).length;
+  document.getElementById("count").textContent = `${cur + 1} / ${slides.length}`;
+  document.getElementById("prev").disabled = cur === 0;
+  document.getElementById("next").disabled = cur === slides.length - 1;
+  const b = document.getElementById("step");
+  b.hidden = total === 0;
+  if (total){
+    b.disabled = shown >= total;
+    b.textContent = shown >= total ? "Всё открыто"
+                  : shown === 0 ? "Раскрыть" : `Дальше (${shown}/${total})`;
+  }
+}
+
+function nextStep(){
+  const steps = stepsOf(cur);
+  if (shown >= steps.length) return false;
+  steps[shown].hidden = false;
+  steps[shown].scrollIntoView({block: "nearest", behavior: "smooth"});
+  shown++;
+  sync();
+  return true;
+}
+
+document.getElementById("prev").addEventListener("click", () => show(cur - 1));
+document.getElementById("next").addEventListener("click", () => show(cur + 1));
+document.getElementById("step").addEventListener("click", nextStep);
+
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowRight" || e.key === "PageDown"){ show(cur + 1); }
+  else if (e.key === "ArrowLeft" || e.key === "PageUp"){ show(cur - 1); }
+  else if (e.key === " " || e.key === "Enter"){
+    if (!nextStep()) show(cur + 1);
+  } else return;
+  e.preventDefault();
+});
+
+show(0);
+</script>
+</body>
+</html>

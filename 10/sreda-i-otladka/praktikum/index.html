@@ -1,0 +1,746 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Среда и отладка — практикум по Python</title>
+<meta name="description" content="Практикум 10 класса (углублённый): трассировочная таблица, отладочный вывод и отладчик IDLE. Тренажёр трассировки с новыми задачами при каждом открытии и три сломанные программы на починку. Проверка — локальной оболочкой, без интернета.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E10%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{margin:0;padding:20px 16px 60px;font:17px/1.55 "Segoe UI",system-ui,sans-serif}
+.wrap{max-width:860px;margin:0 auto}
+h1{font-size:23px;margin:0 0 4px}
+h2{font-size:19px;margin:34px 0 10px;padding-top:10px;border-top:2px solid var(--line)}
+h3{font-size:17px;margin:18px 0 6px}
+.sub{color:var(--muted);font-size:15px;margin:0 0 18px}
+code,pre{font-family:Consolas,"Cascadia Mono",monospace}
+pre{background:#1e2430;color:#e7ecf5;padding:12px 14px;border-radius:10px;
+    overflow-x:auto;font-size:14.5px;line-height:1.45;margin:8px 0}
+pre .c{color:#8fa6c4}
+code{background:var(--card);border:1px solid var(--line);border-radius:5px;
+     padding:1px 5px;font-size:15px}
+pre code{background:none;border:0;padding:0;font-size:inherit;color:inherit}
+table{border-collapse:collapse;width:100%;margin:10px 0;font-size:16px}
+th,td{border:1px solid var(--line);padding:7px 10px;text-align:left}
+th{background:var(--card)}
+.note{border:1px solid var(--hi-line);background:var(--hi-bg);border-radius:10px;
+      padding:12px 16px;margin:14px 0}
+.note b{color:var(--hi)}
+.card{border:1px solid var(--line);border-radius:12px;padding:14px 18px;
+      margin:14px 0;background:#fff}
+.step{border-left:5px solid var(--accent)}
+.step h3{margin-top:0;display:flex;gap:10px;align-items:baseline}
+.badge{background:var(--accent);color:#fff;border-radius:20px;font-size:13px;
+       padding:2px 10px;font-weight:700;white-space:nowrap}
+.badge.gray{background:var(--muted)}
+.io{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px}
+.io h4{margin:0 0 4px;font-size:14px;color:var(--muted);font-weight:600;
+       text-transform:uppercase;letter-spacing:.04em}
+@media(max-width:640px){.io{grid-template-columns:1fr}}
+details{margin-top:10px;border:1px dashed var(--line);border-radius:9px;padding:8px 12px}
+summary{cursor:pointer;color:var(--accent);font-weight:600}
+button{font:600 15px/1 inherit;padding:10px 15px;border-radius:9px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);cursor:pointer}
+button:hover{background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover{background:#194f8c}
+input[type=text]{font:16px/1 Consolas,monospace;padding:9px 11px;border-radius:8px;
+                 border:1px solid var(--line);width:100%;max-width:320px}
+.panel{display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+       border:2px solid var(--accent);border-radius:12px;padding:10px 16px;
+       background:var(--card);position:sticky;top:0;z-index:5;margin-bottom:18px}
+.panel .spacer{flex:1 1 auto}
+.stats{color:var(--muted);font-size:14px}
+.task{border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin:12px 0}
+.task.ok{border-color:var(--ok-line);background:var(--ok-bg)}
+.task.err{border-color:var(--err-line);background:var(--err-bg)}
+.task .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:8px}
+.verdict{font-size:15px;margin-top:8px}
+.verdict.ok{color:var(--ok)}
+.verdict.err{color:var(--err)}
+.tag{font-size:13px;color:var(--muted)}
+ul.tight{margin:6px 0;padding-left:22px}
+ul.tight li{margin:3px 0}
+.kbd{background:#fff;border:1px solid var(--line);border-bottom-width:2px;
+     border-radius:5px;padding:1px 6px;font-size:14px;font-family:Consolas,monospace}
+/* трассировочная сетка */
+table.trace{width:auto;min-width:320px;font-size:15px}
+table.trace th{font-size:14px;text-align:center}
+table.trace td{padding:4px 6px;text-align:center}
+table.trace td.num{color:var(--muted);font-family:Consolas,monospace}
+table.trace input{font:15px/1 Consolas,monospace;width:80px;padding:6px 7px;
+                  border-radius:6px;border:1px solid var(--line);text-align:center}
+table.trace input.bad{border-color:var(--err-line);background:#fff6f5}
+table.trace input.good{border-color:var(--ok-line);background:#f2fbf6}
+table.shown{width:auto;min-width:300px;font-size:15px}
+table.shown td,table.shown th{text-align:center;padding:5px 12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Среда и отладка — практикум</h1>
+<p class="sub">10 класс, углублённый уровень. Занятие второе: как программа
+выполняется на самом деле и что делать, когда она выполняется не так, как
+задумано.</p>
+
+<div class="note">
+  <b>План на пару.</b> Сначала тренажёр: научиться читать программу по шагам,
+  заполняя трассировочную таблицу. Потом — три чужие программы, в каждой по
+  ошибке. Найти и починить. Проверяет починку оболочка
+  <code>Проверка.bat</code> из общей папки: она запускает программу на семи
+  наборах данных. Интернет не нужен.
+</div>
+
+<h2>Часть 1. Что происходит с программой до того, как она заработает</h2>
+<p>Процессор не понимает ни <code>print</code>, ни <code>while</code>. Он
+понимает только машинный код — числа. Значит, между вашим текстом и
+процессором обязательно кто-то стоит. Кто именно — зависит от языка.</p>
+
+<table>
+  <tr><th></th><th>Компилятор</th><th>Интерпретатор</th></tr>
+  <tr><td>Когда переводит</td><td>всю программу заранее, до запуска</td>
+      <td>по ходу дела, строку за строкой</td></tr>
+  <tr><td>Что получается</td><td>готовый файл (<code>.exe</code>)</td>
+      <td>ничего не остаётся, результат сразу</td></tr>
+  <tr><td>Скорость работы</td><td>выше</td><td>ниже</td></tr>
+  <tr><td>Когда видно ошибку</td><td>до запуска, все сразу</td>
+      <td>когда до неё дошло выполнение</td></tr>
+  <tr><td>Языки</td><td>C, C++, Pascal</td><td>Python, JavaScript</td></tr>
+</table>
+
+<p>У Python дорога чуть длиннее и хитрее. Текст программы переводится не в
+команды процессора, а в промежуточный <b>байт-код</b> — и уже его выполняет
+<b>виртуальная машина</b>. Байт-код Python складывает в папку
+<code>__pycache__</code> рядом с программой, чтобы в следующий раз не
+переводить заново.</p>
+
+<div class="note">
+  <b>Зачем это нужно.</b> Байт-код одинаков везде, а виртуальные машины
+  написаны под каждую систему. Поэтому программа на Python переезжает с
+  Windows на Linux и на телефон без единой правки. Так же устроены Java (JVM)
+  и C# (.NET). Плата за это — скорость: между вашей программой и процессором
+  стоит лишний слой.
+</div>
+
+<h3>Среда разработки</h3>
+<p>IDLE, в которой вы работаете, — это <b>интегрированная среда разработки</b>
+(IDE). «Интегрированная» значит, что всё нужное собрано в одном окне:</p>
+<ul class="tight">
+  <li>редактор с подсветкой синтаксиса и отступами;</li>
+  <li>запуск программы по <span class="kbd">F5</span>;</li>
+  <li>окно Shell — там же можно проверить любую строчку по отдельности;</li>
+  <li><b>отладчик</b> — ради него сегодня всё и затевается.</li>
+</ul>
+<p class="tag">Взрослые среды (PyCharm, VS Code, Visual Studio) устроены так
+же, только у них ещё есть подсказки по коду, работа с git и профилировщик —
+инструмент, который меряет, на что программа тратит время.</p>
+
+<h2>Часть 2. Тренажёр: исполни программу как процессор</h2>
+<p>Главный навык отладки не требует ни отладчика, ни компьютера:
+<b>трассировочная таблица</b>. По строкам — шаги цикла, по столбцам —
+переменные. Заполняя её, вы выполняете программу вместо процессора и почти
+всегда именно в этот момент видите ошибку.</p>
+<p>Четыре задачи, при каждом открытии новые. Считать <b>на бумаге или в
+уме</b>: запустив программу, вы узнаете ответ, но не научитесь.</p>
+
+<div class="panel">
+  <div><b id="score">0</b> <span class="stats">верно из 4</span></div>
+  <div class="stats" id="first"></div>
+  <div class="spacer"></div>
+  <button id="again">Новые задачи</button>
+</div>
+<div id="trainer"></div>
+
+<h2>Часть 3. Три инструмента, когда программа врёт</h2>
+<p>Ошибки бывают двух разных видов, и лечатся они по-разному.</p>
+<table>
+  <tr><th>Вид</th><th>Как выглядит</th><th>Чем ловится</th></tr>
+  <tr><td>Программа не запускается</td>
+      <td>красный текст, <code>SyntaxError</code>, <code>ValueError</code></td>
+      <td>читать последнюю строку сообщения — там сказано что и где</td></tr>
+  <tr><td>Программа работает, но врёт</td>
+      <td>ошибок нет, ответ неправильный</td>
+      <td>трассировка, отладочный вывод, отладчик</td></tr>
+</table>
+
+<h3>1. Трассировочная таблица — на бумаге</h3>
+<p>Самый дешёвый инструмент, и часто самый быстрый. Берёте лист, выписываете
+переменные в столбцы и проходите цикл руками. Если программа не помещается в
+голову — она не поместится и в таблицу; значит, надо разбивать на куски.</p>
+
+<h3>2. Отладочный вывод — временный <code>print</code></h3>
+<p>Вставьте <code>print</code> туда, где хотите увидеть, что происходит:</p>
+<pre><code>total = 0
+for i in range(n):
+    km = int(input())
+    total = total + km
+    print("шаг", i, "прочитал", km, "накопил", total)   <span class="c"># временно!</span></code></pre>
+<p>Правило одно: <b>такие строки убирают перед сдачей</b>. Оболочка сравнивает
+вывод с эталонным, и забытая отладочная строка — это уже другой ответ.</p>
+
+<h3>3. Отладчик IDLE — когда непонятно вообще</h3>
+<p>Отладчик ошибку не находит и не исправляет. Он <b>показывает, что
+происходит на самом деле</b>: значения переменных и путь, по которому пошла
+программа. Вывод делаете вы.</p>
+<ol class="tight">
+  <li>Перейди в <b>главное окно IDLE</b> (то, где <code>&gt;&gt;&gt;</code>).</li>
+  <li><span class="kbd">Debug</span> → <span class="kbd">Debugger</span>.
+      Появится окошко <b>Debug&nbsp;Control</b>, в Shell — <code>[DEBUG ON]</code>.</li>
+  <li>Поставь галочки <span class="kbd">Locals</span> и
+      <span class="kbd">Globals</span> — иначе значений не увидишь.</li>
+  <li>Вернись в окно программы, <span class="kbd">F5</span>. Программа встанет
+      на первой строке.</li>
+  <li>Кнопки: <b>Step</b> — шаг, <b>Over</b> — шаг не заходя в функцию,
+      <b>Out</b> — выйти из функции, <b>Go</b> — до точки останова,
+      <b>Quit</b> — прервать.</li>
+  <li>Закончил — <b>выключи отладчик</b> тем же пунктом меню. Пока он включён,
+      любой запуск идёт по шагам.</li>
+</ol>
+<div class="note">
+  <b>Точка останова.</b> Щёлкни по строке <b>правой</b> кнопкой →
+  <code>Set Breakpoint</code>, строка станет жёлтой. Теперь <b>Go</b> домчит
+  программу до неё и остановится <i>перед</i> этой строкой. Незаменимо в
+  цикле: не нужно жать Step по сто раз.
+</div>
+
+<details><summary>Как ловить зависшую программу</summary>
+  <p>Программа работает и не заканчивается — значит, цикл не может выйти.
+  Порядок такой:</p>
+  <ol class="tight">
+    <li>Останови её: <span class="kbd">Ctrl</span>+<span class="kbd">C</span> в
+        окне Shell. Python напечатает <code>KeyboardInterrupt</code> и покажет
+        строку, на которой её прервали, — это строка внутри вечного цикла.</li>
+    <li>Посмотри на условие цикла и найди переменную, от которой оно зависит.</li>
+    <li>Проверь глазами: <b>меняется ли эта переменная внутри цикла?</b> Если
+        нет — условие останется истинным навсегда.</li>
+  </ol>
+  <p>То же самое покажет и отладчик: точка останова на первой строке тела,
+  потом <b>Go</b> несколько раз подряд — и видно, что в Locals ничего не
+  движется.</p>
+</details>
+
+<h2>Часть 4. Три сломанные программы</h2>
+<p>В общей папке лежат <code>broken1.py</code>, <code>broken2.py</code>,
+<code>broken3.py</code>. В каждой описано, что программа должна делать, и в
+каждой ровно одна ошибка. Открой в IDLE, найди, почини.</p>
+
+<div class="note">
+  <b>Сохраняй в свою папку</b> под именами <code>zadanie1.py</code>,
+  <code>zadanie2.py</code>, <code>zadanie3.py</code> —
+  <span class="kbd">File</span> → <span class="kbd">Save As…</span>. Файлы в
+  общей папке править нельзя: они нужны всему классу.
+</div>
+
+<div class="card step">
+  <h3><span class="badge">Задание 1</span> Пробег за смену</h3>
+  <p>Программа читает число поездок, потом расстояние каждой поездки, и
+  печатает суммарный пробег.</p>
+  <div class="io">
+    <div><h4>Вход</h4><pre>3
+12
+5
+20</pre></div>
+    <div><h4>Вывод</h4><pre>Всего: 37 км</pre></div>
+  </div>
+  <p class="tag">Симптом: ответ меньше правды. Похоже на последнюю введённую
+  поездку.</p>
+  <details><summary>Если застрял</summary>
+    <p>Заполни трассировочную таблицу на трёх поездках: столбцы
+    <code>i</code>, <code>km</code>, <code>total</code>. На каждом шаге
+    смотри, чему равен <code>total</code> <b>в начале</b> шага.</p>
+    <p>Вопрос, который решает задачу: <b>сколько раз должно выполниться
+    обнуление накопителя?</b> Один раз за всю программу — или один раз на
+    каждую поездку?</p>
+  </details>
+</div>
+
+<div class="card step">
+  <h3><span class="badge">Задание 2</span> Самый короткий заказ</h3>
+  <p>Программа читает число заказов, потом расстояние до каждого, и печатает
+  наименьшее.</p>
+  <div class="io">
+    <div><h4>Вход</h4><pre>3
+12
+5
+20</pre></div>
+    <div><h4>Вывод</h4><pre>Минимум: 5 км</pre></div>
+  </div>
+  <p class="tag">Симптом: ответ всегда один и тот же, какие числа ни вводи.</p>
+  <details><summary>Если застрял</summary>
+    <p>Условие <code>km &lt; mn</code> сравнивает прочитанное расстояние с
+    тем, что уже лежит в <code>mn</code>. Посмотри в отладчике, чему равно
+    <code>mn</code> перед первым сравнением, и спроси себя: может ли
+    расстояние оказаться меньше?</p>
+    <p><b>И сразу про ловушку.</b> Взять вместо нуля «заведомо большое»
+    число (100, 1000) — не решение, а такая же ошибка: заказ может оказаться
+    дальше. Начинать надо с <b>первого прочитанного</b> расстояния — тогда
+    выдумывать ничего не приходится.</p>
+  </details>
+</div>
+
+<div class="card step">
+  <h3><span class="badge">Задание 3</span> Сколько заказов увезёт курьер</h3>
+  <p>Программа читает вес одного заказа и грузоподъёмность машины и печатает,
+  сколько целых заказов помещается.</p>
+  <div class="io">
+    <div><h4>Вход</h4><pre>7
+30</pre></div>
+    <div><h4>Вывод</h4><pre>Заказов: 4</pre></div>
+  </div>
+  <p class="tag">Симптом: программа зависает. Останови её
+  <span class="kbd">Ctrl</span>+<span class="kbd">C</span> в окне Shell.</p>
+  <details><summary>Если застрял</summary>
+    <p>Условие цикла — <code>free &gt;= weight</code>. Найди в теле цикла
+    строку, которая меняет <code>free</code>. Не нашёл — вот и ответ: цикл
+    никогда не закончится, потому что менять условию нечего.</p>
+    <p>Когда починишь, проверь ещё одну вещь: <b>что будет, если груз влезает
+    ровно впритык</b> — скажем, вес 5 и грузоподъёмность 20. Ответ должен
+    быть 4, а не 3. Отсюда видно, <code>&gt;=</code> в условии или
+    <code>&gt;</code>.</p>
+  </details>
+</div>
+
+<h2>Часть 5. Сдача</h2>
+<ol class="tight">
+  <li>Файлы <code>zadanie1.py</code> … <code>zadanie3.py</code> лежат в твоей
+      папке, отладочные <code>print</code> из них убраны.</li>
+  <li>В общей папке двойной щелчок по <code>Проверка.bat</code>.</li>
+  <li>«Найти мои файлы» → «Проверить всё».</li>
+  <li>Покажи учителю два экрана: тренажёр наверху этой страницы и итог
+      оболочки.</li>
+</ol>
+<div class="note">
+  <b>Если вместо окна открылся текст программы</b> — файл открылся в IDLE как
+  код. Нажми <span class="kbd">F5</span>, окно появится.
+</div>
+<p>Оболочка показывает, на каких данных программа ошиблась и что должна была
+вывести. Это подсказка: исправляй и проверяй снова, попыток сколько угодно.
+Зависшую программу она не ждёт — так и пишет, что та не завершилась.</p>
+
+</div>
+
+<script>
+/* ==== ТРАССИРОВКА: вставлено gen.py, руками не править ==== */
+/* Трассировка программ — источник правды для практикума, ДЗ и проверочной.
+   Вставляется скриптом gen.py --sync между маркерами. Руками в html не править.
+
+   Пять «машин» — коротких программ с циклом. Каждая строится параметрами и
+   тут же прогоняется на JS: получаем и текст программы, и таблицу значений
+   переменных по шагам, и то, что программа напечатает.
+
+   Снимок значений берётся В КОНЦЕ КАЖДОЙ ИТЕРАЦИИ — ровно там, где его берёт
+   человек, заполняющий трассировочную таблицу. Строка `loopLine` (номер строки
+   с for/while, считая с 1) позволяет gen.py --selftest снять то же самое с
+   НАСТОЯЩЕГО исполнения этого кода в Python через sys.settrace и сверить.
+   Поэтому расхождение «в коде одно, в таблице другое» не проходит молча.
+
+   Типы задач:
+     0 «заполни таблицу»   — вписать значения переменных после каждого шага
+     1 «сколько раз»       — сколько раз выполнится тело цикла
+     2 «что выведет»       — вывод программы
+     3 «неверная строка»   — в готовой таблице испорчена одна строка, назвать шаг
+*/
+
+const T_TYPES = [
+  'заполни трассировочную таблицу',
+  'сколько раз выполнится тело цикла',
+  'что выведет программа',
+  'найди неверную строку таблицы'
+];
+
+function tRng(seed) {
+  let s = seed >>> 0;
+  return function () {
+    s = (s * 1664525 + 1013904223) >>> 0;
+    return s / 4294967296;
+  };
+}
+function tRand(rng, a, b) { return a + Math.floor(rng() * (b - a + 1)); }
+function tPick(rng, arr) { return arr[tRand(rng, 0, arr.length - 1)]; }
+
+/* ------------------------------------------------------ машина 1: цифры */
+/* Сумма (или количество) цифр числа: while, целочисленное деление и остаток. */
+function mDigits(rng) {
+  const len = tRand(rng, 4, 5);
+  let digits = [];
+  for (let i = 0; i < len; i++) digits.push(tRand(rng, i === 0 ? 1 : 0, 9));
+  const n0 = Number(digits.join(''));
+  const sum = rng() < 0.6;
+  const code = [
+    'n = ' + n0,
+    's = 0',
+    'while n > 0:',
+    sum ? '    s = s + n % 10' : '    s = s + 1',
+    '    n = n // 10',
+    'print(s)'
+  ].join('\n');
+  let n = n0, s = 0;
+  const rows = [];
+  while (n > 0) {
+    s = s + (sum ? n % 10 : 1);
+    n = Math.floor(n / 10);
+    rows.push([n, s]);
+  }
+  return {
+    machine: sum ? 'digits-sum' : 'digits-count',
+    code, loopLine: 3, vars: ['n', 's'], rows, out: '' + s,
+    what: sum ? 'сумму цифр числа ' + n0 : 'количество цифр числа ' + n0,
+    explain: 'На каждом шаге <code>n % 10</code> — последняя цифра, а '
+           + '<code>n // 10</code> отрезает её. Цикл идёт, пока от числа '
+           + 'что-то осталось: ' + rows.length + ' шагов по числу цифр. '
+           + 'Итог: ' + s + '.'
+  };
+}
+
+/* ------------------------------------------------ машина 2: накопление for */
+/* Пробег за смену: s растёт на b*i. Классическое «что накопилось в переменной». */
+function mAccum(rng) {
+  const a = tRand(rng, 0, 3) * 10;
+  const b = tPick(rng, [2, 3, 4, 5, 6]);
+  const n = tRand(rng, 4, 6);
+  const code = [
+    's = ' + a,
+    'for i in range(1, ' + (n + 1) + '):',
+    '    s = s + ' + b + ' * i',
+    'print(s)'
+  ].join('\n');
+  let s = a;
+  const rows = [];
+  for (let i = 1; i <= n; i++) { s = s + b * i; rows.push([i, s]); }
+  return {
+    machine: 'accum',
+    code, loopLine: 2, vars: ['i', 's'], rows, out: '' + s,
+    what: 'значение s после цикла',
+    explain: '<code>range(1, ' + (n + 1) + ')</code> даёт i от 1 до ' + n
+           + ' — правая граница не входит. К s каждый раз прибавляется '
+           + b + '·i, всего ' + rows.length + ' шагов. Итог: ' + s + '.'
+  };
+}
+
+/* -------------------------------------------- машина 3: while с вычитанием */
+/* Курьеру хватит топлива на столько-то поездок: сколько раз и что осталось. */
+function mFuel(rng) {
+  const cost = tPick(rng, [6, 7, 8, 9, 11, 12]);
+  const steps = tRand(rng, 4, 6);
+  const rest = tRand(rng, 0, cost - 1);
+  const fuel0 = cost * steps + rest;
+  const code = [
+    'fuel = ' + fuel0,
+    'trips = 0',
+    'while fuel >= ' + cost + ':',
+    '    fuel = fuel - ' + cost,
+    '    trips = trips + 1',
+    'print(trips, fuel)'
+  ].join('\n');
+  let fuel = fuel0, trips = 0;
+  const rows = [];
+  while (fuel >= cost) { fuel -= cost; trips += 1; rows.push([fuel, trips]); }
+  return {
+    machine: 'fuel',
+    code, loopLine: 3, vars: ['fuel', 'trips'], rows, out: trips + ' ' + fuel,
+    what: 'сколько поездок и сколько топлива осталось',
+    explain: 'Из ' + fuel0 + ' по ' + cost + ' вычитается, пока хватает: '
+           + fuel0 + ' // ' + cost + ' = ' + trips + ' поездок, в баке остаётся '
+           + fuel0 + ' % ' + cost + ' = ' + fuel + '. print через запятую '
+           + 'ставит между числами пробел.'
+  };
+}
+
+/* ------------------------------------------- машина 4: for с ветвлением */
+/* Не каждый шаг одинаков: делится на k — прибавляем, иначе отнимаем. */
+function mBranch(rng) {
+  const k = tPick(rng, [2, 3, 4]);
+  const from = tRand(rng, 1, 4);
+  const n = tRand(rng, 5, 7);
+  const to = from + n;
+  const code = [
+    's = 0',
+    'for i in range(' + from + ', ' + to + '):',
+    '    if i % ' + k + ' == 0:',
+    '        s = s + i',
+    '    else:',
+    '        s = s - 1',
+    'print(s)'
+  ].join('\n');
+  let s = 0;
+  const rows = [];
+  for (let i = from; i < to; i++) {
+    s = (i % k === 0) ? s + i : s - 1;
+    rows.push([i, s]);
+  }
+  return {
+    machine: 'branch',
+    code, loopLine: 2, vars: ['i', 's'], rows, out: '' + s,
+    what: 'значение s после цикла',
+    explain: 'i пробегает от ' + from + ' до ' + (to - 1) + '. Кратные ' + k
+           + ' прибавляются целиком, остальные отнимают по единице. '
+           + 'Итог: ' + s + '.'
+  };
+}
+
+/* ------------------------------------------- машина 5: алгоритм Евклида */
+/* Два числа сближаются вычитанием — любимый сюжет заданий на трассировку. */
+function mEuclid(rng) {
+  const g = tPick(rng, [3, 4, 5, 6, 7, 8]);
+  /* Подбираем пару так, чтобы вычитаний вышло 3–7: одна-две строки таблицы
+     не дают ничего трассировать, а десяток не помещается на экран. */
+  let x = 0, y = 0;
+  for (let guard = 0; guard < 200; guard++) {
+    x = g * tRand(rng, 2, 9);
+    y = g * tRand(rng, 2, 9);
+    let a = x, b = y, k = 0;
+    while (a !== b && k < 30) { if (a > b) a -= b; else b -= a; k++; }
+    if (a === b && k >= 3 && k <= 7) break;
+    x = 0;
+  }
+  if (!x) { x = g * 5; y = g * 2; }        /* НОД за 4 шага, если не повезло */
+  const code = [
+    'a = ' + x,
+    'b = ' + y,
+    'while a != b:',
+    '    if a > b:',
+    '        a = a - b',
+    '    else:',
+    '        b = b - a',
+    'print(a)'
+  ].join('\n');
+  let a = x, b = y;
+  const rows = [];
+  while (a !== b) {
+    if (a > b) a = a - b; else b = b - a;
+    rows.push([a, b]);
+  }
+  return {
+    machine: 'euclid',
+    code, loopLine: 3, vars: ['a', 'b'], rows, out: '' + a,
+    what: 'значение a после цикла',
+    explain: 'Из большего числа вычитается меньшее, пока они не сравняются. '
+           + 'Так находят наибольший общий делитель: НОД(' + x + ', ' + y
+           + ') = ' + a + '. Шагов получилось ' + rows.length + '.'
+  };
+}
+
+const T_MACHINES = [mDigits, mAccum, mFuel, mBranch, mEuclid];
+
+function tMachine(rng, only) {
+  const f = only === undefined ? tPick(rng, T_MACHINES) : T_MACHINES[only];
+  return f(rng);
+}
+
+/* --------------------------------------------------------------- задачи */
+function tTask(type, rng) {
+  const m = tMachine(rng);
+  const t = {
+    type, machine: m.machine, code: m.code, vars: m.vars, rows: m.rows,
+    loopLine: m.loopLine, out: m.out, explain: m.explain
+  };
+  if (type === 0) {
+    t.question = 'Заполни таблицу: какими станут переменные после каждого шага '
+               + 'цикла. Последняя строка — то, с чем программа выйдет из цикла.';
+    t.answer = m.rows.map(function (r) { return r.join(' '); }).join('; ');
+  } else if (type === 1) {
+    t.question = 'Сколько раз выполнится тело цикла?';
+    t.answer = '' + m.rows.length;
+    t.explain = 'Шагов ' + m.rows.length + '. ' + m.explain;
+  } else if (type === 2) {
+    t.question = 'Что программа выведет на экран?';
+    t.answer = m.out;
+  } else {
+    /* Испорченная таблица: одна ячейка сдвинута — назвать номер шага. */
+    const bad = tRand(rng, 1, m.rows.length);
+    const col = tRand(rng, 0, 1);
+    const delta = tPick(rng, [-2, -1, 1, 2]);
+    t.badRow = bad;
+    t.table = m.rows.map(function (r, i) {
+      const copy = r.slice();
+      if (i === bad - 1) copy[col] = copy[col] + delta;
+      return copy;
+    });
+    t.question = 'Кто-то заполнил трассировочную таблицу этой программы и '
+               + 'ошибся ровно в одной строке. Назови номер шага, в котором '
+               + 'значение неверно.';
+    t.answer = '' + bad;
+    t.explain = 'Ошибка в шаге ' + bad + ': там должно быть <code>'
+              + m.vars[col] + ' = ' + m.rows[bad - 1][col] + '</code>, а не <code>'
+              + t.table[bad - 1][col] + '</code>. ' + m.explain;
+  }
+  return t;
+}
+
+/* Разбор ответа на «заполни таблицу»: сетка полей, сверяем по ячейкам.
+   raw — массив массивов строк. Возвращает список неверных клеток. */
+function tGridWrong(task, raw) {
+  const wrong = [];
+  for (let i = 0; i < task.rows.length; i++) {
+    for (let j = 0; j < task.vars.length; j++) {
+      const got = String((raw[i] || [])[j] === undefined ? '' : raw[i][j]).trim();
+      if (got.replace(/\s+/g, '') !== String(task.rows[i][j]))
+        wrong.push([i, j]);
+    }
+  }
+  return wrong;
+}
+
+/* Сверка короткого ответа: пробелы схлопываем, запятую в числах прощаем. */
+function tCheck(task, raw) {
+  const norm = function (s) {
+    return String(s).replace(/\s+/g, ' ').trim().replace(/(\d),(\d)/g, '$1.$2');
+  };
+  return norm(raw) === norm(task.answer);
+}
+
+/* Набор для практикума: по одной задаче каждого типа, порядок перемешан. */
+function tMake(seed) {
+  const rng = tRng(seed);
+  const order = [0, 1, 2, 3];
+  for (let i = order.length - 1; i > 0; i--) {
+    const j = tRand(rng, 0, i);
+    const tmp = order[i]; order[i] = order[j]; order[j] = tmp;
+  }
+  return order.map(function (t) { return tTask(t, rng); });
+}
+/* ==== /ТРАССИРОВКА ==== */
+
+/* ------------------------------------------------ тренажёр трассировки */
+/* Счёт: сколько задач набора решено и сколько из них — с первой попытки.
+   Освоенные типы копятся за всё занятие, наборы их не сбрасывают: Свете
+   нужнее «какие места человек закрыл», чем «сколько верно в этом наборе». */
+const seenTypes = new Set();
+let tasks = [], state = [], firstTry = 0;
+const solvedCount = () => state.filter(s => s.ok).length;
+
+function esc(s){ return String(s).replace(/[&<>]/g, c =>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+function shownTable(t){
+  let h = '<table class="shown"><tr><th>шаг</th>' +
+          t.vars.map(v => '<th>' + v + '</th>').join('') + '</tr>';
+  t.table.forEach((row, i) => {
+    h += '<tr><td class="num">' + (i + 1) + '</td>' +
+         row.map(x => '<td>' + x + '</td>').join('') + '</tr>';
+  });
+  return h + '</table>';
+}
+
+function gridTable(t, idx){
+  let h = '<table class="trace"><tr><th>шаг</th>' +
+          t.vars.map(v => '<th>' + v + '</th>').join('') + '</tr>';
+  t.rows.forEach((row, i) => {
+    h += '<tr><td class="num">' + (i + 1) + '</td>' +
+         row.map((_, j) => '<td><input type="text" inputmode="numeric" ' +
+           'autocomplete="off" data-t="' + idx + '" data-i="' + i +
+           '" data-j="' + j + '"></td>').join('') + '</tr>';
+  });
+  return h + '</table>';
+}
+
+function paint(){
+  document.getElementById("score").textContent = solvedCount();
+  document.getElementById("first").textContent =
+    "с первой попытки: " + firstTry + " · освоено типов за занятие: " +
+    seenTypes.size + " из " + T_TYPES.length;
+}
+
+function render(){
+  const box = document.getElementById("trainer");
+  box.innerHTML = "";
+  tasks.forEach((t, idx) => {
+    const div = document.createElement("div");
+    div.className = "task";
+    div.id = "task" + idx;
+    div.innerHTML =
+      '<p class="tag">Задача ' + (idx + 1) + ' · ' + T_TYPES[t.type] + '</p>' +
+      '<pre><code>' + esc(t.code) + '</code></pre>' +
+      '<p>' + t.question + '</p>' +
+      (t.type === 3 ? shownTable(t) : '') +
+      (t.type === 0
+        ? gridTable(t, idx) +
+          '<div class="row"><button class="primary" data-go="' + idx + '">Проверить</button></div>'
+        : '<div class="row"><input type="text" id="ans' + idx + '" ' +
+          'autocomplete="off" spellcheck="false">' +
+          '<button class="primary" data-go="' + idx + '">Проверить</button></div>') +
+      '<div class="verdict" id="v' + idx + '"></div>';
+    box.appendChild(div);
+  });
+  box.querySelectorAll("button[data-go]").forEach(b => {
+    b.addEventListener("click", () => judge(Number(b.dataset.go)));
+  });
+  box.querySelectorAll("input[type=text]").forEach(inp => {
+    inp.addEventListener("keydown", e => {
+      if (e.key === "Enter"){
+        const idx = inp.id ? Number(inp.id.slice(3)) : Number(inp.dataset.t);
+        judge(idx);
+      }
+    });
+  });
+  paint();
+}
+
+function judge(idx){
+  const t = tasks[idx];
+  const div = document.getElementById("task" + idx);
+  const v = document.getElementById("v" + idx);
+  const s = state[idx];
+  if (s.ok) return;                    /* решённое повторно не пересчитываем */
+  let ok, why = "";
+
+  if (t.type === 0){
+    const cells = [...div.querySelectorAll("table.trace input")];
+    const raw = t.rows.map(() => []);
+    cells.forEach(c => { raw[Number(c.dataset.i)][Number(c.dataset.j)] = c.value; });
+    if (cells.every(c => !c.value.trim())) return;
+    const wrong = tGridWrong(t, raw);
+    const bad = new Set(wrong.map(w => w[0] + ":" + w[1]));
+    cells.forEach(c => {
+      const key = c.dataset.i + ":" + c.dataset.j;
+      c.className = bad.has(key) ? "bad" : "good";
+    });
+    ok = wrong.length === 0;
+    if (!ok) why = "неверных клеток: " + wrong.length + ". ";
+  } else {
+    const inp = document.getElementById("ans" + idx);
+    if (!inp.value.trim()) return;
+    ok = tCheck(t, inp.value);
+  }
+
+  s.tries++;
+  if (ok){
+    s.ok = true;
+    if (s.tries === 1) firstTry++;
+    div.className = "task ok";
+    v.className = "verdict ok";
+    v.innerHTML = "Верно. " + t.explain;
+    seenTypes.add(t.type);
+  } else {
+    div.className = "task err";
+    v.className = "verdict err";
+    v.innerHTML = "Пока нет. " + why +
+      (t.type === 0 ? "Красным отмечены клетки, которые не сошлись — исправь их и проверь снова."
+                    : "Пройди программу по шагам ещё раз: где-то шаг лишний или пропущенный.");
+  }
+  paint();
+}
+
+function newSet(){
+  const seed = (Date.now() ^ (Math.random() * 1e9)) >>> 0;
+  tasks = tMake(seed);
+  state = tasks.map(() => ({ tries: 0, ok: false }));
+  render();
+}
+
+document.getElementById("again").addEventListener("click", newSet);
+newSet();
+</script>
+</body>
+</html>

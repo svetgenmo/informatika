@@ -12,6 +12,7 @@
 
 - **10 класс** — https://svetgenmo.github.io/informatika/10/
   - [Анализ алгоритмов и этапы решения задач](https://svetgenmo.github.io/informatika/10/analiz-algoritmov/) — Первая пара углублённого курса: ввод-вывод, ветвление и обратная задача на сюжете службы доставки
+  - [Среда программирования и отладка](https://svetgenmo.github.io/informatika/10/sreda-i-otladka/) — Вторая пара углублённого курса: компиляция и интерпретация, байт-код и виртуальная машина, трассировочная таблица и три сломанные программы
 - **11 класс** — https://svetgenmo.github.io/informatika/11/
   - [Схема дорог и таблица](https://svetgenmo.github.io/informatika/11/graf-i-tablica/) — Задание 1 ЕГЭ: анализ информационных моделей
   - [Количество информации и сжатие данных](https://svetgenmo.github.io/informatika/11/informaciya-i-szhatie/) — Обзорный практикум по содержанию ФГОС к первой паре 11 класса
