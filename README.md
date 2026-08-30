@@ -14,6 +14,8 @@
   - [Анализ алгоритмов и этапы решения задач](https://svetgenmo.github.io/informatika/10/analiz-algoritmov/) — Первая пара углублённого курса: ввод-вывод, ветвление и обратная задача на сюжете службы доставки
 - **11 класс** — https://svetgenmo.github.io/informatika/11/
   - [Схема дорог и таблица](https://svetgenmo.github.io/informatika/11/graf-i-tablica/) — Задание 1 ЕГЭ: анализ информационных моделей
+  - [Количество информации и сжатие данных](https://svetgenmo.github.io/informatika/11/informaciya-i-szhatie/) — Обзорный практикум по содержанию ФГОС к первой паре 11 класса
+  - [Код Хаффмана и условие Фано](https://svetgenmo.github.io/informatika/11/kod-huffmana/) — Обзорный практикум по содержанию ФГОС ко второй паре 11 класса
 - **7 класс** — https://svetgenmo.github.io/informatika/7/
   - [Устройство компьютера](https://svetgenmo.github.io/informatika/7/ustroystvo-kompyutera/) — Задание 1 ВПР: ввод, вывод, память, обработка, сеть
 - **8 класс** — https://svetgenmo.github.io/informatika/8/

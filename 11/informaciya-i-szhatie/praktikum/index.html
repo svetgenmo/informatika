@@ -1,0 +1,568 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Количество информации и сжатие данных — обзорный практикум</title>
+<meta name="description" content="Обзорный практикум 11 класса (углублённый) к первой паре: формула Хартли, закон аддитивности, информационный объём сообщения, вероятность и количество информации, алгоритм RLE, сжатие с потерями и без.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E11%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{margin:0;padding:20px 16px 60px;font:17px/1.55 "Segoe UI",system-ui,sans-serif}
+.wrap{max-width:820px;margin:0 auto}
+h1{font-size:23px;margin:0 0 4px}
+h2{font-size:18px;margin:0 0 10px}
+.sub{color:var(--muted);font-size:15px;margin:0 0 18px}
+code{font-family:Consolas,"Cascadia Mono",monospace;background:var(--card);
+     border:1px solid var(--line);border-radius:5px;padding:1px 6px;
+     font-size:15px;letter-spacing:.04em}
+.intro{border:1px solid var(--line);border-radius:12px;background:var(--card);
+       padding:14px 18px;margin-bottom:18px}
+.intro dl{margin:0}
+.intro dt{font-weight:700;margin-top:10px}
+.intro dt:first-child{margin-top:0}
+.intro dd{margin:2px 0 0}
+.progress{border:2px solid var(--accent);border-radius:12px;padding:12px 16px;
+          background:#fff;margin-bottom:18px}
+.ptop{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.ptop h2{margin:0}
+.sp{flex:1 1 auto}
+.score{display:flex;align-items:baseline;gap:10px;color:var(--muted);font-size:15px}
+.score b{font:700 34px/1 "Segoe UI",system-ui,sans-serif;color:var(--ink);
+         min-width:40px;text-align:center;border:2px solid var(--line);
+         border-radius:8px;padding:2px 8px}
+.m5 b{color:var(--ok);border-color:var(--ok-line)}
+.m4 b{color:var(--accent);border-color:#a9c6e8}
+.m3 b{color:#8a5a00;border-color:var(--hi-line)}
+.types{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);border-radius:20px;padding:4px 12px;
+      font-size:14px;color:var(--muted);background:var(--card)}
+.chip.done{border-color:var(--ok-line);background:var(--ok-bg);color:var(--ok);
+           font-weight:600}
+.chip.miss{border-color:var(--err-line);background:var(--err-bg);color:var(--err)}
+.chip.cur{border-color:var(--accent);color:var(--accent);font-weight:600}
+.card{border:1px solid var(--line);border-radius:12px;padding:16px 18px;
+      background:#fff;margin-bottom:14px}
+.card.ok{border-color:var(--ok-line);background:var(--ok-bg)}
+.card.err{border-color:var(--err-line);background:var(--err-bg)}
+.tag{font-size:13px;color:var(--muted);margin:0 0 6px}
+.q{font-size:17px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+input[type=text]{font:16px/1 Consolas,monospace;padding:10px 12px;border-radius:8px;
+                 border:1px solid var(--line);width:100%;max-width:340px}
+button{font:600 15px/1 inherit;padding:11px 16px;border-radius:9px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);color:var(--muted)}
+.verdict{margin-top:10px;font-size:15.5px;font-weight:600}
+.verdict.ok{color:var(--ok)}
+.verdict.err{color:var(--err)}
+.why{margin-top:8px;font-size:15.5px;color:var(--ink)}
+.note{border:1px solid var(--hi-line);background:var(--hi-bg);border-radius:10px;
+      padding:11px 15px;margin:12px 0;font-size:15.5px}
+.code{font:700 26px/1.2 Consolas,monospace;letter-spacing:.06em;
+      background:var(--card);border:2px dashed var(--accent);border-radius:12px;
+      padding:16px;text-align:center;margin:12px 0;user-select:all}
+.stats{color:var(--muted);font-size:14px}
+label{display:block;font-size:14px;color:var(--muted);margin-bottom:3px}
+.fields{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0}
+.fields div{flex:1 1 180px}
+.fields input{max-width:none}
+sup,sub{font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Количество информации и сжатие данных</h1>
+<p class="sub">11 класс, углублённый уровень. Обзорный практикум к первой паре:
+шесть задач по содержанию темы.</p>
+
+<div class="intro">
+  <dl>
+    <dt>Что нужно сделать</dt>
+    <dd>Шесть задач — по одной на каждый вопрос темы. На каждую задачу
+        <b>одна попытка</b>: ответил — сразу видно, верно или нет, и как это
+        решается. Времени нужно около десяти минут.</dd>
+    <dt>Отметка</dt>
+    <dd>Сколько задач решено верно, столько и наработано: шесть — «5»,
+        пять — «4», три или четыре — «3».</dd>
+    <dt>Ответ — целое число</dt>
+    <dd>Без единиц измерения и без пробелов: <code>34</code>, а не
+        <code>34 бита</code>. На КЕГЭ ответ читает машина, и здесь так же.</dd>
+    <dt>Как сдать</dt>
+    <dd>В конце появится код работы и кнопка <b>«Сдать работу»</b>: впишешь
+        фамилию и класс, кнопка сама откроет форму с уже вписанным кодом.
+        Переписывать код руками не надо — на этом чаще всего и ошибаются.</dd>
+    <dt>Не успел на уроке</dt>
+    <dd>Открой эту же страницу дома и пройди целиком: вариант будет другой,
+        а сдаётся всё так же — одним кодом.</dd>
+  </dl>
+</div>
+
+<div class="progress">
+  <div class="ptop">
+    <h2>Вопросы темы</h2>
+    <span class="sp"></span>
+    <div class="score" id="scorebox">
+      <span>наработано на</span><b id="mark">—</b>
+    </div>
+  </div>
+  <div class="types" id="types"></div>
+  <p class="stats" id="stats"></p>
+</div>
+
+<div id="area"></div>
+
+</div>
+
+<script>
+/* ==== ЗАДАЧИ: вставлено gen.py, руками не править ==== */
+/* Обзорный тест-практикум к первой паре 11 класса (углублённый уровень).
+   Содержание ФГОС: количество информации (Хартли, закон аддитивности,
+   информация и вероятность) и алгоритмы сжатия данных (RLE, с потерями
+   и без потерь).
+
+   Единственный источник задач. В practice.html вписывается скриптом
+   gen.py между маркерами — руками страницу не править.
+
+   Ответ везде целое число: тест-практикум приучает к формату КЕГЭ, где
+   ответ сверяет машина. */
+
+const T_TYPES = [
+  "формула Хартли",
+  "закон аддитивности",
+  "объём сообщения",
+  "вероятность и информация",
+  "алгоритм RLE",
+  "с потерями или без"
+];
+
+function tRng(seed) {
+  let s = seed >>> 0;
+  return function () {
+    s ^= s << 13; s >>>= 0;
+    s ^= s >> 17;
+    s ^= s << 5;  s >>>= 0;
+    return s / 4294967296;
+  };
+}
+
+function tRand(rng, a, b) { return a + Math.floor(rng() * (b - a + 1)); }
+function tPick(rng, arr) { return arr[tRand(rng, 0, arr.length - 1)]; }
+
+/* ---------------------------------------------------------------- сюжеты */
+
+/* Склонение при числительном: 1 шар, 2 шара, 5 шаров. Без этого на
+   странице вылезает «В ящике 2 карточек» — мелочь, которую ученик
+   замечает раньше, чем формулу. */
+function tPl(n, one, few, many) {
+  const h = n % 100, t = n % 10;
+  if (h >= 11 && h <= 14) return many;
+  if (t === 1) return one;
+  if (t >= 2 && t <= 4) return few;
+  return many;
+}
+
+function tBits(n) { return n + " " + tPl(n, "бит", "бита", "бит"); }
+
+/* [где, ед., 2-4, мн., событие] */
+const T_SETS = [
+  ["В корзине", "шар", "шара", "шаров", "вынули шар номер k"],
+  ["В колоде", "карточка", "карточки", "карточек", "открыли карточку номер k"],
+  ["В зале", "место", "места", "мест", "занято место номер k"],
+  ["На полке", "книга", "книги", "книг", "взяли книгу номер k"],
+  ["На улице", "дом", "дома", "домов", "нужен дом номер k"]
+];
+
+const T_PAIRS = [
+  ["одну из %1 букв", "один из %2 номеров"],
+  ["один из %1 городов", "одну из %2 дат"],
+  ["одну из %1 команд", "один из %2 стадионов"],
+  ["один из %1 цветов", "одну из %2 фигур"]
+];
+
+/* [что лежит (род. мн.), какие именно, событие] */
+const T_BALLS = [
+  ["шаров", "белых", "достали белый шар"],
+  ["карандашей", "красных", "достали красный карандаш"],
+  ["карточек", "с буквой А", "достали карточку с буквой А"],
+  ["деталей", "бракованных", "достали бракованную деталь"]
+];
+
+const T_LOSSY = [
+  "JPEG", "MP3", "MPEG-4 (видео)", "AAC",
+  "уменьшение глубины кодирования цвета"
+];
+const T_LOSSLESS = ["RLE", "алгоритм Хаффмана", "LZW", "ZIP", "PNG"];
+
+const T_LETTERS = ["А", "Б", "В", "Г", "Д"];
+
+/* ---------------------------------------------------------------- задачи */
+
+function tTask(type, rng) {
+  if (type === 0) return tHartley(rng);
+  if (type === 1) return tAdditive(rng);
+  if (type === 2) return tVolume(rng);
+  if (type === 3) return tProbability(rng);
+  if (type === 4) return tRle(rng);
+  return tLossy(rng);
+}
+
+/* 0. Формула Хартли: N = 2^i. Спрашиваем то биты, то число вариантов. */
+function tHartley(rng) {
+  const i = tRand(rng, 3, 8);
+  const n = Math.pow(2, i);
+  const s = tPick(rng, T_SETS);
+  if (rng() < 0.5) {
+    return {
+      type: 0, kind: "bits", answer: String(i),
+      question: s[0] + " <b>" + n + "</b> " + tPl(n, s[1], s[2], s[3]) +
+        ", все они одинаково вероятны. Сколько бит информации несёт " +
+        "сообщение «" + s[4] + "»?",
+      explain: "По формуле Хартли N = 2<sup>i</sup>. Здесь N = " + n +
+        " = 2<sup>" + i + "</sup>, значит i = " + tBits(i) + "."
+    };
+  }
+  return {
+    type: 0, kind: "count", answer: String(n),
+    question: "Сообщение о том, какой объект выбран из набора равновероятных, " +
+      "несёт <b>" + i + "</b> " + tPl(i, "бит", "бита", "бит") +
+      " информации. Сколько объектов было в наборе?",
+    explain: "По формуле Хартли N = 2<sup>i</sup> = 2<sup>" + i + "</sup> = " +
+      n + " " + tPl(n, "объект", "объекта", "объектов") + "."
+  };
+}
+
+/* 1. Закон аддитивности: независимые сообщения складываются по битам. */
+function tAdditive(rng) {
+  const a = tRand(rng, 2, 6);
+  let b = tRand(rng, 2, 6);
+  if (b === a) b = a === 6 ? 2 : b + 1;
+  const n1 = Math.pow(2, a), n2 = Math.pow(2, b);
+  const p = tPick(rng, T_PAIRS);
+  const part1 = p[0].replace("%1", "<b>" + n1 + "</b>");
+  const part2 = p[1].replace("%2", "<b>" + n2 + "</b>");
+  return {
+    type: 1, answer: String(a + b),
+    question: "Сначала равновероятно выбирают " + part1 + ", затем — " + part2 +
+      ". Сколько бит информации несёт сообщение о полном результате выбора?",
+    explain: "Первое сообщение: " + n1 + " = 2<sup>" + a + "</sup> → " +
+      tBits(a) + ". Второе: " + n2 + " = 2<sup>" + b + "</sup> → " + tBits(b) +
+      ". Выборы независимы, поэтому по закону аддитивности " + a + " + " + b +
+      " = " + tBits(a + b) + "."
+  };
+}
+
+/* 2. Информационный объём сообщения: K символов алфавита мощности N. */
+function tVolume(rng) {
+  const i = tRand(rng, 1, 8);
+  const n = Math.pow(2, i);
+  const k = tRand(rng, 2, 24) * 8;
+  return {
+    type: 2, answer: String(k * i / 8),
+    question: "Алфавит содержит <b>" + n + "</b> " +
+      tPl(n, "символ", "символа", "символов") + ". Сообщение состоит из <b>" +
+      k + "</b> " + tPl(k, "символа", "символов", "символов") +
+      " этого алфавита. Каков информационный объём сообщения " +
+      "<b>в байтах</b>?",
+    explain: "Один символ алфавита из " + n + " = 2<sup>" + i + "</sup> " +
+      tPl(n, "символа", "символов", "символов") + " весит " + tBits(i) +
+      ". Всё сообщение: " + k + " · " + i + " = " + tBits(k * i) + ", это " +
+      (k * i) + " / 8 = " + (k * i / 8) + " " +
+      tPl(k * i / 8, "байт", "байта", "байт") + "."
+  };
+}
+
+/* 3. Информация и вероятность: p = 1/2^k, значит i = k бит. */
+function tProbability(rng) {
+  const k = tRand(rng, 1, 5);
+  const pow = Math.pow(2, k);
+  const mMin = Math.max(1, Math.ceil(12 / pow));
+  const mMax = Math.min(9, Math.floor(200 / pow));
+  const m = tRand(rng, mMin, mMax);
+  const n = m * pow;
+  const s = tPick(rng, T_BALLS);
+  return {
+    type: 3, answer: String(k),
+    question: "В ящике <b>" + n + "</b> " + s[0] + ", из них " + s[1] +
+      " — <b>" + m + "</b>. Наугад достают один. Сколько бит информации " +
+      "несёт сообщение «" + s[2] + "»?",
+    explain: "Вероятность события p = " + m + " / " + n + " = 1/" + pow +
+      ". Количество информации i = log<sub>2</sub>(1/p) = log<sub>2</sub>" +
+      pow + " = " + tBits(k) + "."
+  };
+}
+
+/* 4. RLE: каждая серия одинаковых символов заменяется парой «число, символ»,
+      то есть ровно двумя символами. Серии делаем длиннее одного символа,
+      чтобы сжатие всегда выигрывало и «экономия» не уходила в минус. */
+function tRle(rng) {
+  const runs = tRand(rng, 4, 6);
+  let str = "", prev = "", parts = [];
+  for (let r = 0; r < runs; r++) {
+    let ch = tPick(rng, T_LETTERS);
+    while (ch === prev) ch = tPick(rng, T_LETTERS);
+    prev = ch;
+    const len = tRand(rng, 2, 6);
+    str += ch.repeat(len);
+    parts.push(len + ch);
+  }
+  const coded = runs * 2;
+  const shown = "<code>" + str + "</code>";
+  const how = "В строке " + runs + " " +
+    tPl(runs, "серия", "серии", "серий") + " одинаковых символов: <code>" +
+    parts.join(" ") + "</code>. Каждая серия — это два символа записи " +
+    "(число и буква), всего " + runs + " · 2 = " + coded + " " +
+    tPl(coded, "символ", "символа", "символов") + ".";
+  if (rng() < 0.5) {
+    return {
+      type: 4, kind: "len", answer: String(coded),
+      question: "Строку " + shown + " кодируют алгоритмом RLE: каждая серия " +
+        "одинаковых символов заменяется парой «количество, символ». Сколько " +
+        "символов будет в закодированной записи?",
+      explain: how
+    };
+  }
+  return {
+    type: 4, kind: "save", answer: String(str.length - coded),
+    question: "Строку " + shown + " кодируют алгоритмом RLE: каждая серия " +
+      "одинаковых символов заменяется парой «количество, символ». На сколько " +
+      "символов запись стала короче?",
+    explain: how + " Исходная строка длиной " + str.length + " " +
+      tPl(str.length, "символ", "символа", "символов") + ", значит короче на " +
+      str.length + " − " + coded + " = " + (str.length - coded) + "."
+  };
+}
+
+/* 5. С потерями или без. Список из пяти пунктов, среди них от одного до
+      четырёх «с потерями» — крайние случаи не берём, иначе считать нечего. */
+function tLossy(rng) {
+  const k = tRand(rng, 1, 4);
+  const lossy = T_LOSSY.slice(), lossless = T_LOSSLESS.slice();
+  const items = [];
+  for (let j = 0; j < k; j++)
+    items.push(lossy.splice(tRand(rng, 0, lossy.length - 1), 1)[0]);
+  const marked = items.slice();
+  for (let j = 0; j < 5 - k; j++)
+    items.push(lossless.splice(tRand(rng, 0, lossless.length - 1), 1)[0]);
+  for (let j = items.length - 1; j > 0; j--) {
+    const t = tRand(rng, 0, j);
+    const tmp = items[j]; items[j] = items[t]; items[t] = tmp;
+  }
+  return {
+    type: 5, answer: String(k),
+    question: "Перечислены способы сжатия данных: <b>" + items.join(", ") +
+      "</b>. Сколько из них сжимают данные <b>с потерями</b>?",
+    explain: "С потерями сжимают: " + marked.join(", ") + " — всего " + k +
+      ". Остальные из списка восстанавливают исходные данные точно."
+  };
+}
+
+/* ------------------------------------------------------------- сборка */
+
+function tMake(seed) {
+  const rng = tRng(seed || 1);
+  const order = [0, 1, 2, 3, 4, 5];
+  for (let j = order.length - 1; j > 0; j--) {
+    const t = tRand(rng, 0, j);
+    const tmp = order[j]; order[j] = order[t]; order[t] = tmp;
+  }
+  return order.map(function (type) { return tTask(type, rng); });
+}
+
+/* Ответ сверяется знак в знак: только целое число, пробелы по краям
+   отбрасываются, всё остальное — ошибка. Так же читает ответ машина
+   на КЕГЭ. */
+function tCheck(task, raw) {
+  const s = String(raw === undefined || raw === null ? "" : raw)
+    .replace(/\s+/g, "");
+  if (!/^\d+$/.test(s)) return false;
+  return String(Number(s)) === task.answer;
+}
+/* ==== /ЗАДАЧИ ==== */
+
+/* Форма сдачи ДЗ — одна на все темы. Ссылку разносит set_form_link.py. */
+const FORM = "https://docs.google.com/forms/d/e/1FAIpQLSfQyhaxcnzn4ZaKSe_ZMsluw7qRQnrw_80H6SfrnYB5EThUIA/viewform?usp=pp_url&entry.853601231=ФАМИЛИЯ&entry.1091635917=КЛАСС&entry.487188307=КОД";
+
+const ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+const EPOCH = Date.UTC(2026, 0, 1);
+const PREFIX = "IS";
+const SCALE = [[6, 5], [5, 4], [3, 3]];
+
+const bin = (v, w) => v.toString(2).padStart(w, "0");
+
+/* Семибитными кусками строки: в нагрузке 33 бита, а побитовые операции в JS
+   32-битные — старший бит молча потерялся бы. */
+function checksum(bitstr){
+  let cs = 0x5B;
+  for (let i = 0; i < bitstr.length; i += 7)
+    cs ^= parseInt(bitstr.substr(i, 7).padEnd(7, "0"), 2);
+  return cs & 0x7F;
+}
+
+function makeCode(st){
+  const day = Math.max(0, Math.min(2047, Math.floor(
+      (Date.now() - EPOCH) / 86400000)));
+  const payload = bin(day, 11) + bin(Math.min(15, st.typesDone), 4) +
+                  bin(Math.min(15, st.cleanTypes), 4) +
+                  bin(Math.min(127, st.solved), 7) +
+                  bin(Math.min(127, st.wrong), 7);
+  const bitstr = payload + bin(checksum(payload), 7);
+  let out = "";
+  for (let i = 0; i < 40; i += 5)
+    out += ALPHABET[parseInt(bitstr.substr(i, 5), 2)];
+  return PREFIX + "-" + out.slice(0, 4) + "-" + out.slice(4);
+}
+
+/* ---------------------------------------------------------- состояние */
+let list, idx, st;
+
+function reset(){
+  list = tMake((Date.now() ^ (Math.random() * 1e9)) >>> 0);
+  idx = 0;
+  st = {done: 0, wrong: 0, result: Array(6).fill(null)};
+  /* Имена полей канонические: их читает и makeCode, и сверка из
+     check_homework.py --selftest. Попытка одна, поэтому «закрыто» и
+     «закрыто без ошибок» здесь одно и то же. */
+  Object.defineProperty(st, "typesDone", {get(){ return st.done; }});
+  Object.defineProperty(st, "cleanTypes", {get(){ return st.done; }});
+  Object.defineProperty(st, "solved", {get(){ return st.done; }});
+  paint();
+  nextTask();
+}
+
+function markFor(n){
+  for (const [need, m] of SCALE) if (n >= need) return m;
+  return null;
+}
+
+function esc(s){ return String(s).replace(/[&<>]/g, c =>
+  ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+
+function paint(){
+  const box = document.getElementById("types");
+  box.innerHTML = "";
+  list.forEach(function(t, i){
+    const el = document.createElement("span");
+    const r = st.result[i];
+    el.className = "chip" + (r === true ? " done" : r === false ? " miss"
+                             : i === idx ? " cur" : "");
+    el.textContent = T_TYPES[t.type];
+    box.appendChild(el);
+  });
+  const m = markFor(st.done);
+  const sb = document.getElementById("scorebox");
+  sb.className = "score" + (m ? " m" + m : "");
+  document.getElementById("mark").textContent = m ? m : "—";
+  document.getElementById("stats").textContent =
+    "Решено верно: " + st.done + " из 6. Задача " +
+    Math.min(idx + 1, 6) + " из 6.";
+}
+
+function nextTask(){
+  if (idx >= list.length) return finish();
+  const t = list[idx];
+  document.getElementById("area").innerHTML =
+    '<div class="card" id="task">' +
+      '<p class="tag">Задача ' + (idx + 1) + ' из 6 — ' + T_TYPES[t.type] + '</p>' +
+      '<div class="q">' + t.question + '</div>' +
+      '<div class="row">' +
+        '<input type="text" id="ans" autocomplete="off" spellcheck="false" ' +
+               'inputmode="numeric" placeholder="целое число">' +
+        '<button class="primary" id="go">Ответить</button>' +
+      '</div>' +
+      '<div class="verdict" id="v"></div>' +
+    '</div>';
+  const input = document.getElementById("ans");
+  input.focus();
+  input.addEventListener("keydown", function(e){
+    if (e.key === "Enter") judge();
+  });
+  document.getElementById("go").addEventListener("click", judge);
+  paint();
+}
+
+function judge(){
+  const t = list[idx];
+  const raw = document.getElementById("ans").value;
+  const ok = tCheck(t, raw);
+  st.result[idx] = ok;
+  if (ok) st.done++; else st.wrong++;
+
+  const card = document.getElementById("task");
+  card.className = "card " + (ok ? "ok" : "err");
+  document.getElementById("ans").disabled = true;
+  document.getElementById("go").disabled = true;
+  document.getElementById("v").className = "verdict " + (ok ? "ok" : "err");
+  document.getElementById("v").innerHTML = ok
+    ? "Правильно."
+    : "Ошибка. Твой ответ: <code>" + esc(raw) + "</code>, верный: <code>" +
+      t.answer + "</code>.";
+  card.insertAdjacentHTML("beforeend",
+    '<div class="why">' + t.explain + '</div>' +
+    '<div class="row"><button class="primary" id="nx">' +
+    (idx === 5 ? "Завершить" : "Дальше") + '</button></div>');
+  document.getElementById("nx").addEventListener("click", function(){
+    idx++;
+    nextTask();
+  });
+  paint();
+}
+
+function finish(){
+  const code = makeCode(st);
+  const m = markFor(st.done);
+  const missed = list.filter(function(t, i){ return st.result[i] === false; })
+                     .map(function(t){ return T_TYPES[t.type]; });
+  document.getElementById("area").innerHTML =
+    '<div class="card">' +
+      '<h2>Работа завершена</h2>' +
+      '<p>Верно решено <b>' + st.done + '</b> из 6' +
+        (m ? ', это отметка <b>' + m + '</b>' : '') + '.' +
+        (missed.length ? ' Не получилось: ' + missed.join(", ") + '.' : '') +
+      '</p>' +
+      '<p>Код работы — его и надо сдать:</p>' +
+      '<div class="code">' + code + '</div>' +
+      '<div class="note">Код хранит дату, число решённых задач и число ошибок. ' +
+        'Переписывать его руками не нужно: впиши фамилию и класс, и кнопка ' +
+        'откроет форму с уже подставленным кодом.</div>' +
+      '<div class="fields">' +
+        '<div><label for="fam">Фамилия и имя</label>' +
+          '<input type="text" id="fam" autocomplete="off"></div>' +
+        '<div><label for="kls">Класс</label>' +
+          '<input type="text" id="kls" autocomplete="off" value="11"></div>' +
+      '</div>' +
+      '<div class="row">' +
+        '<button id="send" class="primary">Сдать работу</button>' +
+        '<button id="again">Ещё подход</button>' +
+      '</div>' +
+      '<p class="stats">«Ещё подход» даёт новый вариант для тренировки. ' +
+        'Сдавать нужно тот код, который получен в первый раз.</p>' +
+    '</div>';
+  document.getElementById("send").addEventListener("click", function(){
+    const fam = document.getElementById("fam").value.trim();
+    if (!fam) { document.getElementById("fam").focus(); return; }
+    const kls = document.getElementById("kls").value.trim() || "11";
+    window.open(FORM.replace("ФАМИЛИЯ", encodeURIComponent(fam))
+                    .replace("КЛАСС", encodeURIComponent(kls))
+                    .replace("КОД", encodeURIComponent(code)), "_blank");
+  });
+  document.getElementById("again").addEventListener("click", reset);
+  paint();
+}
+
+reset();
+</script>
+</body>
+</html>

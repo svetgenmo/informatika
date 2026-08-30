@@ -1,0 +1,616 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Код Хаффмана и условие Фано — обзорный практикум</title>
+<meta name="description" content="Обзорный практикум 11 класса (углублённый) ко второй паре: код Хаффмана, префиксные коды, условие Фано, декодирование, равномерный код.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E11%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{margin:0;padding:20px 16px 60px;font:17px/1.55 "Segoe UI",system-ui,sans-serif}
+.wrap{max-width:820px;margin:0 auto}
+h1{font-size:23px;margin:0 0 4px}
+h2{font-size:18px;margin:0 0 10px}
+.sub{color:var(--muted);font-size:15px;margin:0 0 18px}
+code{font-family:Consolas,"Cascadia Mono",monospace;background:var(--card);
+     border:1px solid var(--line);border-radius:5px;padding:1px 6px;
+     font-size:15px;letter-spacing:.04em}
+.intro{border:1px solid var(--line);border-radius:12px;background:var(--card);
+       padding:14px 18px;margin-bottom:18px}
+.intro dl{margin:0}
+.intro dt{font-weight:700;margin-top:10px}
+.intro dt:first-child{margin-top:0}
+.intro dd{margin:2px 0 0}
+.progress{border:2px solid var(--accent);border-radius:12px;padding:12px 16px;
+          background:#fff;margin-bottom:18px}
+.ptop{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.ptop h2{margin:0}
+.sp{flex:1 1 auto}
+.score{display:flex;align-items:baseline;gap:10px;color:var(--muted);font-size:15px}
+.score b{font:700 34px/1 "Segoe UI",system-ui,sans-serif;color:var(--ink);
+         min-width:40px;text-align:center;border:2px solid var(--line);
+         border-radius:8px;padding:2px 8px}
+.m5 b{color:var(--ok);border-color:var(--ok-line)}
+.m4 b{color:var(--accent);border-color:#a9c6e8}
+.m3 b{color:#8a5a00;border-color:var(--hi-line)}
+.types{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);border-radius:20px;padding:4px 12px;
+      font-size:14px;color:var(--muted);background:var(--card)}
+.chip.done{border-color:var(--ok-line);background:var(--ok-bg);color:var(--ok);
+           font-weight:600}
+.chip.miss{border-color:var(--err-line);background:var(--err-bg);color:var(--err)}
+.chip.cur{border-color:var(--accent);color:var(--accent);font-weight:600}
+.card{border:1px solid var(--line);border-radius:12px;padding:16px 18px;
+      background:#fff;margin-bottom:14px}
+.card.ok{border-color:var(--ok-line);background:var(--ok-bg)}
+.card.err{border-color:var(--err-line);background:var(--err-bg)}
+.tag{font-size:13px;color:var(--muted);margin:0 0 6px}
+.q{font-size:17px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+input[type=text]{font:16px/1 Consolas,monospace;padding:10px 12px;border-radius:8px;
+                 border:1px solid var(--line);width:100%;max-width:340px}
+button{font:600 15px/1 inherit;padding:11px 16px;border-radius:9px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);color:var(--muted)}
+.verdict{margin-top:10px;font-size:15.5px;font-weight:600}
+.verdict.ok{color:var(--ok)}
+.verdict.err{color:var(--err)}
+.why{margin-top:8px;font-size:15.5px;color:var(--ink)}
+.note{border:1px solid var(--hi-line);background:var(--hi-bg);border-radius:10px;
+      padding:11px 15px;margin:12px 0;font-size:15.5px}
+.code{font:700 26px/1.2 Consolas,monospace;letter-spacing:.06em;
+      background:var(--card);border:2px dashed var(--accent);border-radius:12px;
+      padding:16px;text-align:center;margin:12px 0;user-select:all}
+.stats{color:var(--muted);font-size:14px}
+label{display:block;font-size:14px;color:var(--muted);margin-bottom:3px}
+.fields{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0}
+.fields div{flex:1 1 180px}
+.fields input{max-width:none}
+sup,sub{font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Код Хаффмана и условие Фано</h1>
+<p class="sub">11 класс, углублённый уровень. Обзорный практикум ко второй паре:
+шесть задач по содержанию темы.</p>
+
+<div class="intro">
+  <dl>
+    <dt>Что нужно сделать</dt>
+    <dd>Шесть задач — по одной на каждый вопрос темы. На каждую задачу
+        <b>одна попытка</b>: ответил — сразу видно, верно или нет, и как это
+        решается. Времени нужно около десяти минут.</dd>
+    <dt>Отметка</dt>
+    <dd>Сколько задач решено верно, столько и наработано: шесть — «5»,
+        пять — «4», три или четыре — «3».</dd>
+    <dt>Ответ — целое число</dt>
+    <dd>Без единиц измерения и без пробелов: <code>34</code>, а не
+        <code>34 бита</code>. На КЕГЭ ответ читает машина, и здесь так же.</dd>
+    <dt>Как сдать</dt>
+    <dd>В конце появится код работы и кнопка <b>«Сдать работу»</b>: впишешь
+        фамилию и класс, кнопка сама откроет форму с уже вписанным кодом.
+        Переписывать код руками не надо — на этом чаще всего и ошибаются.</dd>
+    <dt>Не успел на уроке</dt>
+    <dd>Открой эту же страницу дома и пройди целиком: вариант будет другой,
+        а сдаётся всё так же — одним кодом.</dd>
+  </dl>
+</div>
+
+<div class="progress">
+  <div class="ptop">
+    <h2>Вопросы темы</h2>
+    <span class="sp"></span>
+    <div class="score" id="scorebox">
+      <span>наработано на</span><b id="mark">—</b>
+    </div>
+  </div>
+  <div class="types" id="types"></div>
+  <p class="stats" id="stats"></p>
+</div>
+
+<div id="area"></div>
+
+</div>
+
+<script>
+/* ==== ЗАДАЧИ: вставлено gen.py, руками не править ==== */
+/* Обзорный тест-практикум ко второй паре 11 класса (углублённый уровень).
+   Содержание ФГОС: алгоритм Хаффмана, префиксные коды, построение кода
+   с помощью дерева. Работает на задание 4 ЕГЭ (кодирование и
+   декодирование, условие Фано).
+
+   Единственный источник задач. В practice.html вписывается скриптом
+   gen.py между маркерами — руками страницу не править.
+
+   Ответ везде целое число: тест-практикум приучает к формату КЕГЭ, где
+   ответ сверяет машина. */
+
+const T_TYPES = [
+  "код Хаффмана",
+  "выигрыш против равномерного кода",
+  "условие Фано",
+  "декодирование",
+  "равномерный код",
+  "проверка префиксности"
+];
+
+function tRng(seed) {
+  let s = seed >>> 0;
+  return function () {
+    s ^= s << 13; s >>>= 0;
+    s ^= s >> 17;
+    s ^= s << 5;  s >>>= 0;
+    return s / 4294967296;
+  };
+}
+
+function tRand(rng, a, b) { return a + Math.floor(rng() * (b - a + 1)); }
+function tPick(rng, arr) { return arr[tRand(rng, 0, arr.length - 1)]; }
+
+function tPl(n, one, few, many) {
+  const h = n % 100, t = n % 10;
+  if (h >= 11 && h <= 14) return many;
+  if (t === 1) return one;
+  if (t >= 2 && t <= 4) return few;
+  return many;
+}
+
+function tBits(n) { return n + " " + tPl(n, "бит", "бита", "бит"); }
+
+const T_LETTERS = ["А", "Б", "В", "Г", "Д", "Е"];
+
+/* -------------------------------------------------------------- механика */
+
+/* Суммарная длина сообщения, закодированного по Хаффману. Дерево может
+   строиться по-разному, когда веса совпадают, но СУММА длин от этого не
+   меняется — она равна сумме весов всех слияний. Поэтому у задачи ровно
+   один ответ, и на неоднозначность дерева ссылаться не нужно. */
+function huffTotal(freqs) {
+  const arr = freqs.slice();
+  let total = 0;
+  while (arr.length > 1) {
+    arr.sort(function (a, b) { return a - b; });
+    const a = arr.shift(), b = arr.shift();
+    total += a + b;
+    arr.push(a + b);
+  }
+  return total;
+}
+
+/* Префиксный набор кодов: начинаем с «0» и «1» и дробим случайное слово
+   на две ветки. Что бы ни выпало, условие Фано выполняется по построению. */
+function makePrefix(rng, n) {
+  let codes = ["0", "1"];
+  while (codes.length < n) {
+    const i = tRand(rng, 0, codes.length - 1);
+    const w = codes[i];
+    codes.splice(i, 1, w + "0", w + "1");
+  }
+  return codes;
+}
+
+function isPrefix(a, b) { return b.indexOf(a) === 0; }
+
+/* Можно ли добавить слово w к набору, не нарушив условие Фано. */
+function canAdd(codes, w) {
+  for (const c of codes)
+    if (isPrefix(c, w) || isPrefix(w, c)) return false;
+  return true;
+}
+
+/* Минимальная длина кодового слова, которое ещё можно добавить. */
+function minFanoLen(codes) {
+  for (let L = 1; L <= 9; L++) {
+    for (let v = 0; v < (1 << L); v++) {
+      const w = v.toString(2).padStart(L, "0");
+      if (canAdd(codes, w)) return L;
+    }
+  }
+  return 0;
+}
+
+function table(letters, codes) {
+  return letters.map(function (ch, i) { return ch + ":" + codes[i]; }).join(" ");
+}
+
+/* Частоты с разбросом: если все одинаковы, Хаффман не выигрывает у
+   равномерного кода и задача про выигрыш вырождается. */
+function freqs(rng, n) {
+  const f = [];
+  for (let i = 0; i < n; i++) f.push(tRand(rng, 2, 9) * (i === 0 ? 3 : 1));
+  f[0] = f[0] + tRand(rng, 6, 20);
+  return f;
+}
+
+/* ---------------------------------------------------------------- задачи */
+
+function tTask(type, rng) {
+  if (type === 0) return tHuff(rng);
+  if (type === 1) return tGain(rng);
+  if (type === 2) return tFano(rng);
+  if (type === 3) return tDecode(rng);
+  if (type === 4) return tUniform(rng);
+  return tCheckPrefix(rng);
+}
+
+/* 0. Длина сообщения, закодированного по Хаффману. */
+function tHuff(rng) {
+  const n = tRand(rng, 4, 6);
+  const letters = T_LETTERS.slice(0, n);
+  const f = freqs(rng, n);
+  const total = huffTotal(f);
+  return {
+    type: 0, answer: String(total),
+    question: "В сообщении встречаются только буквы " + letters.join(", ") +
+      ". Сколько раз встречается каждая, показано в таблице: <code>" +
+      table(letters, f.map(String)) + "</code>. Сообщение кодируют " +
+      "алгоритмом Хаффмана. Сколько бит займёт закодированное сообщение?",
+    explain: "Алгоритм сливает два наименьших веса, и так до одного " +
+      "корня. Суммарная длина сообщения равна сумме весов всех слияний " +
+      "и не зависит от того, как разрешаются совпадения весов, — здесь " +
+      "она равна " + tBits(total) + "."
+  };
+}
+
+/* 1. Насколько код Хаффмана короче равномерного. */
+function tGain(rng) {
+  const n = tRand(rng, 4, 6);
+  const letters = T_LETTERS.slice(0, n);
+  const width = Math.ceil(Math.log2(n));
+  /* При четырёх буквах с близкими частотами дерево Хаффмана выходит
+     ровным, и выигрыша нет вовсе — вопрос «на сколько короче» теряет
+     смысл. Поэтому частоты перебираются, пока выигрыш не появится. */
+  let f, huff, count, flat;
+  for (let i = 0; i < 40; i++) {
+    f = freqs(rng, n);
+    huff = huffTotal(f);
+    count = f.reduce(function (a, b) { return a + b; }, 0);
+    flat = count * width;
+    if (flat - huff > 0) break;
+  }
+  return {
+    type: 1, answer: String(flat - huff),
+    question: "В сообщении встречаются только буквы " + letters.join(", ") +
+      " со следующими частотами: <code>" + table(letters, f.map(String)) +
+      "</code>. На сколько бит запись, закодированная по Хаффману, короче " +
+      "записи равномерным кодом?",
+    explain: "Букв " + n + ", значит равномерный код требует " +
+      tBits(width) + " на символ, а всего символов " + count + " — это " +
+      count + " · " + width + " = " + tBits(flat) + ". Код Хаффмана даёт " +
+      tBits(huff) + ". Разница: " + flat + " − " + huff + " = " +
+      tBits(flat - huff) + "."
+  };
+}
+
+/* 2. Условие Фано: минимальная длина кода для оставшейся буквы. */
+function tFano(rng) {
+  const n = tRand(rng, 4, 5);
+  const codes = makePrefix(rng, n);
+  const use = tRand(rng, 2, Math.min(3, n - 1));
+  const chosen = [];
+  const pool = codes.slice();
+  for (let i = 0; i < use; i++)
+    chosen.push(pool.splice(tRand(rng, 0, pool.length - 1), 1)[0]);
+  const letters = T_LETTERS.slice(0, use);
+  const next = T_LETTERS[use];
+  const L = minFanoLen(chosen);
+  return {
+    type: 2, answer: String(L),
+    question: "Для букв " + letters.join(", ") + " заданы кодовые слова: " +
+      "<code>" + table(letters, chosen) + "</code>. Нужно добавить кодовое " +
+      "слово для буквы " + next + " так, чтобы код остался однозначно " +
+      "декодируемым (выполнялось условие Фано). Какова наименьшая " +
+      "возможная длина этого кодового слова?",
+    explain: "Условие Фано: никакое кодовое слово не должно быть началом " +
+      "другого. Слова длиной меньше " + L + " не подходят — каждое из них " +
+      "либо само начинается с уже занятого кода, либо служит его началом. " +
+      "При длине " + L + " подходящее слово находится, значит ответ " + L + "."
+  };
+}
+
+/* 3. Декодирование префиксного кода: сколько букв в сообщении. */
+function tDecode(rng) {
+  const n = tRand(rng, 4, 5);
+  const codes = makePrefix(rng, n);
+  const letters = T_LETTERS.slice(0, n);
+  const count = tRand(rng, 7, 12);
+  let bits = "";
+  for (let i = 0; i < count; i++) bits += tPick(rng, codes);
+  return {
+    type: 3, answer: String(count),
+    question: "Кодовая таблица задана так: <code>" + table(letters, codes) +
+      "</code>. Получено сообщение <code>" + bits + "</code>. Сколько букв " +
+      "в исходном сообщении?",
+    explain: "Код префиксный, поэтому сообщение читается слева направо " +
+      "без возвратов: как только накопленные биты совпали с кодовым " +
+      "словом, буква распознана и отсчёт начинается заново. Так " +
+      "набирается " + count + " " + tPl(count, "буква", "буквы", "букв") + "."
+  };
+}
+
+/* 4. Равномерный код: сколько бит на символ и сколько места остаётся. */
+function tUniform(rng) {
+  let n = tRand(rng, 5, 200);
+  while ((n & (n - 1)) === 0) n++;          // степень двойки — случай вырожден
+  const width = Math.ceil(Math.log2(n));
+  if (rng() < 0.5) {
+    return {
+      type: 4, kind: "width", answer: String(width),
+      question: "Алфавит содержит <b>" + n + "</b> " +
+        tPl(n, "символ", "символа", "символов") + ". Сколько бит нужно на " +
+        "один символ при равномерном кодировании?",
+      explain: "Нужно наименьшее i, при котором 2<sup>i</sup> ≥ " + n +
+        ". Здесь 2<sup>" + (width - 1) + "</sup> = " +
+        Math.pow(2, width - 1) + " — мало, 2<sup>" + width + "</sup> = " +
+        Math.pow(2, width) + " — хватает, значит " + tBits(width) + "."
+    };
+  }
+  return {
+    type: 4, kind: "spare", answer: String(Math.pow(2, width) - n),
+    question: "Алфавит содержит <b>" + n + "</b> " +
+      tPl(n, "символ", "символа", "символов") + ", их кодируют равномерным " +
+      "кодом наименьшей длины. Сколько ещё символов можно добавить в " +
+      "алфавит, не увеличивая длину кода?",
+    explain: "Наименьшая длина равномерного кода — " + tBits(width) +
+      ", такой код различает 2<sup>" + width + "</sup> = " +
+      Math.pow(2, width) + " символов. Занято " + n + ", свободно " +
+      Math.pow(2, width) + " − " + n + " = " + (Math.pow(2, width) - n) + "."
+  };
+}
+
+/* 5. Сколько слов НЕЛЬЗЯ добавить к набору без нарушения условия Фано. */
+function tCheckPrefix(rng) {
+  /* Берём ПОДНАБОР: полный префиксный код покрывает всё дерево, и к нему
+     нельзя добавить вообще ничего — тогда «сколько нельзя» вырождается
+     в «все пять», а список подходящих вариантов оказывается пуст. */
+  const full = makePrefix(rng, tRand(rng, 4, 5));
+  const pool = full.slice();
+  const codes = [];
+  const use = Math.min(3, full.length - 1);
+  for (let i = 0; i < use; i++)
+    codes.push(pool.splice(tRand(rng, 0, pool.length - 1), 1)[0]);
+  const letters = T_LETTERS.slice(0, codes.length);
+
+  const bad = [], good = [];
+  for (let L = 1; L <= 5; L++)
+    for (let v = 0; v < (1 << L); v++) {
+      const w = v.toString(2).padStart(L, "0");
+      (canAdd(codes, w) ? good : bad).push(w);
+    }
+  /* Короткие слова разбираются в уме, длинные превращают задачу в
+     побуквенное сличение — берём из самых коротких. */
+  const byLen = function (a, b) { return a.length - b.length; };
+  bad.sort(byLen).splice(10);
+  good.sort(byLen).splice(10);
+  const k = tRand(rng, 1, Math.min(4, bad.length, 5 - Math.min(1, good.length)));
+  const items = [];
+  const bp = bad.slice(), gp = good.slice();
+  for (let i = 0; i < k; i++)
+    items.push(bp.splice(tRand(rng, 0, bp.length - 1), 1)[0]);
+  const marked = items.slice();
+  for (let i = 0; i < 5 - k; i++)
+    items.push(gp.splice(tRand(rng, 0, gp.length - 1), 1)[0]);
+  for (let i = items.length - 1; i > 0; i--) {
+    const j = tRand(rng, 0, i);
+    const t = items[i]; items[i] = items[j]; items[j] = t;
+  }
+  return {
+    type: 5, answer: String(k),
+    question: "Уже заняты кодовые слова: <code>" + table(letters, codes) +
+      "</code>. Предлагают добавить ещё одно слово, варианты: <code>" +
+      items.join(" ") + "</code>. Сколько из них добавить <b>нельзя</b> — " +
+      "условие Фано будет нарушено?",
+    explain: "Нельзя добавить слово, которое начинается с уже занятого " +
+      "кода или само служит его началом. Таких здесь " + k + ": " +
+      marked.join(", ") + "."
+  };
+}
+
+/* ------------------------------------------------------------- сборка */
+
+function tMake(seed) {
+  const rng = tRng(seed || 1);
+  const order = [0, 1, 2, 3, 4, 5];
+  for (let j = order.length - 1; j > 0; j--) {
+    const t = tRand(rng, 0, j);
+    const tmp = order[j]; order[j] = order[t]; order[t] = tmp;
+  }
+  return order.map(function (type) { return tTask(type, rng); });
+}
+
+function tCheck(task, raw) {
+  const s = String(raw === undefined || raw === null ? "" : raw)
+    .replace(/\s+/g, "");
+  if (!/^\d+$/.test(s)) return false;
+  return String(Number(s)) === task.answer;
+}
+/* ==== /ЗАДАЧИ ==== */
+
+/* Форма сдачи ДЗ — одна на все темы. Ссылку разносит set_form_link.py. */
+const FORM = "https://docs.google.com/forms/d/e/1FAIpQLSfQyhaxcnzn4ZaKSe_ZMsluw7qRQnrw_80H6SfrnYB5EThUIA/viewform?usp=pp_url&entry.853601231=ФАМИЛИЯ&entry.1091635917=КЛАСС&entry.487188307=КОД";
+
+const ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+const EPOCH = Date.UTC(2026, 0, 1);
+const PREFIX = "HF";
+const SCALE = [[6, 5], [5, 4], [3, 3]];
+
+const bin = (v, w) => v.toString(2).padStart(w, "0");
+
+/* Семибитными кусками строки: в нагрузке 33 бита, а побитовые операции в JS
+   32-битные — старший бит молча потерялся бы. */
+function checksum(bitstr){
+  let cs = 0x5B;
+  for (let i = 0; i < bitstr.length; i += 7)
+    cs ^= parseInt(bitstr.substr(i, 7).padEnd(7, "0"), 2);
+  return cs & 0x7F;
+}
+
+function makeCode(st){
+  const day = Math.max(0, Math.min(2047, Math.floor(
+      (Date.now() - EPOCH) / 86400000)));
+  const payload = bin(day, 11) + bin(Math.min(15, st.typesDone), 4) +
+                  bin(Math.min(15, st.cleanTypes), 4) +
+                  bin(Math.min(127, st.solved), 7) +
+                  bin(Math.min(127, st.wrong), 7);
+  const bitstr = payload + bin(checksum(payload), 7);
+  let out = "";
+  for (let i = 0; i < 40; i += 5)
+    out += ALPHABET[parseInt(bitstr.substr(i, 5), 2)];
+  return PREFIX + "-" + out.slice(0, 4) + "-" + out.slice(4);
+}
+
+/* ---------------------------------------------------------- состояние */
+let list, idx, st;
+
+function reset(){
+  list = tMake((Date.now() ^ (Math.random() * 1e9)) >>> 0);
+  idx = 0;
+  st = {done: 0, wrong: 0, result: Array(6).fill(null)};
+  /* Имена полей канонические: их читает и makeCode, и сверка из
+     check_homework.py --selftest. Попытка одна, поэтому «закрыто» и
+     «закрыто без ошибок» здесь одно и то же. */
+  Object.defineProperty(st, "typesDone", {get(){ return st.done; }});
+  Object.defineProperty(st, "cleanTypes", {get(){ return st.done; }});
+  Object.defineProperty(st, "solved", {get(){ return st.done; }});
+  paint();
+  nextTask();
+}
+
+function markFor(n){
+  for (const [need, m] of SCALE) if (n >= need) return m;
+  return null;
+}
+
+function esc(s){ return String(s).replace(/[&<>]/g, c =>
+  ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+
+function paint(){
+  const box = document.getElementById("types");
+  box.innerHTML = "";
+  list.forEach(function(t, i){
+    const el = document.createElement("span");
+    const r = st.result[i];
+    el.className = "chip" + (r === true ? " done" : r === false ? " miss"
+                             : i === idx ? " cur" : "");
+    el.textContent = T_TYPES[t.type];
+    box.appendChild(el);
+  });
+  const m = markFor(st.done);
+  const sb = document.getElementById("scorebox");
+  sb.className = "score" + (m ? " m" + m : "");
+  document.getElementById("mark").textContent = m ? m : "—";
+  document.getElementById("stats").textContent =
+    "Решено верно: " + st.done + " из 6. Задача " +
+    Math.min(idx + 1, 6) + " из 6.";
+}
+
+function nextTask(){
+  if (idx >= list.length) return finish();
+  const t = list[idx];
+  document.getElementById("area").innerHTML =
+    '<div class="card" id="task">' +
+      '<p class="tag">Задача ' + (idx + 1) + ' из 6 — ' + T_TYPES[t.type] + '</p>' +
+      '<div class="q">' + t.question + '</div>' +
+      '<div class="row">' +
+        '<input type="text" id="ans" autocomplete="off" spellcheck="false" ' +
+               'inputmode="numeric" placeholder="целое число">' +
+        '<button class="primary" id="go">Ответить</button>' +
+      '</div>' +
+      '<div class="verdict" id="v"></div>' +
+    '</div>';
+  const input = document.getElementById("ans");
+  input.focus();
+  input.addEventListener("keydown", function(e){
+    if (e.key === "Enter") judge();
+  });
+  document.getElementById("go").addEventListener("click", judge);
+  paint();
+}
+
+function judge(){
+  const t = list[idx];
+  const raw = document.getElementById("ans").value;
+  const ok = tCheck(t, raw);
+  st.result[idx] = ok;
+  if (ok) st.done++; else st.wrong++;
+
+  const card = document.getElementById("task");
+  card.className = "card " + (ok ? "ok" : "err");
+  document.getElementById("ans").disabled = true;
+  document.getElementById("go").disabled = true;
+  document.getElementById("v").className = "verdict " + (ok ? "ok" : "err");
+  document.getElementById("v").innerHTML = ok
+    ? "Правильно."
+    : "Ошибка. Твой ответ: <code>" + esc(raw) + "</code>, верный: <code>" +
+      t.answer + "</code>.";
+  card.insertAdjacentHTML("beforeend",
+    '<div class="why">' + t.explain + '</div>' +
+    '<div class="row"><button class="primary" id="nx">' +
+    (idx === 5 ? "Завершить" : "Дальше") + '</button></div>');
+  document.getElementById("nx").addEventListener("click", function(){
+    idx++;
+    nextTask();
+  });
+  paint();
+}
+
+function finish(){
+  const code = makeCode(st);
+  const m = markFor(st.done);
+  const missed = list.filter(function(t, i){ return st.result[i] === false; })
+                     .map(function(t){ return T_TYPES[t.type]; });
+  document.getElementById("area").innerHTML =
+    '<div class="card">' +
+      '<h2>Работа завершена</h2>' +
+      '<p>Верно решено <b>' + st.done + '</b> из 6' +
+        (m ? ', это отметка <b>' + m + '</b>' : '') + '.' +
+        (missed.length ? ' Не получилось: ' + missed.join(", ") + '.' : '') +
+      '</p>' +
+      '<p>Код работы — его и надо сдать:</p>' +
+      '<div class="code">' + code + '</div>' +
+      '<div class="note">Код хранит дату, число решённых задач и число ошибок. ' +
+        'Переписывать его руками не нужно: впиши фамилию и класс, и кнопка ' +
+        'откроет форму с уже подставленным кодом.</div>' +
+      '<div class="fields">' +
+        '<div><label for="fam">Фамилия и имя</label>' +
+          '<input type="text" id="fam" autocomplete="off"></div>' +
+        '<div><label for="kls">Класс</label>' +
+          '<input type="text" id="kls" autocomplete="off" value="11"></div>' +
+      '</div>' +
+      '<div class="row">' +
+        '<button id="send" class="primary">Сдать работу</button>' +
+        '<button id="again">Ещё подход</button>' +
+      '</div>' +
+      '<p class="stats">«Ещё подход» даёт новый вариант для тренировки. ' +
+        'Сдавать нужно тот код, который получен в первый раз.</p>' +
+    '</div>';
+  document.getElementById("send").addEventListener("click", function(){
+    const fam = document.getElementById("fam").value.trim();
+    if (!fam) { document.getElementById("fam").focus(); return; }
+    const kls = document.getElementById("kls").value.trim() || "11";
+    window.open(FORM.replace("ФАМИЛИЯ", encodeURIComponent(fam))
+                    .replace("КЛАСС", encodeURIComponent(kls))
+                    .replace("КОД", encodeURIComponent(code)), "_blank");
+  });
+  document.getElementById("again").addEventListener("click", reset);
+  paint();
+}
+
+reset();
+</script>
+</body>
+</html>
