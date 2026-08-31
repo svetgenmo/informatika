@@ -328,15 +328,14 @@ for p in permutations('xyzw'):
 
 <section class="slide">
   <h2>Пропуски перебирает <code>product</code></h2>
-  <pre><code>from itertools import permutations, product
+  <pre><code>from itertools import *
 
 for a1, a2, a3, a4 in product([0, 1], repeat=4):
     table = [(a1, a2, 0, 0), (1, 0, a3, 0), (1, 0, 1, a4)]
-    if len(table) != len(set(table)):
-        continue
-    for p in permutations('xyzw'):
-        if [f(**dict(zip(p, row))) for row in table] == [0, 0, 0]:
-            print(*p, sep='')
+    if len(table) == len(set(table)):
+        for p in permutations('xyzw'):
+            if [f(**dict(zip(p, row))) for row in table] == [0, 0, 0]:
+                print(*p, sep='')
 
 <span class="out">wzyx</span></code></pre>
   <div class="steps">
@@ -350,12 +349,13 @@ for a1, a2, a3, a4 in product([0, 1], repeat=4):
 </section>
 
 <section class="slide">
-  <h2>Две строчки, о которых забывают</h2>
-  <pre><code>    if len(table) != len(set(table)):
-        continue</code></pre>
+  <h2>Строчка, о которой забывают</h2>
+  <pre><code>    if len(table) == len(set(table)):
+        for p in permutations('xyzw'):
+            ...</code></pre>
   <p>В условии сказано: строки фрагмента <b>различны</b>. Заполнив пропуски
-  наугад, можно получить две одинаковые строки — такой вариант надо
-  выбросить.</p>
+  наугад, можно получить две одинаковые строки — с таким вариантом дальше
+  работать нельзя, перестановки для него не перебираем.</p>
   <div class="steps">
     <div class="step" hidden>
       <p><code>set(table)</code> — множество, повторы в нём схлопываются.
@@ -409,10 +409,32 @@ print(len(ps))
         <td>ключами словаря становятся числа — ошибка при вызове</td></tr>
     <tr><td>забыть <code>set(table)</code></td>
         <td>лишние ответы там, где ответ один</td></tr>
-    <tr><td><code>print(p)</code></td>
-        <td>напечатает <code>('z', 'w', 'x', 'y')</code> вместо
-            <code>zwxy</code></td></tr>
+    <tr><td><code>from itertools import *</code> забыт</td>
+        <td><code>NameError</code>: <code>permutations</code> не определено</td></tr>
   </table>
+  <p class="lead" style="margin-top:20px">А вот <code>print(p)</code> вместо
+  <code>print(*p, sep='')</code> ошибкой не считается: ответ вы всё равно
+  вписываете руками, и кортеж на экране читается не хуже.</p>
+</section>
+
+<section class="slide">
+  <h2>Шаблон: держите под рукой</h2>
+  <pre><code>from itertools import *
+
+def f(x, y, z, w):
+    return ...              <span class="c"># выражение F: → это &lt;=, ≡ это ==</span>
+
+res = [0, 0, 0]             <span class="c"># столбец F</span>
+
+for a1, a2, a3 in product([0, 1], repeat=3):
+    table = [(a1, 0, 1, a2), (1, 1, a3, 0), (0, 1, 1, 1)]
+    if len(table) == len(set(table)):
+        for p in permutations('xyzw'):
+            if [f(**dict(zip(p, row))) for row in table] == res:
+                print(*p, sep='')</code></pre>
+  <p>Столько же строк решает и задачу без пропусков: тогда <code>table</code>
+  записывается сразу, а внешний <code>for</code> и проверка на повторы не
+  нужны.</p>
 </section>
 
 <section class="slide">
