@@ -14,10 +14,12 @@
   - [Анализ алгоритмов и этапы решения задач](https://svetgenmo.github.io/informatika/10/analiz-algoritmov/) — Первая пара углублённого курса: ввод-вывод, ветвление и обратная задача на сюжете службы доставки
   - [Среда программирования и отладка](https://svetgenmo.github.io/informatika/10/sreda-i-otladka/) — Вторая пара углублённого курса: компиляция и интерпретация, байт-код и виртуальная машина, трассировочная таблица и три сломанные программы
 - **11 класс** — https://svetgenmo.github.io/informatika/11/
-  - [Схема дорог и таблица](https://svetgenmo.github.io/informatika/11/graf-i-tablica/) — Задание 1 ЕГЭ: анализ информационных моделей
-  - [Количество информации и сжатие данных](https://svetgenmo.github.io/informatika/11/informaciya-i-szhatie/) — Обзорный практикум по содержанию ФГОС к первой паре 11 класса
-  - [Таблицы истинности: itertools и словарь](https://svetgenmo.github.io/informatika/11/tablica-istinnosti/) — Задание 2 ЕГЭ: программный метод решения
-  - [Код Хаффмана и условие Фано](https://svetgenmo.github.io/informatika/11/kod-huffmana/) — Обзорный практикум по содержанию ФГОС ко второй паре 11 класса
+  - *Подготовка к ЕГЭ*
+    - [Схема дорог и таблица](https://svetgenmo.github.io/informatika/11/graf-i-tablica/) — Задание 1 ЕГЭ: анализ информационных моделей
+    - [Таблицы истинности: itertools и словарь](https://svetgenmo.github.io/informatika/11/tablica-istinnosti/) — Задание 2 ЕГЭ: программный метод решения
+  - *Практикумы по программе*
+    - [Количество информации и сжатие данных](https://svetgenmo.github.io/informatika/11/informaciya-i-szhatie/) — Обзорный практикум по содержанию ФГОС к первой паре 11 класса
+    - [Код Хаффмана и условие Фано](https://svetgenmo.github.io/informatika/11/kod-huffmana/) — Обзорный практикум по содержанию ФГОС ко второй паре 11 класса
 - **7 класс** — https://svetgenmo.github.io/informatika/7/
   - [Устройство компьютера](https://svetgenmo.github.io/informatika/7/ustroystvo-kompyutera/) — Задание 1 ВПР: ввод, вывод, память, обработка, сеть
 - **8 класс** — https://svetgenmo.github.io/informatika/8/
