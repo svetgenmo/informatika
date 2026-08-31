@@ -1,0 +1,494 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Задание 2 ЕГЭ: itertools и словарь — презентация</title>
+<meta name="description" content="Презентация к разбору задания 2 ЕГЭ в 11 классе (углублённый): второй способ решения — permutations, zip, dict и раскрытие словаря двумя звёздочками; перебор пропусков через product.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E11%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ink)}
+body{font:20px/1.5 "Segoe UI",system-ui,sans-serif}
+.deck{height:100vh;display:flex;flex-direction:column}
+.stage{flex:1 1 auto;overflow-y:auto;padding:34px 56px 12px}
+.slide{display:none;max-width:1100px;margin:0 auto}
+.slide.on{display:block}
+
+h1{font-size:48px;line-height:1.1;margin:0 0 18px;text-wrap:balance}
+h2{font-size:34px;line-height:1.15;margin:0 0 18px;text-wrap:balance}
+.lead{font-size:23px;color:var(--muted);margin:0 0 24px}
+p{margin:0 0 14px}
+ul{margin:0 0 14px;padding-left:28px}
+li{margin:8px 0}
+code{font-family:Consolas,"Cascadia Mono",monospace;background:var(--card);
+     border:1px solid var(--line);border-radius:6px;padding:1px 7px;font-size:.92em}
+pre{font-family:Consolas,"Cascadia Mono",monospace;background:#1e2430;color:#e7ecf5;
+    padding:16px 20px;border-radius:12px;font-size:21px;line-height:1.45;
+    overflow-x:auto;margin:10px 0}
+pre code{background:none;border:0;padding:0;color:inherit;font-size:inherit}
+pre .c{color:#8fa6c4}
+pre .out{color:#9dd4b4}
+pre .hl{color:#ffd479}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+.box{border:1px solid var(--line);border-radius:14px;padding:16px 20px;background:#fff}
+.box h3{margin:0 0 8px;font-size:22px}
+.good{border-color:var(--ok-line);background:var(--ok-bg)}
+.bad{border-color:var(--err-line);background:var(--err-bg)}
+.warn{border-color:var(--hi-line);background:var(--hi-bg)}
+.big{font-size:25px}
+.fx{font-size:26px;white-space:nowrap}
+table{border-collapse:collapse;font-size:21px;margin:10px 0}
+th,td{border:1px solid var(--line);padding:8px 16px;text-align:left}
+th{background:var(--card)}
+table.tt{font-family:Consolas,monospace}
+table.tt th,table.tt td{text-align:center;width:62px;border-color:#9aa0b0}
+table.tt td.fv,table.tt th.fv{background:var(--card)}
+table.mini th,table.mini td{text-align:center;padding:6px 18px}
+.step[hidden]{display:none}
+.tag{display:inline-block;background:var(--accent);color:#fff;border-radius:20px;
+     padding:3px 14px;font-size:16px;font-weight:700;margin-bottom:12px}
+.tag.gray{background:var(--muted)}
+.bar{flex:0 0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+     border-top:1px solid var(--line);background:var(--card);padding:12px 24px}
+.bar .spacer{flex:1 1 auto}
+.count{color:var(--muted);font-size:17px;font-variant-numeric:tabular-nums}
+.keys{color:var(--muted);font-size:15px}
+.keys kbd{font:600 13px/1 Consolas,monospace;border:1px solid var(--line);
+          border-bottom-width:2px;border-radius:5px;padding:2px 6px;background:#fff}
+button{font:600 17px/1 inherit;padding:11px 18px;border-radius:10px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="deck">
+<div class="stage" id="stage">
+
+<section class="slide on">
+  <h1>Задание 2:<br>таблицы истинности</h1>
+  <p class="lead">Второй способ решения — <code>itertools</code> и словарь.<br>
+  11 класс, углублённый уровень.</p>
+  <p>Перебор вложенными циклами вы уже знаете. Сегодня — способ, при котором
+  программа сама подбирает, какая переменная стоит в каком столбце, и делает
+  это в четыре строки.</p>
+</section>
+
+<section class="slide">
+  <h2>Что спрашивают</h2>
+  <p>Логическая функция F задаётся выражением
+  <b class="fx">F = ((x → y) ∨ (z ≡ x)) ∧ (w → z)</b>.
+  Приведён фрагмент таблицы истинности из трёх различных строк — но какому
+  столбцу какая переменная соответствует, не указано.</p>
+  <table class="tt">
+    <tr><th>?</th><th>?</th><th>?</th><th>?</th><th class="fv">F</th></tr>
+    <tr><td>0</td><td>0</td><td>1</td><td>1</td><td class="fv">1</td></tr>
+    <tr><td>0</td><td>0</td><td>1</td><td>0</td><td class="fv">0</td></tr>
+    <tr><td>0</td><td>1</td><td>1</td><td>1</td><td class="fv">0</td></tr>
+  </table>
+  <p>Ответ — буквы в порядке столбцов, подряд и без разделителей.</p>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="box warn big">
+        Переменных четыре, значит расстановок <b>4! = 24</b>. Из них подходит
+        ровно одна — задача в том, чтобы её найти, и не глазами.
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Как мы это делали: вложенные циклы</h2>
+  <pre><code>def f(x, y, z, w):
+    return ((x &lt;= y) or (z == x)) and (w &lt;= z)
+
+for x in range(2):
+    for y in range(2):
+        for z in range(2):
+            for w in range(2):
+                if f(x, y, z, w) == 1:
+                    print(x, y, z, w)</code></pre>
+  <p>Программа печатает все наборы, на которых F = 1, — а дальше человек
+  <b>глазами</b> прикладывает их к строкам фрагмента.</p>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="two">
+        <div class="box good">
+          <h3>Что здесь хорошо</h3>
+          <p>Ничего лишнего знать не надо: четыре цикла и условие.</p>
+        </div>
+        <div class="box bad">
+          <h3>Что плохо</h3>
+          <p>Самую трудную часть — сопоставление столбцов — делает человек.
+          На пропусках в таблице это почти безнадёжно.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h1>Пусть столбцы<br>перебирает программа</h1>
+  <p class="lead">Вся идея второго способа — в одной строке:</p>
+  <pre><code>for p in permutations('xyzw'):</code></pre>
+  <p><code>permutations</code> из модуля <code>itertools</code> выдаёт все 24
+  расстановки букв: <code>('x','y','z','w')</code>,
+  <code>('x','y','w','z')</code>, … Каждая — гипотеза: «в первом столбце
+  <code>p[0]</code>, во втором <code>p[1]</code>, и так далее».</p>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="box warn big">
+        Осталось научиться <b>проверять гипотезу</b>: подставить значения из
+        строки таблицы в функцию — с учётом того, что имена переехали.
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Задача подстановки</h2>
+  <p>Пусть гипотеза <code>p = ('z','w','x','y')</code>, а строка таблицы
+  <code>row = (0, 0, 1, 1)</code>.</p>
+  <table class="mini">
+    <tr><th>столбец</th><td>1</td><td>2</td><td>3</td><td>4</td></tr>
+    <tr><th>переменная <code>p</code></th><td>z</td><td>w</td><td>x</td><td>y</td></tr>
+    <tr><th>значение <code>row</code></th><td>0</td><td>0</td><td>1</td><td>1</td></tr>
+  </table>
+  <div class="steps">
+    <div class="step" hidden>
+      <p class="big">Нужно вызвать <code>f(x=1, y=1, z=0, w=0)</code>.
+      Но <code>p</code> меняется на каждом шаге цикла — вручную не распишешь.</p>
+    </div>
+    <div class="step" hidden>
+      <div class="box warn big">
+        Три шага: <b>zip</b> склеивает, <b>dict</b> собирает,
+        <b>две звёздочки</b> раскрывают.
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Шаг 1: <code>zip</code> — склеить по порядку</h2>
+  <pre><code>p   = ('z', 'w', 'x', 'y')
+row = ( 0 ,  0 ,  1 ,  1 )
+
+list(zip(p, row))
+<span class="out">[('z', 0), ('w', 0), ('x', 1), ('y', 1)]</span></code></pre>
+  <p><code>zip</code> берёт первый элемент оттуда и отсюда, второй оттуда и
+  отсюда — получаются пары «имя — значение».</p>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="box warn">
+        Порядок аргументов важен: <code>zip(row, p)</code> дало бы пары
+        <code>(0, 'z')</code> — числа стали бы именами.
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Шаг 2: <code>dict</code> — собрать словарь</h2>
+  <pre><code>dict(zip(p, row))
+<span class="out">{'z': 0, 'w': 0, 'x': 1, 'y': 1}</span></code></pre>
+  <p>Словарь — это набор пар «ключ: значение». Из списка пар он собирается
+  одним вызовом.</p>
+  <div class="steps">
+    <div class="step" hidden>
+      <p>Теперь у нас есть готовый ответ на вопрос «чему равна каждая
+      переменная в этой строке при этой гипотезе».</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Шаг 3: <code>**</code> — раскрыть в аргументы</h2>
+  <pre><code>d = {'z': 0, 'w': 0, 'x': 1, 'y': 1}
+
+f(**d)          <span class="c"># то же самое, что</span>
+f(z=0, w=0, x=1, y=1)</code></pre>
+  <p>Две звёздочки перед словарём означают: «каждую пару ключ-значение передай
+  как <b>именованный аргумент</b>».</p>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="box good big">
+        Поэтому <b>порядок в <code>def</code> не важен</b>: аргументы попадают
+        по именам, а не по местам. <code>f(z=0, w=0, x=1, y=1)</code> и
+        <code>f(x=1, y=1, z=0, w=0)</code> — один и тот же вызов.
+      </div>
+    </div>
+    <div class="step" hidden>
+      <div class="box warn">
+        Одна звёздочка вместо двух — <code>f(*d)</code> — тихая беда: словарь
+        перебирается по ключам, и в функцию уйдут <b>буквы</b> вместо чисел.
+        Программа не упадёт, а ответ будет мусорный.
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Собираем проверку гипотезы</h2>
+  <pre><code>table = [(0, 0, 1, 1), (0, 0, 1, 0), (0, 1, 1, 1)]
+res   = [1, 0, 0]
+
+<span class="c"># значения функции для всех строк при гипотезе p</span>
+[f(**dict(zip(p, row))) for row in table]</code></pre>
+  <p>Список сравниваем с <code>res</code> — столбцом F из условия.
+  Совпал во всех строках — гипотеза верна.</p>
+  <div class="steps">
+    <div class="step" hidden>
+      <pre><code>if [f(**dict(zip(p, row))) for row in table] == res:
+    print(*p, sep='')</code></pre>
+      <p><code>*p</code> разворачивает кортеж, <code>sep=''</code> убирает
+      пробелы между буквами — ответ печатается сразу в нужном виде.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Решение целиком</h2>
+  <pre><code>from itertools import permutations
+
+def f(x, y, z, w):
+    return ((x &lt;= y) or (z == x)) and (w &lt;= z)
+
+table = [(0, 0, 1, 1), (0, 0, 1, 0), (0, 1, 1, 1)]
+res = [1, 0, 0]
+
+for p in permutations('xyzw'):
+    if [f(**dict(zip(p, row))) for row in table] == res:
+        print(*p, sep='')
+
+<span class="out">zwxy</span></code></pre>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="box good big">
+        Меняется от задачи к задаче только <b>три строки</b>: функция,
+        <code>table</code> и <code>res</code>. Остальное переносится без правок.
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Импликация — это <code>&lt;=</code></h2>
+  <div class="two">
+    <div>
+      <table class="mini">
+        <tr><th>A</th><th>B</th><th>A → B</th><th>A ≤ B</th></tr>
+        <tr><td>0</td><td>0</td><td>1</td><td>1</td></tr>
+        <tr><td>0</td><td>1</td><td>1</td><td>1</td></tr>
+        <tr><td>1</td><td>0</td><td><b>0</b></td><td><b>0</b></td></tr>
+        <tr><td>1</td><td>1</td><td>1</td><td>1</td></tr>
+      </table>
+    </div>
+    <div class="box">
+      <h3>Весь перевод</h3>
+      <p><b>¬A</b> → <code>not A</code><br>
+         <b>A ∧ B</b> → <code>A and B</code><br>
+         <b>A ∨ B</b> → <code>A or B</code><br>
+         <b>A → B</b> → <code>A &lt;= B</code><br>
+         <b>A ≡ B</b> → <code>A == B</code></p>
+    </div>
+  </div>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="box warn">
+        <b>Скобки ставим везде.</b> <code>not x &lt;= y</code> Python читает как
+        <code>not (x &lt;= y)</code>, а <code>x &lt;= y == z</code> — вообще как
+        цепочку сравнений. Лишние скобки не мешают, пропущенные — меняют смысл.
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h1>Если в таблице<br>есть пропуски</h1>
+  <p class="lead">Демоверсия 2024, базовый уровень.</p>
+  <p><b class="fx">F = (x ∧ ¬y) ∨ (y ≡ z) ∨ ¬w</b></p>
+  <table class="tt">
+    <tr><th>?</th><th>?</th><th>?</th><th>?</th><th class="fv">F</th></tr>
+    <tr><td></td><td></td><td>0</td><td>0</td><td class="fv">0</td></tr>
+    <tr><td>1</td><td>0</td><td></td><td>0</td><td class="fv">0</td></tr>
+    <tr><td>1</td><td>0</td><td>1</td><td></td><td class="fv">0</td></tr>
+  </table>
+  <p>Пустых клеток четыре. Значит и заполнений — <b>2⁴ = 16</b>.</p>
+</section>
+
+<section class="slide">
+  <h2>Пропуски перебирает <code>product</code></h2>
+  <pre><code>from itertools import permutations, product
+
+for a1, a2, a3, a4 in product([0, 1], repeat=4):
+    table = [(a1, a2, 0, 0), (1, 0, a3, 0), (1, 0, 1, a4)]
+    if len(table) != len(set(table)):
+        continue
+    for p in permutations('xyzw'):
+        if [f(**dict(zip(p, row))) for row in table] == [0, 0, 0]:
+            print(*p, sep='')
+
+<span class="out">wzyx</span></code></pre>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="box warn big">
+        <code>product([0, 1], repeat=4)</code> — все 16 наборов из нулей и
+        единиц. Пропуски просто становятся переменными цикла.
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Две строчки, о которых забывают</h2>
+  <pre><code>    if len(table) != len(set(table)):
+        continue</code></pre>
+  <p>В условии сказано: строки фрагмента <b>различны</b>. Заполнив пропуски
+  наугад, можно получить две одинаковые строки — такой вариант надо
+  выбросить.</p>
+  <div class="steps">
+    <div class="step" hidden>
+      <p><code>set(table)</code> — множество, повторы в нём схлопываются.
+      Длины разошлись — значит повтор был.</p>
+    </div>
+    <div class="step" hidden>
+      <div class="box bad big">
+        Без этой проверки ответов часто оказывается <b>несколько</b>, и
+        задание «не решается». Условие про различные строки — не украшение,
+        а рабочее ограничение наравне с самой функцией.
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Спрашивают не буквы, а количество</h2>
+  <p><b class="fx">F = x → (y ∧ z)</b>. Фрагмент содержит неповторяющиеся
+  наборы аргументов. Вопрос: <b>сколько существует различных способов
+  расстановки переменных</b>, подходящих для этой таблицы?</p>
+  <table class="tt">
+    <tr><th>?</th><th>?</th><th>?</th><th class="fv">F</th></tr>
+    <tr><td>0</td><td>1</td><td>0</td><td class="fv">0</td></tr>
+    <tr><td>1</td><td>1</td><td>0</td><td class="fv">0</td></tr>
+  </table>
+  <pre><code>ps = set()
+for p in permutations('xyz'):
+    if [f(**dict(zip(p, row))) for row in table] == res:
+        ps.add(p)
+print(len(ps))
+
+<span class="out">2</span></code></pre>
+  <div class="steps">
+    <div class="step" hidden>
+      <p>Всё то же самое: вместо <code>print</code> — накопление в множество.
+      Множество нужно потому, что при переборе пропусков одна и та же
+      расстановка может подойти несколько раз.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Где здесь ошибаются</h2>
+  <table>
+    <tr><th>Ошибка</th><th>Что получится</th></tr>
+    <tr><td><code>x &lt; y</code> вместо <code>x &lt;= y</code></td>
+        <td>импликация становится неверной при x = y = 1</td></tr>
+    <tr><td><code>f(*d)</code> вместо <code>f(**d)</code></td>
+        <td>в функцию уходят буквы, программа врёт молча</td></tr>
+    <tr><td><code>zip(row, p)</code></td>
+        <td>ключами словаря становятся числа — ошибка при вызове</td></tr>
+    <tr><td>забыть <code>set(table)</code></td>
+        <td>лишние ответы там, где ответ один</td></tr>
+    <tr><td><code>print(p)</code></td>
+        <td>напечатает <code>('z', 'w', 'x', 'y')</code> вместо
+            <code>zwxy</code></td></tr>
+  </table>
+</section>
+
+<section class="slide">
+  <h1>За работу</h1>
+  <p class="lead">Открывайте практикум.</p>
+  <p>Первые четыре типа задач — про то, как этот код устроен: их считают в
+  голове. Задания 2 решайте программой: набрали один раз — дальше меняете
+  только функцию, <code>table</code> и <code>res</code>.</p>
+</section>
+
+</div>
+
+<div class="bar">
+  <button id="prev">← Назад</button>
+  <button id="step" class="primary">Раскрыть</button>
+  <button id="next">Вперёд →</button>
+  <span class="count" id="count"></span>
+  <div class="spacer"></div>
+  <span class="keys"><kbd>Пробел</kbd> раскрыть и дальше ·
+    <kbd>←</kbd> <kbd>→</kbd> слайды</span>
+</div>
+</div>
+
+<script>
+const slides = [...document.querySelectorAll(".slide")];
+let cur = 0, shown = 0;
+
+const stepsOf = i => [...slides[i].querySelectorAll(".steps > .step")];
+
+function show(i){
+  slides[cur].classList.remove("on");
+  cur = Math.max(0, Math.min(slides.length - 1, i));
+  slides[cur].classList.add("on");
+  shown = stepsOf(cur).filter(el => !el.hidden).length;
+  document.getElementById("stage").scrollTop = 0;
+  sync();
+}
+
+function sync(){
+  const total = stepsOf(cur).length;
+  document.getElementById("count").textContent = `${cur + 1} / ${slides.length}`;
+  document.getElementById("prev").disabled = cur === 0;
+  document.getElementById("next").disabled = cur === slides.length - 1;
+  const b = document.getElementById("step");
+  b.hidden = total === 0;
+  if (total){
+    b.disabled = shown >= total;
+    b.textContent = shown >= total ? "Всё открыто"
+                  : shown === 0 ? "Раскрыть" : `Дальше (${shown}/${total})`;
+  }
+}
+
+function nextStep(){
+  const steps = stepsOf(cur);
+  if (shown >= steps.length) return false;
+  steps[shown].hidden = false;
+  steps[shown].scrollIntoView({block: "nearest", behavior: "smooth"});
+  shown++;
+  sync();
+  return true;
+}
+
+document.getElementById("prev").addEventListener("click", () => show(cur - 1));
+document.getElementById("next").addEventListener("click", () => show(cur + 1));
+document.getElementById("step").addEventListener("click", nextStep);
+
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowRight" || e.key === "PageDown"){ show(cur + 1); }
+  else if (e.key === "ArrowLeft" || e.key === "PageUp"){ show(cur - 1); }
+  else if (e.key === " " || e.key === "Enter"){
+    if (!nextStep()) show(cur + 1);
+  } else return;
+  e.preventDefault();
+});
+
+show(0);
+</script>
+</body>
+</html>

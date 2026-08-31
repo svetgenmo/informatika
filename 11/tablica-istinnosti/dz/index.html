@@ -1,0 +1,1027 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Задание 2 ЕГЭ: таблицы истинности — домашняя работа</title>
+<meta name="description" content="Домашняя работа 11 класса (углублённый) по заданию 2 ЕГЭ: тренажёр с добором задач, тип закрывается двумя верными подряд, в конце — код работы для сдачи.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E11%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{margin:0;padding:20px 16px 60px;font:17px/1.55 "Segoe UI",system-ui,sans-serif}
+.wrap{max-width:860px;margin:0 auto}
+h1{font-size:23px;margin:0 0 4px}
+h2{font-size:18px;margin:0 0 10px}
+.sub{color:var(--muted);font-size:15px;margin:0 0 18px}
+code{font-family:Consolas,"Cascadia Mono",monospace;background:var(--card);
+     border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:15px}
+pre{font-family:Consolas,"Cascadia Mono",monospace;background:#1e2430;color:#e7ecf5;
+    padding:14px 16px;border-radius:10px;font-size:15px;line-height:1.5;
+    overflow-x:auto;margin:12px 0;white-space:pre}
+pre code{background:none;border:0;padding:0;color:inherit;font-size:inherit}
+.intro{border:1px solid var(--line);border-radius:12px;background:var(--card);
+       padding:14px 18px;margin-bottom:18px}
+.intro dl{margin:0}
+.intro dt{font-weight:700;margin-top:10px}
+.intro dt:first-child{margin-top:0}
+.intro dd{margin:2px 0 0}
+details{margin-top:12px}
+summary{cursor:pointer;font-weight:600;color:var(--accent)}
+.progress{border:2px solid var(--accent);border-radius:12px;padding:12px 16px;
+          background:#fff;margin-bottom:18px}
+.ptop{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.ptop h2{margin:0}
+.sp{flex:1 1 auto}
+.score{display:flex;align-items:baseline;gap:10px;color:var(--muted);font-size:15px}
+.score b{font:700 34px/1 "Segoe UI",system-ui,sans-serif;color:var(--ink);
+         min-width:40px;text-align:center;border:2px solid var(--line);
+         border-radius:8px;padding:2px 8px}
+.m5 b{color:var(--ok);border-color:var(--ok-line)}
+.m4 b{color:var(--accent);border-color:#a9c6e8}
+.m3 b{color:#8a5a00;border-color:var(--hi-line)}
+.types{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);border-radius:20px;padding:4px 12px;
+      font-size:14px;color:var(--muted);background:var(--card)}
+.chip.done{border-color:var(--ok-line);background:var(--ok-bg);color:var(--ok);
+           font-weight:600}
+.chip.cur{border-color:var(--accent);color:var(--accent);font-weight:600}
+.card{border:1px solid var(--line);border-radius:12px;padding:16px 18px;
+      background:#fff;margin-bottom:14px}
+.card.ok{border-color:var(--ok-line);background:var(--ok-bg)}
+.card.err{border-color:var(--err-line);background:var(--err-bg)}
+.tag{font-size:13px;color:var(--muted);margin:0 0 6px}
+.q{font-size:17px}
+.fx{font-size:18px;letter-spacing:.01em;white-space:nowrap}
+table.tt{border-collapse:collapse;margin:14px 0;font:16px/1 Consolas,monospace}
+table.tt th,table.tt td{border:1px solid #9aa0b0;padding:7px 0;width:52px;
+                        text-align:center}
+table.tt th{background:var(--card);font-weight:700}
+table.tt td.fv{background:var(--card)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+input[type=text]{font:16px/1 Consolas,monospace;padding:10px 12px;border-radius:8px;
+                 border:1px solid var(--line);width:100%;max-width:300px}
+button{font:600 15px/1 inherit;padding:11px 16px;border-radius:9px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);color:var(--muted)}
+.verdict{margin-top:10px;font-size:15.5px;font-weight:600}
+.verdict.ok{color:var(--ok)}
+.verdict.err{color:var(--err)}
+.why{margin-top:8px;font-size:15.5px;font-weight:400}
+.note{border:1px solid var(--hi-line);background:var(--hi-bg);border-radius:10px;
+      padding:11px 15px;margin:12px 0;font-size:15.5px}
+.code{font:700 26px/1.2 Consolas,monospace;letter-spacing:.06em;
+      background:var(--card);border:2px dashed var(--accent);border-radius:12px;
+      padding:16px;text-align:center;margin:12px 0;user-select:all}
+.stats{color:var(--muted);font-size:14px}
+label{display:block;font-size:14px;color:var(--muted);margin-bottom:3px}
+.fields{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0}
+.fields div{flex:1 1 180px}
+.fields input{max-width:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Домашняя работа: задание 2 ЕГЭ</h1>
+<p class="sub">11 класс, углублённый уровень. Таблицы истинности программным
+методом: <code>permutations</code>, <code>zip</code>, <code>dict</code>,
+<code>**</code>.</p>
+
+<div class="intro">
+  <dl>
+    <dt>Зачем это</dt>
+    <dd>Домашняя работа не обязательна — она <b>поднимает оценку</b>.
+        Насколько, зависит от того, сколько типов закрыто.</dd>
+    <dt>Как устроено</dt>
+    <dd>Шесть типов задач. Тип закрывается <b>двумя верными ответами
+        подряд</b>: ошибся — серия обнуляется, и тип придётся закрывать
+        заново на новых числах. Задачи не кончаются.</dd>
+    <dt>Чем решать</dt>
+    <dd>Написанная один раз программа решает любое число вариантов — в этом
+        и смысл метода. Первые четыре типа проверяют, понимаешь ли ты, что
+        именно она делает; их считают в голове.</dd>
+    <dt>Как сдать</dt>
+    <dd>Закроешь хотя бы четыре типа — появится <b>код работы</b> и кнопка
+        «Сдать работу»: впишешь фамилию и класс, форма откроется с уже
+        подставленным кодом. Переписывать его руками не надо.</dd>
+    <dt>Учти</dt>
+    <dd>В начале следующего занятия будет проверочная <b>на этих же типах</b>.
+        Так что задача не «получить код», а научиться — расхождение видно
+        сразу.</dd>
+  </dl>
+  <details>
+    <summary>Шаблон решения</summary>
+<pre><code>from itertools import permutations, product
+
+def f(x, y, z, w):
+    return ...          # выражение F: → это &lt;=, ≡ это ==
+
+table = [(0, 0, 1, 1), (0, 0, 1, 0), (0, 1, 1, 1)]   # строки фрагмента
+res = [1, 0, 0]                                       # столбец F
+
+for p in permutations('xyzw'):
+    if [f(**dict(zip(p, row))) for row in table] == res:
+        print(*p, sep='')</code></pre>
+    <p class="stats">С пропусками таблица собирается внутри
+    <code>for a1, a2, a3 in product([0, 1], repeat=3)</code>, а варианты с
+    повторяющимися строками пропускаются:
+    <code>if len(table) != len(set(table)): continue</code>.</p>
+  </details>
+</div>
+
+<div class="progress">
+  <div class="ptop">
+    <h2>Типы задач</h2>
+    <span class="sp"></span>
+    <div class="score" id="scorebox">
+      <span>наработано на</span><b id="mark">—</b>
+    </div>
+  </div>
+  <div class="types" id="types"></div>
+  <p class="stats" id="stats"></p>
+</div>
+
+<div id="area"></div>
+
+</div>
+
+<script>
+/* ==== ЗАДАЧИ: вставлено gen.py, руками не править ==== */
+/* Задание 2 ЕГЭ: таблицы истинности. Программный метод через itertools.
+
+   ЕДИНСТВЕННЫЙ ИСТОЧНИК ЗАДАЧ для практикума, домашней работы и
+   проверочной. В html вписывается скриптом gen.py --sync между маркерами —
+   руками страницы не править.
+
+   Шесть типов:
+     0 «значение функции»       перевод ∧ ∨ ¬ → ≡ в Python, ответ 0/1
+     1 «словарь и звёздочки»    f(**dict(zip(p, row))) — ядро метода, 0/1
+     2 «счёт вариантов»         сколько вызовов f / сколько расстановок подходит
+     3 «ошибка в программе»     в решении испорчена одна строка, назвать номер
+     4 «задание 2»              фрагмент таблицы без пропусков, ответ буквами
+     5 «задание 2 с пропусками» то же, но часть клеток пуста
+
+   Единственность ответа встроена в отбор: генератор сам перебирает все
+   перестановки имён и берёт задачу, только если подходит ровно одна
+   (для типа 2 kind=ways — наоборот, подходить должно несколько).
+
+   Машинные поля лежат в task.meta: по ним gen.py --selftest пересчитывает
+   ответ НАСТОЯЩИМ Python — выражение f выполняется как есть, а программа
+   типа 3 запускается целиком. Сверять генератор с собственной копией
+   формулы бесполезно: две реализации расходятся молча. */
+
+const L_TYPES = [
+  'значение функции',
+  'словарь и звёздочки',
+  'счёт вариантов',
+  'ошибка в программе',
+  'задание 2',
+  'задание 2 с пропусками'
+];
+
+/* ----------------------------------------------------------- случайность */
+
+function tRng(seed) {
+  let s = (seed >>> 0) || 1;
+  return function () {
+    s ^= s << 13; s >>>= 0;
+    s ^= s >> 17;
+    s ^= s << 5;  s >>>= 0;
+    return s / 4294967296;
+  };
+}
+
+function tRand(rng, a, b) { return a + Math.floor(rng() * (b - a + 1)); }
+function tPick(rng, arr) { return arr[tRand(rng, 0, arr.length - 1)]; }
+
+function tPl(n, one, few, many) {
+  const h = n % 100, t = n % 10;
+  if (h >= 11 && h <= 14) return many;
+  if (t === 1) return one;
+  if (t >= 2 && t <= 4) return few;
+  return many;
+}
+
+function tShuffle(rng, arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = tRand(rng, 0, i);
+    const t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+function esc2(s) {
+  return String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+}
+
+/* ------------------------------------------------------ логическая функция */
+
+/* Дерево: {op:'v', name} | {op:'not', a} | {op:'and'|'or'|'impl'|'eq', a, b} */
+
+const L_SIGN = {and: '∧', or: '∨', impl: '→', eq: '≡'};
+const L_PY   = {and: 'and', or: 'or', impl: '<=', eq: '=='};
+
+function lEval(node, env) {
+  switch (node.op) {
+    case 'v':    return env[node.name] ? 1 : 0;
+    case 'not':  return lEval(node.a, env) ? 0 : 1;
+    case 'and':  return (lEval(node.a, env) && lEval(node.b, env)) ? 1 : 0;
+    case 'or':   return (lEval(node.a, env) || lEval(node.b, env)) ? 1 : 0;
+    case 'impl': return (lEval(node.a, env) <= lEval(node.b, env)) ? 1 : 0;
+    case 'eq':   return (lEval(node.a, env) === lEval(node.b, env)) ? 1 : 0;
+    /* Только для порченых версий из задачи «ошибка в программе». */
+    case 'lt':   return (lEval(node.a, env) < lEval(node.b, env)) ? 1 : 0;
+    case 'ne':   return (lEval(node.a, env) !== lEval(node.b, env)) ? 1 : 0;
+  }
+  return 0;
+}
+
+/* Дерево с испорченной операцией — ровно то, во что превращает функцию
+   правка строки `return`. Нужно, чтобы проверить: а меняет ли ошибка ответ?
+   Порча, которая ничего не меняет, — не задача, а ловушка на пустом месте.
+   Порядок обхода тот же, что у lPy, поэтому портится тот же по счёту знак,
+   что и в тексте программы. */
+function lBreakNode(node, op, st) {
+  if (node.op === 'v') return node;
+  if (node.op === 'not') {
+    if (op === 'not' && !st.done) { st.done = true; return node.a; }
+    return {op: 'not', a: lBreakNode(node.a, op, st)};
+  }
+  const a = lBreakNode(node.a, op, st);
+  let self = node.op;
+  if (!st.done && node.op === op) {
+    st.done = true;
+    self = op === 'impl' ? 'lt' : 'ne';
+  }
+  return {op: self, a: a, b: lBreakNode(node.b, op, st)};
+}
+
+/* Математическая запись. Внешние скобки у корня не нужны. */
+function lMath(node, top) {
+  if (node.op === 'v') return node.name;
+  if (node.op === 'not') return '¬' + lMath(node.a, false);
+  const s = lMath(node.a, false) + ' ' + L_SIGN[node.op] + ' ' + lMath(node.b, false);
+  return top ? s : '(' + s + ')';
+}
+
+/* Запись на Python. Скобки ставятся всюду, и это не перестраховка:
+   `not x <= y` Python читает как `not (x <= y)`, а цепочка `x <= y == z` —
+   это сравнение подряд, а не то, что имелось в виду. */
+function lPy(node, top) {
+  if (node.op === 'v') return node.name;
+  if (node.op === 'not') return '(not ' + lPy(node.a, false) + ')';
+  const s = lPy(node.a, false) + ' ' + L_PY[node.op] + ' ' + lPy(node.b, false);
+  return top ? s : '(' + s + ')';
+}
+
+function lHasOp(node, ops) {
+  if (node.op === 'v') return false;
+  if (node.op === 'not') return lHasOp(node.a, ops);
+  return ops.indexOf(node.op) >= 0 || lHasOp(node.a, ops) || lHasOp(node.b, ops);
+}
+
+/* Все наборы значений длины n, в порядке имён. */
+function lAllRows(n) {
+  const out = [];
+  for (let m = 0; m < (1 << n); m++) {
+    const row = [];
+    for (let i = n - 1; i >= 0; i--) row.push((m >> i) & 1);
+    out.push(row);
+  }
+  return out;
+}
+
+function lEnv(names, vals) {
+  const e = {};
+  names.forEach((nm, i) => { e[nm] = vals[i]; });
+  return e;
+}
+
+/* Значения функции на всех наборах сразу: индекс — набор битами, старший
+   бит у первой переменной. Дальше вся работа идёт по этому массиву, а не
+   по дереву: перебор расстановок иначе считается минутами. */
+function lTruth(node, names) {
+  const n = names.length, out = new Array(1 << n);
+  for (let m = 0; m < (1 << n); m++) {
+    const env = {};
+    for (let i = 0; i < n; i++) env[names[i]] = (m >> (n - 1 - i)) & 1;
+    out[m] = lEval(node, env);
+  }
+  return out;
+}
+
+function lRowOf(m, n) {
+  const row = [];
+  for (let i = n - 1; i >= 0; i--) row.push((m >> i) & 1);
+  return row;
+}
+
+/* Существенная зависимость от каждой переменной: если функция не замечает
+   одну из них, подходящих расстановок заведомо больше одной. */
+function lDependsAll(truth, n) {
+  for (let i = 0; i < n; i++) {
+    const bit = 1 << (n - 1 - i);
+    let matters = false;
+    for (let m = 0; m < (1 << n) && !matters; m++)
+      if (!(m & bit) && truth[m] !== truth[m | bit]) matters = true;
+    if (!matters) return false;
+  }
+  return true;
+}
+
+/* Функция симметрична, если перестановка переменных её не меняет: тогда
+   ни один фрагмент таблицы не определит расстановку однозначно, и такую
+   функцию для задания 2 брать бессмысленно. */
+function lAsymmetric(truth, n) {
+  for (const q of lPermIdx(n)) {
+    let trivial = true;
+    for (let i = 0; i < n; i++) if (q[i] !== i) trivial = false;
+    if (trivial) continue;
+    let same = true;
+    for (let m = 0; m < (1 << n) && same; m++) {
+      let mm = 0;
+      for (let i = 0; i < n; i++)
+        if ((m >> (n - 1 - i)) & 1) mm |= 1 << (n - 1 - q[i]);
+      if (truth[m] !== truth[mm]) same = false;
+    }
+    if (same) return false;
+  }
+  return true;
+}
+
+/* Случайная функция: каждая переменная входит хотя бы раз, иногда одна
+   повторяется дважды — как в разобранных на доске примерах.
+   `strong` — требовать ещё и асимметрии (нужно там, где ответ обязан быть
+   единственным). Возвращается пара {node, truth}. */
+function lFormula(rng, names, strong) {
+  for (let guard = 0; guard < 300; guard++) {
+    let leaves = tShuffle(rng, names);
+    if (rng() < 0.45) {
+      const extra = tPick(rng, names);
+      leaves = leaves.slice();
+      leaves.splice(tRand(rng, 0, leaves.length), 0, extra);
+    }
+    let nodes = leaves.map(nm => rng() < 0.3
+      ? {op: 'not', a: {op: 'v', name: nm}}
+      : {op: 'v', name: nm});
+    const ops = ['and', 'or', 'impl', 'impl', 'eq', 'eq'];
+    while (nodes.length > 1) {
+      const i = tRand(rng, 0, nodes.length - 2);
+      nodes.splice(i, 2, {op: tPick(rng, ops), a: nodes[i], b: nodes[i + 1]});
+    }
+    const f = nodes[0];
+    /* Импликация или эквивалентность обязана быть: ради них и заводится
+       перевод в `<=` и `==`, на них же чаще всего и ошибаются. */
+    if (!lHasOp(f, ['impl', 'eq'])) continue;
+    const truth = lTruth(f, names);
+    if (!lDependsAll(truth, names.length)) continue;
+    if (strong && !lAsymmetric(truth, names.length)) continue;
+    return {node: f, truth: truth};
+  }
+  return null;
+}
+
+/* --------------------------------------------------------- перестановки */
+
+function lPerms(arr) {
+  if (arr.length <= 1) return [arr.slice()];
+  const out = [];
+  for (let i = 0; i < arr.length; i++) {
+    const rest = arr.slice(0, i).concat(arr.slice(i + 1));
+    for (const p of lPerms(rest)) out.push([arr[i]].concat(p));
+  }
+  return out;
+}
+
+const L_PERM_CACHE = {};
+function lPermIdx(n) {
+  if (!L_PERM_CACHE[n]) {
+    const idx = [];
+    for (let i = 0; i < n; i++) idx.push(i);
+    L_PERM_CACHE[n] = lPerms(idx);
+  }
+  return L_PERM_CACHE[n];
+}
+
+/* Все расстановки имён по столбцам, при которых фрагмент сходится.
+   Ровно то, что делает решение на itertools, только по таблице значений:
+   q[i] — номер переменной, стоящей в столбце i. */
+function lSolveT(truth, names, table, res) {
+  const n = names.length, out = [];
+  for (const q of lPermIdx(n)) {
+    let ok = true;
+    for (let j = 0; j < table.length && ok; j++) {
+      let m = 0;
+      for (let i = 0; i < n; i++)
+        if (table[j][i]) m |= 1 << (n - 1 - q[i]);
+      if (truth[m] !== res[j]) ok = false;
+    }
+    if (ok) out.push(q.map(k => names[k]).join(''));
+  }
+  return out;
+}
+
+function lDupRows(table) {
+  const seen = new Set();
+  for (const row of table) {
+    const k = row.join('');
+    if (seen.has(k)) return true;
+    seen.add(k);
+  }
+  return false;
+}
+
+/* Таблица с пропусками: перебираем заполнения, отбрасываем те, где строки
+   повторяются (в условии сказано «различные строки»), и собираем расстановки.
+   `strict` — считать ли этот отброс; без него ответов бывает больше, и на
+   этом ловятся забывшие про условие. */
+function lSolveHoles(truth, names, table, res, holes, strict) {
+  const found = new Set();
+  for (let m = 0; m < (1 << holes.length); m++) {
+    const t = table.map(r => r.slice());
+    holes.forEach(([r, c], i) => { t[r][c] = (m >> i) & 1; });
+    if (strict && lDupRows(t)) continue;
+    for (const s of lSolveT(truth, names, t, res)) found.add(s);
+  }
+  return [...found].sort();
+}
+
+/* --------------------------------------------------------------- разметка */
+
+function lTable(table, res, names) {
+  let h = '<table class="tt"><tr>';
+  for (let i = 0; i < table[0].length; i++) h += '<th>?</th>';
+  h += '<th>F</th></tr>';
+  table.forEach((row, j) => {
+    h += '<tr>' + row.map(v => '<td>' + (v < 0 ? '' : v) + '</td>').join('') +
+         '<td class="fv">' + res[j] + '</td></tr>';
+  });
+  return h + '</table>';
+}
+
+function lFdef(f, names) {
+  return 'def f(' + names.join(', ') + '):\n    return ' + lPy(f, true);
+}
+
+function lTableLiteral(table) {
+  return '[' + table.map(r => '(' + r.join(', ') + ')').join(', ') + ']';
+}
+
+const L_ASK = 'Определите, какому столбцу таблицы соответствует каждая из ' +
+  'переменных. В ответе напишите буквы в том порядке, в котором идут ' +
+  'соответствующие им столбцы, подряд и без разделителей.';
+
+/* ------------------------------------------- заготовка задания 2 (ядро) */
+
+/* Возвращает функцию, истинную расстановку и фрагмент таблицы, у которого
+   подходящая расстановка РОВНО ОДНА. Всё остальное строится поверх. */
+function lPuzzle(rng, n, rowsCount) {
+  const names = n === 4 ? ['x', 'y', 'z', 'w'] : ['x', 'y', 'z'];
+  for (let guard = 0; guard < 30; guard++) {
+    const g = lFormula(rng, names, true);
+    if (!g) continue;
+    /* Функция уже отобрана асимметричной, поэтому подходящий набор строк
+       почти наверняка найдётся — пробуем наборы, а не новые функции. */
+    for (let attempt = 0; attempt < 40; attempt++) {
+      const p0 = tShuffle(rng, names);
+      const all = tShuffle(rng, lAllRows(n)).slice(0, rowsCount);
+      /* Строка таблицы — значения по СТОЛБЦАМ: в столбце i стоит p0[i]. */
+      const table = all.map(vals => p0.map(nm => vals[names.indexOf(nm)]));
+      const res = all.map(vals => g.truth[parseInt(vals.join(''), 2)]);
+      if (lSolveT(g.truth, names, table, res).length !== 1) continue;
+      return {f: g.node, truth: g.truth, names, p0, table, res,
+              answer: p0.join('')};
+    }
+  }
+  return null;
+}
+
+/* ------------------------------------------- тип 0: значение функции */
+
+function lType0(rng) {
+  const n = rng() < 0.5 ? 3 : 4;
+  const names = n === 4 ? ['x', 'y', 'z', 'w'] : ['x', 'y', 'z'];
+  const g = lFormula(rng, names, false);
+  const f = g.node;
+  const vals = names.map(() => tRand(rng, 0, 1));
+  const val = lEval(f, lEnv(names, vals));
+  const given = names.map((nm, i) => nm + ' = ' + vals[i]).join(', ');
+  return {
+    type: 0, kind: 'n' + n, form: 'bit',
+    question: 'Логическая функция F задаётся выражением <b class="fx">F = ' +
+      lMath(f, true) + '</b>. Чему равно значение F при <b>' + given + '</b>?',
+    answer: String(val),
+    explain: 'На Python это же выражение записывается так: <code>' +
+      esc2(lPy(f, true)) + '</code>. Импликация <b>→</b> — это <code>&lt;=</code>, ' +
+      'эквивалентность <b>≡</b> — это <code>==</code>. Подставив значения, ' +
+      'получаем <b>' + val + '</b>.',
+    meta: {vars: names, py: lPy(f, true), assign: vals, want: val}
+  };
+}
+
+/* ------------------------------------- тип 1: словарь и две звёздочки */
+
+function lType1(rng) {
+  const names = ['x', 'y', 'z', 'w'];
+  const f = lFormula(rng, names, false).node;
+  const p = tShuffle(rng, names);
+  const row = names.map(() => tRand(rng, 0, 1));
+  const env = {};
+  p.forEach((nm, i) => { env[nm] = row[i]; });
+  const val = lEval(f, env);
+  const dict = '{' + p.map((nm, i) => "'" + nm + "': " + row[i]).join(', ') + '}';
+  return {
+    type: 1, kind: 'call', form: 'bit',
+    code: lFdef(f, names) + '\n\np = ' + "('" + p.join("', '") + "')" +
+          '\nrow = (' + row.join(', ') + ')\nprint(f(**dict(zip(p, row))))',
+    question: 'Что напечатает программа?',
+    answer: String(val),
+    explain: '<code>zip(p, row)</code> склеивает имена со значениями по ' +
+      'порядку, <code>dict</code> собирает из пар словарь <code>' + esc2(dict) +
+      '</code>, а <code>**</code> раскрывает его в именованные аргументы — ' +
+      'выходит вызов <code>f(' + p.map((nm, i) => nm + '=' + row[i]).join(', ') +
+      ')</code>. Порядок имён в <code>def</code> при этом не важен: аргументы ' +
+      'попадают по именам, а не по местам. Ответ <b>' + val + '</b>.',
+    meta: {vars: names, py: lPy(f, true),
+           assign: names.map(nm => env[nm]), want: val}
+  };
+}
+
+/* --------------------------------------------- тип 2: счёт вариантов */
+
+function lType2(rng) {
+  if (rng() < 0.5) {
+    /* Сколько раз будет вызвана f — арифметика перебора. */
+    const n = rng() < 0.5 ? 3 : 4;
+    const names = n === 4 ? ['x', 'y', 'z', 'w'] : ['x', 'y', 'z'];
+    const rows = tRand(rng, 2, 4);
+    const fact = n === 4 ? 24 : 6;
+    const table = [];
+    for (let i = 0; i < rows; i++) table.push(names.map(() => tRand(rng, 0, 1)));
+    const code = [
+      'from itertools import permutations',
+      '',
+      'table = ' + lTableLiteral(table),
+      'res = [' + table.map(() => tRand(rng, 0, 1)).join(', ') + ']',
+      "for p in permutations('" + names.join('') + "'):",
+      '    if [f(**dict(zip(p, row))) for row in table] == res:',
+      "        print(*p, sep='')"
+    ].join('\n');
+    return {
+      type: 2, kind: 'calls', form: 'int', code,
+      question: 'Сколько раз за время работы этого фрагмента будет вызвана ' +
+        'функция <code>f</code>? (Список внутри <code>if</code> строится ' +
+        'целиком, независимо от того, сойдётся он с <code>res</code> или нет.)',
+      answer: String(fact * rows),
+      explain: 'Перестановок из ' + n + ' имён — ' + n + '! = ' + fact +
+        '. На каждой строится список из ' + rows + ' значений, то есть ' +
+        rows + ' ' + tPl(rows, 'вызов', 'вызова', 'вызовов') +
+        ' <code>f</code>. Всего ' + fact + ' · ' + rows +
+        ' = <b>' + fact * rows + '</b>.',
+      meta: {count: 'calls', n: n, rows: rows}
+    };
+  }
+  /* Сколько расстановок подходит: тут ответов заведомо несколько. */
+  for (let guard = 0; guard < 120; guard++) {
+    const n = 3;
+    const names = ['x', 'y', 'z'];
+    const g = lFormula(rng, names, false);
+    if (!g) continue;
+    const f = g.node;
+    const rowsCount = tRand(rng, 2, 3);
+    const all = tShuffle(rng, lAllRows(n)).slice(0, rowsCount);
+    const p0 = tShuffle(rng, names);
+    const table = all.map(vals => p0.map(nm => vals[names.indexOf(nm)]));
+    const res = all.map(vals => g.truth[parseInt(vals.join(''), 2)]);
+    const sols = lSolveT(g.truth, names, table, res);
+    if (sols.length < 2 || sols.length > 5) continue;
+    return {
+      type: 2, kind: 'ways', form: 'int',
+      question: 'Логическая функция F задаётся выражением <b class="fx">F = ' +
+        lMath(f, true) + '</b>. Приведён фрагмент таблицы истинности функции F, ' +
+        'содержащий неповторяющиеся наборы аргументов.' +
+        lTable(table, res, names) +
+        'Сколько существует различных расстановок переменных ' +
+        names.join(', ') + ' по столбцам, подходящих под этот фрагмент?',
+      answer: String(sols.length),
+      explain: 'Здесь фрагмент не определяет расстановку однозначно: ' +
+        'подходят ' + sols.length + ' — ' + sols.join(', ') + '. В программе ' +
+        'вместо <code>print</code> набирают подходящие в <code>set()</code> и ' +
+        'печатают <code>len</code>.',
+      meta: {vars: names, py: lPy(f, true), table: table, res: res,
+             count: 'ways', want: sols.length}
+    };
+  }
+  return lType2(rng);
+}
+
+/* --------------------------------------- тип 3: ошибка в программе */
+
+/* Порчи. Каждая берёт строки правильного решения и портит ровно одну.
+   Что порча действительно меняет вывод, проверяет gen.py --selftest
+   настоящим запуском обеих программ. */
+function lBreaks(lines, f, names, res) {
+  const out = [];
+  const body = lines[2];                       /* строка с return */
+  if (body.indexOf(' <= ') >= 0) {
+    out.push({line: 3, code: body.replace(' <= ', ' < '), broken: 'impl',
+      why: 'Импликация <b>A → B</b> ложна только при A = 1, B = 0 — это ' +
+        '<code>A &lt;= B</code>. Со строгим <code>&lt;</code> случай ' +
+        'A = B = 1 объявляется ложным, и функция считает не то.'});
+  }
+  if (body.indexOf(' == ') >= 0) {
+    out.push({line: 3, code: body.replace(' == ', ' != '), broken: 'eq',
+      why: 'Эквивалентность <b>A ≡ B</b> истинна, когда значения совпадают, ' +
+        'то есть <code>A == B</code>. <code>!=</code> — это ровно наоборот.'});
+  }
+  if (/\(not [a-z]\)/.test(body)) {
+    out.push({line: 3, code: body.replace(/\(not ([a-z])\)/, '$1'), broken: 'not',
+      why: 'Потеряно отрицание: в выражении стоит <b>¬</b>, а в коде его нет.'});
+  }
+  if (res.join('') !== res.slice().reverse().join('')) {
+    out.push({line: 5, code: lines[4].replace(/\[(.+)\]/,
+        (m, s) => '[' + s.split(', ').reverse().join(', ') + ']'),
+      why: 'Значения функции перечислены в обратном порядке: <code>res</code> ' +
+        'обязан идти строка в строку с <code>table</code>.'});
+  }
+  out.push({line: 6, code: lines[5].replace("'" + names.join('') + "'",
+      "'" + names.slice(0, names.length - 1).join('') + "'"),
+    why: 'Перебирать надо перестановки всех ' + names.length + ' имён. ' +
+      'Из ' + (names.length - 1) + ' букв словарь получается неполным, и ' +
+      'вызов <code>f</code> просто не собирается.'});
+  out.push({line: 7, code: lines[6].replace('zip(p, row)', 'zip(row, p)'),
+    why: 'Порядок в <code>zip</code> перевёрнут: ключами словаря становятся ' +
+      'нули и единицы, а значениями — имена. Ключи именованных аргументов ' +
+      'обязаны быть строками.'});
+  out.push({line: 7, code: lines[6].replace('f(**dict', 'f(*dict'),
+    why: 'Одна звёздочка вместо двух. Словарь при этом перебирается по ' +
+      'ключам, и в <code>f</code> уходят сами буквы вместо значений — ' +
+      'программа не падает, но сравнивает строки и отвечает мимо.'});
+  out.push({line: 8, code: lines[7].replace("print(*p, sep='')", 'print(p)'),
+    why: 'Ответ надо вывести подряд, без разделителей: <code>*p</code> ' +
+      'разворачивает кортеж, а <code>sep=\'\'</code> убирает пробелы. ' +
+      '<code>print(p)</code> печатает кортеж со скобками и кавычками.'});
+  return out;
+}
+
+function lType3(rng) {
+  for (let guard = 0; guard < 60; guard++) {
+    const z = lPuzzle(rng, 4, 3);
+    if (!z) continue;
+    const lines = [
+      'from itertools import permutations',
+      'def f(' + z.names.join(', ') + '):',
+      '    return ' + lPy(z.f, true),
+      'table = ' + lTableLiteral(z.table),
+      'res = [' + z.res.join(', ') + ']',
+      "for p in permutations('" + z.names.join('') + "'):",
+      '    if [f(**dict(zip(p, row))) for row in table] == res:',
+      "        print(*p, sep='')"
+    ];
+    /* Порча обязана менять ответ. Испорченную функцию считаем здесь же и
+       смотрим, что подходящие расстановки стали другими: ошибка, которая
+       на этом фрагменте не проявляется, задачей быть не может. */
+    const breaks = lBreaks(lines, z.f, z.names, z.res).filter(b => {
+      if (lines[b.line - 1] === b.code) return false;
+      if (!b.broken) return true;
+      const bt = lTruth(lBreakNode(z.f, b.broken, {done: false}), z.names);
+      return lSolveT(bt, z.names, z.table, z.res).join(',') !== z.answer;
+    });
+    if (!breaks.length) continue;
+    const b = tPick(rng, breaks);
+    const bad = lines.slice();
+    bad[b.line - 1] = b.code;
+    const numbered = bad.map((s, i) =>
+      String(i + 1).padStart(2, ' ') + '  ' + s).join('\n');
+    return {
+      type: 3, kind: 'line' + b.line, form: 'int',
+      question: 'Логическая функция F задаётся выражением <b class="fx">F = ' +
+        lMath(z.f, true) + '</b>, и по этому фрагменту таблицы истинности ' +
+        'надо определить, какому столбцу соответствует каждая переменная.' +
+        lTable(z.table, z.res, z.names) +
+        'Верный ответ программа не печатает: ровно в одной строке ошибка. ' +
+        'Укажите <b>номер строки</b>.',
+      code: numbered,
+      answer: String(b.line),
+      explain: 'Ошибка в строке <b>' + b.line + '</b>. ' + b.why +
+        ' Правильно так: <code>' + esc2(lines[b.line - 1].trim()) + '</code>. ' +
+        'Верный ответ задания — <b>' + z.answer + '</b>.',
+      meta: {vars: z.names, py: lPy(z.f, true), table: z.table, res: z.res,
+             good: lines, bad: bad, badLine: b.line, want: z.answer}
+    };
+  }
+  return lType3(rng);          /* другой тип подсовывать нельзя: у него своя meta */
+}
+
+/* ------------------------------------------------- тип 4: задание 2 */
+
+function lType4(rng) {
+  for (let guard = 0; guard < 40; guard++) {
+    const z = lPuzzle(rng, 4, 3);
+    if (!z) continue;
+    return {
+      type: 4, kind: 'plain', form: 'letters',
+      question: 'Логическая функция F задаётся выражением <b class="fx">F = ' +
+        lMath(z.f, true) + '</b>. Дан фрагмент таблицы истинности функции F ' +
+        'из трёх различных строк — какой переменной соответствует каждый ' +
+        'столбец, неизвестно.' + lTable(z.table, z.res, z.names) + L_ASK,
+      answer: z.answer,
+      explain: 'Подходит ровно одна расстановка — <b>' + z.answer + '</b>. ' +
+        'На Python функция записывается так: <code>' + esc2(lPy(z.f, true)) +
+        '</code>, таблица — <code>' + esc2(lTableLiteral(z.table)) +
+        '</code>, значения — <code>[' + z.res.join(', ') + ']</code>.',
+      meta: {vars: z.names, py: lPy(z.f, true), table: z.table, res: z.res,
+             want: z.answer}
+    };
+  }
+  return lType4(rng);
+}
+
+/* --------------------------------- тип 5: задание 2 с пропусками */
+
+function lType5(rng) {
+  for (let guard = 0; guard < 300; guard++) {
+    const z = lPuzzle(rng, 4, 3);
+    if (!z) continue;
+    /* Пропуски: не больше двух в строке, иначе строка перестаёт держать. */
+    const cells = [];
+    for (let r = 0; r < 3; r++)
+      for (const c of tShuffle(rng, [0, 1, 2, 3]).slice(0, 2)) cells.push([r, c]);
+    const holes = tShuffle(rng, cells).slice(0, tRand(rng, 4, 5));
+    const table = z.table.map(r => r.slice());
+    holes.forEach(([r, c]) => { table[r][c] = -1; });
+    const strict = lSolveHoles(z.truth, z.names, table, z.res, holes, true);
+    if (strict.length !== 1 || strict[0] !== z.answer) continue;
+    const loose = lSolveHoles(z.truth, z.names, table, z.res, holes, false);
+    /* Первые 90 попыток берём только задачи-ловушки: без условия
+       «строки различны» ответ перестаёт быть единственным, и забывший
+       про него получает лишние варианты. */
+    if (guard < 200 && loose.length < 2) continue;
+    return {
+      type: 5, kind: loose.length > 1 ? 'trap' : 'plain', form: 'letters',
+      question: 'Логическая функция F задаётся выражением <b class="fx">F = ' +
+        lMath(z.f, true) + '</b>. Дан частично заполненный фрагмент таблицы ' +
+        'истинности функции F, содержащий <b>неповторяющиеся</b> строки.' +
+        lTable(table, z.res, z.names) + L_ASK,
+      answer: z.answer,
+      explain: 'Пропуски перебираются через <code>product([0, 1], repeat=' +
+        holes.length + ')</code>, а варианты с повторяющимися строками ' +
+        'отбрасываются. ' + (loose.length > 1
+          ? 'Без этого отброса подошло бы ' + loose.length + ' расстановок (' +
+            loose.join(', ') + ') — условие «неповторяющиеся строки» здесь ' +
+            'работает наравне с самой функцией. '
+          : '') +
+        'Верный ответ — <b>' + z.answer + '</b>.',
+      meta: {vars: z.names, py: lPy(z.f, true), table: table, res: z.res,
+             holes: holes, want: z.answer, loose: loose.length}
+    };
+  }
+  return lType5(rng);
+}
+
+/* ------------------------------------------------------------- сборка */
+
+const L_MAKERS = [lType0, lType1, lType2, lType3, lType4, lType5];
+
+function lMake(type, rng) {
+  const t = L_MAKERS[type](rng);
+  t.type = type;
+  return t;
+}
+
+/* Один вариант работы: по задаче каждого типа, порядок перемешан. */
+function lSet(seed) {
+  const rng = tRng(seed || 1);
+  const order = tShuffle(rng, [0, 1, 2, 3, 4, 5]);
+  return order.map(type => lMake(type, rng));
+}
+
+/* Ответ сверяется знак в знак: на КЕГЭ его читает машина, и «xy zw» или
+   «x,y,z,w» там просто не засчитают. */
+function lVerdict(task, raw) {
+  const s = String(raw === undefined || raw === null ? '' : raw).trim();
+  if (!s) return {ok: false, why: 'ответ пустой'};
+  if (task.form === 'letters') {
+    const t = s.toLowerCase();
+    if (/[а-яё]/.test(t))
+      return {ok: false, why: 'буквы набраны кириллицей — переключи раскладку'};
+    if (!/^[a-z]+$/.test(t))
+      return {ok: false, why: 'в ответе только буквы, подряд, без пробелов и запятых'};
+    return {ok: t === task.answer, why: ''};
+  }
+  if (!/^\d+$/.test(s))
+    return {ok: false, why: 'ответ — целое число, без пояснений и единиц'};
+  if (task.form === 'bit' && s !== '0' && s !== '1')
+    return {ok: false, why: 'функция принимает только два значения: 0 или 1'};
+  return {ok: String(Number(s)) === task.answer, why: ''};
+}
+/* ==== /ЗАДАЧИ ==== */
+
+/* Форма сдачи ДЗ — одна на все темы. Ссылку разносит set_form_link.py. */
+const FORM = "https://docs.google.com/forms/d/e/1FAIpQLSfQyhaxcnzn4ZaKSe_ZMsluw7qRQnrw_80H6SfrnYB5EThUIA/viewform?usp=pp_url&entry.853601231=ФАМИЛИЯ&entry.1091635917=КЛАСС&entry.487188307=КОД";
+
+const ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+const EPOCH = Date.UTC(2026, 0, 1);
+const PREFIX = "TI";
+const NEED_STREAK = 2;     // сколько верных подряд закрывают тип
+const MIN_TYPES = 4;       // ниже этого код не выдаётся
+const SCALE = [[6, 5], [5, 4], [4, 3]];
+
+const bin = (v, w) => v.toString(2).padStart(w, "0");
+
+/* Семибитными кусками строки: в нагрузке 33 бита, а побитовые операции в JS
+   32-битные — старший бит молча потерялся бы. */
+function checksum(bitstr){
+  let cs = 0x5B;
+  for (let i = 0; i < bitstr.length; i += 7)
+    cs ^= parseInt(bitstr.substr(i, 7).padEnd(7, "0"), 2);
+  return cs & 0x7F;
+}
+
+function makeCode(st){
+  const day = Math.max(0, Math.min(2047, Math.floor(
+      (Date.now() - EPOCH) / 86400000)));
+  const payload = bin(day, 11) + bin(Math.min(15, st.typesDone), 4) +
+                  bin(Math.min(15, st.cleanTypes), 4) +
+                  bin(Math.min(127, st.solved), 7) +
+                  bin(Math.min(127, st.wrong), 7);
+  const bitstr = payload + bin(checksum(payload), 7);
+  let out = "";
+  for (let i = 0; i < 40; i += 5)
+    out += ALPHABET[parseInt(bitstr.substr(i, 5), 2)];
+  return PREFIX + "-" + out.slice(0, 4) + "-" + out.slice(4);
+}
+
+/* ---------------------------------------------------------- состояние */
+const N = L_TYPES.length;
+const rng = tRng((Date.now() ^ (Math.random() * 1e9)) >>> 0);
+const st = {
+  streak: Array(N).fill(0),
+  done: Array(N).fill(false),
+  clean: Array(N).fill(true),
+  solved: 0, wrong: 0,
+  cur: null, answered: false
+};
+Object.defineProperty(st, "typesDone",
+  {get(){ return st.done.filter(Boolean).length; }});
+Object.defineProperty(st, "cleanTypes",
+  {get(){ return st.done.filter((d, i) => d && st.clean[i]).length; }});
+
+function markFor(n){
+  for (const [need, m] of SCALE) if (n >= need) return m;
+  return null;
+}
+
+function esc(s){ return String(s).replace(/[&<>]/g, c =>
+  ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+
+function pickType(){
+  const open = [];
+  for (let i = 0; i < N; i++) if (!st.done[i]) open.push(i);
+  if (!open.length) return null;
+  const started = open.filter(i => st.streak[i] > 0);
+  const from = started.length ? started : open;
+  return from[tRand(rng, 0, from.length - 1)];
+}
+
+function paint(){
+  const box = document.getElementById("types");
+  box.innerHTML = "";
+  L_TYPES.forEach(function(name, i){
+    const c = document.createElement("span");
+    c.className = "chip" + (st.done[i] ? " done"
+                  : (st.cur && st.cur.type === i ? " cur" : ""));
+    c.textContent = name + (st.done[i] ? " ✓"
+                   : st.streak[i] ? " (" + st.streak[i] + "/" + NEED_STREAK + ")" : "");
+    box.appendChild(c);
+  });
+  const m = markFor(st.typesDone);
+  const sb = document.getElementById("scorebox");
+  sb.className = "score" + (m ? " m" + m : "");
+  document.getElementById("mark").textContent = m || "—";
+  document.getElementById("stats").textContent =
+    "закрыто типов: " + st.typesDone + " из " + N +
+    " · решено задач: " + st.solved + " · ошибок: " + st.wrong +
+    (st.typesDone < MIN_TYPES
+      ? " · до кода работы осталось закрыть " + (MIN_TYPES - st.typesDone) : "");
+}
+
+function nextTask(){
+  const type = pickType();
+  if (type === null) return finish();
+  st.cur = lMake(type, rng);
+  st.answered = false;
+  const t = st.cur;
+  document.getElementById("area").innerHTML =
+    '<div class="card" id="task">' +
+      '<p class="tag">' + L_TYPES[type] + ' · серия ' + st.streak[type] +
+        ' из ' + NEED_STREAK + '</p>' +
+      '<div class="q">' + t.question + '</div>' +
+      (t.code ? '<pre><code>' + esc(t.code) + '</code></pre>' : '') +
+      '<div class="row">' +
+        '<input type="text" id="ans" autocomplete="off" spellcheck="false" ' +
+               'placeholder="' + (t.form === "letters" ? "буквы подряд" : "число") + '">' +
+        '<button class="primary" id="go">Проверить</button>' +
+        '<button id="stop">Закончить</button>' +
+      '</div>' +
+      '<div class="verdict" id="v"></div>' +
+    '</div>';
+  const input = document.getElementById("ans");
+  input.focus();
+  input.addEventListener("keydown", e => { if (e.key === "Enter") judge(); });
+  document.getElementById("go").addEventListener("click", judge);
+  document.getElementById("stop").addEventListener("click", finish);
+  paint();
+}
+
+function judge(){
+  if (st.answered) return nextTask();
+  const raw = document.getElementById("ans").value;
+  if (!raw.trim()) return;
+  const t = st.cur, type = t.type;
+  const res = lVerdict(t, raw);
+  st.answered = true;
+  document.getElementById("go").textContent = "Дальше";
+  document.getElementById("ans").disabled = true;
+  const card = document.getElementById("task");
+  const v = document.getElementById("v");
+  if (res.ok){
+    st.solved++;
+    st.streak[type]++;
+    card.className = "card ok";
+    v.className = "verdict ok";
+    let text = "Верно.";
+    if (st.streak[type] >= NEED_STREAK){ st.done[type] = true; text += " Тип закрыт."; }
+    else text += " Ещё один такой же — и тип закрыт.";
+    v.innerHTML = text + '<div class="why">' + t.explain + '</div>';
+  } else {
+    st.wrong++;
+    st.streak[type] = 0;
+    st.clean[type] = false;
+    card.className = "card err";
+    v.className = "verdict err";
+    v.innerHTML = "Пока нет" + (res.why ? " — " + res.why : "") +
+      ". Верный ответ: <code>" + t.answer + "</code>. Серия сброшена." +
+      '<div class="why">' + t.explain + '</div>';
+  }
+  paint();
+}
+
+function finish(){
+  const m = markFor(st.typesDone);
+  const code = st.typesDone >= MIN_TYPES ? makeCode(st) : null;
+  const more = st.typesDone < N
+    ? '<button id="more">Закрыть ещё типы</button>' : "";
+  document.getElementById("area").innerHTML =
+    '<div class="card">' +
+      '<h2>Работа окончена</h2>' +
+      '<p>Закрыто типов: <b>' + st.typesDone + '</b> из ' + N +
+        '. Решено задач: ' + st.solved + ', ошибок: ' + st.wrong + '.' +
+        (m ? ' Наработано на <b>' + m + '</b>.' : '') + '</p>' +
+      (code
+        ? '<p>Твой код работы:</p><div class="code">' + code + '</div>' +
+          '<div class="note">Код хранит дату, число закрытых типов и число ' +
+            'ошибок. Впиши фамилию и класс — кнопка откроет форму с уже ' +
+            'подставленным кодом.</div>' +
+          '<div class="fields">' +
+            '<div><label for="fam">Фамилия и имя</label>' +
+              '<input type="text" id="fam" autocomplete="off"></div>' +
+            '<div><label for="kls">Класс</label>' +
+              '<input type="text" id="kls" autocomplete="off" value="11"></div>' +
+          '</div>' +
+          '<div class="row"><button id="send" class="primary">Сдать работу</button></div>'
+        : '<div class="note">Закрыто меньше ' + MIN_TYPES +
+          ' типов — кода работы нет. Закрой ещё хотя бы ' +
+          (MIN_TYPES - st.typesDone) + ', и он появится.</div>') +
+      '<div class="row">' + more + '</div>' +
+    '</div>';
+  const b = document.getElementById("more");
+  if (b) b.addEventListener("click", nextTask);
+  const send = document.getElementById("send");
+  if (send) send.addEventListener("click", function(){
+    const fam = document.getElementById("fam").value.trim();
+    if (!fam) { document.getElementById("fam").focus(); return; }
+    const kls = document.getElementById("kls").value.trim() || "11";
+    window.open(FORM.replace("ФАМИЛИЯ", encodeURIComponent(fam))
+                    .replace("КЛАСС", encodeURIComponent(kls))
+                    .replace("КОД", encodeURIComponent(code)), "_blank");
+  });
+  paint();
+}
+
+nextTask();
+</script>
+</body>
+</html>
