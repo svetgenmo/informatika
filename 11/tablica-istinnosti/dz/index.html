@@ -90,6 +90,13 @@ label{display:block;font-size:14px;color:var(--muted);margin-bottom:3px}
 .fields{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0}
 .fields div{flex:1 1 180px}
 .fields input{max-width:none}
+/* второй канал сдачи: письмо с файлом программы. Форма файлов не
+   берёт без входа в аккаунт, письму аккаунт не нужен. */
+.mailbox{margin:14px 0 0;border:2px dashed var(--accent);
+         border-radius:12px;padding:14px 16px}
+.mailbox h3{margin:0 0 6px;font-size:16.5px;color:var(--accent)}
+.mailbox p{margin:6px 0;font-size:15.5px}
+.mailbox a{color:var(--accent);font-weight:600;word-break:break-all}
 </style>
 </head>
 <body>
@@ -102,9 +109,6 @@ label{display:block;font-size:14px;color:var(--muted);margin-bottom:3px}
 
 <div class="intro">
   <dl>
-    <dt>Зачем это</dt>
-    <dd>Домашняя работа не обязательна — она <b>поднимает оценку</b>.
-        Насколько, зависит от того, сколько типов закрыто.</dd>
     <dt>Как устроено</dt>
     <dd>Шесть типов задач. Тип закрывается <b>двумя верными ответами
         подряд</b>: ошибся — серия обнуляется, и тип придётся закрывать
@@ -114,9 +118,20 @@ label{display:block;font-size:14px;color:var(--muted);margin-bottom:3px}
         и смысл метода. Первые четыре типа проверяют, понимаешь ли ты, что
         именно она делает; их считают в голове.</dd>
     <dt>Как сдать</dt>
-    <dd>Закроешь хотя бы четыре типа — появится <b>код работы</b> и кнопка
-        «Сдать работу»: впишешь фамилию и класс, форма откроется с уже
-        подставленным кодом. Переписывать его руками не надо.</dd>
+    <dd><b>Два шага.</b> Закроешь хотя бы четыре типа — появится
+        <b>код работы</b> и кнопка «Сдать работу»: впишешь фамилию и
+        класс, форма откроется с уже подставленным кодом, переписывать
+        его руками не надо. Следом кнопка <b>«Отправить программу»</b>
+        откроет письмо на
+        <a href="mailto:krevskayas+hw@gmail.com">krevskayas+hw@gmail.com</a>
+        — приложи к нему файл своего решения.</dd>
+    <dt>Что за файл</dt>
+    <dd>Та самая программа, которой ты решал последние два типа: сохрани
+        её в IDLE как <code>решение.py</code> и приложи к письму
+        <b>файлом</b>, а не картинкой и не текстом в теле письма.
+        Так её можно запустить и посмотреть, что она действительно
+        решает задание, — со скриншота этого не видно. <b>Код без файла
+        не засчитывается.</b></dd>
     <dt>Учти</dt>
     <dd>В начале следующего занятия будет проверочная <b>на этих же типах</b>.
         Так что задача не «получить код», а научиться — расхождение видно
@@ -1004,6 +1019,55 @@ function judge(){
   paint();
 }
 
+/* ----------------------------------------------------- письмо с файлом
+   Код говорит, сколько задач закрыто, но не показывает саму программу.
+   Поэтому рядом с формой второй канал — обычное письмо с вложением.
+   Почта, а не форма: Google Форма берёт файлы только у того, кто вошёл
+   в аккаунт, а письму аккаунт не нужен. До агента-учителя такое письмо
+   доходит само.
+------------------------------------------------------------------ */
+var MAIL = "krevskayas+hw@gmail.com";
+
+var MAILBOX =
+  '<div class="mailbox">' +
+    '<h3>Осталось прислать программу</h3>' +
+    '<p>Файл <code>решение.py</code> — та программа, которой ты решал ' +
+       'последние два типа. Приложи её к письму файлом.</p>' +
+    '<div class="row"><button id="mailbtn">Отправить программу</button></div>' +
+    '<p class="stats" id="mailnote">Кнопка откроет письмо на <b>' + MAIL +
+       '</b> с уже вписанной темой — останется приложить файл и нажать ' +
+       '«Отправить». Входить никуда не нужно.</p>' +
+  '</div>';
+
+// Тема письма — то, по чему работу опознают: фамилия, класс и код.
+// Её собирает кнопка, чтобы код не набирали руками.
+function wireMail(code){
+  var btn = document.getElementById("mailbtn");
+  if (!btn) return;
+  var note = document.getElementById("mailnote");
+  btn.addEventListener("click", function(){
+    var famEl = document.getElementById("fam");
+    var klsEl = document.getElementById("kls");
+    var f = famEl ? famEl.value.trim() : "";
+    var k = (klsEl ? klsEl.value.trim() : "") || "11";
+    if (!f){
+      note.textContent = "Сначала впиши фамилию — она уйдёт в тему письма, "
+                       + "иначе непонятно, чья это работа.";
+      if (famEl) famEl.focus();
+      return;
+    }
+    var subject = "ДЗ " + f + " " + k + " " + code;
+    var body = ["Прикрепи файл решение.py — писать здесь ничего не нужно.",
+                "", "Фамилия: " + f, "Класс: " + k, "Код работы: " + code];
+    window.location.href = "mailto:" + MAIL
+      + "?subject=" + encodeURIComponent(subject)
+      + "&body=" + encodeURIComponent(body.join("\r\n"));
+    note.textContent = "Письмо открылось в почтовой программе: приложи файл "
+      + "и нажми «Отправить». Ничего не открылось — напиши сам(а) на "
+      + MAIL + ", тема письма: " + subject;
+  });
+}
+
 function finish(){
   const m = markFor(st.typesDone);
   const code = st.typesDone >= MIN_TYPES ? makeCode(st) : null;
@@ -1026,7 +1090,8 @@ function finish(){
             '<div><label for="kls">Класс</label>' +
               '<input type="text" id="kls" autocomplete="off" value="11"></div>' +
           '</div>' +
-          '<div class="row"><button id="send" class="primary">Сдать работу</button></div>'
+          '<div class="row"><button id="send" class="primary">Сдать работу</button></div>' +
+          MAILBOX
         : '<div class="note">Закрыто меньше ' + MIN_TYPES +
           ' типов — кода работы нет. Закрой ещё хотя бы ' +
           (MIN_TYPES - st.typesDone) + ', и он появится.</div>') +
@@ -1043,6 +1108,7 @@ function finish(){
                     .replace("КЛАСС", encodeURIComponent(kls))
                     .replace("КОД", encodeURIComponent(code)), "_blank");
   });
+  wireMail(code);
   paint();
 }
 

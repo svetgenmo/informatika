@@ -142,6 +142,16 @@ table.hex td,table.hex th{border:1px solid var(--line);padding:3px 9px;
      text-align:center}
 table.hex th{background:#fff;color:var(--muted);font-family:inherit}
 @media (max-width:620px){ .types{grid-template-columns:1fr} }
+
+/* --------------------------------------------------- письмо с файлами
+   Второй канал сдачи. Код уезжает формой, а файлы — обычным письмом:
+   Google Форма берёт вложения только у того, кто вошёл в аккаунт, а
+   письму аккаунт не нужен. */
+.mailbox{margin:16px 0 0;border:2px dashed var(--accent);border-radius:12px;
+         padding:14px 18px;background:#fff}
+.mailbox h3{margin:0 0 6px;font-size:17px;color:var(--accent)}
+.mailbox p{margin:6px 0}
+.mailbox a{color:var(--accent);font-weight:600;word-break:break-all}
 </style>
 </head>
 <body>
@@ -171,10 +181,22 @@ table.hex th{background:#fff;color:var(--muted);font-family:inherit}
         сколько решил задач и сколько было ошибок.</dd>
 
     <dt>Как сдать</dt>
-    <dd>В конце появится кнопка <b>«Сдать работу»</b>: впишешь фамилию
-        и класс, кнопка сама откроет форму с уже вписанным кодом.
-        Останется нажать «Отправить». Переписывать код руками не надо —
-        именно на этом чаще всего и ошибаются.</dd>
+    <dd><b>Два шага, оба кнопками прямо отсюда.</b>
+        <br>1. <b>«Сдать работу»</b> — впишешь фамилию и класс, откроется
+        форма с уже вписанным кодом, останется нажать «Отправить».
+        Переписывать код руками не надо — именно на этом чаще всего и
+        ошибаются.
+        <br>2. <b>«Отправить фотографии»</b> — откроется письмо на
+        <a href="mailto:krevskayas+hw@gmail.com">krevskayas+hw@gmail.com</a>
+        с уже вписанной темой: приложи снимки и отправь. Входить никуда
+        не нужно, письмо можно послать и с телефона.</dd>
+
+    <dt>Что на фото</dt>
+    <dd>Тетрадь с решением: столбики деления и разряды, по которым ты
+        переводил. Не ответы — их видно по коду, — а <b>ход</b>. Снимай
+        так, чтобы читалось: лист целиком, без бликов и наискосок.
+        Одной-двух фотографий хватит. <b>Код без фотографий не
+        засчитывается.</b></dd>
   </dl>
 </div>
 
@@ -511,6 +533,50 @@ function render(){
   } else btn.focus();
 }
 
+/* ----------------------------------------------------- письмо с файлами
+   Код говорит, сколько задач решено, но не говорит, чем они решались.
+   Поэтому рядом с формой второй канал — обычное письмо с вложением.
+   Почта, а не форма: Google Форма берёт файлы только у того, кто вошёл
+   в аккаунт, а письму аккаунт не нужен. До агента-учителя такое письмо
+   доходит само.
+------------------------------------------------------------------ */
+const MAIL = "krevskayas+hw@gmail.com";
+
+const MAILBOX = `<div class="mailbox">
+  <h3>Осталось прислать фотографии</h3>
+  <p>Тетрадь с решением: столбики деления и разряды — как ты считал, а не только что получилось. Одной-двух фотографий хватит.</p>
+  <button id="mailbtn">Отправить фотографии</button>
+  <p class="stats" id="mailnote">Кнопка откроет письмо на <b>${MAIL}</b>
+     с уже вписанной темой — останется приложить снимки и нажать «Отправить».
+     Входить никуда не нужно, письмо годится и с телефона.</p>
+</div>`;
+
+// Тема письма — это то, по чему работу опознают: фамилия, класс и код.
+// Её собирает кнопка, чтобы никто не набирал код руками.
+function wireMail(code){
+  const btn = document.getElementById("mailbtn");
+  if (!btn) return;
+  const note = document.getElementById("mailnote");
+  btn.addEventListener("click", () => {
+    const val = id => (document.getElementById(id) || {value: ""}).value.trim();
+    const f = val("fam"), k = val("kls");
+    if (!f || !k){
+      note.textContent = "Сначала впиши фамилию и класс — они уйдут в тему "
+                       + "письма, иначе непонятно, чья это работа.";
+      return;
+    }
+    const subject = "ДЗ " + f + " " + k + " " + code;
+    const body = ["Прикрепи фотографии решения — писать здесь ничего не нужно.", "",
+                  "Фамилия: " + f, "Класс: " + k, "Код работы: " + code];
+    window.location.href = "mailto:" + MAIL
+      + "?subject=" + encodeURIComponent(subject)
+      + "&body=" + encodeURIComponent(body.join("\r\n"));
+    note.textContent = "Письмо открылось в почтовой программе: приложить снимки и "
+      + "нажми «Отправить». Ничего не открылось — напиши сам(а) на "
+      + MAIL + ", тема письма: " + subject;
+  });
+}
+
 /* Кнопка «Сдать»: фамилию и класс страница помнит между заходами, код
    подставляет сам. Переписывать код руками больше не нужно — именно на
    переписывании и брались «код не разобрался». */
@@ -589,10 +655,12 @@ function renderFinish(){
             <a href="https://forms.gle/gKBZNb5rVbcv65Ls5" target="_blank" rel="noopener">https://forms.gle/gKBZNb5rVbcv65Ls5</a></li>
         <li>Впиши фамилию, класс и этот код — <b>ровно как здесь</b>.</li>
       </ol>`}
+      ${MAILBOX}
     </div>
     <div class="card"><div class="row">${more}</div></div>`;
 
   wireSend(code);
+  wireMail(code);
   const back = document.getElementById("back");
   if (back) back.addEventListener("click", nextTask);
   const btn = document.getElementById("more");
