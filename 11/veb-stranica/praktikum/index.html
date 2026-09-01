@@ -1,0 +1,597 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Своя веб-страница — практикум</title>
+<meta name="description" content="Практикум 11 класса: собрать личную веб-страницу в редакторе с живым предпросмотром. Двенадцать требований проверяются автоматически, готовый файл скачивается одной кнопкой.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E10%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ink)}
+body{font:16px/1.5 "Segoe UI",system-ui,sans-serif;
+     display:flex;flex-direction:column}
+
+/* ---- шапка ---- */
+.top{flex:0 0 auto;display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+     border-bottom:2px solid var(--accent);background:var(--card);
+     padding:10px 20px}
+.top h1{font-size:18px;margin:0}
+.mark{display:flex;align-items:baseline;gap:9px}
+.mark span{color:var(--muted);font-size:14px}
+.mark b{font:700 32px/1 "Segoe UI",system-ui,sans-serif;min-width:38px;
+        text-align:center;border-radius:8px;padding:1px 9px;
+        background:#fff;border:2px solid var(--line)}
+.m5{color:var(--ok);border-color:var(--ok-line)!important}
+.m4{color:var(--accent);border-color:#a9c6e8!important}
+.m3{color:#8a5a00;border-color:#e6c98a!important}
+.m2{color:var(--err);border-color:var(--err-line)!important}
+.top .stats{color:var(--muted);font-size:14px;line-height:1.3}
+.spacer{flex:1 1 auto}
+button{font:600 14px/1 inherit;padding:10px 14px;border-radius:9px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);
+       cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);
+                color:var(--muted);background:#fff}
+button:focus-visible{outline:3px solid #a9c6e8;outline-offset:2px}
+input[type=text]{font:15px/1 inherit;padding:9px 12px;border-radius:9px;
+                 border:1px solid var(--line);width:170px}
+input[type=text]:focus{outline:2px solid var(--accent);border-color:var(--accent)}
+
+/* ---- три колонки ---- */
+.main{flex:1 1 auto;display:grid;grid-template-columns:1fr 1fr 320px;
+      min-height:0}
+.pane{display:flex;flex-direction:column;min-width:0;min-height:0;
+      border-right:1px solid var(--line)}
+.pane > h2{flex:0 0 auto;margin:0;padding:8px 14px;font-size:13px;
+           letter-spacing:.06em;text-transform:uppercase;color:var(--muted);
+           background:var(--card);border-bottom:1px solid var(--line);
+           display:flex;align-items:center;gap:10px}
+.pane > h2 .spacer{flex:1 1 auto}
+.pane > h2 button{font-size:12px;padding:5px 9px;border-radius:7px}
+
+#code{flex:1 1 auto;width:100%;border:0;resize:none;padding:12px 14px;
+      font:14px/1.55 Consolas,"Cascadia Mono",monospace;color:var(--ink);
+      background:#fff;tab-size:2}
+#code:focus{outline:2px solid var(--accent);outline-offset:-2px}
+#view{flex:1 1 auto;width:100%;border:0;background:#fff}
+
+/* ---- чек-лист ---- */
+.side{overflow-y:auto;background:var(--card)}
+ol.check{list-style:none;margin:0;padding:8px 12px 20px}
+ol.check li{display:flex;gap:9px;align-items:flex-start;
+            padding:8px 10px;margin-bottom:6px;border-radius:9px;
+            background:#fff;border:1px solid var(--line);font-size:14px;
+            line-height:1.4}
+ol.check li.done{border-color:var(--ok-line);background:var(--ok-bg)}
+ol.check .box{flex:0 0 20px;height:20px;border-radius:5px;margin-top:1px;
+              border:2px solid var(--line);color:#fff;font:700 13px/17px sans-serif;
+              text-align:center;background:#fff}
+ol.check li.done .box{background:var(--ok);border-color:var(--ok);}
+ol.check b{display:block;color:var(--ink)}
+ol.check span{color:var(--muted)}
+ol.check code{font-family:Consolas,monospace;background:var(--card);
+              border:1px solid var(--line);border-radius:4px;padding:0 4px}
+
+/* ---- шпаргалка ----
+   Копировать её нельзя намеренно: теги, набранные руками, запоминаются,
+   а вставленные из буфера — нет. */
+.cheat{padding:0 12px 24px}
+.cheat h3{font-size:13px;letter-spacing:.06em;text-transform:uppercase;
+          color:var(--muted);margin:16px 0 6px}
+.cheat pre{user-select:none;-webkit-user-select:none;margin:0 0 8px;
+           font:13px/1.5 Consolas,monospace;background:#1e2430;color:#e7ecf5;
+           padding:9px 12px;border-radius:9px;white-space:pre-wrap;
+           word-break:break-word}
+.cheat p{font-size:13px;color:var(--muted);margin:0 0 10px}
+
+.hint{padding:10px 14px;font-size:13px;color:var(--muted);
+      border-bottom:1px solid var(--line);background:#fff}
+
+.cheat details{border:1px solid var(--line);border-radius:9px;
+               padding:9px 12px;background:#fff;margin-top:8px}
+.cheat summary{cursor:pointer;font-weight:600;font-size:13px}
+.cheat details h3{margin:14px 0 4px}
+.cheat details p{font-size:13px;color:var(--ink);margin:5px 0}
+.cheat details code{font-family:Consolas,monospace;background:var(--card);
+                    border:1px solid var(--line);border-radius:4px;padding:0 4px}
+.cheat details table{border-collapse:collapse;font-size:12.5px;margin:5px 0}
+.cheat details td,.cheat details th{border:1px solid var(--line);
+                                    padding:3px 7px;text-align:left}
+.cheat details th{background:var(--card);color:var(--muted)}
+
+@media (max-width:1100px){
+  .main{grid-template-columns:1fr 1fr;grid-template-rows:1fr auto}
+  .side{grid-column:1 / -1;max-height:340px}
+}
+@media (max-width:760px){
+  .main{grid-template-columns:1fr;grid-template-rows:340px 300px auto}
+  .side{grid-column:auto}
+}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <h1>Своя веб-страница</h1>
+  <div class="mark"><span>Оценка</span><b id="mark">—</b></div>
+  <div class="stats" id="stats"></div>
+  <div class="spacer"></div>
+  <input type="text" id="fam" placeholder="Фамилия" autocomplete="off"
+         spellcheck="false">
+  <button id="save" class="primary">Скачать мой сайт</button>
+  <button id="reset">Начать заново</button>
+</div>
+
+<div class="main">
+
+  <div class="pane">
+    <h2>Код страницы
+      <div class="spacer"></div>
+      <span id="saved" style="text-transform:none;letter-spacing:0"></span>
+    </h2>
+    <textarea id="code" spellcheck="false" autocomplete="off"
+              autocapitalize="off"></textarea>
+  </div>
+
+  <div class="pane">
+    <h2>Предпросмотр
+      <div class="spacer"></div>
+      <button id="toggle">Показать образец</button>
+    </h2>
+    <div class="hint" id="viewhint">Так страница выглядит прямо сейчас.
+      Меняете код слева — картинка меняется сама.</div>
+    <iframe id="view" sandbox="allow-scripts" title="Предпросмотр"></iframe>
+  </div>
+
+  <div class="pane side">
+    <h2>Что должно быть на странице</h2>
+    <ol class="check" id="check"></ol>
+
+    <div class="cheat">
+      <h3>Шпаргалка</h3>
+      <p>Скопировать её нельзя — набирайте руками, так запоминается.</p>
+
+      <pre>&lt;h2&gt;Заголовок раздела&lt;/h2&gt;
+&lt;p&gt;Обычный абзац текста.&lt;/p&gt;</pre>
+
+      <pre>&lt;img src="адрес картинки" width="260"&gt;</pre>
+      <p>Адрес берут так: нашли картинку в поиске, правой кнопкой по
+         ней → «Копировать адрес изображения».</p>
+
+      <pre>&lt;ul&gt;
+  &lt;li&gt;первый пункт&lt;/li&gt;
+  &lt;li&gt;второй пункт&lt;/li&gt;
+&lt;/ul&gt;</pre>
+
+      <pre>&lt;a href="https://ya.ru"&gt;Текст ссылки&lt;/a&gt;</pre>
+
+      <pre>&lt;table&gt;
+  &lt;tr&gt;&lt;th&gt;День&lt;/th&gt;&lt;th&gt;Дело&lt;/th&gt;&lt;/tr&gt;
+  &lt;tr&gt;&lt;td&gt;Пн&lt;/td&gt;&lt;td&gt;Плавание&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;</pre>
+
+      <h3>Стили — внутри &lt;style&gt;</h3>
+      <pre>body {
+  background: #eef3fb;
+  font-family: Georgia, serif;
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 24px;
+}
+img { border-radius: 12px; }
+table, td, th { border: 1px solid #888;
+  border-collapse: collapse; padding: 6px; }</pre>
+
+      <h3>Кнопка — внутри &lt;script&gt;</h3>
+      <pre>&lt;button id="knopka"&gt;Нажми&lt;/button&gt;
+&lt;p id="otvet"&gt;&lt;/p&gt;
+
+&lt;script&gt;
+knopka.addEventListener("click", function () {
+  otvet.textContent = "Сегодня " +
+    new Date().toLocaleDateString("ru");
+});
+&lt;/script&gt;</pre>
+      <p>Пока страница только показывает готовый текст — она
+         <b>статическая</b>. Как только содержимое начинает считаться
+         прямо в браузере, она становится <b>динамической</b>.</p>
+    </div>
+
+    <details>
+      <summary>Подсказка: как устроена веб-страница</summary>
+
+      <h3>Браузер и сервер разговаривают запросами</h3>
+      <p>Браузер — <b>клиент</b>: он просит. Сервер только <b>отвечает</b>,
+         сам первым ничего не присылает. Протокол этого разговора —
+         <b>HTTP</b> (у <b>HTTPS</b> то же самое, но зашифровано).
+         В ответе есть код: <code>200</code> — нашлось,
+         <code>301</code> — переехало, <code>403</code> — нельзя,
+         <code>404</code> — такого файла нет, <code>500</code> — сервер
+         сломался. Одна страница — это десятки запросов: HTML, стили,
+         шрифты, каждая картинка отдельно (видно по <b>F12 → Сеть</b>).</p>
+
+      <h3>Страница приезжает текстом</h3>
+      <p><b>HTML</b> — язык разметки, а не программа: он ничего не
+         вычисляет, он только называет части текста. <b>Тег</b> — имя
+         части в угловых скобках, почти всегда парный:
+         <code>&lt;p&gt;</code> открывает, <code>&lt;/p&gt;</code>
+         закрывает. Исходный текст любой страницы —
+         <b>Ctrl + U</b>.</p>
+      <table>
+        <tr><th>тег</th><th>что означает</th></tr>
+        <tr><td><code>h1</code>, <code>h2</code></td><td>заголовки</td></tr>
+        <tr><td><code>p</code></td><td>абзац</td></tr>
+        <tr><td><code>img</code></td><td>картинка (одиночный)</td></tr>
+        <tr><td><code>ul</code> / <code>li</code></td><td>список и пункт</td></tr>
+        <tr><td><code>a href</code></td><td>ссылка</td></tr>
+        <tr><td><code>table</code> / <code>tr</code> / <code>td</code></td>
+            <td>таблица, строка, ячейка</td></tr>
+      </table>
+
+      <h3>Оформление отдельно от содержания</h3>
+      <p><b>CSS</b> отвечает за вид: <code>body { background: #eef3fb;
+         font-family: Georgia; }</code>. Один файл стилей оформляет хоть
+         тысячу страниц, а тот же HTML сам подстраивается под телефон и
+         принтер — потому что в нём написано, <i>что</i> это, а не
+         <i>как это нарисовать</i>.</p>
+
+      <h3>Статическая страница и динамическая</h3>
+      <p><b>Статическая</b> лежит на сервере готовым файлом, и всем
+         приходит одна и та же. <b>Динамическая</b> собирается в момент
+         запроса — каждому своё. Собирают в двух местах: <b>на сервере</b>
+         (программа лезет в базу данных и склеивает HTML) или
+         <b>в браузере</b> (программа на <b>JavaScript</b> дорисовывает
+         страницу уже у вас). Кнопка, которая считает дни до Нового года,
+         — это уже второе.</p>
+
+      <h3>Где живёт сайт</h3>
+      <p><b>Хостинг</b> — место под файлы на сервере, который включён
+         всегда и имеет постоянный публичный IP. <b>Домен</b> покупается
+         отдельно и привязывается к этому адресу через DNS: сайт может
+         переехать, не меняя имени. <b>Облачный диск</b> устроен так же —
+         файл лежит на чужом сервере, а вам дают доступ и ссылку.
+         Отсюда правило: то, что жалко потерять, должно лежать минимум в
+         двух местах, и хотя бы одно из них — ваше собственное.</p>
+    </details>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+
+/* ==================================================================
+   ЗАГОТОВКА
+
+   Даём каркас, а не пустой лист: за 27 минут урока набрать <!doctype>
+   и <head> руками — потерянное время, а разговор не про них. Всё
+   содержательное ученик пишет сам, и заглушки в <title> и <h1>
+   специально такие, что первые два пункта чек-листа не засчитываются,
+   пока их не заменили своим.
+================================================================== */
+
+const START = `<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Моя страница</title>
+
+<style>
+/* Здесь живут стили. Начните с фона и шрифта:
+   body { background: #eef3fb; font-family: Georgia, serif; } */
+
+</style>
+</head>
+<body>
+
+<h1>Имя Фамилия</h1>
+
+<!-- Дальше всё ваше. Смотрите список справа: он сам отмечает
+     выполненное. Шпаргалка с тегами — под списком. -->
+
+</body>
+</html>
+`;
+
+/* ==================================================================
+   ОБРАЗЕЦ
+
+   Не «как надо сделать», а «до какого уровня можно дойти». Показывается
+   в том же окне предпросмотра по кнопке — чтобы сравнивать было с чем,
+   и чтобы не заводить второй файл, который придётся носить отдельно.
+================================================================== */
+
+const SAMPLE = `<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Марина Соколова — 11 класс</title>
+<style>
+body { background: #f2f6fb; font-family: Georgia, "Times New Roman", serif;
+       color: #22252b; max-width: 720px; margin: 0 auto; padding: 28px 22px 60px; }
+h1 { color: #1f5fa8; border-bottom: 3px solid #1f5fa8; padding-bottom: 8px; }
+h2 { color: #1f5fa8; margin-top: 30px; }
+img { border-radius: 14px; border: 3px solid #ffffff;
+      box-shadow: 0 3px 12px rgba(0,0,0,.18); }
+table { border-collapse: collapse; }
+td, th { border: 1px solid #9aa4b5; padding: 7px 14px; }
+th { background: #e3ecf7; }
+#otvet { font-size: 20px; font-weight: bold; color: #137a41; }
+</style>
+</head>
+<body>
+
+<h1>Марина Соколова</h1>
+<p>Учусь в 11 классе. Люблю астрономию, длинные пешие маршруты и
+чинить старые велосипеды. Эту страницу написала сама, на уроке
+информатики, за сорок минут.</p>
+
+<img src="data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='170'%3E%3Crect width='260' height='170' fill='%231f5fa8'/%3E%3Ccircle cx='196' cy='42' r='22' fill='%23ffd479'/%3E%3Cpath d='M0 170 L70 92 L130 138 L196 78 L260 128 L260 170 Z' fill='%239dd4b4'/%3E%3C/svg%3E" width="260">
+
+<h2>Чем занимаюсь</h2>
+<ul>
+  <li>астрономический кружок — второй год</li>
+  <li>велопоходы по выходным</li>
+  <li>олимпиада по информатике</li>
+</ul>
+
+<h2>Моя неделя</h2>
+<table>
+  <tr><th>День</th><th>Что делаю</th></tr>
+  <tr><td>Понедельник</td><td>кружок</td></tr>
+  <tr><td>Среда</td><td>бассейн</td></tr>
+  <tr><td>Суббота</td><td>велосипед</td></tr>
+</table>
+
+<h2>Полезная ссылка</h2>
+<p>Расписание запусков и пролётов МКС:
+<a href="https://www.heavens-above.com">heavens-above.com</a></p>
+
+<h2>А это уже динамика</h2>
+<button id="knopka">Сколько осталось до Нового года</button>
+<p id="otvet"></p>
+
+<script>
+knopka.addEventListener("click", function () {
+  const now = new Date();
+  const ny = new Date(now.getFullYear() + 1, 0, 1);
+  const days = Math.ceil((ny - now) / 86400000);
+  otvet.textContent = days + " дней";
+});
+<\/script>
+
+</body>
+</html>
+`;
+
+/* ==================================================================
+   ЧЕК-ЛИСТ
+
+   Двенадцать требований. Каждое проверяется разбором того, что
+   написано в редакторе, — а не поиском строки в тексте: <h1> можно
+   написать с атрибутами, в другом регистре, с переносами, и это всё
+   равно <h1>. Поэтому код разбирается настоящим парсером браузера.
+
+   Заглушки заготовки не засчитываются: страница, где не поменяли ни
+   заголовок вкладки, ни имя, — это не работа ученика.
+================================================================== */
+
+const STUBS = ["моя страница", "имя фамилия", "заголовок", ""];
+const isStub = s => STUBS.indexOf(String(s).trim().toLowerCase()) >= 0;
+const txt = el => (el ? el.textContent.trim() : "");
+
+const RULES = [
+  {t: "Заголовок вкладки", d: "в <code>&lt;title&gt;</code> своё название, а не «Моя страница»",
+   f: d => !isStub(d.doc.title) && d.doc.title.trim().length >= 3},
+
+  {t: "Имя на странице", d: "<code>&lt;h1&gt;</code> с вашим именем",
+   f: d => { const h = d.doc.querySelector("h1");
+             return !!h && !isStub(txt(h)) && txt(h).length >= 3; }},
+
+  {t: "Рассказ о себе", d: "абзац <code>&lt;p&gt;</code> не короче 40 знаков",
+   f: d => [...d.doc.querySelectorAll("p")].some(p => txt(p).length >= 40)},
+
+  {t: "Два раздела", d: "минимум два заголовка <code>&lt;h2&gt;</code>",
+   f: d => [...d.doc.querySelectorAll("h2")].filter(h => txt(h)).length >= 2},
+
+  {t: "Картинка", d: "<code>&lt;img&gt;</code> с непустым <code>src</code>",
+   f: d => [...d.doc.querySelectorAll("img")]
+             .some(i => (i.getAttribute("src") || "").trim().length > 5)},
+
+  {t: "Список", d: "<code>&lt;ul&gt;</code> или <code>&lt;ol&gt;</code> минимум из трёх пунктов",
+   f: d => [...d.doc.querySelectorAll("ul,ol")].some(l =>
+             [...l.querySelectorAll("li")].filter(li => txt(li)).length >= 3)},
+
+  {t: "Ссылка наружу", d: "<code>&lt;a href=\"https://…\"&gt;</code> с текстом",
+   f: d => [...d.doc.querySelectorAll("a")].some(a =>
+             /^https?:\/\/\S{4,}/i.test(a.getAttribute("href") || "")
+             && txt(a).length >= 2)},
+
+  {t: "Таблица", d: "<code>&lt;table&gt;</code>: минимум 3 строки и 2 столбца",
+   f: d => [...d.doc.querySelectorAll("table")].some(t => {
+             const rows = [...t.querySelectorAll("tr")];
+             return rows.length >= 3
+                 && rows.every(r => r.querySelectorAll("td,th").length >= 2); })},
+
+  {t: "Свой фон", d: "<code>background</code> в <code>&lt;style&gt;</code>",
+   f: d => /background(-color)?\s*:\s*[^;{}]{3,}/i.test(d.css)},
+
+  {t: "Свой шрифт", d: "<code>font-family</code> в <code>&lt;style&gt;</code>",
+   f: d => /font-family\s*:\s*[^;{}]{3,}/i.test(d.css)},
+
+  {t: "Рамка или скругление", d: "<code>border</code> или <code>border-radius</code>",
+   f: d => /border(-radius)?\s*:\s*[^;{}]{2,}/i.test(d.css)},
+
+  {t: "Динамика", d: "кнопка <code>&lt;button&gt;</code>, которая что-то делает по клику",
+   f: d => !!d.doc.querySelector("button")
+        && (/addEventListener\s*\(\s*["']click/i.test(d.js)
+            || /onclick\s*=/i.test(d.src))}
+];
+
+const TOTAL = RULES.length;
+const SCALE = [[12, 5], [10, 4], [8, 3]];
+function markFor(n){
+  for (const s of SCALE) if (n >= s[0]) return s[1];
+  return 2;
+}
+
+/* Закомментированное не считается сделанным. Заготовка подсказывает
+   стили строкой-примером внутри комментария, и без этой чистки два
+   пункта про оформление засчитывались бы сами собой. */
+const noComments = s => String(s).replace(/\/\*[\s\S]*?\*\//g, " ");
+
+function analyse(src){
+  const doc = new DOMParser().parseFromString(src, "text/html");
+  const css = noComments([...doc.querySelectorAll("style")]
+                .map(s => s.textContent).join("\n"));
+  const js = noComments([...doc.querySelectorAll("script")]
+               .map(s => s.textContent).join("\n"));
+  const clean = String(src).replace(/<!--[\s\S]*?-->/g, " ");
+  return {src: clean, doc, css, js};
+}
+
+/* ------------------------------------------------------------------
+   Предпросмотр и сохранение работы.
+
+   Работа держится в localStorage: урок идёт сорок минут, а закрыть
+   вкладку случайно можно на любой минуте. Хранилище своё у каждой
+   машины и никуда не уходит — опознания в нём нет и не нужно.
+------------------------------------------------------------------ */
+
+const KEY = "veb-stranica-11";
+const code = document.getElementById("code");
+const view = document.getElementById("view");
+let showingSample = false;
+
+function load(){
+  let saved = null;
+  try { saved = localStorage.getItem(KEY); } catch (e) {}
+  code.value = saved || START;
+  try { document.getElementById("fam").value =
+          localStorage.getItem(KEY + "-fam") || ""; } catch (e) {}
+}
+
+function store(){
+  try {
+    localStorage.setItem(KEY, code.value);
+    localStorage.setItem(KEY + "-fam", document.getElementById("fam").value);
+    const s = document.getElementById("saved");
+    s.textContent = "сохранено";
+    s.style.color = "#137a41";
+    clearTimeout(store.t);
+    store.t = setTimeout(() => { s.textContent = ""; }, 1200);
+  } catch (e) {}
+}
+
+function refreshView(){
+  if (showingSample) return;
+  view.srcdoc = code.value;
+}
+
+function renderCheck(){
+  const d = analyse(code.value);
+  const box = document.getElementById("check");
+  box.innerHTML = "";
+  let done = 0;
+  RULES.forEach((r, i) => {
+    let ok = false;
+    try { ok = !!r.f(d); } catch (e) { ok = false; }
+    if (ok) done++;
+    const li = document.createElement("li");
+    li.className = ok ? "done" : "";
+    li.innerHTML = '<span class="box">' + (ok ? "✓" : "") + '</span>' +
+                   '<span><b>' + (i + 1) + '. ' + r.t + '</b>' + r.d + '</span>';
+    box.appendChild(li);
+  });
+
+  const mark = markFor(done);
+  const el = document.getElementById("mark");
+  el.textContent = done ? mark : "—";
+  el.className = done ? "m" + mark : "";
+  const next = SCALE.filter(s => s[0] > done).pop();
+  document.getElementById("stats").innerHTML =
+    "выполнено: <b>" + done + "</b> из " + TOTAL +
+    (next ? "<br>до оценки " + next[1] + " осталось: <b>" +
+            (next[0] - done) + "</b>" : "<br>всё готово");
+}
+
+let timer = null;
+code.addEventListener("input", () => {
+  renderCheck();
+  clearTimeout(timer);
+  timer = setTimeout(() => { refreshView(); store(); }, 500);
+});
+
+/* ---- кнопки ---- */
+
+document.getElementById("toggle").addEventListener("click", e => {
+  showingSample = !showingSample;
+  e.target.textContent = showingSample ? "Вернуться к своей"
+                                       : "Показать образец";
+  document.getElementById("viewhint").innerHTML = showingSample
+    ? "Это <b>образец</b> — так может выглядеть готовая работа. " +
+      "Повторять один в один не нужно: важно, чтобы были все двенадцать " +
+      "пунктов, а вид ваш собственный."
+    : "Так страница выглядит прямо сейчас. Меняете код слева — " +
+      "картинка меняется сама.";
+  if (showingSample) view.srcdoc = SAMPLE; else refreshView();
+});
+
+document.getElementById("save").addEventListener("click", () => {
+  const fam = (document.getElementById("fam").value || "").trim();
+  if (!fam){
+    document.getElementById("fam").focus();
+    document.getElementById("fam").placeholder = "сначала фамилию!";
+    return;
+  }
+  store();
+  const blob = new Blob(["﻿", code.value], {type: "text/html;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = fam.replace(/[\\/:*?"<>|]/g, "") + ".html";
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+});
+
+document.getElementById("fam").addEventListener("input", store);
+
+document.getElementById("reset").addEventListener("click", () => {
+  if (!confirm("Стереть всё написанное и начать с чистой заготовки?")) return;
+  code.value = START;
+  showingSample = false;
+  document.getElementById("toggle").textContent = "Показать образец";
+  renderCheck();
+  refreshView();
+  store();
+});
+
+/* Табуляция внутри редактора должна давать отступ, а не уводить фокус
+   на следующую кнопку: иначе набирать вложенные теги невозможно. */
+code.addEventListener("keydown", e => {
+  if (e.key !== "Tab") return;
+  e.preventDefault();
+  const s = code.selectionStart, t = code.selectionEnd;
+  code.value = code.value.slice(0, s) + "  " + code.value.slice(t);
+  code.selectionStart = code.selectionEnd = s + 2;
+});
+
+load();
+renderCheck();
+refreshView();
+</script>
+
+</body>
+</html>

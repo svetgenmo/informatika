@@ -1,0 +1,1042 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Сети, адреса и DNS — практикум</title>
+<meta name="description" content="Практикум 11 класса по теме «Компьютерные сети, адресация в Интернете, система доменных имён»: лаборатория в командной строке (ipconfig, nslookup, ping, tracert) и тренажёр из пяти типов задач с мгновенной проверкой.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E10%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{margin:0;padding:20px 16px 60px;
+     font:17px/1.5 "Segoe UI",system-ui,sans-serif}
+.wrap{max-width:860px;margin:0 auto}
+
+h1{font-size:22px;margin:0 0 4px}
+.sub{color:var(--muted);font-size:15px;margin:0 0 18px}
+h2.part{font-size:15px;letter-spacing:.06em;text-transform:uppercase;
+        color:var(--muted);margin:34px 0 6px;font-weight:600}
+p.partsub{color:var(--muted);font-size:15px;margin:0 0 16px}
+
+/* ---- панель оценки ---- */
+.panel{display:flex;align-items:center;gap:18px;flex-wrap:wrap;
+       border:2px solid var(--accent);border-radius:12px;
+       padding:12px 18px;background:var(--card);margin-bottom:20px;
+       position:sticky;top:0;z-index:5}
+.mark{display:flex;align-items:baseline;gap:10px}
+.mark span{color:var(--muted);font-size:15px}
+.mark b{font:700 40px/1 "Segoe UI",system-ui,sans-serif;min-width:44px;
+        text-align:center;border-radius:8px;padding:2px 10px;
+        background:#fff;border:2px solid var(--line)}
+.m5{color:var(--ok);border-color:var(--ok-line)!important}
+.m4{color:var(--accent);border-color:#a9c6e8!important}
+.m3{color:#8a5a00;border-color:#e6c98a!important}
+.m2{color:var(--err);border-color:var(--err-line)!important}
+.stats{color:var(--muted);font-size:14px;line-height:1.35}
+.spacer{flex:1 1 auto}
+button{font:600 15px/1 inherit;padding:11px 16px;border-radius:9px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);
+       cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);
+                color:var(--muted);background:#fff}
+button:focus-visible{outline:3px solid #a9c6e8;outline-offset:2px}
+
+/* ---- карточки ---- */
+.task{border:1px solid var(--line);border-radius:12px;padding:14px 18px;
+      margin-bottom:14px;background:#fff}
+.task.ok{border-color:var(--ok-line);background:var(--ok-bg)}
+.task.err{border-color:var(--err-line);background:var(--err-bg)}
+.q{display:flex;gap:12px;align-items:flex-start}
+.num{flex:0 0 28px;height:28px;border-radius:50%;background:var(--accent);
+     color:#fff;font:700 15px/28px sans-serif;text-align:center}
+.text{flex:1 1 auto}
+.extra{display:inline-block;margin-left:8px;background:var(--hi-bg);
+       border:1px solid var(--hi-line);color:var(--hi);border-radius:20px;
+       padding:1px 9px;font-size:13px;font-weight:600;vertical-align:middle}
+
+.url{font-family:Consolas,"Cascadia Mono",monospace;font-size:18px;
+     background:#1e2430;color:#e7ecf5;border-radius:10px;
+     padding:12px 16px;margin:12px 0 4px 40px;word-break:break-all}
+ol.opts{margin:10px 0 0 40px;padding-left:22px}
+ol.opts li{margin:6px 0}
+ol.opts li.right{color:var(--ok);font-weight:600}
+ol.opts li.wrong{color:var(--err)}
+ol.opts code{font-family:Consolas,monospace;background:var(--card);
+             border:1px solid var(--line);border-radius:5px;padding:1px 6px}
+ol.steps{margin:10px 0 0 40px;padding-left:22px}
+ol.steps li{margin:7px 0}
+
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+     margin:12px 0 0 40px}
+input[type=text]{font:16px/1 Consolas,monospace;padding:11px 13px;
+                 border:1px solid var(--line);border-radius:9px;width:190px}
+input[type=text]:focus{outline:2px solid var(--accent);outline-offset:0;
+                       border-color:var(--accent)}
+input[type=text]:disabled{background:var(--card);color:var(--muted)}
+input.wide{width:270px}
+.verdict{font-weight:600}
+.verdict.ok{color:var(--ok)}
+.verdict.err{color:var(--err)}
+.verdict small{display:block;font-weight:400;color:var(--ink);
+               font-size:15px;margin-top:3px;max-width:560px}
+.why{margin:10px 0 0 40px;padding:10px 14px;border-radius:9px;
+     background:#fff;border:1px solid var(--line);font-size:15px;
+     color:var(--ink)}
+.hint{color:var(--muted);font-size:14px;margin:6px 0 0 40px}
+
+/* ---- лаборатория ---- */
+.lab{border:1px solid var(--line);border-radius:12px;padding:14px 18px;
+     margin-bottom:14px;background:#fff}
+.lab.ok{border-color:var(--ok-line);background:var(--ok-bg)}
+.lab.err{border-color:var(--err-line);background:var(--err-bg)}
+.cmd{font-family:Consolas,"Cascadia Mono",monospace;font-size:17px;
+     background:#1e2430;color:#e7ecf5;border-radius:10px;
+     padding:11px 15px;margin:10px 0 0 40px}
+.cmd .p{color:#8fa6c4}
+.lab .fields{margin-left:40px}
+.lab label{display:inline-flex;align-items:center;gap:9px;margin:10px 14px 0 0;
+           font-size:15px;color:var(--muted)}
+.note{margin:10px 0 0 40px;font-size:15px;color:var(--muted)}
+
+.done{margin:18px 0 0;padding:12px 16px;border-radius:10px;
+      background:var(--ok-bg);border:1px solid var(--ok-line);
+      color:var(--ok);font-weight:600}
+
+details{margin-top:26px;border:1px solid var(--line);border-radius:12px;
+        padding:12px 18px;background:var(--card)}
+summary{cursor:pointer;font-weight:600;font-size:17px}
+details h3{font-size:16px;margin:18px 0 6px}
+details p{margin:6px 0}
+details code{font-family:Consolas,monospace;background:#fff;
+             border:1px solid var(--line);border-radius:5px;padding:1px 6px}
+table{border-collapse:collapse;margin:6px 0;font-size:15px}
+td,th{border:1px solid var(--line);padding:5px 10px;text-align:left}
+th{background:#fff;color:var(--muted);font-size:14px}
+
+@media (max-width:700px){
+  .url,.row,.why,ol.opts,ol.steps,.cmd,.lab .fields,.note,.hint{
+    margin-left:0;padding-left:20px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Сети, адреса и DNS — практикум</h1>
+<p class="sub">Часть первая — лаборатория: пять опытов на своей машине,
+   в командной строке. Часть вторая — тренажёр: пять типов задач,
+   отсюда и отметка. Задачи при каждом открытии новые.</p>
+
+<div class="panel">
+  <div class="mark">
+    <span>Оценка</span><b id="mark">—</b>
+  </div>
+  <div class="stats" id="stats"></div>
+  <div class="spacer"></div>
+  <button id="add" class="primary" disabled>Добавить задачи</button>
+  <button id="again">Начать заново</button>
+</div>
+
+<h2 class="part">Часть 1. Лаборатория</h2>
+<p class="partsub">Откройте командную строку: <b>Win + R</b>, наберите
+  <code>cmd</code>, Enter. Команды пишутся там же, где мигает курсор.
+  Страница не знает правильных чисел — у каждого они свои; она проверяет,
+  что вы действительно смотрели в вывод команды.</p>
+
+<div id="lab"></div>
+
+<h2 class="part">Часть 2. Тренажёр</h2>
+<p class="partsub">Пять типов задач. Тип считается освоенным, когда решён
+  верно. Ошиблись — кнопка «Добавить задачи» донесёт ещё по одной такого
+  же типа, попыток сколько угодно.</p>
+
+<div id="tasks"></div>
+<div id="done"></div>
+
+<details>
+  <summary>Подсказка: сети, адреса, домены</summary>
+
+  <h3>Из чего состоит сеть</h3>
+  <p>Компьютеры соединяет <b>сетевая карта</b> — проводом или по Wi-Fi.
+     Внутри дома или кабинета всё сводится в <b>коммутатор</b>, а наружу,
+     в другие сети, ведёт <b>маршрутизатор</b> (роутер). Он же —
+     <b>шлюз</b>: первый узел, через который уходит всё, что адресовано
+     не соседу по кабинету. Дальше идут сети провайдера, и так до
+     сервера — интернет и есть сеть сетей.</p>
+
+  <h3>Протокол — это договор</h3>
+  <p><b>Протокол</b> — набор правил, о которых договорились обе стороны.
+     <b>IP</b> отвечает за адреса и доставку пакета; <b>TCP</b> — за то,
+     чтобы пакеты не потерялись и собрались в правильном порядке;
+     <b>HTTP</b> и <b>HTTPS</b> — за разговор браузера с веб-сервером
+     (у HTTPS всё зашифровано); <b>DNS</b> — за перевод имён в адреса.</p>
+
+  <h3>IP-адрес</h3>
+  <p>Адрес IPv4 — четыре числа от 0 до 255 через точку:
+     <code>84.201.157.12</code>. Каждое число — один байт, весь адрес —
+     4 байта, 32 бита. Поэтому всего адресов 2<sup>32</sup> ≈ 4,3 млрд —
+     и на всех уже не хватает.</p>
+  <p>Три диапазона отданы под <b>локальные сети</b>:
+     <code>10.*.*.*</code>, <code>172.16.*.*</code>–<code>172.31.*.*</code>
+     и <code>192.168.*.*</code>. Они повторяются в миллионах домашних
+     сетей, в интернете не маршрутизируются, и снаружи по ним не
+     достучаться. Весь кабинет выходит наружу под <b>одним</b> публичным
+     адресом роутера — это называется NAT.</p>
+
+  <h3>Доменное имя и DNS</h3>
+  <p>Числа человек не запоминает, поэтому у серверов есть имена.
+     Имя читают <b>справа налево</b>: <code>ru</code> — домен верхнего
+     уровня (зона), <code>school15.edu.ru</code> — домен второго уровня
+     внутри зоны <code>edu.ru</code>, <code>www.</code> — уже конкретный
+     компьютер внутри домена.</p>
+  <p><b>DNS</b> — распределённая служба, которая переводит имя в
+     IP-адрес. Своей копии всей таблицы нет ни у кого: сервер, который не
+     знает ответа, спрашивает вышестоящий.</p>
+
+  <h3>Адрес документа в сети</h3>
+  <p><code>https://www.school15.edu.ru/uroki/2026/plan.pdf</code></p>
+  <table>
+    <tr><th>часть</th><th>что это</th></tr>
+    <tr><td><code>https</code></td><td>протокол</td></tr>
+    <tr><td><code>www.school15.edu.ru</code></td><td>доменное имя сервера</td></tr>
+    <tr><td><code>ru</code></td><td>домен верхнего уровня</td></tr>
+    <tr><td><code>/uroki/2026/</code></td><td>путь к файлу на сервере</td></tr>
+    <tr><td><code>plan.pdf</code></td><td>имя файла</td></tr>
+  </table>
+
+  <h3>Как отличить подделку</h3>
+  <p>Настоящее имя сайта — <b>последние две части</b> имени сервера, до
+     первой одиночной косой черты. В адресе
+     <code>sberbank.ru.secure-login.tk/vhod</code> вы не на
+     <code>sberbank.ru</code>, а на <code>secure-login.tk</code>: всё,
+     что левее, придумал владелец чужого домена.</p>
+
+  <h3>Скорость: биты и байты</h3>
+  <p>Скорость канала считают в <b>мегабитах</b> в секунду, а файлы — в
+     <b>мегабайтах</b>. Разница ровно в 8 раз, и на ней ошибаются чаще
+     всего. Время = объём в битах ÷ скорость: файл 900 МБ по каналу
+     50 Мбит/с идёт 900 · 8 ÷ 50 = 144 секунды.</p>
+
+  <h3>Что делает браузер, когда вы ввели адрес</h3>
+  <p>Спрашивает у DNS адрес по имени → получает IP → соединяется с
+     сервером по этому IP и просит страницу → получает HTML → рисует
+     страницу на экране. Сеть умеет доставлять пакеты только по
+     числовому адресу, поэтому шаг с DNS всегда первый.</p>
+
+  <h3>Команды, которыми это видно</h3>
+  <table>
+    <tr><th>команда</th><th>что показывает</th></tr>
+    <tr><td><code>ipconfig</code></td><td>свой IP, маску, шлюз</td></tr>
+    <tr><td><code>nslookup имя</code></td><td>IP-адрес по доменному имени</td></tr>
+    <tr><td><code>ping имя</code></td><td>доходят ли пакеты и за сколько миллисекунд</td></tr>
+    <tr><td><code>tracert имя</code></td><td>через сколько узлов идёт путь и какие они</td></tr>
+  </table>
+</details>
+
+</div>
+
+<script>
+"use strict";
+
+/* ==== БАЗА: вставлено gen.py, руками не править ==== */
+const SUBS = ["", "www.", "lib.", "news.", "shop.", "old."];
+const SITES = [
+  ["school15", "edu"],
+  ["gimnazia7", "edu"],
+  ["licey3", "edu"],
+  ["kolledzh", "edu"],
+  ["biblioteka", ""],
+  ["museum", ""],
+  ["olimpiada", ""],
+  ["sportklub", ""],
+  ["teatr", ""],
+  ["gorod", ""],
+  ["pogoda", ""],
+  ["recepty", ""]
+];
+const TLDS = ["ru", "com", "org", "net", "info"];
+const DIRS = ["uroki", "docs", "files", "2026", "archive", "info", "class11", "photo", "public", "download"];
+const FILES = [
+  ["plan", "pdf"],
+  ["doklad", "docx"],
+  ["tablica", "xlsx"],
+  ["shema", "png"],
+  ["otchet", "pdf"],
+  ["spisok", "txt"],
+  ["prezentaciya", "pptx"],
+  ["foto", "jpg"],
+  ["zadachi", "html"]
+];
+const URL_ASKS = [
+  {"key": "proto", "q": "Какой фрагмент адреса — <b>протокол передачи данных</b>?", "rule": "Протокол стоит в самом начале адреса, до <code>://</code>. Он говорит, по каким правилам браузер разговаривает с сервером."},
+  {"key": "host", "q": "Какой фрагмент — <b>доменное имя сервера</b> (имя компьютера в сети)?", "rule": "Имя сервера — всё между <code>://</code> и первым одиночным <code>/</code>. Ни протокол, ни путь в него не входят."},
+  {"key": "tld", "q": "Какой фрагмент — <b>домен верхнего уровня</b>?", "rule": "Домен верхнего уровня — самая правая часть имени, после последней точки. Именно она говорит, в какой зоне зарегистрирован сайт."},
+  {"key": "path", "q": "Какой фрагмент — <b>путь к файлу на сервере</b> (без имени файла)?", "rule": "Путь — это папки на сервере: всё между именем сервера и именем файла, вместе с косыми чертами."},
+  {"key": "file", "q": "Какой фрагмент — <b>имя файла</b>?", "rule": "Имя файла — то, что стоит после последнего <code>/</code>, вместе с расширением."}
+];
+const PHISH = [
+  {"url": "https://sberbank.ru.secure-login.tk/vhod", "host": "sberbank.ru.secure-login.tk", "answer": "secure-login.tk", "brand": "sberbank.ru", "fake": true},
+  {"url": "https://gosuslugi-ru.info/lk/payment", "host": "gosuslugi-ru.info", "answer": "gosuslugi-ru.info", "brand": "gosuslugi.ru", "fake": true},
+  {"url": "http://vk.com.id-check.xyz/login", "host": "vk.com.id-check.xyz", "answer": "id-check.xyz", "brand": "vk.com", "fake": true},
+  {"url": "https://www.ozon.ru.bonus-2026.top/promo", "host": "www.ozon.ru.bonus-2026.top", "answer": "bonus-2026.top", "brand": "ozon.ru", "fake": true},
+  {"url": "https://mail-ru.security-alert.online/inbox", "host": "mail-ru.security-alert.online", "answer": "security-alert.online", "brand": "mail.ru", "fake": true},
+  {"url": "https://wildberries.ru.wb-cashback.site/order", "host": "wildberries.ru.wb-cashback.site", "answer": "wb-cashback.site", "brand": "wildberries.ru", "fake": true},
+  {"url": "https://avito.ru.dostavka-oplata.ru/deal", "host": "avito.ru.dostavka-oplata.ru", "answer": "dostavka-oplata.ru", "brand": "avito.ru", "fake": true},
+  {"url": "https://vk-com.ru/feed", "host": "vk-com.ru", "answer": "vk-com.ru", "brand": "vk.com", "fake": true},
+  {"url": "https://tinkoff.ru-online.cc/card", "host": "tinkoff.ru-online.cc", "answer": "ru-online.cc", "brand": "tinkoff.ru", "fake": true},
+  {"url": "https://www.gosuslugi.ru/lk/gosuslugi.ru.info", "host": "www.gosuslugi.ru", "answer": "gosuslugi.ru", "brand": "gosuslugi.ru.info", "fake": false},
+  {"url": "https://lk.sberbank.ru/payments/vk.com", "host": "lk.sberbank.ru", "answer": "sberbank.ru", "brand": "vk.com", "fake": false},
+  {"url": "https://passport.yandex.ru/auth?retpath=sberbank.ru", "host": "passport.yandex.ru", "answer": "yandex.ru", "brand": "sberbank.ru", "fake": false},
+  {"url": "https://market.ozon.ru/product/ozon.ru.top", "host": "market.ozon.ru", "answer": "ozon.ru", "brand": "ozon.ru.top", "fake": false}
+];
+const IP_CLASSES = [
+  {"id": "local", "n": 1, "name": "адрес из локальной сети"},
+  {"id": "public", "n": 2, "name": "обычный адрес в интернете"},
+  {"id": "bad", "n": 3, "name": "такого IP-адреса не бывает"}
+];
+const CHAIN = ["Браузер спрашивает у DNS-сервера: какой IP-адрес у имени <b>{host}</b>?", "DNS-сервер отвечает: <b>{ip}</b>", "Браузер соединяется с сервером <b>{ip}</b> и посылает запрос страницы", "Сервер отправляет в ответ файл с HTML-кодом страницы", "Браузер разбирает HTML и рисует страницу на экране"];
+const CHAIN_HOSTS = [
+  ["example.ru", "93.184.216.34"],
+  ["school15.edu.ru", "84.201.157.12"],
+  ["pogoda.ru", "185.71.76.20"],
+  ["olimpiada.ru", "5.61.239.10"],
+  ["biblioteka.org", "212.193.5.44"]
+];
+const TYPES = [
+  {"id": 0, "name": "части адреса", "kind": "choice"},
+  {"id": 1, "name": "настоящий владелец сайта", "kind": "choice"},
+  {"id": 2, "name": "какой это IP-адрес", "kind": "choice"},
+  {"id": 3, "name": "скорость канала", "kind": "number"},
+  {"id": 4, "name": "порядок работы браузера", "kind": "order"}
+];
+
+
+/* ---- мелочи ---- */
+const rnd = () => Math.random();
+const ri = (lo, hi) => lo + Math.floor(rnd() * (hi - lo + 1));
+const pick = arr => arr[Math.floor(rnd() * arr.length)];
+function shuffle(arr){
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(rnd() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+function sample(arr, k){ return shuffle(arr).slice(0, k); }
+
+/* ---- тип 0: части адреса ----------------------------------------
+   Адрес собирается из кусочков, а варианты ответа — настоящие
+   подстроки этого же адреса. Отвлекающие берутся не случайно: это
+   ровно те куски, которые путают с искомым (домен без зоны, имя
+   сервера вместе с путём, файл без расширения).                    */
+function makeUrl(){
+  const proto = rnd() < 0.75 ? "https" : "http";
+  const sub = pick(SUBS);
+  const site = pick(SITES);
+  const tld = pick(TLDS);
+  const mid = site[1] ? "." + site[1] : "";
+  const host = sub + site[0] + mid + "." + tld;
+  const dirs = sample(DIRS, ri(1, 2));
+  const path = "/" + dirs.join("/") + "/";
+  const f = pick(FILES);
+  const file = f[0] + "." + f[1];
+  return {proto, sub, name: site[0], mid, tld, host, path, file,
+          dirs, base: f[0], ext: f[1],
+          url: proto + "://" + host + path + file};
+}
+
+function urlOptions(u, key){
+  const right = u[key];
+  const pool = [];
+  const add = s => { if (s && s !== right && pool.indexOf(s) < 0) pool.push(s); };
+
+  add(u.proto);
+  add(u.proto + "://");
+  add(u.host);
+  add(u.tld);
+  add(u.path);
+  add(u.file);
+  add(u.base);
+  add(u.ext);
+  add(u.name + u.mid + "." + u.tld);      // имя сервера без поддомена
+  add((u.mid ? u.mid.slice(1) + "." : "") + u.tld);  // «edu.ru» вместо «ru»
+  add(u.host + u.path);                    // сервер вместе с путём
+  add(u.path + u.file);                    // путь вместе с файлом
+  add(u.dirs[0]);
+  add(u.proto + "://" + u.host);
+  if (u.sub) add(u.sub.slice(0, -1));
+
+  return shuffle([right].concat(sample(pool, 4)));
+}
+
+function taskUrl(){
+  const u = makeUrl();
+  const ask = pick(URL_ASKS);
+  const opts = urlOptions(u, ask.key);
+  return {
+    type: 0, kind: "choice",
+    q: ask.q,
+    body: '<div class="url">' + esc(u.url) + '</div>',
+    options: opts.map(esc),
+    answer: String(opts.indexOf(u[ask.key]) + 1),
+    rule: ask.rule,
+    meta: {key: ask.key, url: u.url, parts: u, options: opts}
+  };
+}
+
+/* ---- тип 1: кому принадлежит сайт -------------------------------- */
+function taskPhish(){
+  const p = pick(PHISH);
+  const host = p.host;
+  const bits = host.split(".");
+  const opts = [p.answer];
+  const add = s => { if (s && opts.indexOf(s) < 0) opts.push(s); };
+  add(p.brand);                                   // имя, ради которого подделка
+  add(bits[bits.length - 1]);                     // только зона
+  add(bits.slice(0, 2).join("."));                // две ПЕРВЫЕ части имени
+  add(host);                                      // всё имя целиком
+  add(bits[0]);                                   // только первая часть
+  add("www." + p.answer);
+  const shown = shuffle(opts.slice(0, 4));
+  return {
+    type: 1, kind: "choice",
+    q: "Ссылка пришла в письме. На сайт <b>какой организации</b> вы " +
+       "на самом деле попадёте, если по ней перейти?",
+    body: '<div class="url">' + esc(p.url) + '</div>',
+    options: shown.map(esc),
+    answer: String(shown.indexOf(p.answer) + 1),
+    rule: "Настоящее имя сайта читают <b>справа</b>: берут последние две " +
+          "части имени сервера — до первой одиночной косой черты. " +
+          "Всё, что левее, придумывает владелец домена, а всё, что " +
+          "правее черты, — это уже путь на его сервере.",
+    meta: {host: host, answer: p.answer, fake: p.fake, options: shown}
+  };
+}
+
+/* ---- тип 2: что это за IP ---------------------------------------- */
+function makeIp(){
+  const r = rnd();
+  if (r < 0.36){                                   // локальный
+    const v = ri(1, 3);
+    let a;
+    if (v === 1) a = [192, 168, ri(0, 20), ri(1, 254)];
+    else if (v === 2) a = [10, ri(0, 255), ri(0, 255), ri(1, 254)];
+    else a = [172, ri(16, 31), ri(0, 255), ri(1, 254)];
+    return {ip: a.join("."), cls: "local", octets: a};
+  }
+  if (r < 0.72){                                   // публичный
+    let a;
+    do {
+      a = [ri(1, 223), ri(0, 255), ri(0, 255), ri(1, 254)];
+    } while (a[0] === 10 || a[0] === 127 ||
+             (a[0] === 192 && a[1] === 168) ||
+             (a[0] === 172 && a[1] >= 16 && a[1] <= 31));
+    return {ip: a.join("."), cls: "public", octets: a};
+  }
+  // не адрес
+  const how = ri(1, 4);
+  if (how === 1){
+    const a = [ri(1, 223), ri(0, 255), ri(256, 999), ri(0, 255)];
+    return {ip: a.join("."), cls: "bad", why: "octet", octets: a};
+  }
+  if (how === 2){
+    const a = [ri(1, 223), ri(0, 255), ri(0, 255)];
+    return {ip: a.join("."), cls: "bad", why: "three", octets: a};
+  }
+  if (how === 3){
+    const a = [ri(1, 223), ri(0, 255), ri(0, 255), ri(0, 255), ri(0, 255)];
+    return {ip: a.join("."), cls: "bad", why: "five", octets: a};
+  }
+  const a = [ri(1, 223), ri(0, 255), ri(0, 255), ri(0, 255)];
+  const s = a.slice(0, 3).join(".") + "." + pick(["1a", "ru", "-7", "0x10"]);
+  return {ip: s, cls: "bad", why: "letters", octets: a};
+}
+
+const IP_WHY = {
+  octet: "В IP-адресе каждое из четырёх чисел — один байт, а байт " +
+         "больше 255 не бывает.",
+  three: "В IPv4-адресе ровно четыре числа, разделённых точками.",
+  five: "В IPv4-адресе ровно четыре числа, а здесь их пять.",
+  letters: "Все четыре части IP-адреса — числа. Букв в нём нет."
+};
+
+function taskIp(){
+  const a = makeIp();
+  const cls = IP_CLASSES.filter(c => c.id === a.cls)[0];
+  let rule;
+  if (a.cls === "local")
+    rule = "Для локальных сетей отведены три диапазона: <b>10.*.*.*</b>, " +
+           "<b>172.16.*.*</b> — <b>172.31.*.*</b> и <b>192.168.*.*</b>. " +
+           "Такие адреса повторяются в миллионах домашних сетей и в " +
+           "интернете не маршрутизируются — снаружи по ним не достучаться.";
+  else if (a.cls === "public")
+    rule = "Адрес записан правильно и не попадает ни в один частный " +
+           "диапазон — значит, он публичный: такой адрес в интернете " +
+           "единственный, и по нему сервер можно найти из любой точки мира.";
+  else
+    rule = IP_WHY[a.why];
+  return {
+    type: 2, kind: "choice",
+    q: "Что это за адрес?",
+    body: '<div class="url">' + esc(a.ip) + '</div>',
+    options: IP_CLASSES.map(c => c.name),
+    answer: String(cls.n),
+    rule: rule,
+    meta: {ip: a.ip, cls: a.cls, why: a.why || null}
+  };
+}
+
+/* ---- тип 3: скорость канала --------------------------------------
+   Три формы одной задачи: найти время, объём или скорость. Числа
+   подбираются так, чтобы ответ был целым — на экзамене и в жизни
+   дробей тут не бывает.                                            */
+const SPEEDS = [8, 10, 16, 20, 25, 40, 50, 64, 80, 100, 125, 200, 250, 500];
+const WHAT = [
+  {n: "фильм", lo: 700, hi: 4000}, {n: "игру", lo: 2000, hi: 9000},
+  {n: "фотоальбом", lo: 200, hi: 900}, {n: "запись концерта", lo: 500, hi: 2500},
+  {n: "резервную копию телефона", lo: 1000, hi: 6000}
+];
+
+function taskSpeed(){
+  const form = ri(1, 3);
+  const speed = pick(SPEEDS);
+  const what = pick(WHAT);
+  if (form === 1){                       // сколько секунд качать
+    const step = speed / gcd(8, speed);  // МБ, при которых время целое
+    let size = Math.round(ri(what.lo, what.hi) / step) * step;
+    if (size < step) size = step;
+    const t = size * 8 / speed;
+    return {
+      type: 3, kind: "number",
+      q: "Скорость подключения — <b>" + speed + " Мбит/с</b>. Сколько " +
+         "<b>секунд</b> будет скачиваться " + what.n + " размером <b>" +
+         size + " МБ</b>, если канал больше ничем не занят?",
+      body: "", options: null,
+      answer: String(t),
+      rule: "Скорость измеряют в мега<b>битах</b>, а файлы — в мега<b>байтах</b>. " +
+            "Сначала переводим объём в биты: " + size + " · 8 = " + (size * 8) +
+            " Мбит. Дальше делим на скорость: " + (size * 8) + " : " + speed +
+            " = " + t + " с.",
+      meta: {form: 1, speed: speed, size: size, t: t}
+    };
+  }
+  if (form === 2){                       // сколько скачается
+    const t = pick([30, 40, 60, 80, 120, 150, 180, 240, 300]);
+    const size = speed * t / 8;
+    if (!Number.isInteger(size)) return taskSpeed();
+    return {
+      type: 3, kind: "number",
+      q: "Скорость подключения — <b>" + speed + " Мбит/с</b>. Сколько " +
+         "<b>мегабайт</b> скачается за <b>" + t + " секунд</b>?",
+      body: "", options: null,
+      answer: String(size),
+      rule: "За " + t + " с по каналу пройдёт " + speed + " · " + t + " = " +
+            (speed * t) + " Мбит. Переводим в мегабайты делением на 8: " +
+            (speed * t) + " : 8 = " + size + " МБ.",
+      meta: {form: 2, speed: speed, t: t, size: size}
+    };
+  }
+  const t = pick([20, 30, 40, 50, 60, 80, 100, 120]);   // какая скорость нужна
+  const size = pick([200, 300, 400, 500, 600, 800, 1000, 1200, 1500, 2000]);
+  const v = size * 8 / t;
+  if (!Number.isInteger(v)) return taskSpeed();
+  return {
+    type: 3, kind: "number",
+    q: "Файл размером <b>" + size + " МБ</b> нужно скачать за <b>" + t +
+       " секунд</b>. Какая скорость канала для этого нужна, в <b>Мбит/с</b>?",
+    body: "", options: null,
+    answer: String(v),
+    rule: "Объём в битах: " + size + " · 8 = " + (size * 8) + " Мбит. " +
+          "Делим на время: " + (size * 8) + " : " + t + " = " + v + " Мбит/с.",
+    meta: {form: 3, size: size, t: t, v: v}
+  };
+}
+
+function gcd(a, b){ return b ? gcd(b, a % b) : a; }
+
+/* ---- тип 4: порядок работы браузера ------------------------------ */
+function taskChain(){
+  const h = pick(CHAIN_HOSTS);
+  const text = CHAIN.map(s => s.replace("{host}", h[0]).replace(/\{ip\}/g, h[1]));
+  let order;                       // order[i] — какой шаг показан i-м
+  do {
+    order = shuffle([0, 1, 2, 3, 4]);
+  } while (order.every((v, i) => v === i));
+  const shown = order.map(i => text[i]);
+  // ответ: номера показанных строк в правильном порядке
+  const answer = text.map((_, i) => order.indexOf(i) + 1).join("");
+  return {
+    type: 4, kind: "order",
+    q: "Вы ввели в браузер адрес <b>" + h[0] + "</b>. Шаги перепутаны — " +
+       "запишите их номера в правильном порядке, подряд, без пробелов.",
+    body: "", options: shown,
+    answer: answer,
+    rule: "Сначала имя превращают в адрес: браузер спрашивает у DNS и " +
+          "получает IP. Только потом идёт запрос самой страницы — сеть " +
+          "умеет доставлять пакеты по числовому адресу, а не по имени. " +
+          "Ответ сервера — это текст HTML, и рисует из него страницу " +
+          "уже сам браузер.",
+    meta: {order: order, host: h[0], ip: h[1], steps: text}
+  };
+}
+
+const MAKERS = [taskUrl, taskPhish, taskIp, taskSpeed, taskChain];
+function makeTask(typeId){ return MAKERS[typeId](); }
+
+function esc(s){
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
+                  .replace(/>/g, "&gt;");
+}
+
+if (typeof module !== "undefined") module.exports = {makeTask, TYPES};
+/* ==== /БАЗА ==== */
+
+/* ==================================================================
+   ЧАСТЬ 1. ЛАБОРАТОРИЯ
+
+   Правильных чисел здесь нет и быть не может: у каждой машины свой
+   адрес, у каждого канала своя задержка. Поэтому опыт проверяется
+   не сверкой с ключом, а разбором ТОГО, ЧТО ВВЕДЕНО: адрес обязан
+   быть адресом, локальный — локальным, внешний — публичным и не
+   совпадать с локальным. Списать такое у соседа можно, но, чтобы
+   списать правдоподобно, придётся понять, что списываешь.
+================================================================== */
+
+function ipParts(s){
+  const m = String(s).trim().match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (!m) return null;
+  const a = m.slice(1).map(Number);
+  return a.every(n => n <= 255) ? a : null;
+}
+function isLocal(a){
+  return a[0] === 10 || a[0] === 127
+      || (a[0] === 192 && a[1] === 168)
+      || (a[0] === 172 && a[1] >= 16 && a[1] <= 31);
+}
+const sameNet24 = (a, b) => a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
+
+const LAB = [
+  {
+    q: "Свой адрес и шлюз",
+    cmd: "ipconfig",
+    note: "Ищите строки «IPv4-адрес» и «Основной шлюз» у того адаптера, " +
+          "который работает (Ethernet или беспроводная сеть).",
+    fields: [{k: "ip", label: "IPv4-адрес", ph: "192.168.0.15"},
+             {k: "gw", label: "Основной шлюз", ph: "192.168.0.1"}],
+    check(v){
+      const ip = ipParts(v.ip), gw = ipParts(v.gw);
+      if (!ip) return ["IPv4-адрес записан не как адрес: четыре числа " +
+                       "от 0 до 255 через точку."];
+      if (!gw) return ["Шлюз записан не как адрес."];
+      if (!isLocal(ip)) return ["Этот адрес не из локальной сети. В " +
+        "кабинете у машины обязательно частный адрес — 192.168.*, 10.* " +
+        "или 172.16–31.*. Похоже, взята не та строка вывода."];
+      if (!isLocal(gw)) return ["Шлюз тоже должен быть частным адресом."];
+      if (!sameNet24(ip, gw)) return ["Первые три числа у адреса и шлюза " +
+        "обычно совпадают: вы с роутером в одной сети. Проверьте, из " +
+        "того ли адаптера взяты строки."];
+      return null;
+    },
+    why: v => "Ваш компьютер — " + v.ip + ", роутер — " + v.gw + ". " +
+              "Совпадают первые три числа: значит, вы в одной сети и " +
+              "разговариваете напрямую. Всё, что адресовано наружу, " +
+              "уходит через шлюз."
+  },
+  {
+    q: "IP-адрес сайта по имени",
+    cmd: "nslookup ya.ru\nnslookup www.gosuslugi.ru",
+    note: "Нужны строки «Address» в самом низу ответа — это адреса " +
+          "сервера, а не вашего DNS.",
+    fields: [{k: "a", label: "IP сайта ya.ru", ph: "5.255.255.242"},
+             {k: "b", label: "IP сайта gosuslugi.ru", ph: "..."}],
+    check(v){
+      const a = ipParts(v.a), b = ipParts(v.b);
+      if (!a || !b) return ["Оба ответа — IP-адреса: четыре числа через точку."];
+      if (isLocal(a) || isLocal(b)) return ["Один из адресов частный. " +
+        "Скорее всего, списан адрес вашего DNS-сервера из верхней части " +
+        "вывода, а не адрес сайта из нижней."];
+      if (a.join(".") === b.join(".")) return ["У двух разных сайтов " +
+        "получился один адрес — проверьте, оба ли раза брали нижнюю часть " +
+        "вывода."];
+      return null;
+    },
+    why: v => "Имя превратилось в число: " + v.a + " и " + v.b + ". " +
+              "Именно это и делает DNS — и именно это делает браузер " +
+              "первым делом, до всякого запроса страницы. У соседа " +
+              "адреса могут отличаться: у больших сайтов серверов много."
+  },
+  {
+    q: "Сколько идёт пакет",
+    cmd: "ping ya.ru\nping www.mit.edu",
+    note: "Нужно среднее время из последней строки — «Среднее». " +
+          "Если сайт не отвечает на ping, возьмите любой другой " +
+          "зарубежный адрес.",
+    fields: [{k: "ru", label: "среднее до ya.ru, мс", ph: "12"},
+             {k: "us", label: "среднее до mit.edu, мс", ph: "150"}],
+    check(v){
+      const a = Number(v.ru), b = Number(v.us);
+      if (!Number.isFinite(a) || !Number.isFinite(b) || v.ru === "" || v.us === "")
+        return ["Нужны два числа — миллисекунды, без «мс» и без пробелов."];
+      if (a <= 0 || b <= 0) return ["Время не бывает нулевым или отрицательным."];
+      if (a > 3000 || b > 3000) return ["Больше трёх секунд — это уже не " +
+        "среднее время отклика, а что-то другое из вывода."];
+      return null;
+    },
+    why: v => "До ближнего сервера — " + v.ru + " мс, до дальнего — " +
+              v.us + " мс. Пакет идёт по проводам и стеклу со скоростью " +
+              "около 200 000 км/с, и туда-обратно через океан быстрее " +
+              "физически не получится. Задержку не «ускоряют тарифом»: " +
+              "её определяет расстояние и число узлов по дороге."
+  },
+  {
+    q: "Через сколько узлов идёт путь",
+    cmd: "tracert ya.ru",
+    note: "Каждая строка — один узел. Нужен номер последней строки. " +
+          "Звёздочки в середине — нормально: узел просто не отвечает.",
+    fields: [{k: "n", label: "сколько узлов", ph: "11"},
+             {k: "first", label: "первый узел (IP)", ph: "192.168.0.1"}],
+    check(v){
+      const n = Number(v.n), f = ipParts(v.first);
+      if (!Number.isInteger(n) || n < 2 || n > 40)
+        return ["Число узлов — целое, обычно от 5 до 20."];
+      if (!f) return ["Первый узел — это IP-адрес."];
+      if (!isLocal(f)) return ["Первым узлом всегда стоит ваш шлюз, а его " +
+        "адрес частный. Проверьте самую первую строку вывода."];
+      return null;
+    },
+    why: v => "Путь до сайта прошёл через " + v.n + " узлов, и первый из " +
+              "них — " + v.first + ", ваш собственный роутер. Дальше идут " +
+              "узлы провайдера, потом магистральные. Никакого «прямого " +
+              "провода» до сайта не существует."
+  },
+  {
+    q: "Каким вас видят снаружи",
+    cmd: "откройте в браузере   2ip.ru",
+    note: "Сайт показывает адрес, с которого к нему пришёл запрос. " +
+          "Сравните с тем, что выдал ipconfig, и спросите соседа, " +
+          "что у него.",
+    fields: [{k: "out", label: "внешний IP", ph: "85.140.7.31"}],
+    check(v, all){
+      const o = ipParts(v.out);
+      if (!o) return ["Внешний адрес — это IP: четыре числа через точку."];
+      if (isLocal(o)) return ["Внешний адрес не может быть частным: " +
+        "частные в интернете не маршрутизируются."];
+      const mine = all[0] && ipParts(all[0].ip || "");
+      if (mine && mine.join(".") === o.join("."))
+        return ["Внешний адрес совпал с тем, что показал ipconfig, — " +
+                "так не бывает. Проверьте оба."];
+      return null;
+    },
+    why: v => "Снаружи вас видят как " + v.out + " — и точно так же видят " +
+              "весь кабинет: у соседа внешний адрес тот же, а внутренний " +
+              "другой. Роутер подменяет адрес на выходе и помнит, кому " +
+              "вернуть ответ. Это NAT, и он же причина, почему четырёх " +
+              "миллиардов адресов миру пока хватает."
+  }
+];
+
+const LAB_TOTAL = LAB.length;
+let labState = LAB.map(() => ({status: "open", v: {}, err: null}));
+
+function labCheck(i){
+  const st = labState[i];
+  const v = {};
+  LAB[i].fields.forEach(f => {
+    const el = document.getElementById("lab" + i + "_" + f.k);
+    v[f.k] = el ? el.value.trim() : "";
+  });
+  if (LAB[i].fields.some(f => !v[f.k])) return;
+  labCapture();
+  st.v = v;
+  const problems = LAB[i].check(v, labState.map(s => s.v));
+  st.err = problems ? problems[0] : null;
+  st.status = problems ? "err" : "ok";
+  renderLab();
+  updatePanel();
+}
+
+function labCapture(){
+  labState.forEach((st, i) => {
+    LAB[i].fields.forEach(f => {
+      const el = document.getElementById("lab" + i + "_" + f.k);
+      if (el) st.v[f.k] = el.value;
+    });
+  });
+}
+
+function labDone(){ return labState.filter(s => s.status === "ok").length; }
+
+function renderLab(){
+  const box = document.getElementById("lab");
+  box.innerHTML = "";
+  LAB.forEach((e, i) => {
+    const st = labState[i];
+    const card = document.createElement("div");
+    card.className = "lab" + (st.status === "open" ? "" : " " + st.status);
+    const fields = e.fields.map(f =>
+      '<label>' + esc(f.label) +
+      '<input type="text" id="lab' + i + '_' + f.k + '" autocomplete="off" ' +
+      'spellcheck="false" placeholder="' + esc(f.ph) + '" ' +
+      'value="' + esc(st.v[f.k] || "") + '"' +
+      (st.status === "ok" ? " disabled" : "") + '></label>').join("");
+    const cmd = esc(e.cmd).split("\n")
+                 .map(l => '<span class="p">&gt;</span> ' + l).join("<br>");
+    let tail = "";
+    if (st.status === "ok")
+      tail = '<div class="why">' + esc(e.why(st.v)) + '</div>';
+    else if (st.status === "err")
+      tail = '<div class="row"><span class="verdict err">Не сходится' +
+             '<small>' + st.err + '</small></span></div>';
+    card.innerHTML =
+      '<div class="q"><div class="num">' + (i + 1) + '</div>' +
+      '<div class="text"><b>' + esc(e.q) + '</b></div></div>' +
+      '<div class="cmd">' + cmd + '</div>' +
+      '<div class="note">' + esc(e.note) + '</div>' +
+      '<div class="fields">' + fields + '</div>' +
+      (st.status === "ok" ? "" :
+        '<div class="row"><button data-lab="' + i + '">Записать</button></div>') +
+      tail;
+    box.appendChild(card);
+  });
+  box.querySelectorAll("button[data-lab]").forEach(b => {
+    b.addEventListener("click", () => labCheck(+b.dataset.lab));
+  });
+  box.querySelectorAll("input:not(:disabled)").forEach(inp => {
+    inp.addEventListener("keydown", ev => {
+      if (ev.key === "Enter"){
+        ev.preventDefault();
+        labCheck(+inp.id.slice(3).split("_")[0]);
+      }
+    });
+  });
+}
+
+/* ==================================================================
+   ЧАСТЬ 2. ТРЕНАЖЁР
+
+   Отметка считается по числу ОСВОЕННЫХ ТИПОВ, а не по числу верных
+   ответов: иначе добор ломает счёт — решил один тип трижды, и уже
+   «пятёрка». Рядом показываем, сколько взято с первой попытки: это
+   и есть настоящая картина по классу.
+================================================================== */
+
+const TYPES_TOTAL = TYPES.length;
+const SCALE = [[5, 5], [4, 4], [3, 3]];
+function markFor(mastered){
+  for (const s of SCALE) if (mastered >= s[0]) return s[1];
+  return 2;
+}
+
+let tasks = [];
+let firstRoundRight = 0;
+
+function newRun(){
+  tasks = TYPES.map(t => Object.assign(makeTask(t.id),
+                          {status: "open", extra: false, draft: ""}));
+  firstRoundRight = 0;
+  render();
+}
+
+function masteredTypes(){
+  const set = new Set();
+  tasks.forEach(t => { if (t.status === "ok") set.add(t.type); });
+  return set;
+}
+function failedTypes(){
+  const ok = masteredTypes(), set = new Set();
+  tasks.forEach(t => { if (t.status === "err" && !ok.has(t.type)) set.add(t.type); });
+  return set;
+}
+const allAnswered = () => tasks.every(t => t.status !== "open");
+
+/* Ответ сверяется знак в знак: пробелы и запятые не прощаем. Но
+   ошибку записи называем своим именем — иначе человек решит, что не
+   понял тему, а он просто поставил запятую. */
+function complain(t, raw){
+  if (t.kind === "number"){
+    if (!/^\d+$/.test(raw))
+      return "Ответ — целое число, только цифры: без единиц измерения, " +
+             "пробелов и запятых.";
+    return null;
+  }
+  if (t.kind === "order"){
+    if (!/^\d+$/.test(raw))
+      return "Номера пишут подряд, только цифрами: например <b>31425</b>.";
+    if (raw.length !== 5)
+      return "Шагов пять — значит, и цифр в ответе должно быть пять.";
+    if (new Set(raw).size !== 5 || /[^1-5]/.test(raw))
+      return "Каждый номер от 1 до 5 встречается ровно один раз.";
+    return null;
+  }
+  if (!/^\d+$/.test(raw)) return "Ответ — номер варианта, одна цифра.";
+  const n = Number(raw);
+  if (n < 1 || n > t.options.length)
+    return "Вариантов " + t.options.length + ", а в ответе " + n + ".";
+  return null;
+}
+
+function check(i){
+  const t = tasks[i];
+  if (t.status !== "open") return;
+  const raw = document.getElementById("in" + i).value.trim();
+  if (!raw) return;
+  capture();
+  t.given = raw;
+  t.status = (raw === t.answer) ? "ok" : "err";
+  if (t.status === "err") t.hint = complain(t, raw);
+  if (t.status === "ok" && !t.extra) firstRoundRight++;
+  render();
+  focusNextOpen(i + 1);
+}
+
+function focusNextOpen(from){
+  let idx = tasks.findIndex((t, k) => k >= from && t.status === "open");
+  if (idx < 0) idx = tasks.findIndex(t => t.status === "open");
+  if (idx < 0) return null;
+  const el = document.getElementById("in" + idx);
+  if (el) el.focus();
+  return el;
+}
+
+function addTasks(){
+  capture();
+  const need = [...failedTypes()];
+  if (!need.length) return;
+  need.forEach(id => tasks.push(
+      Object.assign(makeTask(id), {status: "open", extra: true, draft: ""})));
+  render();
+  const el = focusNextOpen(0);
+  if (el) el.scrollIntoView({block: "center", behavior: "smooth"});
+}
+
+function capture(){
+  tasks.forEach((t, i) => {
+    if (t.status !== "open") return;
+    const el = document.getElementById("in" + i);
+    if (el) t.draft = el.value;
+  });
+}
+
+function render(){
+  const box = document.getElementById("tasks");
+  box.innerHTML = "";
+
+  tasks.forEach((t, i) => {
+    const card = document.createElement("div");
+    card.className = "task" + (t.status === "open" ? "" : " " + t.status);
+
+    let list = "";
+    if (t.kind === "choice"){
+      list = '<ol class="opts">' + t.options.map((o, k) => {
+        let cls = "";
+        if (t.status !== "open"){
+          if (String(k + 1) === t.answer) cls = "right";
+          else if (String(k + 1) === t.given) cls = "wrong";
+        }
+        return '<li class="' + cls + '"><code>' + o + '</code></li>';
+      }).join("") + '</ol>';
+    } else if (t.kind === "order"){
+      list = '<ol class="steps">' + t.options.map(o => '<li>' + o + '</li>')
+             .join("") + '</ol>';
+    }
+
+    let tail;
+    if (t.status === "open"){
+      tail = '<div class="row">' +
+             '<input type="text" id="in' + i + '" autocomplete="off" ' +
+             'inputmode="numeric" spellcheck="false" placeholder="ответ" ' +
+             'maxlength="12" value="' + esc(t.draft || "") + '">' +
+             '<button data-check="' + i + '">Проверить</button></div>' +
+             (t.kind === "choice"
+                ? '<div class="hint">в ответе — номер варианта</div>'
+              : t.kind === "order"
+                ? '<div class="hint">пять цифр подряд, без пробелов</div>'
+                : '<div class="hint">целое число, без единиц измерения</div>');
+    } else {
+      const verdict = t.status === "ok"
+        ? '<span class="verdict ok">Правильно</span>'
+        : '<span class="verdict err">Ошибка<small>' +
+          (t.hint ? t.hint : "Правильный ответ: <b>" + t.answer + "</b>") +
+          '</small></span>';
+      tail = '<div class="row"><input type="text" value="' + esc(t.given) +
+             '" disabled>' + verdict + '</div>' +
+             '<div class="why">' + t.rule + '</div>';
+    }
+
+    card.innerHTML =
+      '<div class="q"><div class="num">' + (i + 1) + '</div>' +
+      '<div class="text">' + t.q +
+      (t.extra ? '<span class="extra">добор</span>' : "") + '</div></div>' +
+      (t.body || "") + list + tail;
+    box.appendChild(card);
+  });
+
+  box.querySelectorAll("button[data-check]").forEach(b => {
+    b.addEventListener("click", () => check(+b.dataset.check));
+  });
+  box.querySelectorAll("input[type=text]:not(:disabled)").forEach(inp => {
+    inp.addEventListener("keydown", e => {
+      if (e.key === "Enter"){ e.preventDefault(); check(+inp.id.slice(2)); }
+    });
+  });
+
+  updatePanel();
+}
+
+function updatePanel(){
+  const mastered = masteredTypes().size;
+  const mark = markFor(mastered);
+  const started = tasks.some(t => t.status !== "open");
+  const el = document.getElementById("mark");
+  el.textContent = started ? mark : "—";
+  el.className = started ? "m" + mark : "";
+
+  const extras = tasks.filter(t => t.extra).length;
+  const nextUp = SCALE.filter(s => s[0] > mastered).pop();
+  document.getElementById("stats").innerHTML =
+    "освоено типов: <b>" + mastered + "</b> из " + TYPES_TOTAL + "<br>" +
+    "верно с первой попытки: <b>" + firstRoundRight + "</b> из " + TYPES_TOTAL +
+    (extras ? " &middot; добрано задач: <b>" + extras + "</b>" : "") +
+    "<br>лаборатория: <b>" + labDone() + "</b> из " + LAB_TOTAL + " опытов" +
+    (nextUp ? "<br>до оценки " + nextUp[1] + " осталось закрыть: <b>" +
+              (nextUp[0] - mastered) + "</b>" : "");
+
+  const need = failedTypes().size;
+  const btn = document.getElementById("add");
+  btn.disabled = !(allAnswered() && need > 0);
+  btn.textContent = need && allAnswered()
+      ? "Добавить задачи (" + need + ")" : "Добавить задачи";
+
+  const done = document.getElementById("done");
+  done.innerHTML = (allAnswered() && need === 0)
+    ? '<div class="done">Все ' + TYPES_TOTAL + ' типов закрыты. Оценка ' +
+      mark + '. Лаборатория: ' + labDone() + ' из ' + LAB_TOTAL + '.</div>'
+    : "";
+}
+
+document.getElementById("again").addEventListener("click", () => {
+  labState = LAB.map(() => ({status: "open", v: {}, err: null}));
+  renderLab();
+  newRun();
+});
+document.getElementById("add").addEventListener("click", addTasks);
+
+renderLab();
+newRun();
+</script>
+<p class="ai-mark" style="margin:34px auto 0;max-width:860px;padding-top:12px;border-top:1px solid #d9dce6;color:#5c6070;font:13px/1.5 'Segoe UI',system-ui,sans-serif">Материалы подготовлены с использованием технологий искусственного интеллекта.</p>
+</body>
+</html>

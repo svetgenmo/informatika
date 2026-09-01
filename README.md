@@ -20,6 +20,9 @@
   - *Практикумы по программе*
     - [Количество информации и сжатие данных](https://svetgenmo.github.io/informatika/11/informaciya-i-szhatie/) — Обзорный практикум по содержанию ФГОС к первой паре 11 класса
     - [Код Хаффмана и условие Фано](https://svetgenmo.github.io/informatika/11/kod-huffmana/) — Обзорный практикум по содержанию ФГОС ко второй паре 11 класса
+  - *Базовый уровень*
+    - [Сети, адреса и система доменных имён](https://svetgenmo.github.io/informatika/11/seti-i-dns/) — Первый урок 11 класса: как из компьютера получается интернет, что такое IP и NAT, зачем DNS и как отличить поддельный адрес от настоящего
+    - [Веб-страница и веб-сервер](https://svetgenmo.github.io/informatika/11/veb-stranica/) — Второй урок 11 класса: как браузер разговаривает с сервером, чем статическая страница отличается от динамической, и своя веб-страница за сорок минут
 - **7 класс** — https://svetgenmo.github.io/informatika/7/
   - [Устройство компьютера](https://svetgenmo.github.io/informatika/7/ustroystvo-kompyutera/) — Задание 1 ВПР: ввод, вывод, память, обработка, сеть
 - **8 класс** — https://svetgenmo.github.io/informatika/8/

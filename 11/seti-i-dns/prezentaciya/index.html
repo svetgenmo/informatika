@@ -1,0 +1,469 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Сети, адреса и DNS — разбор темы</title>
+<meta name="description" content="Разбор темы для 11 класса: принципы построения компьютерных сетей, аппаратные компоненты, сетевые протоколы, IP-адресация, NAT и система доменных имён.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E10%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ink)}
+body{font:20px/1.5 "Segoe UI",system-ui,sans-serif}
+.deck{height:100vh;display:flex;flex-direction:column}
+.stage{flex:1 1 auto;overflow-y:auto;padding:34px 56px 12px}
+.slide{display:none;max-width:1100px;margin:0 auto}
+.slide.on{display:block}
+
+h1{font-size:50px;line-height:1.1;margin:0 0 18px;text-wrap:balance}
+h2{font-size:36px;line-height:1.15;margin:0 0 20px;text-wrap:balance}
+.lead{font-size:24px;color:var(--muted);margin:0 0 26px}
+p{margin:0 0 14px}
+ul{margin:0 0 14px;padding-left:28px}
+li{margin:8px 0}
+code{font-family:Consolas,"Cascadia Mono",monospace;background:var(--card);
+     border:1px solid var(--line);border-radius:6px;padding:1px 7px;font-size:.92em}
+pre{font-family:Consolas,"Cascadia Mono",monospace;background:#1e2430;color:#e7ecf5;
+    padding:16px 20px;border-radius:12px;font-size:21px;line-height:1.45;
+    overflow-x:auto;margin:10px 0}
+pre code{background:none;border:0;padding:0;color:inherit;font-size:inherit}
+pre .c{color:#8fa6c4}
+pre .out{color:#9dd4b4}
+pre .hl{color:#ffd479}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;align-items:start}
+.box{border:1px solid var(--line);border-radius:14px;padding:16px 20px;background:#fff}
+.box h3{margin:0 0 8px;font-size:22px}
+.good{border-color:var(--ok-line);background:var(--ok-bg)}
+.bad{border-color:var(--err-line);background:var(--err-bg)}
+.warn{border-color:var(--hi-line);background:var(--hi-bg)}
+.big{font-size:26px}
+table{border-collapse:collapse;width:100%;font-size:21px;margin:10px 0}
+th,td{border:1px solid var(--line);padding:9px 14px;text-align:left}
+th{background:var(--card)}
+.step[hidden]{display:none}
+.tag{display:inline-block;background:var(--accent);color:#fff;border-radius:20px;
+     padding:3px 14px;font-size:16px;font-weight:700;margin-bottom:12px}
+.tag.gray{background:var(--muted)}
+.url{font-family:Consolas,"Cascadia Mono",monospace;font-size:30px;
+     background:#1e2430;color:#e7ecf5;border-radius:12px;padding:16px 22px;
+     margin:14px 0;word-break:break-all}
+.url .p1{color:#ffd479}.url .p2{color:#9dd4b4}.url .p3{color:#8fa6c4}
+.url .p4{color:#f2a0a0}
+.chain{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+       font-size:21px;margin:14px 0}
+.chain .n{border:1px solid var(--line);border-radius:12px;background:#fff;
+          padding:10px 16px}
+.chain .ar{color:var(--muted);font-size:26px}
+.bar{flex:0 0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+     border-top:1px solid var(--line);background:var(--card);padding:12px 24px}
+.bar .spacer{flex:1 1 auto}
+.count{color:var(--muted);font-size:17px;font-variant-numeric:tabular-nums}
+.keys{color:var(--muted);font-size:15px}
+.keys kbd{font:600 13px/1 Consolas,monospace;border:1px solid var(--line);
+          border-bottom-width:2px;border-radius:5px;padding:2px 6px;background:#fff}
+button{font:600 17px/1 inherit;padding:11px 18px;border-radius:10px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="deck">
+<div class="stage" id="stage">
+
+<section class="slide on">
+  <h1>Как из вашего компьютера<br>получается интернет</h1>
+  <p class="lead">Компьютерные сети. Протоколы. IP-адреса. Доменные имена.<br>
+  11 класс — первое занятие года.</p>
+  <p>Через двадцать минут вы своими руками узнаете адрес любого сайта,
+  увидите дорогу до него по узлам и поймёте, почему ссылка
+  <code>sberbank.ru.secure-login.tk</code> ведёт совсем не в банк.</p>
+</section>
+
+<section class="slide">
+  <h2>Кабинет, в котором вы сидите, — уже сеть</h2>
+  <p class="lead">Сеть — это компьютеры, соединённые так, чтобы обмениваться
+  данными. Больше ничего для определения не нужно.</p>
+  <div class="three">
+    <div class="box"><h3>Сетевая карта</h3>
+      <p>Есть в каждом компьютере. Превращает данные в сигнал —
+      в провод или в радиоволну.</p></div>
+    <div class="box"><h3>Коммутатор</h3>
+      <p>Коробка, в которую сходятся провода кабинета. Передаёт кадр
+      тому, кому он адресован, а не всем подряд.</p></div>
+    <div class="box"><h3>Маршрутизатор</h3>
+      <p>Он же роутер. Стоит на границе и уводит наружу всё, что
+      адресовано не своим.</p></div>
+  </div>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="box warn big">Ваш домашний Wi-Fi-роутер — это все три
+      устройства в одном корпусе. Плюс точка доступа, чтобы не тянуть
+      провод.</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Интернет — это сеть сетей</h2>
+  <div class="chain">
+    <span class="n">ваш компьютер</span><span class="ar">→</span>
+    <span class="n">сеть кабинета</span><span class="ar">→</span>
+    <span class="n">сеть школы</span><span class="ar">→</span>
+    <span class="n">сеть провайдера</span><span class="ar">→</span>
+    <span class="n">магистраль</span><span class="ar">→</span>
+    <span class="n">сервер сайта</span>
+  </div>
+  <div class="steps">
+    <div class="step" hidden>
+      <p><b>Никакого «главного компьютера интернета» нет.</b> Есть
+      миллионы отдельных сетей, которые договорились соединяться друг с
+      другом и передавать чужие данные дальше. Выключить интернет одной
+      кнопкой не получится: выключать нечего.</p>
+    </div>
+    <div class="step" hidden>
+      <div class="box good big">Раз хозяина нет, договариваться надо
+      заранее — и очень подробно. Эти договорённости называются
+      <b>протоколами</b>.</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Протокол — это договор, а не программа</h2>
+  <table>
+    <tr><th>протокол</th><th>о чём договорились</th></tr>
+    <tr><td><code>IP</code></td>
+        <td>у каждого узла есть адрес; пакет доставляем по адресу</td></tr>
+    <tr><td><code>TCP</code></td>
+        <td>пакеты нумеруем, потерянные шлём заново, собираем по порядку</td></tr>
+    <tr><td><code>HTTP</code> / <code>HTTPS</code></td>
+        <td>как браузер просит страницу у сервера (у HTTPS — в шифре)</td></tr>
+    <tr><td><code>DNS</code></td>
+        <td>как узнать адрес по имени</td></tr>
+    <tr><td><code>SMTP</code>, <code>FTP</code></td>
+        <td>почта, передача файлов</td></tr>
+  </table>
+  <div class="steps">
+    <div class="step" hidden>
+      <p>Они работают не рядом, а <b>стопкой</b>: HTTP пользуется TCP,
+      TCP пользуется IP. Каждый следующий уровень не знает, что делает
+      нижний, — и ему это не нужно. Ровно так же вы кладёте письмо в
+      конверт, не думая, на каком самолёте оно полетит.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Данные идут пакетами</h2>
+  <p class="lead">Файл не летит целиком. Его режут на куски по несколько
+  килобайт, и каждый едет отдельно.</p>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="two">
+        <div class="box"><h3>Зачем так</h3>
+          <ul><li>один канал делят сразу все, а не по очереди</li>
+              <li>потерялся кусок — переслать надо кусок, а не файл</li>
+              <li>оборвался маршрут — пакеты пойдут в обход</li></ul></div>
+        <div class="box"><h3>Что в каждом пакете</h3>
+          <ul><li>адрес отправителя</li><li>адрес получателя</li>
+              <li>номер по порядку</li><li>сам кусок данных</li></ul></div>
+      </div>
+    </div>
+    <div class="step" hidden>
+      <div class="box warn big">Пакеты одного файла могут прийти разными
+      путями и не по порядку. Собрать их обратно — работа TCP.</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>IP-адрес: четыре числа</h2>
+  <pre><code>84 . 201 . 157 . 12</code></pre>
+  <ul>
+    <li>каждое число — один <b>байт</b>, от 0 до 255;</li>
+    <li>весь адрес — 4 байта, <b>32 бита</b>;</li>
+    <li>значит, всего адресов 2<sup>32</sup> ≈ <b>4,3 миллиарда</b>.</li>
+  </ul>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="box bad big">Людей на Земле 8 миллиардов, а устройств
+      с сетью — десятки миллиардов. Адресов <b>не хватает</b>, и это не
+      будущая проблема, а сегодняшняя.</div>
+    </div>
+    <div class="step" hidden>
+      <p>Выходов два. Долгий — <b>IPv6</b>, 128 бит, адресов хватит на
+      каждую песчинку. Быстрый — раздать всем один адрес на всех, и
+      именно так сделано в вашем кабинете.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Почему у всего кабинета один адрес</h2>
+  <p>Три диапазона отданы под локальные сети и в интернете не работают:</p>
+  <pre><code>10.  *  .  *  .  *
+172. 16..31 .  *  .  *
+192.168 .  *  .  *     <span class="c">← почти наверняка ваш</span></code></pre>
+  <div class="steps">
+    <div class="step" hidden>
+      <p>Такие адреса повторяются в миллионах домашних сетей: ваш
+      <code>192.168.0.15</code> есть ещё у сотен тысяч человек. Снаружи
+      по нему не достучаться — маршрута нет.</p>
+    </div>
+    <div class="step" hidden>
+      <div class="box good">
+        <h3>NAT — подмена адреса на выходе</h3>
+        <p>Роутер подставляет в исходящие пакеты <b>свой</b> публичный
+        адрес и записывает в табличку, кому вернуть ответ. Наружу весь
+        кабинет выглядит как один компьютер.</p>
+      </div>
+    </div>
+    <div class="step" hidden>
+      <div class="box warn big">Через десять минут вы это проверите:
+      <code>ipconfig</code> покажет у каждого свой адрес, а сайт
+      <code>2ip.ru</code> — у всех один и тот же.</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Числа человек не запоминает</h2>
+  <p class="lead">Поэтому у серверов есть имена. Имя читают
+  <b>справа налево</b>.</p>
+  <div class="url">www<span class="p3">.</span><span class="p2">school15</span><span class="p3">.</span><span class="p2">edu</span><span class="p3">.</span><span class="p1">ru</span></div>
+  <table>
+    <tr><td><code>ru</code></td><td>домен верхнего уровня — зона</td></tr>
+    <tr><td><code>edu.ru</code></td><td>домен второго уровня внутри зоны</td></tr>
+    <tr><td><code>school15.edu.ru</code></td><td>домен третьего уровня — чей сайт</td></tr>
+    <tr><td><code>www.</code></td><td>конкретный компьютер внутри домена</td></tr>
+  </table>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="box warn big">Запомните направление: <b>главное — справа</b>.
+      Из этого через две минуты получится очень полезный навык.</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>DNS переводит имя в адрес</h2>
+  <p>Полной таблицы «имя → адрес» нет ни у кого. Сервер, который не знает
+  ответа, спрашивает вышестоящий: сначала корневой, потом сервер зоны
+  <code>ru</code>, потом сервер самого домена.</p>
+  <pre><code><span class="c">&gt;</span> nslookup ya.ru
+
+Имя:     ya.ru
+Addresses:  <span class="out">5.255.255.242</span>
+            <span class="out">77.88.55.242</span></code></pre>
+  <div class="steps">
+    <div class="step" hidden>
+      <p>Адресов может быть несколько: у большого сайта серверов много, и
+      DNS отдаёт разным людям разные — чтобы нагрузка делилась, а
+      ближайший сервер отвечал быстрее.</p>
+    </div>
+    <div class="step" hidden>
+      <div class="box bad">Отсюда и практический вывод: <b>«сайт не
+      открывается» чаще всего значит «не отработал DNS»</b>. Сам сервер
+      при этом жив и по IP доступен.</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Что происходит, когда вы ввели адрес</h2>
+  <div class="chain">
+    <span class="n">1. браузер → DNS: чей это IP?</span><span class="ar">→</span>
+    <span class="n">2. DNS → браузеру: 5.255.255.242</span>
+  </div>
+  <div class="chain">
+    <span class="n">3. браузер → серверу: дай страницу</span><span class="ar">→</span>
+    <span class="n">4. сервер → браузеру: вот HTML</span><span class="ar">→</span>
+    <span class="n">5. браузер рисует страницу</span>
+  </div>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="box good big">Порядок жёсткий: <b>сначала имя в адрес,
+      потом всё остальное</b>. Сеть умеет доставлять пакеты только по
+      числовому адресу — имя для неё пустой звук.</div>
+    </div>
+    <div class="step" hidden>
+      <p>Шаги 4 и 5 — тема следующего занятия: что за файл присылает
+      сервер и как из текста получается страница. Сегодня — первые три.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Адрес документа: пять частей</h2>
+  <div class="url"><span class="p1">https</span>://<span class="p2">www.school15.edu.ru</span><span class="p3">/uroki/2026/</span><span class="p4">plan.pdf</span></div>
+  <table>
+    <tr><td><span style="color:#b8860b"><b>https</b></span></td><td>протокол</td></tr>
+    <tr><td><b>www.school15.edu.ru</b></td><td>доменное имя сервера</td></tr>
+    <tr><td><b>ru</b></td><td>домен верхнего уровня</td></tr>
+    <tr><td><b>/uroki/2026/</b></td><td>путь к файлу на сервере</td></tr>
+    <tr><td><b>plan.pdf</b></td><td>имя файла</td></tr>
+  </table>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="box warn">Граница между именем сервера и путём — <b>первая
+      одиночная косая черта</b>. Всё левее — про то, куда вы идёте; всё
+      правее — про то, что вы там просите.</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Проверка на внимательность</h2>
+  <p class="lead">Письмо: «Ваша карта заблокирована, войдите в личный
+  кабинет».</p>
+  <div class="url">https://<span class="p4">sberbank.ru.secure-login</span><span class="p1">.tk</span>/vhod</div>
+  <div class="steps">
+    <div class="step" hidden>
+      <p>Читаем <b>справа</b>: последние две части имени сервера —
+      <code>secure-login.tk</code>. Это и есть сайт, на который вы
+      попадёте. <code>sberbank.ru</code> здесь просто кусок текста слева,
+      его дописал владелец чужого домена — точно так же, как вы могли бы
+      завести <code>sberbank.ru.мойсайт.рф</code>.</p>
+    </div>
+    <div class="step" hidden>
+      <div class="two">
+        <div class="box bad"><h3>Подделка</h3>
+          <p><code>vk.com.id-check.xyz</code><br>
+             <code>gosuslugi-ru.info</code><br>
+             <code>avito.ru.dostavka-oplata.ru</code></p></div>
+        <div class="box good"><h3>Настоящие</h3>
+          <p><code>lk.sberbank.ru</code><br>
+             <code>www.gosuslugi.ru</code><br>
+             <code>market.ozon.ru</code></p></div>
+      </div>
+    </div>
+    <div class="step" hidden>
+      <div class="box warn big">Правило на всю жизнь: смотреть <b>две
+      последние части перед первой одиночной чертой</b>. Всё остальное в
+      адресе — украшение, в том числе замок и слово «https».</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Мегабиты и мегабайты</h2>
+  <p class="lead">Скорость канала считают в би<b>т</b>ах, а файлы — в
+  бай<b>т</b>ах. Разница ровно в 8 раз.</p>
+  <pre><code>канал 50 Мбит/с,  фильм 900 МБ
+
+900 МБ · 8 = 7200 Мбит        <span class="c">переводим объём в биты</span>
+7200 : 50  = <span class="out">144 секунды</span>        <span class="c">делим на скорость</span></code></pre>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="box warn">Провайдер пишет «100 Мбит/с» — а файл в
+      загрузках идёт «12 МБ/с». Это одно и то же число. Именно на этой
+      восьмёрке и построена вся реклама тарифов.</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Теперь руками</h2>
+  <p class="lead">Открывайте <b>практикум</b> из общей папки.</p>
+  <div class="two">
+    <div class="box"><h3>Часть 1. Лаборатория</h3>
+      <p>Пять опытов в командной строке: свой адрес и шлюз, адрес сайта
+      по имени, время отклика, путь по узлам, ваш адрес снаружи.</p>
+      <p><code>Win + R</code> → <code>cmd</code> → Enter</p></div>
+    <div class="box"><h3>Часть 2. Тренажёр</h3>
+      <p>Пять типов задач, проверка сразу на экране. Ошиблись — кнопка
+      донесёт ещё одну такую же, попыток сколько угодно.</p>
+      <p><b>Отсюда оценка за урок.</b> Пять типов — «5», четыре — «4»,
+      три — «3».</p></div>
+  </div>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="box good big">Числа в лаборатории у всех разные и это
+      нормально: страница проверяет не значение, а то, что вы поняли,
+      какую строку вывода берёте.</div>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<div class="bar">
+  <button id="prev">← Назад</button>
+  <button id="step" class="primary">Раскрыть</button>
+  <button id="next">Вперёд →</button>
+  <span class="count" id="count"></span>
+  <div class="spacer"></div>
+  <span class="ai-mark" style="color:#5c6070;font-size:13px">Материалы подготовлены с использованием технологий искусственного интеллекта.</span>
+  <span class="keys"><kbd>Пробел</kbd> раскрыть и дальше ·
+    <kbd>←</kbd> <kbd>→</kbd> слайды</span>
+</div>
+</div>
+
+<script>
+const slides = [...document.querySelectorAll(".slide")];
+let cur = 0, shown = 0;
+
+const stepsOf = i => [...slides[i].querySelectorAll(".steps > .step")];
+
+function show(i){
+  slides[cur].classList.remove("on");
+  cur = Math.max(0, Math.min(slides.length - 1, i));
+  slides[cur].classList.add("on");
+  shown = stepsOf(cur).filter(el => !el.hidden).length;
+  document.getElementById("stage").scrollTop = 0;
+  sync();
+}
+
+function sync(){
+  const total = stepsOf(cur).length;
+  document.getElementById("count").textContent = `${cur + 1} / ${slides.length}`;
+  document.getElementById("prev").disabled = cur === 0;
+  document.getElementById("next").disabled = cur === slides.length - 1;
+  const b = document.getElementById("step");
+  b.hidden = total === 0;
+  if (total){
+    b.disabled = shown >= total;
+    b.textContent = shown >= total ? "Всё открыто"
+                  : shown === 0 ? "Раскрыть" : `Дальше (${shown}/${total})`;
+  }
+}
+
+function nextStep(){
+  const steps = stepsOf(cur);
+  if (shown >= steps.length) return false;
+  steps[shown].hidden = false;
+  steps[shown].scrollIntoView({block: "nearest", behavior: "smooth"});
+  shown++;
+  sync();
+  return true;
+}
+
+document.getElementById("prev").addEventListener("click", () => show(cur - 1));
+document.getElementById("next").addEventListener("click", () => show(cur + 1));
+document.getElementById("step").addEventListener("click", nextStep);
+
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowRight" || e.key === "PageDown"){ show(cur + 1); }
+  else if (e.key === "ArrowLeft" || e.key === "PageUp"){ show(cur - 1); }
+  else if (e.key === " " || e.key === "Enter"){
+    if (!nextStep()) show(cur + 1);
+  } else return;
+  e.preventDefault();
+});
+
+show(0);
+</script>
+</body>
+</html>

@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Веб-страница и веб-сервер — карточка в тетрадь</title>
+<meta name="robots" content="noindex">
+<style>
+@page{size:A4 landscape;margin:0}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:#f2f3f7}
+body{font:9.5pt/1.3 "Segoe UI",system-ui,sans-serif;color:#1b1b1f}
+
+/* лист: 297x210 мм, две карточки A5 книжной ориентации рядом */
+.sheet{width:297mm;height:210mm;margin:0 auto;background:#fff;
+       display:flex;position:relative}
+.card{width:148.5mm;height:210mm;padding:7mm 7mm 5mm;
+      display:flex;flex-direction:column;overflow:hidden}
+
+/* линия разреза — ровно посередине листа */
+.sheet::after{content:"";position:absolute;left:148.5mm;top:0;bottom:0;
+              border-left:1px dashed #b9bece}
+
+header{border-bottom:2px solid #1f5fa8;padding-bottom:2.5mm;margin-bottom:3mm}
+.klass{display:block;font-size:.78em;letter-spacing:.09em;
+       text-transform:uppercase;color:#5c6070;margin-bottom:1mm}
+h1{font-size:1.5em;line-height:1.15;margin:0;color:#1f5fa8}
+.sub{margin:1.5mm 0 0;font-size:.85em;color:#5c6070}
+
+.body{flex:1 1 auto;min-height:0}
+.body h3{font-size:1em;margin:2.2mm 0 .8mm;color:#1f5fa8}
+.body h3:first-child{margin-top:0}
+.body p{margin:1mm 0}
+.body ol,.body ul{margin:1mm 0;padding-left:5mm}
+.body li{margin:.6mm 0}
+.body pre{margin:1.2mm 0;padding:1.2mm 1.8mm;background:#f6f7fb;
+          border:1px solid #d9dce6;border-radius:1.5mm;
+          font:.88em/1.25 Consolas,"Courier New",monospace;
+          white-space:pre-wrap}
+.body code{font:.9em/1.3 Consolas,"Courier New",monospace;
+           background:#f6f7fb;border:1px solid #d9dce6;
+           border-radius:1mm;padding:0 .8mm}
+.body table{border-collapse:collapse;margin:1.5mm 0;font-size:.9em}
+.body th,.body td{border:1px solid #d9dce6;padding:.5mm 1.6mm;
+                  text-align:center}
+.body th{background:#f6f7fb;color:#5c6070;font-weight:600}
+.body b{color:#1b1b1f}
+
+footer{margin-top:3mm;padding-top:2mm;border-top:1px solid #d9dce6;
+       font-size:.72em;line-height:1.3;color:#5c6070}
+footer a,footer .url{color:#1f5fa8;text-decoration:none}
+
+/* подсказка про печать — только на экране, на бумагу не идёт */
+.howto{max-width:297mm;margin:6mm auto;padding:4mm 6mm;background:#fff;
+       border:1px solid #d9dce6;border-radius:3mm;font-size:11pt;
+       line-height:1.5}
+.howto b{color:#1f5fa8}
+.tight{margin:3mm 0 0;color:#b3261e;font-weight:600}
+@media print{
+  html,body{background:#fff}
+  .howto{display:none}
+  .sheet{margin:0}
+}
+</style>
+</head>
+<body>
+
+<div class="howto">
+  <b>Печать:</b> Ctrl+P &rarr; ориентация <b>альбомная</b>, масштаб
+  <b>100 %</b> (не «вписать в лист»), поля <b>нет</b>, «печать фона»
+  включить — иначе пропадут рамки таблиц. На листе <b>две одинаковые
+  карточки</b>: разрезать по пунктиру посередине, получится две штуки
+  формата A5. Эта серая рамка на бумагу не печатается.
+</div>
+
+<div class="sheet">
+  <div class="card">
+    <header>
+      <span class="klass">11 класс</span>
+      <h1>Веб-страница и веб-сервер</h1>
+      <p class="sub">Второй урок 11 класса: как браузер разговаривает с сервером, чем статическая страница отличается от динамической, и своя веб-страница за сорок минут</p>
+    </header>
+    <div class="body">
+<h3>Браузер и сервер разговаривают запросами</h3>
+      <p>Браузер — <b>клиент</b>: он просит. Сервер только <b>отвечает</b>,
+         сам первым ничего не присылает. Протокол этого разговора —
+         <b>HTTP</b> (у <b>HTTPS</b> то же самое, но зашифровано).
+         В ответе есть код: <code>200</code> — нашлось,
+         <code>301</code> — переехало, <code>403</code> — нельзя,
+         <code>404</code> — такого файла нет, <code>500</code> — сервер
+         сломался. Одна страница — это десятки запросов: HTML, стили,
+         шрифты, каждая картинка отдельно (видно по <b>F12 → Сеть</b>).</p>
+
+      <h3>Страница приезжает текстом</h3>
+      <p><b>HTML</b> — язык разметки, а не программа: он ничего не
+         вычисляет, он только называет части текста. <b>Тег</b> — имя
+         части в угловых скобках, почти всегда парный:
+         <code>&lt;p&gt;</code> открывает, <code>&lt;/p&gt;</code>
+         закрывает. Исходный текст любой страницы —
+         <b>Ctrl + U</b>.</p>
+      <table>
+        <tr><th>тег</th><th>что означает</th></tr>
+        <tr><td><code>h1</code>, <code>h2</code></td><td>заголовки</td></tr>
+        <tr><td><code>p</code></td><td>абзац</td></tr>
+        <tr><td><code>img</code></td><td>картинка (одиночный)</td></tr>
+        <tr><td><code>ul</code> / <code>li</code></td><td>список и пункт</td></tr>
+        <tr><td><code>a href</code></td><td>ссылка</td></tr>
+        <tr><td><code>table</code> / <code>tr</code> / <code>td</code></td>
+            <td>таблица, строка, ячейка</td></tr>
+      </table>
+
+      <h3>Оформление отдельно от содержания</h3>
+      <p><b>CSS</b> отвечает за вид: <code>body { background: #eef3fb;
+         font-family: Georgia; }</code>. Один файл стилей оформляет хоть
+         тысячу страниц, а тот же HTML сам подстраивается под телефон и
+         принтер — потому что в нём написано, <i>что</i> это, а не
+         <i>как это нарисовать</i>.</p>
+
+      <h3>Статическая страница и динамическая</h3>
+      <p><b>Статическая</b> лежит на сервере готовым файлом, и всем
+         приходит одна и та же. <b>Динамическая</b> собирается в момент
+         запроса — каждому своё. Собирают в двух местах: <b>на сервере</b>
+         (программа лезет в базу данных и склеивает HTML) или
+         <b>в браузере</b> (программа на <b>JavaScript</b> дорисовывает
+         страницу уже у вас). Кнопка, которая считает дни до Нового года,
+         — это уже второе.</p>
+
+      <h3>Где живёт сайт</h3>
+      <p><b>Хостинг</b> — место под файлы на сервере, который включён
+         всегда и имеет постоянный публичный IP. <b>Домен</b> покупается
+         отдельно и привязывается к этому адресу через DNS: сайт может
+         переехать, не меняя имени. <b>Облачный диск</b> устроен так же —
+         файл лежит на чужом сервере, а вам дают доступ и ссылку.
+         Отсюда правило: то, что жалко потерять, должно лежать минимум в
+         двух местах, и хотя бы одно из них — ваше собственное.</p>
+    </div>
+    <footer>Тренажёр и разбор темы: <span class="url">https://svetgenmo.github.io/informatika/11/veb-stranica/</span><br>Материалы подготовлены с использованием технологий искусственного интеллекта.</footer>
+  </div>
+  <div class="card">
+    <header>
+      <span class="klass">11 класс</span>
+      <h1>Веб-страница и веб-сервер</h1>
+      <p class="sub">Второй урок 11 класса: как браузер разговаривает с сервером, чем статическая страница отличается от динамической, и своя веб-страница за сорок минут</p>
+    </header>
+    <div class="body">
+<h3>Браузер и сервер разговаривают запросами</h3>
+      <p>Браузер — <b>клиент</b>: он просит. Сервер только <b>отвечает</b>,
+         сам первым ничего не присылает. Протокол этого разговора —
+         <b>HTTP</b> (у <b>HTTPS</b> то же самое, но зашифровано).
+         В ответе есть код: <code>200</code> — нашлось,
+         <code>301</code> — переехало, <code>403</code> — нельзя,
+         <code>404</code> — такого файла нет, <code>500</code> — сервер
+         сломался. Одна страница — это десятки запросов: HTML, стили,
+         шрифты, каждая картинка отдельно (видно по <b>F12 → Сеть</b>).</p>
+
+      <h3>Страница приезжает текстом</h3>
+      <p><b>HTML</b> — язык разметки, а не программа: он ничего не
+         вычисляет, он только называет части текста. <b>Тег</b> — имя
+         части в угловых скобках, почти всегда парный:
+         <code>&lt;p&gt;</code> открывает, <code>&lt;/p&gt;</code>
+         закрывает. Исходный текст любой страницы —
+         <b>Ctrl + U</b>.</p>
+      <table>
+        <tr><th>тег</th><th>что означает</th></tr>
+        <tr><td><code>h1</code>, <code>h2</code></td><td>заголовки</td></tr>
+        <tr><td><code>p</code></td><td>абзац</td></tr>
+        <tr><td><code>img</code></td><td>картинка (одиночный)</td></tr>
+        <tr><td><code>ul</code> / <code>li</code></td><td>список и пункт</td></tr>
+        <tr><td><code>a href</code></td><td>ссылка</td></tr>
+        <tr><td><code>table</code> / <code>tr</code> / <code>td</code></td>
+            <td>таблица, строка, ячейка</td></tr>
+      </table>
+
+      <h3>Оформление отдельно от содержания</h3>
+      <p><b>CSS</b> отвечает за вид: <code>body { background: #eef3fb;
+         font-family: Georgia; }</code>. Один файл стилей оформляет хоть
+         тысячу страниц, а тот же HTML сам подстраивается под телефон и
+         принтер — потому что в нём написано, <i>что</i> это, а не
+         <i>как это нарисовать</i>.</p>
+
+      <h3>Статическая страница и динамическая</h3>
+      <p><b>Статическая</b> лежит на сервере готовым файлом, и всем
+         приходит одна и та же. <b>Динамическая</b> собирается в момент
+         запроса — каждому своё. Собирают в двух местах: <b>на сервере</b>
+         (программа лезет в базу данных и склеивает HTML) или
+         <b>в браузере</b> (программа на <b>JavaScript</b> дорисовывает
+         страницу уже у вас). Кнопка, которая считает дни до Нового года,
+         — это уже второе.</p>
+
+      <h3>Где живёт сайт</h3>
+      <p><b>Хостинг</b> — место под файлы на сервере, который включён
+         всегда и имеет постоянный публичный IP. <b>Домен</b> покупается
+         отдельно и привязывается к этому адресу через DNS: сайт может
+         переехать, не меняя имени. <b>Облачный диск</b> устроен так же —
+         файл лежит на чужом сервере, а вам дают доступ и ссылку.
+         Отсюда правило: то, что жалко потерять, должно лежать минимум в
+         двух местах, и хотя бы одно из них — ваше собственное.</p>
+    </div>
+    <footer>Тренажёр и разбор темы: <span class="url">https://svetgenmo.github.io/informatika/11/veb-stranica/</span><br>Материалы подготовлены с использованием технологий искусственного интеллекта.</footer>
+  </div>
+</div>
+
+<script>
+/* Кегль подбирается здесь, а не задаётся в манифесте.
+   Причина простая: конспект живёт на странице темы и правится там же,
+   а карточка от каждой новой строки становится длиннее. Число,
+   подогнанное руками, устареет молча — последние строки уедут под обрез
+   карточки и никто этого не заметит до раздачи. Поэтому страница
+   уменьшает шрифт сама, пока текст не уложится в высоту A5.
+   Запас в 2% — на то, что принтер разложит строки чуть иначе. */
+(function (){
+  var START = 9.5, FLOOR = 6, STEP = 0.1;
+  var tight = false;
+
+  /* Меряем не scrollHeight: блок конспекта растянут на всю свободную
+     высоту карточки, и его scrollHeight упирается в clientHeight даже
+     когда текста мало, — с таким сравнением шрифт уезжает в минимум.
+     Берём низ последнего элемента: он говорит, сколько занято на самом
+     деле. */
+  function used(box){
+    var last = box.lastElementChild;
+    if (!last) return 0;
+    return last.getBoundingClientRect().bottom -
+           box.getBoundingClientRect().top;
+  }
+
+  document.querySelectorAll(".card").forEach(function (card){
+    var body = card.querySelector(".body"), size = START;
+    card.style.fontSize = size + "pt";
+    while (size > FLOOR && used(body) > body.clientHeight * 0.98){
+      size = Math.round((size - STEP) * 10) / 10;
+      card.style.fontSize = size + "pt";
+    }
+    if (used(body) > body.clientHeight) tight = true;
+  });
+  if (tight){
+    var note = document.createElement("p");
+    note.className = "tight";
+    note.textContent = "Конспект не влезает даже мелким шрифтом: "
+      + "часть текста обрежется. Убери из подсказки лишний раздел — "
+      + "в publish.json темы, ключ card.drop.";
+    document.querySelector(".howto").appendChild(note);
+  }
+})();
+</script>
+
+</body>
+</html>
