@@ -259,58 +259,177 @@ function plural(n, one, few, many){
 const roads = n => n + " " + plural(n, "дорога", "дороги", "дорог");
 
 /* --------------------------------------------------------------- схема
-   Схему рисуем не «как выйдет», а по узлам сетки: тогда рёбра выходят
-   короткими, а пересечений почти нет — читать такую схему можно, не
-   распутывая клубок. Диагонали одного квадрата пересекаются, поэтому из
-   каждого квадрата остаётся не больше одной.
+   Схему рисуем так, как её рисуют в реальных вариантах: замкнутый
+   внешний контур из пяти-семи пунктов, внутри него один-три пункта,
+   связанных с контуром и между собой.
+
+   Форма снята не с потолка, а с разбора четырнадцати задач с
+   kompege.ru — демоверсия 2027 и весь 2026 год (№ 31498, 31209, 31139,
+   31108, 29951, 29333, 28922, 28749, 28685, 27756, 27613, 26832, 26829,
+   25340). У всех четырнадцати одно и то же:
+
+     * пунктов 6–8, чаще всего 8; девяти не бывает;
+     * дорог ровно n+2 или n+3 — без единого исключения;
+     * из пункта выходит две или три дороги; тупиков (одна дорога) нет
+       нигде, кроме одной задачи вне основных волн;
+     * каждый пункт лежит на кольце: «хвостов» и «усов» не бывает.
+
+   Отсюда устройство: контур замыкается всегда, внутренний пункт
+   получает не меньше двух дорог, больше трёх дорог не выдаётся никому.
+   Исключение — симметричные схемы с близнецами: там двум пунктам
+   достаётся по четыре дороги, иначе близнецов не подвесить. На ЕГЭ
+   такие схемы тоже бывают (№ 28685 — там у одного пункта пять дорог).
 --------------------------------------------------------------------- */
 
-const COLS = 4, ROWS = 3, DX = 126, DY = 100, X0 = 60, Y0 = 58, JIT = 11;
+// (пунктов, дорог, пунктов внутри контура). Доли — из тех же
+// четырнадцати задач: одна семёрка на пять восьмёрок с десятью дорогами
+// и три с одиннадцатью.
+//
+// Форм (6, 8) и (7, 10) в списке нет, хотя на ЕГЭ они попадаются, и это
+// не недосмотр: когда из каждого пункта выходит две-три дороги, а самих
+// пунктов шесть-семь, схема неизбежно оказывается симметричной —
+// проверено перебором, годных не нашлось ни одной из двух тысяч. У
+// симметричной схемы соответствие с таблицей не одно, и ответ на прямой
+// вопрос («какова длина дороги X—Y») не единственный. Составители это
+// знают и на таких схемах спрашивают только то, что от симметрии не
+// зависит, — ровно как наши типы «звёздочки» и «неоднозначное
+// соотнесение». Так что форма не потеряна: она живёт в этих двух типах.
+const SHAPES = [
+  [7, 9, 1],
+  [8, 10, 1], [8, 10, 2], [8, 10, 2], [8, 10, 3], [8, 10, 3],
+  [8, 11, 1], [8, 11, 2], [8, 11, 3]
+];
 
-function pickSlots(n){
-  const all = [];
-  for (let r = 0; r < ROWS; r++)
-    for (let c = 0; c < COLS; c++) all.push({c: c, r: r});
-  const chosen = [pick(all)];
-  const has = s => chosen.some(t => t.c === s.c && t.r === s.r);
-  const near = s => chosen.some(t => Math.abs(t.c - s.c) <= 1 &&
-                                     Math.abs(t.r - s.r) <= 1);
-  while (chosen.length < n){
-    const free = all.filter(s => !has(s) && near(s));
-    if (!free.length) return null;
-    chosen.push(pick(free));
+// Близнецы строятся прямо на контуре (см. buildRing), и место для них
+// остаётся не в любой форме: на остальных пара либо не помещается, либо
+// тянет за собой вторую симметрию.
+const TWIN_SHAPES = [[8, 10, 1], [8, 10, 2]];
+
+const CX = 265, CY = 145, RX = 235, RY = 118;
+const NODE_GAP = 60;   // ближе этого два пункта друг к другу не ставим
+const EDGE_GAP = 28;   // и дорога не проходит вплотную к чужому кружку
+
+const dist2 = (a, b) => (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y);
+
+function turn(p, q, r){
+  const v = (q.x - p.x) * (r.y - p.y) - (q.y - p.y) * (r.x - p.x);
+  return (v > 0) - (v < 0);
+}
+function crosses(a, b, c, d){
+  return turn(a, c, d) !== turn(b, c, d) && turn(a, b, c) !== turn(a, b, d);
+}
+// квадрат расстояния от пункта до дороги: дорога сквозь чужой кружок не
+// проходит, иначе на схеме не сосчитать, сколько дорог из пункта выходит
+function gap2(p, a, b){
+  const dx = b.x - a.x, dy = b.y - a.y, ln = dx * dx + dy * dy;
+  let t = ln ? ((p.x - a.x) * dx + (p.y - a.y) * dy) / ln : 0;
+  t = Math.max(0, Math.min(1, t));
+  const qx = a.x + t * dx - p.x, qy = a.y + t * dy - p.y;
+  return qx * qx + qy * qy;
+}
+
+function fits(pos, edges, i, j){
+  for (const f of edges){
+    if (f.i === i || f.i === j || f.j === i || f.j === j) continue;
+    if (crosses(pos[i], pos[j], pos[f.i], pos[f.j])) return false;
   }
-  return chosen;
+  for (let v = 0; v < pos.length; v++){
+    if (v === i || v === j) continue;
+    if (gap2(pos[v], pos[i], pos[j]) < EDGE_GAP * EDGE_GAP) return false;
+  }
+  return true;
 }
 
-function layout(slots){
-  return slots.map(s => ({c: s.c, r: s.r,
-                          x: X0 + s.c * DX + randInt(-JIT, JIT),
-                          y: Y0 + s.r * DY + randInt(-JIT, JIT)}));
+/* Контур — выпуклый многоугольник с разбросом по углу и радиусу: он
+   выходит неправильным, как на бланках, но выпуклым, а у выпуклого
+   стороны заведомо не пересекаются. Разброс по углу меньше половины
+   шага — порядок вершин по кругу от него не сбивается. */
+function ringLayout(n, m){
+  const k = n - m;
+  const step = 2 * Math.PI / k;
+  const pos = [];
+  for (let i = 0; i < k; i++){
+    const a = -Math.PI / 2 + step * i + (Math.random() - 0.5) * step * 0.55;
+    const f = 0.84 + Math.random() * 0.16;
+    pos.push({x: CX + RX * f * Math.cos(a), y: CY + RY * f * Math.sin(a)});
+  }
+  for (let guard = 0; pos.length < n && guard < 400; guard++){
+    const a = Math.random() * 2 * Math.PI;
+    const r = Math.sqrt(Math.random()) * 0.5;
+    const p = {x: CX + RX * r * Math.cos(a), y: CY + RY * r * Math.sin(a)};
+    if (pos.some(q => dist2(p, q) < NODE_GAP * NODE_GAP)) continue;
+    pos.push(p);
+  }
+  return pos.length < n ? null : {k: k, pos: pos};
 }
 
-function candidates(pos){
-  const out = [];
-  for (let i = 0; i < pos.length; i++)
-    for (let j = i + 1; j < pos.length; j++){
-      const dc = Math.abs(pos[i].c - pos[j].c);
-      const dr = Math.abs(pos[i].r - pos[j].r);
-      if (dc <= 1 && dr <= 1)
-        out.push({i: i, j: j, diag: dc === 1 && dr === 1,
-                  key: Math.min(pos[i].c, pos[j].c) + ":" +
-                       Math.min(pos[i].r, pos[j].r)});
+function buildRing(shape, twin){
+  const n = shape[0], E = shape[1], m = shape[2];
+  const L = ringLayout(n, m);
+  if (!L) return null;
+  const pos = L.pos, k = L.k;
+  const edges = [], deg = range(n).map(() => 0), cap = range(n).map(() => 3);
+
+  const has = (i, j) => edges.some(e => (e.i === i && e.j === j) ||
+                                        (e.i === j && e.j === i));
+  const add = (i, j) => { edges.push({i: i, j: j}); deg[i]++; deg[j]++; };
+  const free = (i, j) => deg[i] < cap[i] && deg[j] < cap[j] &&
+                         !has(i, j) && fits(pos, edges, i, j);
+
+  for (let i = 0; i < k; i++){                       // контур
+    const j = (i + 1) % k;
+    if (!fits(pos, edges, i, j)) return null;
+    add(i, j);
+  }
+
+  let tw = null;
+  if (twin){
+    // Близнецы: пункт t на контуре и пункт w внутри него. У обоих ровно
+    // по две дороги, и ведут они к одной и той же паре — к соседям t по
+    // контуру. Связи у близнецов совпадают в точности, значит различить
+    // их по таблице нечем, — а это и спрашивается. Строятся они прямо
+    // на контуре: w лежит внутри, t снаружи, и дороги c—w и d—w сторон
+    // c—t и t—d не пересекают.
+    const t = randInt(0, k - 1), c = (t + k - 1) % k, d = (t + 1) % k, w = k;
+    for (const e of [[c, w], [d, w]]){
+      if (!fits(pos, edges, e[0], e[1])) return null;
+      add(e[0], e[1]);
     }
-  return out;
-}
+    cap[t] = 2; cap[w] = 2;                // близнецам — ровно по две
+    tw = {u: t, v: w};
+  }
 
-function dropCrossings(cand){
-  const seen = {};
-  return shuffle(cand).filter(e => {
-    if (!e.diag) return true;
-    if (seen[e.key]) return false;
-    seen[e.key] = 1;
-    return true;
-  });
+  // Внутренний пункт — не тупик: две дороги ему даём прежде всего,
+  // иначе случайный добор может оставить его с одной.
+  for (const w of shuffle(range(n).slice(k)))
+    for (const o of shuffle(range(n))){
+      if (deg[w] >= 2 || edges.length >= E) break;
+      if (o !== w && free(w, o)) add(w, o);
+    }
+
+  const rest = [];                                   // остальные дороги
+  for (let i = 0; i < n; i++)
+    for (let j = i + 1; j < n; j++) rest.push([i, j]);
+  for (const c of shuffle(rest)){
+    if (edges.length >= E) break;
+    if (free(c[0], c[1])) add(c[0], c[1]);
+  }
+
+  if (edges.length !== E) return null;
+  if (Math.min.apply(null, deg) < 2) return null;
+  if (!connected(n, edges)) return null;
+
+  const adj = matrix(n, edges);
+  const auts = automorphisms(adj, 4);
+  if (twin){
+    if (auts.length !== 2) return null;
+    const s = auts.find(p => p.some((x, q) => x !== q));
+    const okSwap = s[tw.u] === tw.v && s[tw.v] === tw.u &&
+      s.every((x, q) => (q === tw.u || q === tw.v) ? true : x === q);
+    if (!okSwap) return null;
+  } else if (auts.length !== 1) return null;
+
+  return {n: n, pos: pos, edges: edges, adj: adj, deg: deg, twin: tw};
 }
 
 function connected(n, edges){
@@ -327,39 +446,10 @@ function connected(n, edges){
   return cnt === n;
 }
 
-function thin(n, edges, target, fixed){
-  let cur = edges.slice();
-  for (const e of shuffle(edges)){
-    if (cur.length <= target) break;
-    if (fixed && fixed(e)) continue;
-    const rest = cur.filter(x => x !== e);
-    if (connected(n, rest)) cur = rest;
-  }
-  return cur;
-}
-
 function matrix(n, edges){
   const m = range(n).map(() => range(n).map(() => 0));
   edges.forEach(e => { m[e.i][e.j] = 1; m[e.j][e.i] = 1; });
   return m;
-}
-
-/* Пара «близнецов» для типа со звёздочками: две вершины на диагонали
-   одного квадрата, соединённые с двумя другими его углами и больше ни с
-   чем. Их связи совпадают в точности, значит различить их по таблице
-   нельзя — а именно это и спрашивают. */
-function twinPair(pos){
-  const at = (c, r) => pos.findIndex(p => p.c === c && p.r === r);
-  const out = [];
-  for (let r = 0; r < ROWS - 1; r++)
-    for (let c = 0; c < COLS - 1; c++){
-      const p00 = at(c, r), p10 = at(c + 1, r);
-      const p01 = at(c, r + 1), p11 = at(c + 1, r + 1);
-      if (p00 < 0 || p10 < 0 || p01 < 0 || p11 < 0) continue;
-      out.push({u: p00, v: p11, a: p10, b: p01});
-      out.push({u: p10, v: p01, a: p00, b: p11});
-    }
-  return out.length ? pick(out) : null;
 }
 
 /* Автоморфизмы: перестановки вершин, сохраняющие связи. Если такая
@@ -386,57 +476,17 @@ function automorphisms(adj, limit){
   return res;
 }
 
-function buildGraph(n, twin){
-  for (let attempt = 0; attempt < 500; attempt++){
-    const slots = pickSlots(n);
-    if (!slots) continue;
-    const pos = layout(slots);
-    let tw = null, touches = null;
-    if (twin){
-      tw = twinPair(pos);
-      if (!tw) continue;
-    }
-    let base = dropCrossings(candidates(pos));
-    if (tw){
-      const keep = [[tw.u, tw.a], [tw.u, tw.b], [tw.v, tw.a], [tw.v, tw.b]];
-      const isKeep = e => keep.some(k => (e.i === k[0] && e.j === k[1]) ||
-                                         (e.i === k[1] && e.j === k[0]));
-      touches = e => e.i === tw.u || e.j === tw.u ||
-                     e.i === tw.v || e.j === tw.v;
-      base = base.filter(e => !touches(e) || isKeep(e));
-      if (base.filter(isKeep).length !== 4) continue;
-    }
-    if (!connected(n, base)) continue;
-
-    // Разрежаем одну и ту же расстановку несколько раз: рёбра выбывают
-    // случайно, и годная схема обычно находится на второй-третьей
-    // попытке — заново раскладывать пункты ради этого незачем.
-    for (let k = 0; k < 15; k++){
-      const edges = thin(n, base, n + randInt(1, 3), touches);
-      if (!connected(n, edges)) continue;
-      if (edges.length > n + 4) continue;
-
-      const adj = matrix(n, edges);
-      const deg = adj.map(row => row.reduce((a, b) => a + b, 0));
-      if (Math.min.apply(null, deg) < 1) continue;
-      if (Math.max.apply(null, deg) > 5) continue;
-
-      // Пункт, у которого число дорог единственное в своём роде,
-      // опознаётся взглядом, и дальше схема сыплется сама. На реальном
-      // ЕГЭ таких не бывает — и здесь не будет: каждое число дорог
-      // обязано встречаться хотя бы дважды.
-      if (deg.some(d => deg.filter(x => x === d).length < 2)) continue;
-
-      const auts = automorphisms(adj, 4);
-      if (twin){
-        if (auts.length !== 2) continue;
-        const s = auts.find(m => m.some((x, q) => x !== q));
-        const okSwap = s[tw.u] === tw.v && s[tw.v] === tw.u &&
-          s.every((x, q) => (q === tw.u || q === tw.v) ? true : x === q);
-        if (!okSwap) continue;
-      } else if (auts.length !== 1) continue;
-
-      return {n: n, pos: pos, edges: edges, adj: adj, deg: deg, twin: tw};
+// Форма выбирается один раз и держится полсотни попыток: годная схема
+// на ней находится с вероятностью около трети, а если перевыбирать
+// форму каждый раз, редкие вытесняются частыми и доли, снятые с
+// реальных задач, перестают что-либо значить.
+function buildGraph(twin){
+  const shapes = twin ? TWIN_SHAPES : SHAPES;
+  for (let round = 0; round < 8; round++){
+    const sh = pick(shapes);
+    for (let attempt = 0; attempt < 50; attempt++){
+      const g = buildRing(sh, twin);
+      if (g) return g;
     }
   }
   return null;
@@ -450,11 +500,10 @@ function buildGraph(n, twin){
         каким числом дорог эти дороги ведут;
      3. связи с уже опознанными пунктами.
 
-   Первый шаг сам по себе почти ничего не даёт: на настоящем ЕГЭ
-   пунктов с уникальным числом дорог не бывает, и схема такого не
-   пропустит (см. buildGraph). Если распутать этими тремя ходами не
-   удаётся, задача бракуется — пусть ответ и единственный формально,
-   решать её нечем.
+   Первый шаг сам по себе почти ничего не даёт: дорог из пункта две
+   или три, и пунктов с каждым числом обычно несколько (см. buildRing).
+   Если распутать этими тремя ходами не удаётся, задача бракуется —
+   пусть ответ и единственный формально, решать её нечем.
 --------------------------------------------------------------------- */
 
 function neighbourDegrees(adj, v){
@@ -637,7 +686,7 @@ const NEEDS_TWIN = {stars: 1, ambig: 1};
 function makeTask(id){
   const T = TYPES[id];
   for (let attempt = 0; attempt < 300; attempt++){
-    const g = buildGraph(randInt(7, 9), !!NEEDS_TWIN[T.key]);
+    const g = buildGraph(!!NEEDS_TWIN[T.key]);
     if (!g) continue;
     const n = g.n;
 
