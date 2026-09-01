@@ -79,6 +79,21 @@ label{display:block;font-size:14px;color:var(--muted);margin-bottom:3px}
 .fields div{flex:1 1 180px}
 .fields input{max-width:none}
 sup,sub{font-size:12px}
+h3{font-size:16.5px;margin:16px 0 6px;color:var(--accent)}
+details.help{margin-top:26px;border:1px solid var(--line);border-radius:12px;
+        padding:12px 18px;background:var(--card)}
+details.help summary{cursor:pointer;font-weight:600;font-size:17px;
+        color:var(--accent)}
+details.help p{margin:6px 0}
+details.help ol,details.help ul{margin:6px 0;padding-left:22px}
+details.help li{margin:4px 0}
+details.help table{border-collapse:collapse;margin:8px 0;font-size:15px}
+details.help th,details.help td{border:1px solid var(--line);
+        padding:4px 10px;text-align:center;background:#fff}
+details.help th{background:#fff;color:var(--muted);font-weight:600}
+details.help pre{font-family:Consolas,"Cascadia Mono",monospace;
+        background:#1e2430;color:#e7ecf5;padding:10px 12px;border-radius:9px;
+        font-size:14.5px;overflow-x:auto}
 </style>
 </head>
 <body>
@@ -123,6 +138,49 @@ sup,sub{font-size:12px}
 </div>
 
 <div id="area"></div>
+
+<details class="help">
+  <summary>Подсказка: количество информации и сжатие</summary>
+  <h3>Формула Хартли</h3>
+  <p><b>N = 2<sup>i</sup></b> — выбор из N равновероятных вариантов несёт
+     i битов.</p>
+  <table>
+    <tr><th>N</th><td>2</td><td>4</td><td>8</td><td>16</td><td>32</td>
+        <td>64</td><td>128</td><td>256</td></tr>
+    <tr><th>i</th><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td>
+        <td>6</td><td>7</td><td>8</td></tr>
+  </table>
+  <p>N не степень двойки — округлять <b>вверх</b>: на 5 вариантов нужно
+     3 бита.</p>
+
+  <h3>Закон аддитивности</h3>
+  <p>Два независимых выбора — биты складываются. 8 вариантов (3 бита) и
+     4 варианта (2 бита) вместе дают 5 битов, то есть 32 варианта.</p>
+
+  <h3>Объём сообщения</h3>
+  <p><b>I = K · i</b>: длина сообщения в символах, умноженная на вес
+     символа. Вес берётся из мощности алфавита по Хартли.
+     8 битов = 1 байт, 1 Кбайт = 1024 байта.</p>
+
+  <h3>Вероятность и информация</h3>
+  <p>Если вероятность события <b>p = 1/2<sup>k</sup></b>, сообщение о том,
+     что оно произошло, несёт <b>k</b> битов. p = 1/8 — три бита.</p>
+
+  <h3>RLE — сжатие серий</h3>
+  <p>Подряд идущие одинаковые символы заменяются парой «сколько, что»:
+     <code>AAAAABBB</code> превращается в <code>5A3B</code> — было восемь
+     символов, стало четыре. На чередующихся символах RLE не сжимает, а
+     удлиняет.</p>
+
+  <h3>С потерями и без</h3>
+  <table>
+    <tr><th>без потерь</th><td>RLE, Хаффман, LZW, ZIP, PNG, GIF</td></tr>
+    <tr><th>с потерями</th><td>JPEG, MP3, AAC, MPEG</td></tr>
+  </table>
+  <p>Без потерь — исходный файл восстанавливается точно, бит в бит. С
+     потерями — выбрасывается то, чего человек не заметит; вернуть
+     выброшенное уже нельзя.</p>
+</details>
 
 </div>
 

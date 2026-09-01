@@ -79,6 +79,21 @@ label{display:block;font-size:14px;color:var(--muted);margin-bottom:3px}
 .fields div{flex:1 1 180px}
 .fields input{max-width:none}
 sup,sub{font-size:12px}
+h3{font-size:16.5px;margin:16px 0 6px;color:var(--accent)}
+details.help{margin-top:26px;border:1px solid var(--line);border-radius:12px;
+        padding:12px 18px;background:var(--card)}
+details.help summary{cursor:pointer;font-weight:600;font-size:17px;
+        color:var(--accent)}
+details.help p{margin:6px 0}
+details.help ol,details.help ul{margin:6px 0;padding-left:22px}
+details.help li{margin:4px 0}
+details.help table{border-collapse:collapse;margin:8px 0;font-size:15px}
+details.help th,details.help td{border:1px solid var(--line);
+        padding:4px 10px;text-align:center;background:#fff}
+details.help th{background:#fff;color:var(--muted);font-weight:600}
+details.help pre{font-family:Consolas,"Cascadia Mono",monospace;
+        background:#1e2430;color:#e7ecf5;padding:10px 12px;border-radius:9px;
+        font-size:14.5px;overflow-x:auto}
 </style>
 </head>
 <body>
@@ -123,6 +138,43 @@ sup,sub{font-size:12px}
 </div>
 
 <div id="area"></div>
+
+<details class="help">
+  <summary>Подсказка: код Хаффмана и условие Фано</summary>
+  <h3>Равномерный код</h3>
+  <p>На n различных букв нужно по <b>log₂n битов, округлённым вверх</b>:
+     на 5 букв — 3 бита, потому что 2² = 4 мало, а 2³ = 8 хватает. Запас
+     неиспользованных слов — 8 − 5 = 3.</p>
+
+  <h3>Код Хаффмана: как строится</h3>
+  <ol>
+    <li>выписать частоты букв;</li>
+    <li>взять две наименьшие и слить в один узел — его вес равен их
+        сумме;</li>
+    <li>повторять, пока не останется один узел;</li>
+    <li><b>длина всего сообщения = сумма весов всех слияний.</b></li>
+  </ol>
+  <p>При совпадающих весах дерево можно построить по-разному, и коды
+     отдельных букв получатся разными, — а сумма нет. Поэтому спрашивают
+     именно её, а не «какой код у буквы Б».</p>
+
+  <h3>Условие Фано</h3>
+  <p>Ни одно кодовое слово не должно быть <b>началом</b> другого. Тогда
+     поток читается однозначно, слева направо, и разделители не нужны.</p>
+  <p><code>0, 10, 110</code> — годится. <code>0, 01</code> — нет:
+     <code>0</code> есть начало <code>01</code>.</p>
+
+  <h3>Декодирование</h3>
+  <p>Читать слева направо, накапливая биты, пока накопленное не совпадёт с
+     кодовым словом; совпало — записать букву и начать заново. Возвращаться
+     назад не приходится — за это и отвечает условие Фано.</p>
+
+  <h3>Выигрыш против равномерного кода</h3>
+  <p><b>K · (log₂n вверх) − (сумма слияний)</b>, где K — длина сообщения в
+     буквах. Если частоты букв близки, дерево
+     выходит ровным и выигрыша нет вовсе: Хаффман помогает там, где буквы
+     встречаются по-разному часто.</p>
+</details>
 
 </div>
 
