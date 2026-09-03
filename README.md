@@ -16,6 +16,8 @@
   - [Системы счисления](https://svetgenmo.github.io/informatika/8/sistemy-schisleniya/) — Шесть переводов: 2↔10, 8↔10, 16↔10
 - **9 класс** — https://svetgenmo.github.io/informatika/9/
   - [Информационный объём текста](https://svetgenmo.github.io/informatika/9/obem-teksta/) — Задание 1 ОГЭ по вариантам Статграда: вычеркнутое слово
+  - *Практикумы по программе*
+    - [Глобальная сеть Интернет: IP-адреса и большие данные](https://svetgenmo.github.io/informatika/9/globalnaya-set-internet/) — Обзорный практикум по программе ФГОС, урок без доступа в интернет
 - **10 класс** — https://svetgenmo.github.io/informatika/10/
   - *Базовый уровень*
     - [Принципы работы компьютера](https://svetgenmo.github.io/informatika/10/principy-raboty-kompyutera/) — Фон Нейман, память, шина — и выбор конфигурации ПК под задачу
