@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Принципы работы компьютера — презентация</title>
+<meta name="description" content="Разбор темы «Принципы работы компьютера», 10 класс: пять принципов фон Неймана и выбор конфигурации ПК под задачу.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E10%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ink)}
+body{font:20px/1.5 "Segoe UI",system-ui,sans-serif;overflow:hidden}
+
+.deck{position:relative;height:100vh;width:100vw}
+.slide{position:absolute;inset:0;display:none;flex-direction:column;
+       justify-content:center;padding:60px 80px;max-width:1100px;
+       margin:0 auto}
+.slide.active{display:flex}
+.slide h1{font-size:42px;margin:0 0 18px}
+.slide h2{font-size:30px;margin:0 0 20px;color:var(--accent)}
+.kicker{font-size:15px;letter-spacing:.1em;text-transform:uppercase;
+        color:var(--muted);font-weight:700;margin:0 0 8px}
+.slide p{font-size:22px;margin:10px 0;color:var(--ink)}
+.slide p.lead{font-size:26px;color:var(--muted)}
+.slide ul{font-size:22px;padding-left:30px}
+.slide li{margin:8px 0}
+
+.box{border:2px solid var(--line);border-radius:14px;padding:18px 24px;
+     background:var(--card);margin:14px 0}
+.box.ok{border-color:var(--ok-line);background:var(--ok-bg)}
+.box b{color:var(--ink)}
+
+/* ---- блок-схема компьютера ---- */
+.diagram{display:grid;grid-template-columns:repeat(3,1fr);
+         grid-template-rows:repeat(3,auto);gap:16px 24px;margin:20px 0;
+         align-items:center}
+.blk{border:2.5px solid var(--accent);border-radius:12px;padding:16px 14px;
+     background:#fff;text-align:center;font-size:19px;font-weight:600}
+.blk small{display:block;font-weight:400;color:var(--muted);
+           font-size:14px;margin-top:4px}
+.blk.core{background:var(--accent);color:#fff;border-color:var(--accent)}
+.blk.core small{color:#dce8f7}
+.arrow{text-align:center;font-size:26px;color:var(--muted)}
+.in{grid-column:1;grid-row:2}
+.cpu{grid-column:2;grid-row:2}
+.out{grid-column:3;grid-row:2}
+.mem{grid-column:2;grid-row:1}
+.bus{grid-column:1/4;grid-row:3;text-align:center;color:var(--muted);
+     font-size:16px;padding-top:6px;border-top:2px dashed var(--line)}
+
+/* ---- сравнение сборок (тизер перед тренажёром) ---- */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:18px 0}
+.compare .c{border:2px solid var(--line);border-radius:12px;
+            padding:14px 18px;font-size:18px}
+.compare .c.bad{border-color:var(--hi-line);background:var(--hi-bg)}
+.compare .c.good{border-color:var(--ok-line);background:var(--ok-bg)}
+.compare .c b{display:block;margin-bottom:6px}
+
+.nav{position:fixed;bottom:0;left:0;right:0;display:flex;
+     align-items:center;gap:14px;padding:10px 24px;font-size:14px;
+     color:var(--muted);background:linear-gradient(transparent,#fff 40%)}
+.dots{display:flex;gap:7px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--line)}
+.dot.cur{background:var(--accent)}
+.hint{margin-left:auto}
+.zone{position:fixed;top:0;bottom:40px;width:15%;z-index:2;cursor:pointer}
+.zone.l{left:0}.zone.r{right:0}
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+<section class="slide active">
+  <p class="kicker">10 класс &middot; урок 1</p>
+  <h1>Принципы работы компьютера</h1>
+  <p class="lead">Как устроен компьютер изнутри — и как выбрать
+     конфигурацию под конкретную задачу.</p>
+</section>
+
+<section class="slide">
+  <p class="kicker">Компьютер — универсальное устройство</p>
+  <h2>Одна и та же машина — для чего угодно</h2>
+  <p>Компьютер не «умеет» ничего конкретного сам по себе. Всё, что он
+     делает — считает, показывает видео, ищет в интернете, играет —
+     задаёт <b>программа</b>, которую в него загрузили.</p>
+  <p>Смени программу — получишь другую машину на том же железе. Это и
+     называют универсальностью: одно устройство решает любые задачи,
+     под которые есть программа.</p>
+</section>
+
+<section class="slide">
+  <p class="kicker">Как устроен компьютер</p>
+  <h2>Четыре блока и канал между ними</h2>
+  <div class="diagram">
+    <div></div>
+    <div class="blk mem">Память<small>хранит программу и данные</small></div>
+    <div></div>
+    <div class="blk in">Устройства ввода<small>клавиатура, мышь…</small></div>
+    <div class="blk core">Процессор<small>выполняет команды</small></div>
+    <div class="blk out">Устройства вывода<small>монитор, колонки…</small></div>
+    <div class="bus">Шина — по ней процессор, память и устройства
+      обмениваются данными и командами</div>
+  </div>
+</section>
+
+<section class="slide">
+  <p class="kicker">Принцип 1</p>
+  <h2>Хранимая программа</h2>
+  <p>Команды программы — это тоже данные. Они хранятся в той же памяти,
+     что и числа, тексты, изображения, с которыми программа работает.</p>
+  <div class="box"><b>Поэтому программу можно загрузить, изменить,
+     удалить</b> — так же, как обычный файл с данными. Процессор не
+     различает «команду» и «данные», пока не начнёт конкретную ячейку
+     выполнять.</div>
+</section>
+
+<section class="slide">
+  <p class="kicker">Принцип 2</p>
+  <h2>Адресуемость памяти</h2>
+  <p>Память — это множество пронумерованных ячеек. У каждой есть свой
+     номер — <b>адрес</b>.</p>
+  <div class="box"><b>Процессор всегда обращается по адресу</b>, а не
+     ищет по содержимому. Значит, чтобы прочитать или записать данные,
+     достаточно знать их номер в памяти — перебирать всё подряд не
+     нужно.</div>
+</section>
+
+<section class="slide">
+  <p class="kicker">Принцип 3</p>
+  <h2>Последовательное выполнение команд</h2>
+  <p>Процессор идёт по программе <b>одна команда за другой</b>, строго
+     в том порядке, в котором они записаны.</p>
+  <div class="box"><b>Порядок меняется только командой перехода</b> —
+     тогда процессор перескакивает на другой адрес и продолжает
+     последовательно уже оттуда. Циклы и ветвления в программах — это и
+     есть управляемые переходы.</div>
+</section>
+
+<section class="slide">
+  <p class="kicker">Принцип 4</p>
+  <h2>Энергозависимость памяти</h2>
+  <div class="compare">
+    <div class="c bad"><b>Оперативная память (ОЗУ)</b>
+      Хранит то, с чем работает программа прямо сейчас. Выключили
+      питание — всё пропало.</div>
+    <div class="c good"><b>Долговременная память</b>
+      Жёсткий диск, SSD, флешка. Данные остаются и без питания — на
+      них и хранят файлы годами.</div>
+  </div>
+  <p>Поэтому несохранённый документ пропадает при отключении света, а
+     файл на диске — нет.</p>
+</section>
+
+<section class="slide">
+  <p class="kicker">Персональный компьютер</p>
+  <h2>Выбор конфигурации — под задачу, а не «чем мощнее, тем лучше»</h2>
+  <p>У каждой задачи свой минимум по четырём параметрам:</p>
+  <ul>
+    <li><b>процессор</b> — сколько вычислений в секунду</li>
+    <li><b>оперативная память</b> — сколько данных обрабатывать разом</li>
+    <li><b>накопитель</b> — сколько хранить и как быстро читать</li>
+    <li><b>видеокарта</b> — кто считает изображение</li>
+  </ul>
+  <p>Слабее минимума — не потянет. Сильнее — потянет, но часть денег
+     уйдёт туда, где эффекта не будет.</p>
+</section>
+
+<section class="slide">
+  <p class="kicker">Дальше — тренажёр</p>
+  <h2>Проверим, как это работает</h2>
+  <p class="lead">Девять заданий: четыре — про устройство компьютера,
+     пять — про выбор сборки под задачу. Открывайте
+     <b>practice.html</b> из общей папки.</p>
+</section>
+
+</div>
+
+<div class="nav">
+  <span id="pos">1 / 9</span>
+  <div class="dots" id="dots"></div>
+  <span class="hint">← → или клик по краям экрана &middot; F11 — во весь экран</span>
+</div>
+<div class="zone l" id="prevZone"></div>
+<div class="zone r" id="nextZone"></div>
+
+<script>
+"use strict";
+const slides = Array.from(document.querySelectorAll(".slide"));
+const dotsBox = document.getElementById("dots");
+slides.forEach((_, i) => {
+  const d = document.createElement("span");
+  d.className = "dot" + (i === 0 ? " cur" : "");
+  dotsBox.appendChild(d);
+});
+const dots = Array.from(dotsBox.children);
+let cur = 0;
+
+function go(i){
+  if (i < 0 || i >= slides.length) return;
+  slides[cur].classList.remove("active");
+  dots[cur].classList.remove("cur");
+  cur = i;
+  slides[cur].classList.add("active");
+  dots[cur].classList.add("cur");
+  document.getElementById("pos").textContent = `${cur + 1} / ${slides.length}`;
+}
+
+document.addEventListener("keydown", e => {
+  if (["ArrowRight", "PageDown", " "].includes(e.key)) go(cur + 1);
+  else if (["ArrowLeft", "PageUp"].includes(e.key)) go(cur - 1);
+  else if (e.key === "Home") go(0);
+  else if (e.key === "End") go(slides.length - 1);
+});
+document.getElementById("prevZone").addEventListener("click", () => go(cur - 1));
+document.getElementById("nextZone").addEventListener("click", () => go(cur + 1));
+</script>
+<p class="ai-mark" style="position:fixed;bottom:2px;right:14px;margin:0;color:#b7bccb;font:11px/1 'Segoe UI',system-ui,sans-serif">Материалы подготовлены с использованием технологий искусственного интеллекта.</p>
+</body>
+</html>
