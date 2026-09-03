@@ -10,6 +10,12 @@
 Ссылку на класс удобно класть в заметки и в журнал: темы в
 нём прибавляются, а адрес остаётся прежним.
 
+- **7 класс** — https://svetgenmo.github.io/informatika/7/
+  - [Устройство компьютера](https://svetgenmo.github.io/informatika/7/ustroystvo-kompyutera/) — Задание 1 ВПР: ввод, вывод, память, обработка, сеть
+- **8 класс** — https://svetgenmo.github.io/informatika/8/
+  - [Системы счисления](https://svetgenmo.github.io/informatika/8/sistemy-schisleniya/) — Шесть переводов: 2↔10, 8↔10, 16↔10
+- **9 класс** — https://svetgenmo.github.io/informatika/9/
+  - [Информационный объём текста](https://svetgenmo.github.io/informatika/9/obem-teksta/) — Задание 1 ОГЭ по вариантам Статграда: вычеркнутое слово
 - **10 класс** — https://svetgenmo.github.io/informatika/10/
   - *Базовый уровень*
     - [Принципы работы компьютера](https://svetgenmo.github.io/informatika/10/principy-raboty-kompyutera/) — Фон Нейман, память, шина — и выбор конфигурации ПК под задачу
@@ -26,12 +32,6 @@
   - *Базовый уровень*
     - [Сети, адреса и система доменных имён](https://svetgenmo.github.io/informatika/11/seti-i-dns/) — Первый урок 11 класса: как из компьютера получается интернет, что такое IP и NAT, зачем DNS и как отличить поддельный адрес от настоящего
     - [Веб-страница и веб-сервер](https://svetgenmo.github.io/informatika/11/veb-stranica/) — Второй урок 11 класса: как браузер разговаривает с сервером, чем статическая страница отличается от динамической, и своя веб-страница за сорок минут
-- **7 класс** — https://svetgenmo.github.io/informatika/7/
-  - [Устройство компьютера](https://svetgenmo.github.io/informatika/7/ustroystvo-kompyutera/) — Задание 1 ВПР: ввод, вывод, память, обработка, сеть
-- **8 класс** — https://svetgenmo.github.io/informatika/8/
-  - [Системы счисления](https://svetgenmo.github.io/informatika/8/sistemy-schisleniya/) — Шесть переводов: 2↔10, 8↔10, 16↔10
-- **9 класс** — https://svetgenmo.github.io/informatika/9/
-  - [Информационный объём текста](https://svetgenmo.github.io/informatika/9/obem-teksta/) — Задание 1 ОГЭ по вариантам Статграда: вычеркнутое слово
 
 ## Устройство адресов
 
