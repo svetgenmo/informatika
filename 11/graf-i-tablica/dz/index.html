@@ -913,8 +913,8 @@ function compose(T, g, pr, letterOf){
     const t = randInt(0, n - 1);
     const v = inv[t];
     ask = "Определите, какому пункту схемы соответствует пункт " + P(t) +
-          " в таблице. В ответе запишите букву — обозначение этого " +
-          "пункта на схеме.";
+          " в таблице. В ответе запишите одну заглавную русскую букву — " +
+          "обозначение этого пункта на схеме.";
     answer = L(v);
     need = [v];
     finish = "значит, " + P(t) + " — это " + L(v) + "; в ответе пишется " +
@@ -957,9 +957,15 @@ function verdict(t, given){
   const raw = String(given === null || given === undefined ? "" : given).trim();
   if (t.answerKind === "letter"){
     const up = raw.replace(/\s+/g, "").toUpperCase();
+    if (/^[A-Z]$/i.test(raw.trim()))
+      return {ok: false, hint: "Это латинская буква — набрана не той " +
+                               "раскладкой. Нужна <b>заглавная русская " +
+                               "буква</b>, как на схеме: <b>А</b>, " +
+                               "<b>Б</b>, <b>В</b>…"};
     if (!/^[А-Я]$/.test(up))
-      return {ok: false, hint: "Ответ — одна буква, обозначение пункта " +
-                               "на схеме: <b>А</b>, <b>Б</b>, <b>В</b>…"};
+      return {ok: false, hint: "Ответ — одна заглавная русская буква, " +
+                               "обозначение пункта на схеме: <b>А</b>, " +
+                               "<b>Б</b>, <b>В</b>…"};
     return {ok: up === t.answer, hint: null};
   }
   const s = raw.replace(/\s+/g, "");

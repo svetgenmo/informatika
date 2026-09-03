@@ -62,10 +62,6 @@ button:focus-visible{outline:3px solid #a9c6e8;outline-offset:2px}
 .text{flex:1 1 auto;padding-top:3px}
 .kind{display:block;font-size:12px;font-weight:600;color:var(--muted);
       text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px}
-.extra{display:inline-block;margin-left:8px;font-size:12px;font-weight:600;
-       color:var(--accent);border:1px solid #a9c6e8;border-radius:20px;
-       padding:1px 8px;vertical-align:2px;text-transform:none;
-       letter-spacing:0}
 .intro{margin:0}
 .ask{margin:12px 0 0;font-weight:600}
 
@@ -134,14 +130,15 @@ code{font:600 15px/1.4 Consolas,"Courier New",monospace;
 <div class="wrap">
 
 <h1>Схема дорог и таблица — тренажёр</h1>
-<p class="sub">Задание&nbsp;1 ЕГЭ. Четырнадцать задач — по две на каждый
+<p class="sub">Задание&nbsp;1 ЕГЭ. Семь задач — по одной на каждый
    поворот. Задача во всех одна и та же: <b>сначала опознать, какой
    столбец таблицы какому пункту схемы соответствует</b>, и только потом
    отвечать. Схемы устроены как на настоящем экзамене: пунктов
    шесть-восемь, из каждого выходит две-три дороги, тупиков нет, и
    опознать пункт по одному только числу дорог не выйдет ни в одной.
    Ответ набирается как на экзамене: число без единиц измерения (или
-   одна буква, если спрошена буква).</p>
+   заглавная русская буква, если спрошена буква). Ошибся — сразу видно
+   разбор, и по этому же повороту даётся новая задача.</p>
 
 <div class="panel">
   <div class="mark">
@@ -149,7 +146,6 @@ code{font:600 15px/1.4 Consolas,"Courier New",monospace;
   </div>
   <div class="stats" id="stats"></div>
   <div class="spacer"></div>
-  <button id="add" class="primary" disabled>Добавить задачи</button>
   <button id="again">Начать заново</button>
 </div>
 
@@ -206,7 +202,8 @@ code{font:600 15px/1.4 Consolas,"Courier New",monospace;
   <h3>Как записывают ответ</h3>
   <p>Целое число без единиц измерения: <code>34</code>, а не «34 км».
      Два номера — подряд и по возрастанию: <code>25</code>, а не
-     «5 и 2». Буква — одна, заглавная: <code>Г</code>.</p>
+     «5 и 2». Буква — одна, заглавная и русская: <code>Г</code>, а не
+     латинская «G» или «Г» с английской раскладки.</p>
   <p>Это не придирка. ЕГЭ по информатике сдают за компьютером: ответ
      набирается в экзаменационной программе, и сверяет его машина —
      знак в знак. Привыкать надо здесь.</p>
@@ -849,8 +846,8 @@ function compose(T, g, pr, letterOf){
     const t = randInt(0, n - 1);
     const v = inv[t];
     ask = "Определите, какому пункту схемы соответствует пункт " + P(t) +
-          " в таблице. В ответе запишите букву — обозначение этого " +
-          "пункта на схеме.";
+          " в таблице. В ответе запишите одну заглавную русскую букву — " +
+          "обозначение этого пункта на схеме.";
     answer = L(v);
     need = [v];
     finish = "значит, " + P(t) + " — это " + L(v) + "; в ответе пишется " +
@@ -893,9 +890,15 @@ function verdict(t, given){
   const raw = String(given === null || given === undefined ? "" : given).trim();
   if (t.answerKind === "letter"){
     const up = raw.replace(/\s+/g, "").toUpperCase();
+    if (/^[A-Z]$/i.test(raw.trim()))
+      return {ok: false, hint: "Это латинская буква — набрана не той " +
+                               "раскладкой. Нужна <b>заглавная русская " +
+                               "буква</b>, как на схеме: <b>А</b>, " +
+                               "<b>Б</b>, <b>В</b>…"};
     if (!/^[А-Я]$/.test(up))
-      return {ok: false, hint: "Ответ — одна буква, обозначение пункта " +
-                               "на схеме: <b>А</b>, <b>Б</b>, <b>В</b>…"};
+      return {ok: false, hint: "Ответ — одна заглавная русская буква, " +
+                               "обозначение пункта на схеме: <b>А</b>, " +
+                               "<b>Б</b>, <b>В</b>…"};
     return {ok: up === t.answer, hint: null};
   }
   const s = raw.replace(/\s+/g, "");
@@ -917,19 +920,12 @@ function verdict(t, given){
 /* ==== /БАЗА ==== */
 
 /* ------------------------------------------------------------- оценка
-   Семь поворотов задания. Задача по сути одна, поэтому закрыть все
-   семь реально — на «5» и нужны все семь.
-
-   На каждый поворот идут ДВЕ задачи: одна решается «повезло с
-   опознанием», и работа заканчивалась бы раньше, чем ученик успевал
-   поставить себе способ. Поворот считается освоенным, когда обе решены
-   верно.
-
-   Считаем ОСВОЕННЫЕ повороты, а не верные ответы — иначе добор ломает
-   счёт.
+   Семь поворотов задания, по одной задаче на каждый — задача по сути
+   одна и та же, разбираться в ней дважды незачем. Ошибся — карточка
+   показывает разбор и тут же предлагает новую задачу того же поворота,
+   а не откладывает добор в сторону.
 ------------------------------------------------------------------ */
 const SCALE = [[7, 5], [6, 4], [5, 3]];
-const PER_TYPE = 2;
 function markFor(mastered){
   for (const s of SCALE) if (mastered >= s[0]) return s[1];
   return 2;
@@ -937,102 +933,58 @@ function markFor(mastered){
 
 /* ---------------------------------------------------------- состояние */
 
-let tasks = [];
-let firstRoundRight = 0;
+let tasks = [];        // текущая задача каждого поворота, индекс = type
+let status = [];       // "open" | "ok" | "err", индекс = type
+let neverFailed = [];  // поворот ни разу не ошибся, индекс = type
 
 function newRun(){
-  // Два круга: сначала по одной задаче каждого типа, потом ещё по одной.
-  // Так одинаковые повороты не идут подряд.
-  tasks = [];
-  for (let round = 0; round < PER_TYPE; round++)
-    shuffle(TYPES).forEach(t => tasks.push(
-        Object.assign(makeTask(t.id),
-                      {status: "open", extra: false, draft: ""})));
-  firstRoundRight = 0;
+  tasks = TYPES.map(t => Object.assign(makeTask(t.id), {draft: ""}));
+  status = TYPES.map(() => "open");
+  neverFailed = TYPES.map(() => true);
   render();
   const first = document.querySelector("input[type=text]");
   if (first) first.focus();
 }
 
-function rightByType(){
-  const cnt = {};
-  tasks.forEach(t => { if (t.status === "ok")
-                         cnt[t.type] = (cnt[t.type] || 0) + 1; });
-  return cnt;
-}
-function masteredTypes(){
-  const cnt = rightByType();
-  const set = new Set();
-  Object.keys(cnt).forEach(k => { if (cnt[k] >= PER_TYPE) set.add(+k); });
-  return set;
-}
-function failedTypes(){
-  const ok = masteredTypes();
-  const set = new Set();
-  tasks.forEach(t => { if (t.status !== "open" && !ok.has(t.type))
-                         set.add(t.type); });
-  return set;
-}
-function lackCount(){
-  const cnt = rightByType();
-  let n = 0;
-  failedTypes().forEach(id => { n += PER_TYPE - (cnt[id] || 0); });
-  return n;
-}
-const allAnswered = () => tasks.every(t => t.status !== "open");
+const mastered = () => status.filter(s => s === "ok").length;
+const allDone = () => status.every(s => s === "ok");
 
 /* ------------------------------------------------------------ проверка */
 
 function check(i){
-  const t = tasks[i];
-  if (t.status !== "open") return;
+  if (status[i] !== "open") return;
   const given = document.getElementById("in" + i).value.trim();
   if (!given) return;
 
-  captureDrafts();
+  const t = tasks[i];
   const v = verdict(t, given);
   t.given = given;
   t.hint = v.hint;
-  t.status = v.ok ? "ok" : "err";
-  if (t.status === "ok" && !t.extra) firstRoundRight++;
+  status[i] = v.ok ? "ok" : "err";
+  if (!v.ok) neverFailed[i] = false;
 
   render();
-  focusNextOpen(i + 1);
+  if (v.ok) focusNextOpen(i + 1);
+}
+
+function retry(i){
+  tasks[i] = Object.assign(makeTask(TYPES[i].id), {draft: ""});
+  status[i] = "open";
+  render();
+  const el = document.getElementById("in" + i);
+  if (el){ el.focus(); el.scrollIntoView({block: "center", behavior: "smooth"}); }
 }
 
 function focusNextOpen(from){
-  let idx = tasks.findIndex((t, k) => k >= from && t.status === "open");
-  if (idx < 0) idx = tasks.findIndex(t => t.status === "open");
+  let idx = status.findIndex((s, k) => k >= from && s === "open");
+  if (idx < 0) idx = status.findIndex(s => s === "open");
   if (idx < 0) return null;
   const el = document.getElementById("in" + idx);
   if (el) el.focus();
   return el;
 }
 
-function addTasks(){
-  captureDrafts();
-  const need = [...failedTypes()];
-  if (!need.length) return;
-  const cnt = rightByType();
-  need.forEach(id => {
-    for (let i = PER_TYPE - (cnt[id] || 0); i > 0; i--)
-      tasks.push(Object.assign(makeTask(id),
-                               {status: "open", extra: true, draft: ""}));
-  });
-  render();
-  const el = focusNextOpen(0);
-  if (el) el.scrollIntoView({block: "center", behavior: "smooth"});
-}
-
 /* -------------------------------------------------------------- вывод */
-
-function captureDrafts(){
-  tasks.forEach((t, i) => {
-    if (t.status !== "open") return;
-    const el = document.getElementById("in" + i);
-    if (el) t.draft = el.value;
-  });
-}
 
 const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
                           .replace(/>/g, "&gt;");
@@ -1052,11 +1004,12 @@ function render(){
   box.innerHTML = "";
 
   tasks.forEach((t, i) => {
+    const s = status[i];
     const card = document.createElement("div");
-    card.className = "task" + (t.status === "open" ? "" : " " + t.status);
+    card.className = "task" + (s === "open" ? "" : " " + s);
 
     let tail;
-    if (t.status === "open"){
+    if (s === "open"){
       tail = `<div class="row">
                 <input type="text" id="in${i}" autocomplete="off"
                        spellcheck="false" placeholder="ответ" maxlength="12"
@@ -1064,22 +1017,26 @@ function render(){
                 <button data-check="${i}">Проверить</button>
               </div>`;
     } else {
-      const verdictHtml = t.status === "ok"
+      const verdictHtml = s === "ok"
         ? `<span class="verdict ok">Правильно</span>`
         : `<span class="verdict err">Ошибка<small>${t.hint
              ? t.hint
              : `Правильный ответ: <b>${esc(t.answer)}</b>`}</small></span>`;
+      const retryBtn = s === "err"
+        ? `<div style="margin:10px 0 0 40px">
+             <button data-retry="${i}">Попробовать ещё раз</button>
+           </div>`
+        : "";
       tail = `<div class="row">
                 <input type="text" value="${esc(t.given)}" disabled>
                 ${verdictHtml}
-              </div>` + steps(t, t.status === "err");
+              </div>` + steps(t, s === "err") + retryBtn;
     }
 
     card.innerHTML = `
       <div class="q">
         <div class="num">${i + 1}</div>
-        <div class="text"><span class="kind">${esc(t.name)}${
-          t.extra ? '<span class="extra">добор</span>' : ""}</span>
+        <div class="text"><span class="kind">${esc(t.name)}</span>
           <p class="intro">${esc(t.intro)} ${esc(t.caveat)}</p></div>
       </div>
       <div class="figure">${t.svg}${t.table}</div>
@@ -1091,6 +1048,9 @@ function render(){
   box.querySelectorAll("button[data-check]").forEach(b => {
     b.addEventListener("click", () => check(+b.dataset.check));
   });
+  box.querySelectorAll("button[data-retry]").forEach(b => {
+    b.addEventListener("click", () => retry(+b.dataset.retry));
+  });
   box.querySelectorAll("input[type=text]:not(:disabled)").forEach(inp => {
     inp.addEventListener("keydown", e => {
       if (e.key === "Enter"){ e.preventDefault(); check(+inp.id.slice(2)); }
@@ -1101,40 +1061,30 @@ function render(){
 }
 
 function updatePanel(){
-  const mastered = masteredTypes().size;
-  const mark = markFor(mastered);
-  const started = tasks.some(t => t.status !== "open");
+  const m = mastered();
+  const mark = markFor(m);
+  const started = status.some(s => s !== "open");
   const el = document.getElementById("mark");
   // до первого ответа — прочерк: двойка на чистом листе никого ещё не
   // характеризует, а работа только началась
   el.textContent = started ? mark : "—";
   el.className = started ? "m" + mark : "";
 
-  const extras = tasks.filter(t => t.extra).length;
-  const base = TYPES_TOTAL * PER_TYPE;
-  const nextUp = SCALE.filter(s => s[0] > mastered).pop();
+  const clean = status.filter((s, i) => s === "ok" && neverFailed[i]).length;
+  const nextUp = SCALE.filter(s => s[0] > m).pop();
   document.getElementById("stats").innerHTML =
-    `освоено поворотов: <b>${mastered}</b> из ${TYPES_TOTAL} ` +
-    `<span style="opacity:.7">(поворот закрывают две верные задачи)</span><br>` +
-    `верно с первой попытки: <b>${firstRoundRight}</b> из ${base}` +
-    (extras ? ` &middot; добрано задач: <b>${extras}</b>` : "") +
+    `освоено поворотов: <b>${m}</b> из ${TYPES_TOTAL}<br>` +
+    `без единой ошибки: <b>${clean}</b> из ${TYPES_TOTAL}` +
     (nextUp ? `<br>до оценки ${nextUp[1]} осталось закрыть: ` +
-              `<b>${nextUp[0] - mastered}</b>` : "");
-
-  const lack = lackCount();
-  const btn = document.getElementById("add");
-  btn.disabled = !(allAnswered() && lack > 0);
-  btn.textContent = lack && allAnswered()
-      ? `Добавить задачи (${lack})` : "Добавить задачи";
+              `<b>${nextUp[0] - m}</b>` : "");
 
   const done = document.getElementById("done");
-  done.innerHTML = (allAnswered() && lack === 0)
+  done.innerHTML = allDone()
     ? `<div class="done">Все ${TYPES_TOTAL} поворотов закрыты. Оценка ${mark}.</div>`
     : "";
 }
 
 document.getElementById("again").addEventListener("click", newRun);
-document.getElementById("add").addEventListener("click", addTasks);
 newRun();
 </script>
 <p class="ai-mark" style="margin:34px auto 0;max-width:860px;padding-top:12px;border-top:1px solid #d9dce6;color:#5c6070;font:13px/1.5 "Segoe UI",system-ui,sans-serif">Материалы подготовлены с использованием технологий искусственного интеллекта.</p>

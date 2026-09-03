@@ -10,6 +10,7 @@
   --bg:#fff; --card:#f6f7fb;
   --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
   --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
 }
 *{box-sizing:border-box}
 html,body{background:var(--bg);color:var(--ink)}
@@ -58,22 +59,29 @@ button:disabled{opacity:.4;cursor:default;border-color:var(--line);
 .text{flex:1 1 auto;padding-top:3px}
 .text b{font-family:Consolas,"Courier New",monospace;font-size:1.08em}
 sub{font-size:.75em}
-.extra{display:inline-block;margin-left:8px;font-size:12px;font-weight:600;
-       color:var(--accent);border:1px solid #a9c6e8;border-radius:20px;
-       padding:1px 8px;vertical-align:2px}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;
      margin:12px 0 0 40px}
+.tail{margin:12px 0 0 40px}
 input[type=text]{font:600 19px/1 Consolas,"Courier New",monospace;
      padding:10px 12px;width:220px;border:2px solid var(--line);
      border-radius:9px;background:#fff;color:var(--ink)}
 input[type=text]:focus{outline:none;border-color:var(--accent)}
 input[type=text]:disabled{background:#f1f2f6;color:var(--muted)}
-.verdict{font-weight:700}
-.verdict.ok{color:var(--ok)}
-.verdict.err{color:var(--err)}
-.verdict small{display:block;font-weight:400;color:var(--muted);
-               margin-top:2px}
-.verdict small b{color:var(--ink);font-family:Consolas,monospace}
+.verdict{border-radius:10px;padding:10px 14px;font-weight:600}
+.verdict.ok{background:var(--ok-bg);border:1px solid var(--ok-line);color:var(--ok)}
+.verdict.err{background:var(--err-bg);border:1px solid var(--err-line);color:var(--err)}
+.solution{margin-top:10px;border:1px solid var(--hi-line);
+          background:var(--hi-bg);border-radius:10px;padding:12px 16px;
+          color:var(--ink)}
+.solution .cap{display:block;font-size:13px;letter-spacing:.06em;
+     text-transform:uppercase;color:var(--hi);margin-bottom:8px;
+     font-weight:700}
+.calc{font:16px/1.6 Consolas,"Courier New",monospace;white-space:pre;
+      overflow-x:auto}
+table.div{border-collapse:collapse;font:16px/1.4 Consolas,monospace}
+table.div td{padding:2px 10px;border:0}
+table.div td.rem{color:var(--accent);font-weight:700}
+.retry{margin-top:10px}
 
 /* ---- подсказка ---- */
 details{margin-top:26px;border:1px solid var(--line);border-radius:12px;
@@ -97,7 +105,7 @@ th{background:#fff;font-family:inherit;color:var(--muted)}
 
 <h1>Системы счисления — тренажёр переводов</h1>
 <p class="sub">Шесть заданий: по одному на каждый перевод.
-   Числа при каждом запуске новые.</p>
+   Ошибся — увидишь разбор и получишь новую попытку по этому же переводу.</p>
 
 <div class="panel">
   <div class="mark">
@@ -105,7 +113,6 @@ th{background:#fff;font-family:inherit;color:var(--muted)}
   </div>
   <div class="stats" id="stats"></div>
   <div class="spacer"></div>
-  <button id="add" class="primary" disabled>Добавить задачи</button>
   <button id="again">Начать заново</button>
 </div>
 
@@ -163,12 +170,14 @@ A 4₁₆   = 10·16¹ + 4·16⁰      = 160 + 4         = <b>164</b></pre>
 
 /* ------------------------------------------------------------------
    Шесть типов заданий — ровно шесть переводов, по образцу задания 1
-   ВПР-8. Каждый тип умеет придумать себе число и знает точный ответ.
+   ВПР-8. Каждый тип умеет придумать себе число, знает точный ответ
+   и умеет объяснить разбором, как до него дойти.
 ------------------------------------------------------------------ */
 
 const DIGITS = "0123456789ABCDEF";
 const NAMES = {2:"двоичное", 8:"восьмеричное", 16:"шестнадцатеричное"};
 const NAMES_ACC = {2:"двоичную", 8:"восьмеричную", 16:"шестнадцатеричную"};
+const SUP = {0:"⁰",1:"¹",2:"²",3:"³",4:"⁴",5:"⁵",6:"⁶",7:"⁷"};
 
 function toBase(n, base){
   if (n === 0) return "0";
@@ -179,90 +188,103 @@ function toBase(n, base){
 function randInt(lo, hi){            // включительно
   return lo + Math.floor(Math.random() * (hi - lo + 1));
 }
+const pad = (s, w) => String(s).padStart(w, " ");
 
-// Из q-ичной в десятичную.
-function makeToDec(base, lo, hi){
-  return () => {
-    let n;
-    do {
-      n = randInt(lo, hi);
-      // для 16-ричной пусть в записи почти всегда будет буква:
-      // иначе задача вырождается в «прочитай двузначное число»
-    } while (base === 16 && n % 16 < 10 && Math.floor(n / 16) % 16 < 10
-             && Math.random() < 0.8);
-    const src = toBase(n, base);
-    return {
-      html: `Переведите ${NAMES[base]} число <b>${src}<sub>${base}</sub></b> ` +
-            `в десятичную систему счисления.`,
-      answer: String(n),
-      answerBase: 10
-    };
+// Из q-ичной в десятичную — с разбором по разрядам.
+function genToDec(base, lo, hi){
+  let n;
+  do {
+    n = randInt(lo, hi);
+    // для 16-ричной пусть в записи почти всегда будет буква:
+    // иначе задача вырождается в «прочитай двузначное число»
+  } while (base === 16 && n % 16 < 10 && Math.floor(n / 16) % 16 < 10
+           && Math.random() < 0.8);
+  const src = toBase(n, base);
+  const d = [...src], L = d.length;
+  const terms = d.map((ch, k) => {
+    const p = L - 1 - k, v = DIGITS.indexOf(ch);
+    return {p, v, val: v * Math.pow(base, p)};
+  });
+  return {
+    answerBase: 10, answer: String(n),
+    q: `Переведите ${NAMES[base]} число <b>${src}<sub>${base}</sub></b> ` +
+       `в десятичную систему счисления.`,
+    solution:
+      `<div class="calc">число:   ${d.join(" ")}\n` +
+      `позиции: ${d.map((ch,k)=>pad(L-1-k, ch.length)).join(" ")}\n\n` +
+      `${terms.map(t=>`${t.v}·${base}${SUP[t.p]}`).join(" + ")}\n` +
+      `= ${terms.map(t=>t.val).join(" + ")}\n= ${n}</div>`
   };
 }
 
-// Из десятичной в q-ичную.
-function makeFromDec(base, lo, hi){
-  return () => {
-    const n = randInt(lo, hi);
-    return {
-      html: `Переведите десятичное число <b>${n}</b> в ` +
-            `${NAMES_ACC[base]} систему счисления. ` +
-            `Основание системы писать не нужно.`,
-      answer: toBase(n, base),
-      answerBase: base
-    };
+// Из десятичной в q-ичную — со столбиком деления.
+function genFromDec(base, lo, hi){
+  const n = randInt(lo, hi);
+  const rows = [];
+  let x = n;
+  while (x > 0){
+    const r = x % base;
+    rows.push({from:x, q:Math.floor(x/base), r, ch:DIGITS[r], letter:r>9});
+    x = Math.floor(x / base);
+  }
+  const w = String(n).length;
+  const table = rows.map(r =>
+    `<tr><td>${pad(r.from,w)}</td><td>:</td><td>${base}</td><td>=</td>` +
+    `<td>${pad(r.q,w)}</td><td>ост.</td><td class="rem">${pad(r.r,2)}</td>` +
+    `<td>${r.letter ? "&rarr; " + r.ch : ""}</td></tr>`).join("");
+  const digits = rows.map(r => r.ch).reverse().join("");
+  return {
+    answerBase: base, answer: digits,
+    q: `Переведите десятичное число <b>${n}</b> в ${NAMES_ACC[base]} ` +
+       `систему счисления. Основание системы писать не нужно.`,
+    solution: `<table class="div">${table}</table>` +
+      `<div class="calc">\nчитаем снизу вверх:  ` +
+      `${rows.map(r=>r.ch).reverse().join("  ")}\n${n} = ${digits}` +
+      `<sub>${base}</sub></div>`
   };
 }
 
 const TYPES = [
-  {id:0, name:"из 2 в 10",  gen: makeToDec(2,  37, 250)},
-  {id:1, name:"из 8 в 10",  gen: makeToDec(8,  40, 500)},
-  {id:2, name:"из 16 в 10", gen: makeToDec(16, 40, 255)},
-  {id:3, name:"из 10 в 2",  gen: makeFromDec(2,  37, 250)},
-  {id:4, name:"из 10 в 8",  gen: makeFromDec(8,  60, 500)},
-  {id:5, name:"из 10 в 16", gen: makeFromDec(16, 60, 500)}
+  {id:0, gen: () => genToDec(2,  37, 250)},
+  {id:1, gen: () => genToDec(8,  40, 500)},
+  {id:2, gen: () => genToDec(16, 40, 255)},
+  {id:3, gen: () => genFromDec(2,  37, 250)},
+  {id:4, gen: () => genFromDec(8,  60, 500)},
+  {id:5, gen: () => genFromDec(16, 60, 500)}
 ];
 
 /* ------------------------------------------------------------------
    Оценка: сколько переводов освоено, столько и считаем.
    Шесть освоенных -> «5», пять -> «4», четыре -> «3», меньше -> «2».
-   Добор поднимает оценку, потому что чинит именно непокорившийся тип.
 ------------------------------------------------------------------ */
 const SCALE = {6:5, 5:4, 4:3};
 function markFor(mastered){ return SCALE[mastered] || 2; }
 
-/* ---------------------------------------------------------- состояние */
+/* ---------------------------------------------------------- состояние
+   По одному заданию на перевод: шесть карточек, по одной на тип.
+   Ошибся — карточка показывает разбор и предлагает новую попытку по
+   тому же переводу, а не откладывает добор в сторону. */
 
-let tasks = [];          // {type, html, answer, answerBase, status, extra}
-let firstRoundRight = 0; // верных с первой попытки (из шести первых)
+let tasks = [];        // текущая задача каждого типа, индекс = type
+let status = [];       // "open" | "ok" | "err", индекс = type
+let neverFailed = [];  // тип ни разу не ошибся, индекс = type
 
 function newRun(){
-  tasks = TYPES.map(t => Object.assign({type: t.id, status: "open",
-                                        extra: false}, t.gen()));
-  firstRoundRight = 0;
+  tasks = TYPES.map(t => t.gen());
+  status = TYPES.map(() => "open");
+  neverFailed = TYPES.map(() => true);
   render();
   const first = document.querySelector("input[type=text]");
   if (first) first.focus();
 }
 
-function masteredTypes(){
-  const set = new Set();
-  tasks.forEach(t => { if (t.status === "ok") set.add(t.type); });
-  return set;
-}
-function failedTypes(){
-  const ok = masteredTypes();
-  const set = new Set();
-  tasks.forEach(t => { if (t.status === "err" && !ok.has(t.type))
-                         set.add(t.type); });
-  return set;
-}
-const allAnswered = () => tasks.every(t => t.status !== "open");
+const mastered = () => status.filter(s => s === "ok").length;
+const allDone = () => status.every(s => s === "ok");
 
 /* ------------------------------------------------------- нормализация */
 
 function normalize(raw){
-  let s = String(raw).trim().toUpperCase().replace(/[\s ]/g, "");
+  let s = String(raw).trim().toUpperCase().replace(/[\s ]/g, "");
   s = s.replace(/[₀₁₂₃₄₅₆₇₈₉]+$/, "");     // 1001₂
   s = s.replace(/\((?:2|8|10|16)\)$/, "");  // 1001(2)
   s = s.replace(/_.*$/, "");                // 1001_2
@@ -283,60 +305,46 @@ function badDigit(s, base){
 /* ------------------------------------------------------------ проверка */
 
 function check(i){
-  const t = tasks[i];
-  if (t.status !== "open") return;
+  if (status[i] !== "open") return;
   const input = document.getElementById("in" + i);
   const raw = input.value;
   if (!normalize(raw)) return;             // пустое — не считаем ответом
 
   const given = normalize(raw);
-  captureDrafts();
+  const t = tasks[i];
   t.given = raw.trim();
-  t.status = (given === t.answer) ? "ok" : "err";
-  if (t.status === "err") t.bad = badDigit(given, t.answerBase);
-  if (t.status === "ok" && !t.extra) firstRoundRight++;
+  const ok = given === t.answer;
+  status[i] = ok ? "ok" : "err";
+  if (ok){
+    render();
+    focusNextOpen(i + 1);
+  } else {
+    neverFailed[i] = false;
+    t.bad = badDigit(given, t.answerBase);
+    render();
+  }
+}
 
+function retry(i){
+  tasks[i] = TYPES[i].gen();
+  status[i] = "open";
   render();
-  focusNextOpen(i + 1);
+  const el = document.getElementById("in" + i);
+  if (el){ el.focus(); el.scrollIntoView({block: "center", behavior: "smooth"}); }
 }
 
 // Следующее открытое поле после только что закрытого; если сзади всё
 // решено — первое открытое сверху.
 function focusNextOpen(from){
-  let idx = tasks.findIndex((t, k) => k >= from && t.status === "open");
-  if (idx < 0) idx = tasks.findIndex(t => t.status === "open");
+  let idx = status.findIndex((s, k) => k >= from && s === "open");
+  if (idx < 0) idx = status.findIndex(s => s === "open");
   if (idx < 0) return null;
   const el = document.getElementById("in" + idx);
   if (el) el.focus();
   return el;
 }
 
-function addTasks(){
-  captureDrafts();
-  const need = [...failedTypes()];
-  if (!need.length) return;
-  need.forEach(id => {
-    const t = TYPES.find(x => x.id === id);
-    tasks.push(Object.assign({type: id, status: "open", extra: true},
-                             t.gen()));
-  });
-  render();
-  const el = focusNextOpen(0);
-  if (el) el.scrollIntoView({block: "center", behavior: "smooth"});
-}
-
 /* -------------------------------------------------------------- вывод */
-
-// Перерисовка собирает карточки заново, поэтому набранное в ещё не
-// проверенных полях надо сначала забрать в состояние — иначе ученик
-// теряет ответы, которые уже вписал, но пока не проверил.
-function captureDrafts(){
-  tasks.forEach((t, i) => {
-    if (t.status !== "open") return;
-    const el = document.getElementById("in" + i);
-    if (el) t.draft = el.value;
-  });
-}
 
 const esc = v => String(v == null ? "" : v).replace(/"/g, "&quot;");
 
@@ -345,40 +353,45 @@ function render(){
   box.innerHTML = "";
 
   tasks.forEach((t, i) => {
+    const s = status[i];
     const card = document.createElement("div");
-    card.className = "task" + (t.status === "open" ? "" : " " + t.status);
+    card.className = "task" + (s === "open" ? "" : " " + s);
 
-    let verdict = "";
-    if (t.status === "ok"){
-      verdict = `<span class="verdict ok">Правильно</span>`;
-    } else if (t.status === "err"){
+    let tail = "";
+    if (s === "ok"){
+      tail = `<div class="tail"><span class="verdict ok">Правильно</span></div>`;
+    } else if (s === "err"){
       const why = t.bad
-        ? `<small>В этой системе счисления нет цифры
-             <b>${t.bad}</b>. Правильный ответ: <b>${t.answer}</b></small>`
-        : `<small>Правильный ответ: <b>${t.answer}</b></small>`;
-      verdict = `<span class="verdict err">Ошибка${why}</span>`;
+        ? `В этой системе счисления нет цифры <b>${t.bad}</b>. `
+        : "";
+      tail = `<div class="tail">
+        <div class="verdict err">Ошибка. ${why}Правильный ответ: <b>${t.answer}</b></div>
+        <div class="solution"><span class="cap">разбор</span>${t.solution}</div>
+        <button class="retry" data-retry="${i}">Попробовать ещё раз</button>
+      </div>`;
     }
 
     card.innerHTML = `
       <div class="q">
         <div class="num">${i + 1}</div>
-        <div class="text">${t.html}${
-          t.extra ? '<span class="extra">добор</span>' : ""}</div>
+        <div class="text">${t.q}</div>
       </div>
       <div class="row">
         <input type="text" id="in${i}" autocomplete="off"
                spellcheck="false" placeholder="ответ"
-               value="${esc(t.status === "open" ? t.draft : t.given)}"
-               ${t.status === "open" ? "" : "disabled"}>
-        ${t.status === "open"
-            ? `<button data-check="${i}">Проверить</button>`
-            : verdict}
-      </div>`;
+               value="${s === "open" ? "" : esc(t.given)}"
+               ${s === "open" ? "" : "disabled"}>
+        ${s === "open" ? `<button data-check="${i}">Проверить</button>` : ""}
+      </div>
+      ${tail}`;
     box.appendChild(card);
   });
 
   box.querySelectorAll("button[data-check]").forEach(b => {
     b.addEventListener("click", () => check(+b.dataset.check));
+  });
+  box.querySelectorAll("button[data-retry]").forEach(b => {
+    b.addEventListener("click", () => retry(+b.dataset.retry));
   });
   box.querySelectorAll("input[type=text]").forEach(inp => {
     inp.addEventListener("keydown", e => {
@@ -391,35 +404,27 @@ function render(){
 }
 
 function updatePanel(){
-  const mastered = masteredTypes().size;
-  const mark = markFor(mastered);
-  const started = tasks.some(t => t.status !== "open");
+  const m = mastered();
+  const mark = markFor(m);
+  const started = status.some(s => s !== "open");
   const el = document.getElementById("mark");
   // до первого ответа показываем прочерк: двойка на чистом листе никого
   // ещё не характеризует, а урок только начался
   el.textContent = started ? mark : "—";
   el.className = started ? "m" + mark : "";
 
-  const extras = tasks.filter(t => t.extra).length;
+  const clean = status.filter((s, i) => s === "ok" && neverFailed[i]).length;
   document.getElementById("stats").innerHTML =
-    `освоено переводов: <b>${mastered}</b> из 6<br>` +
-    `верно с первой попытки: <b>${firstRoundRight}</b> из 6` +
-    (extras ? ` &middot; добрано задач: <b>${extras}</b>` : "");
-
-  const need = failedTypes().size;
-  const btn = document.getElementById("add");
-  btn.disabled = !(allAnswered() && need > 0);
-  btn.textContent = need && allAnswered()
-      ? `Добавить задачи (${need})` : "Добавить задачи";
+    `освоено переводов: <b>${m}</b> из 6<br>` +
+    `без единой ошибки: <b>${clean}</b> из 6`;
 
   const done = document.getElementById("done");
-  done.innerHTML = (allAnswered() && need === 0)
+  done.innerHTML = allDone()
     ? `<div class="done">Все шесть переводов освоены. Оценка ${mark}.</div>`
     : "";
 }
 
 document.getElementById("again").addEventListener("click", newRun);
-document.getElementById("add").addEventListener("click", addTasks);
 newRun();
 </script>
 <p class="ai-mark" style="margin:34px auto 0;max-width:860px;padding-top:12px;border-top:1px solid #d9dce6;color:#5c6070;font:13px/1.5 "Segoe UI",system-ui,sans-serif">Материалы подготовлены с использованием технологий искусственного интеллекта.</p>

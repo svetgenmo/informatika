@@ -99,6 +99,11 @@ input[type=text]:disabled{background:#f1f2f6;color:var(--muted)}
 details.steps{margin:10px 0 0 40px;border:none;background:none;padding:0}
 details.steps summary{font-size:14px;color:var(--accent);font-weight:600}
 
+/* Условие задачи — картинкой: не выделяется и не копируется в
+   поисковик или в нейросеть, набирать приходится руками. */
+.frozen{margin:10px 0 0 40px;user-select:none}
+.frozen canvas{display:block;max-width:100%;height:auto}
+
 .done{margin:18px 0 0;padding:12px 16px;border-radius:10px;
       background:var(--ok-bg);border:1px solid var(--ok-line);
       color:var(--ok);font-weight:600}
@@ -116,7 +121,7 @@ code{font:600 15px/1.4 Consolas,"Courier New",monospace;
      padding:1px 5px}
 
 @media (max-width:700px){
-  .quote,.row,.why,details.steps{margin-left:0}
+  .quote,.row,.why,details.steps,.frozen{margin-left:0}
 }
 </style>
 </head>
@@ -128,7 +133,9 @@ code{font:600 15px/1.4 Consolas,"Courier New",monospace;
    &nbsp;1 всегда одно и то же, в нём меняются <b>только две вещи</b>:
    сколько битов на символ (8, 16 или 32) и что ушло вместе со словом
    (запятая с пробелом или один пробел). Ответ набирается <b>как на
-   экзамене</b>: одно слово, без кавычек и знаков препинания.</p>
+   экзамене</b>: одно слово, без кавычек и знаков препинания. Условие —
+   картинка, скопировать его не получится: читаем и решаем как на
+   бумаге.</p>
 
 <div class="panel">
   <div class="mark">
@@ -648,6 +655,76 @@ function captureDrafts(){
 const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
                           .replace(/>/g, "&gt;");
 
+/* ----------------------------------------------------- условие картинкой
+   Текст задания (условие + цитата) рисуется на canvas, а не выводится
+   тегами: с картинки нельзя выделить и скопировать фразу в поисковик
+   или нейросеть — только прочитать и набрать самому. */
+const COND_FONT = '17px "Segoe UI", system-ui, sans-serif';
+const COND_LINE = 26;
+const COND_W = 680;
+
+function wrapLines(ctx, text, maxWidth){
+  const words = text.split(" ");
+  const lines = [];
+  let cur = "";
+  words.forEach(w => {
+    const test = cur ? cur + " " + w : w;
+    if (cur && ctx.measureText(test).width > maxWidth){
+      lines.push(cur);
+      cur = w;
+    } else cur = test;
+  });
+  if (cur) lines.push(cur);
+  return lines;
+}
+
+function renderCondition(t){
+  const measure = document.createElement("canvas").getContext("2d");
+  measure.font = COND_FONT;
+
+  const introLines = wrapLines(measure, t.intro, COND_W);
+  const quoteLines = (t.quote || [])
+    .flatMap(line => wrapLines(measure, line, COND_W - 32));
+  const tailLines = wrapLines(measure, t.tail, COND_W);
+
+  const quoteBoxH = quoteLines.length ? quoteLines.length * (COND_LINE - 2) + 16 : 0;
+  const H = introLines.length * COND_LINE
+    + (quoteLines.length ? 8 + quoteBoxH + 10 : 0)
+    + tailLines.length * COND_LINE;
+
+  const dpr = Math.max(1, window.devicePixelRatio || 1);
+  const canvas = document.createElement("canvas");
+  canvas.width = COND_W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width = COND_W + "px";
+  canvas.setAttribute("role", "img");
+  canvas.setAttribute("aria-label", [t.intro, ...(t.quote || []), t.tail].join(" "));
+
+  const ctx = canvas.getContext("2d");
+  ctx.scale(dpr, dpr);
+  ctx.font = COND_FONT;
+  ctx.textBaseline = "top";
+  ctx.fillStyle = "#1b1b1f";
+
+  let y = 0;
+  introLines.forEach(l => { ctx.fillText(l, 0, y); y += COND_LINE; });
+
+  if (quoteLines.length){
+    y += 8;
+    ctx.fillStyle = "#f6f7fb";
+    ctx.fillRect(0, y, COND_W, quoteBoxH);
+    ctx.fillStyle = "#a9c6e8";
+    ctx.fillRect(0, y, 4, quoteBoxH);
+    ctx.fillStyle = "#1b1b1f";
+    let qy = y + 8;
+    quoteLines.forEach(l => { ctx.fillText(l, 16, qy); qy += COND_LINE - 2; });
+    y += quoteBoxH + 10;
+  }
+
+  tailLines.forEach(l => { ctx.fillText(l, 0, y); y += COND_LINE; });
+  return canvas;
+}
+
 // Разбор — это ход решения, а не объявление ответа. «Правильный ответ
 // 151» не учит ничему: важно, откуда взялось 151.
 function steps(t, open){
@@ -665,11 +742,6 @@ function render(){
   tasks.forEach((t, i) => {
     const card = document.createElement("div");
     card.className = "task" + (t.status === "open" ? "" : " " + t.status);
-
-    const quote = t.quote
-      ? `<div class="quote">${t.quote.map(l => `<div>${esc(l)}</div>`)
-                                    .join("")}</div>`
-      : "";
 
     let tail;
     if (t.status === "open"){
@@ -695,14 +767,12 @@ function render(){
       <div class="q">
         <div class="num">${i + 1}</div>
         <div class="text"><span class="kind">${esc(t.name)}${
-          t.extra ? '<span class="extra">добор</span>' : ""}</span>
-          ${esc(t.intro)}</div>
+          t.extra ? '<span class="extra">добор</span>' : ""}</span></div>
       </div>
-      ${quote}
-      <div class="why" style="border:none;color:var(--ink);margin-top:10px">
-        ${esc(t.tail)}</div>
+      <div class="frozen" id="frozen${i}"></div>
       ${tail}`;
     box.appendChild(card);
+    document.getElementById("frozen" + i).appendChild(renderCondition(t));
   });
 
   box.querySelectorAll("button[data-check]").forEach(b => {
