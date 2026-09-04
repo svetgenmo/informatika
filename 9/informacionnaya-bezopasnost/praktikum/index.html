@@ -1,0 +1,695 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Информационная безопасность — обзорный практикум</title>
+<meta name="description" content="Обзорный практикум 9 класса по программе: надёжность пароля, угрозы и защита от них, защита личной информации, признаки фишинга, кибербуллинг, безопасное поведение в интернете.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E9%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{margin:0;padding:20px 16px 60px;font:17px/1.55 "Segoe UI",system-ui,sans-serif}
+.wrap{max-width:820px;margin:0 auto}
+h1{font-size:23px;margin:0 0 4px}
+h2{font-size:18px;margin:0 0 10px}
+.sub{color:var(--muted);font-size:15px;margin:0 0 18px}
+code{font-family:Consolas,"Cascadia Mono",monospace;background:var(--card);
+     border:1px solid var(--line);border-radius:5px;padding:1px 6px;
+     font-size:15px;letter-spacing:.04em}
+.intro{border:1px solid var(--line);border-radius:12px;background:var(--card);
+       padding:14px 18px;margin-bottom:18px}
+.intro dl{margin:0}
+.intro dt{font-weight:700;margin-top:10px}
+.intro dt:first-child{margin-top:0}
+.intro dd{margin:2px 0 0}
+.progress{border:2px solid var(--accent);border-radius:12px;padding:12px 16px;
+          background:#fff;margin-bottom:18px}
+.ptop{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.ptop h2{margin:0}
+.sp{flex:1 1 auto}
+.score{display:flex;align-items:baseline;gap:10px;color:var(--muted);font-size:15px}
+.score b{font:700 34px/1 "Segoe UI",system-ui,sans-serif;color:var(--ink);
+         min-width:40px;text-align:center;border:2px solid var(--line);
+         border-radius:8px;padding:2px 8px}
+.m5 b{color:var(--ok);border-color:var(--ok-line)}
+.m4 b{color:var(--accent);border-color:#a9c6e8}
+.m3 b{color:#8a5a00;border-color:var(--hi-line)}
+.types{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);border-radius:20px;padding:4px 12px;
+      font-size:14px;color:var(--muted);background:var(--card)}
+.chip.done{border-color:var(--ok-line);background:var(--ok-bg);color:var(--ok);
+           font-weight:600}
+.chip.cur{border-color:var(--accent);color:var(--accent);font-weight:600}
+.card{border:1px solid var(--line);border-radius:12px;padding:16px 18px;
+      background:#fff;margin-bottom:14px}
+.card.ok{border-color:var(--ok-line);background:var(--ok-bg)}
+.card.err{border-color:var(--err-line);background:var(--err-bg)}
+.tag{font-size:13px;color:var(--muted);margin:0 0 6px}
+.q{font-size:17px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+input[type=text]{font:16px/1 Consolas,monospace;padding:10px 12px;border-radius:8px;
+                 border:1px solid var(--line);width:100%;max-width:340px}
+button{font:600 15px/1 inherit;padding:11px 16px;border-radius:9px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);color:var(--muted)}
+.verdict{margin-top:10px;font-size:15.5px;font-weight:600}
+.verdict.ok{color:var(--ok)}
+.verdict.err{color:var(--err)}
+.why{margin-top:8px;font-size:15.5px;color:var(--ink)}
+.note{border:1px solid var(--hi-line);background:var(--hi-bg);border-radius:10px;
+      padding:11px 15px;margin:12px 0;font-size:15.5px}
+.code{font:700 26px/1.2 Consolas,monospace;letter-spacing:.06em;
+      background:var(--card);border:2px dashed var(--accent);border-radius:12px;
+      padding:16px;text-align:center;margin:12px 0;user-select:all}
+.stats{color:var(--muted);font-size:14px}
+label{display:block;font-size:14px;color:var(--muted);margin-bottom:3px}
+.fields{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0}
+.fields div{flex:1 1 180px}
+.fields input{max-width:none}
+sup,sub{font-size:12px}
+h3{font-size:16.5px;margin:16px 0 6px;color:var(--accent)}
+details.help{margin-top:26px;border:1px solid var(--line);border-radius:12px;
+        padding:12px 18px;background:var(--card)}
+details.help summary{cursor:pointer;font-weight:600;font-size:17px;
+        color:var(--accent)}
+details.help p{margin:6px 0}
+details.help ol,details.help ul{margin:6px 0;padding-left:22px}
+details.help li{margin:4px 0}
+details.help table{border-collapse:collapse;margin:8px 0;font-size:15px}
+details.help th,details.help td{border:1px solid var(--line);
+        padding:4px 10px;text-align:center;background:#fff}
+details.help th{background:#fff;color:var(--muted);font-weight:600}
+details.help pre{font-family:Consolas,"Cascadia Mono",monospace;
+        background:#1e2430;color:#e7ecf5;padding:10px 12px;border-radius:9px;
+        font-size:14.5px;overflow-x:auto}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Информационная безопасность</h1>
+<p class="sub">9 класс. Обзорный практикум по программе: шесть вопросов темы
+«Информационная безопасность» — угрозы и защита от них, аутентификация,
+личные данные, фишинг, кибербуллинг, безопасное поведение.</p>
+
+<div class="intro">
+  <dl>
+    <dt>Что нужно сделать</dt>
+    <dd>Шесть вопросов темы. По каждому — задача; ответил верно — вопрос
+        закрыт. Ошибся — вопрос остаётся открытым, и его можно сдать ещё
+        раз с новым списком примеров: сколько закрыл, столько и наработал.
+        Времени нужно около десяти минут.</dd>
+    <dt>Отметка и добор</dt>
+    <dd>Закрыто 6 из 6 — «5», 5 — «4», 3 или 4 — «3». Дойдя до нужной
+        отметки, можно остановиться и забрать код сразу, а можно
+        <b>досдать оставшиеся вопросы</b> и получить код получше — решать
+        самому, до какой отметки добирать.</dd>
+    <dt>Ответ</dt>
+    <dd>Везде — целое число без единиц измерения и без пробелов:
+        <code>2</code>, а не <code>2 примера</code>.</dd>
+    <dt>Как сдать</dt>
+    <dd>В конце появится код работы и кнопка <b>«Сдать работу»</b>: впишешь
+        фамилию и класс, кнопка сама откроет форму с уже вписанным кодом.
+        Переписывать код руками не надо — на этом чаще всего и ошибаются.</dd>
+    <dt>Не успел на уроке</dt>
+    <dd>Открой эту же страницу дома и пройди целиком: вариант будет другой,
+        а сдаётся всё так же — одним кодом.</dd>
+  </dl>
+</div>
+
+<div class="progress">
+  <div class="ptop">
+    <h2>Вопросы темы</h2>
+    <span class="sp"></span>
+    <div class="score" id="scorebox">
+      <span>наработано на</span><b id="mark">—</b>
+    </div>
+  </div>
+  <div class="types" id="types"></div>
+  <p class="stats" id="stats"></p>
+</div>
+
+<div id="area"></div>
+
+<details class="help">
+  <summary>Подсказка: информационная безопасность</summary>
+  <h3>Надёжный пароль</h3>
+  <p>Не короче <b>8 символов</b>, есть и буквы, и цифры. Пароль не должен
+     быть личными данными: именем, датой рождения или их сочетанием —
+     такое легко подобрать, зная человека. Пароль должен быть свой для
+     каждого сайта.</p>
+
+  <h3>Угрозы и защита от них</h3>
+  <p>Защищают: двухфакторная аутентификация, регулярные обновления
+     программ, проверка ссылок и адреса сайта перед вводом данных,
+     недоверие к вложениям от незнакомых отправителей. Наоборот создают
+     угрозу: один пароль везде, диктовка кода из смс по телефону,
+     отключённый антивирус, переход по случайным ссылкам.</p>
+
+  <h3>Защита личной информации</h3>
+  <p>Нельзя выкладывать в открытый доступ то, что помогает найти человека
+     или получить доступ к его деньгам: домашний адрес, номер документа,
+     геолокацию в реальном времени, номер карты, расписание, когда дома
+     никого нет. Увлечения и вкусы к личной информации в этом смысле не
+     относятся.</p>
+
+  <h3>Фишинг</h3>
+  <p>Фишинг — попытка обманом получить пароль или данные карты. Признаки:
+     срочность и угроза блокировки, адрес сайта, отличающийся от
+     настоящего на одну букву, просьба прислать код из смс или номер
+     карты по ссылке. Письмо от знакомого адреса, с которым уже была
+     переписка, — не повод для подозрений.</p>
+
+  <h3>Кибербуллинг</h3>
+  <p>Систематическая травля одного человека в интернете: оскорбления,
+     поддельные аккаунты от его имени, распространение личных фото без
+     согласия, групповые насмешки. Взаимная шутка, после которой смешно
+     обоим, — не кибербуллинг.</p>
+
+  <h3>Безопасное поведение в интернете</h3>
+  <p>Не публиковать геолокацию и личные данные, не открывать вложения от
+     незнакомцев, не встречаться лично с незнакомцами из интернета без
+     родителей, не делиться паролем и кодами из смс, рассказывать
+     взрослым о подозрительных сообщениях.</p>
+</details>
+
+</div>
+
+<script>
+/* ==== ЗАДАЧИ: вставлено gen.py, руками не править ==== */
+/* Обзорный тест-практикум к теме 9 класса (официальный план ФГОС,
+   раздел «Глобальная сеть Интернет и стратегии безопасного поведения
+   в ней», вторая тема): понятие об информационной безопасности, угрозы
+   и методы противодействия, безопасная аутентификация, защита личной
+   информации, безопасные стратегии поведения, кибербуллинг и фишинг.
+
+   Единственный источник задач. В practice.html вписывается скриптом
+   gen.py между маркерами — руками страницу не править.
+
+   Числовые ответы — целое число без единиц. Проверка знак в знак,
+   как на ОГЭ. */
+
+const T_TYPES = [
+  "надёжность пароля",
+  "угрозы и защита от них",
+  "защита личной информации",
+  "признаки фишинга",
+  "кибербуллинг",
+  "безопасное поведение в интернете"
+];
+
+function tRng(seed) {
+  let s = seed >>> 0;
+  return function () {
+    s ^= s << 13; s >>>= 0;
+    s ^= s >> 17;
+    s ^= s << 5;  s >>>= 0;
+    return s / 4294967296;
+  };
+}
+
+function tRand(rng, a, b) { return a + Math.floor(rng() * (b - a + 1)); }
+function tPick(rng, arr) { return arr[tRand(rng, 0, arr.length - 1)]; }
+
+/* ---------------------------------------------------------------- сюжеты */
+
+const T_THREATS = ["включена двухфакторная аутентификация на почте",
+                    "программы на компьютере регулярно обновляются",
+                    "не переходить по ссылке из письма с незнакомого адреса",
+                    "не открывать вложения от незнакомых отправителей",
+                    "проверять адрес сайта перед вводом пароля"];
+const T_NOTTHREATS = ["один и тот же пароль используется на всех сайтах",
+                       "код из смс-подтверждения диктуется по телефону тому, кто его попросил",
+                       "антивирус на компьютере отключён, чтобы не мешал",
+                       "ссылки из сообщений в незнакомых чатах открываются не глядя"];
+
+const T_PERSONAL = ["домашний адрес и номер квартиры",
+                     "номер паспорта или свидетельства о рождении",
+                     "геолокация в реальном времени",
+                     "расписание, когда дома никого нет",
+                     "номер банковской карты"];
+const T_NOTPERSONAL = ["название любимого фильма",
+                        "любимый цвет",
+                        "псевдоним в компьютерной игре",
+                        "любимый школьный предмет"];
+
+const T_PHISHING = ["письмо требует срочно ввести пароль по ссылке, иначе аккаунт заблокируют",
+                     "адрес сайта отличается от настоящего на одну букву",
+                     "сообщение просит прислать код из смс-подтверждения",
+                     "письмо просит перейти по ссылке и ввести номер карты для «проверки»"];
+const T_NOTPHISHING = ["письмо от учителя с домашним заданием пришло с адреса школы, который уже приходил раньше",
+                        "уведомление от сервиса пришло на почту, которую ты сам указывал при регистрации",
+                        "друг прислал ссылку на видео в мессенджере, где переписка идёт давно"];
+
+const T_BULLYING = ["одному и тому же человеку каждый день пишут оскорбления в чате",
+                     "создали поддельный аккаунт, чтобы издеваться от чужого имени",
+                     "личные фотографии человека распространяют без его согласия",
+                     "в общем чате травят одного участника, пересылая его сообщения с насмешками"];
+const T_NOTBULLYING = ["друзья по-доброму подшучивают друг над другом, обоим смешно",
+                        "в игровом чате поспорили и разошлись, не переходя на личности",
+                        "человек написал вежливый отзыв о том, что фильм ему не понравился"];
+
+const T_SAFE = ["не публиковать в открытом доступе геолокацию в реальном времени",
+                "не открывать вложения от незнакомых отправителей",
+                "рассказать взрослым о подозрительном сообщении",
+                "проверять адрес сайта перед вводом личных данных"];
+const T_UNSAFE = ["встретиться лично с незнакомцем из интернета без родителей",
+                   "поделиться паролем от аккаунта с лучшим другом",
+                   "выложить в открытый доступ домашний адрес",
+                   "сообщить код из смс-подтверждения тому, кто его запросил по телефону"];
+
+const T_LETTERS = "abcdefghijklmnopqrstuvwxyz";
+const T_NAMES = ["Anna", "Ivan", "Maria", "Oleg", "Vika", "Denis", "Nikita", "Kira"];
+
+/* ---------------------------------------------------------------- задачи */
+
+function tTask(type, rng) {
+  if (type === 0) return tPassword(rng);
+  if (type === 1) return tCountTask(rng, 1, T_THREATS, T_NOTTHREATS,
+      "действительно защищают от угроз в интернете",
+      "Защищают: двухфакторная аутентификация, обновления программ, " +
+      "проверка ссылок и адресов перед вводом данных, недоверие к незнакомым " +
+      "вложениям. Не защищает — а создаёт угрозу — обратное: общий пароль " +
+      "везде, диктовка кода из смс, отключённый антивирус, переход по " +
+      "случайным ссылкам.");
+  if (type === 2) return tCountTask(rng, 2, T_PERSONAL, T_NOTPERSONAL,
+      "нельзя выкладывать в открытый доступ, потому что это личная информация",
+      "Личная информация — то, что помогает найти человека, узнать его " +
+      "финансы или понять, когда его не будет дома: адрес, документы, " +
+      "геолокация, расписание, номер карты. Вкусы и увлечения к личной " +
+      "информации в этом смысле не относятся.");
+  if (type === 3) return tCountTask(rng, 3, T_PHISHING, T_NOTPHISHING,
+      "являются признаками фишинга",
+      "Фишинг узнают по срочности и просьбе ввести данные по ссылке: " +
+      "угрозы блокировки, чуть изменённый адрес сайта, просьба прислать " +
+      "код или номер карты. Знакомый отправитель, к которому уже была " +
+      "переписка, и адрес, который сам указывал при регистрации, — не " +
+      "признаки фишинга.");
+  if (type === 4) return tCountTask(rng, 4, T_BULLYING, T_NOTBULLYING,
+      "являются примерами кибербуллинга",
+      "Кибербуллинг — систематическая травля одного человека в интернете: " +
+      "оскорбления, поддельные аккаунты от его имени, распространение " +
+      "личных фото без согласия, групповые насмешки. Взаимная безобидная " +
+      "шутка или один вежливый отзыв — не кибербуллинг.");
+  return tCountTask(rng, 5, T_SAFE, T_UNSAFE,
+      "относятся к безопасному поведению в интернете",
+      "Безопасное поведение — не раскрывать то, что выдаёт местоположение " +
+      "и доступ к аккаунтам, и сообщать взрослым о подозрительном. " +
+      "Небезопасно — встречи с незнакомцами, чужой пароль, открытый адрес, " +
+      "код из смс постороннему.");
+}
+
+/* 0. Надёжность пароля: не короче 8 символов, есть и буквы, и цифры, и это
+      не «Имя+год» — личные данные паролем быть не должны. Правило одно и
+      то же и в генераторе, и в независимой проверке gen.py. */
+function pwGood(rng) {
+  // Имя не короче 4 букв — значит цифр нужно минимум 4, чтобы пароль
+  // не мог случайно выйти короче 8 символов (это как раз и проверяет
+  // pwIsGood, и pw_is_good в gen.py — расхождение здесь ловит --selftest).
+  const name = tPick(rng, T_NAMES);
+  const letters = name.toLowerCase();
+  let digits = "";
+  for (let i = 0; i < tRand(rng, 4, 6); i++) digits += tRand(rng, 0, 9);
+  return letters + digits;
+}
+function pwTooShort(rng) {
+  const s = pwGood(rng);
+  return s.slice(0, tRand(rng, 5, 7));
+}
+function pwNoDigit(rng) {
+  let s = "";
+  for (let i = 0; i < tRand(rng, 8, 11); i++) s += tPick(rng, T_LETTERS.split(""));
+  return s;
+}
+function pwNoLetter(rng) {
+  let s = "";
+  for (let i = 0; i < tRand(rng, 8, 11); i++) s += tRand(rng, 0, 9);
+  return s;
+}
+function pwPersonalInfo(rng) {
+  const name = tPick(rng, T_NAMES);
+  const cap = name[0].toUpperCase() + name.slice(1).toLowerCase();
+  const year = tRand(rng, 1970, 2015);
+  return cap + year;
+}
+/* Личные данные: заглавная буква, дальше строчные латинские буквы, а
+   следом сразу четырёхзначный год — и ничего больше. */
+function pwIsPersonal(s) {
+  return /^[A-Z][a-z]+(19[7-9]\d|20[01]\d)$/.test(s);
+}
+function pwIsGood(s) {
+  if (s.length < 8) return false;
+  if (!/[A-Za-z]/.test(s)) return false;
+  if (!/\d/.test(s)) return false;
+  if (pwIsPersonal(s)) return false;
+  return true;
+}
+function tPassword(rng) {
+  const makers = [pwTooShort, pwNoDigit, pwNoLetter, pwPersonalInfo];
+  const k = tRand(rng, 1, 3);
+  const items = [];
+  const seen = new Set();
+  while (items.length < k) {
+    const s = pwGood(rng);
+    if (seen.has(s)) continue;
+    seen.add(s); items.push(s);
+  }
+  while (items.length < 4) {
+    const s = tPick(rng, makers)(rng);
+    if (seen.has(s)) continue;
+    seen.add(s); items.push(s);
+  }
+  for (let j = items.length - 1; j > 0; j--) {
+    const t = tRand(rng, 0, j);
+    const tmp = items[j]; items[j] = items[t]; items[t] = tmp;
+  }
+  const good = items.filter(pwIsGood);
+  return {
+    type: 0, answer: String(k),
+    question: "Среди паролей: <code>" + items.join(", ") + "</code> — " +
+      "сколько соответствуют правилам безопасной аутентификации (не короче " +
+      "8 символов, есть и буквы, и цифры, не совпадает с личными данными " +
+      "вроде «имя и год рождения»)?",
+    explain: "Подходят под правила: " + (good.length ? good.join(", ") : "таких в списке нет") +
+      ". У остальных — либо меньше 8 символов, либо нет цифр, либо нет " +
+      "букв, либо это личные данные (имя и год). Подходящих паролей: " + k + "."
+  };
+}
+
+/* 1-5. Общий вид «сколько из перечисленного подходит под признак»: k штук
+   берём из пула «да», 4-k — из пула «нет», список перемешиваем. */
+function tPickN(rng, pool, n) {
+  const copy = pool.slice();
+  const chosen = [];
+  for (let i = 0; i < n; i++) chosen.push(copy.splice(tRand(rng, 0, copy.length - 1), 1)[0]);
+  return chosen;
+}
+function tCountTask(rng, type, yesPool, noPool, askPhrase, ruleExplain) {
+  const k = tRand(rng, 1, 3);
+  const yes = tPickN(rng, yesPool, k);
+  const no = tPickN(rng, noPool, 4 - k);
+  const items = yes.concat(no);
+  for (let j = items.length - 1; j > 0; j--) {
+    const t = tRand(rng, 0, j);
+    const tmp = items[j]; items[j] = items[t]; items[t] = tmp;
+  }
+  return {
+    type: type, answer: String(k),
+    question: "Перечислены примеры: <b>" + items.join("; ") + "</b>. " +
+      "Сколько из них " + askPhrase + "?",
+    explain: ruleExplain + " Из перечисленного подходят: " + yes.join("; ") +
+      " — всего " + k + "."
+  };
+}
+
+/* ------------------------------------------------------------- сборка */
+
+function tMake(seed) {
+  const rng = tRng(seed || 1);
+  const order = [0, 1, 2, 3, 4, 5];
+  for (let j = order.length - 1; j > 0; j--) {
+    const t = tRand(rng, 0, j);
+    const tmp = order[j]; order[j] = order[t]; order[t] = tmp;
+  }
+  return order.map(function (type) { return tTask(type, rng); });
+}
+
+/* Ответ сверяется знак в знак: целое число без пробелов и единиц. */
+function tCheck(task, raw) {
+  const s = String(raw === undefined || raw === null ? "" : raw).replace(/\s+/g, "");
+  if (!/^\d+$/.test(s)) return false;
+  return String(Number(s)) === task.answer;
+}
+/* ==== /ЗАДАЧИ ==== */
+
+/* Форма сдачи ДЗ — одна на все темы. Ссылку разносит set_form_link.py. */
+const FORM = "https://docs.google.com/forms/d/e/1FAIpQLSfQyhaxcnzn4ZaKSe_ZMsluw7qRQnrw_80H6SfrnYB5EThUIA/viewform?usp=pp_url&entry.853601231=ФАМИЛИЯ&entry.1091635917=КЛАСС&entry.487188307=КОД";
+
+const ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+const EPOCH = Date.UTC(2026, 0, 1);
+const PREFIX = "IB";
+const SCALE = [[6, 5], [5, 4], [3, 3]];
+
+const bin = (v, w) => v.toString(2).padStart(w, "0");
+
+/* Семибитными кусками строки: в нагрузке 33 бита, а побитовые операции в JS
+   32-битные — старший бит молча потерялся бы. */
+function checksum(bitstr){
+  let cs = 0x5B;
+  for (let i = 0; i < bitstr.length; i += 7)
+    cs ^= parseInt(bitstr.substr(i, 7).padEnd(7, "0"), 2);
+  return cs & 0x7F;
+}
+
+function makeCode(st){
+  const day = Math.max(0, Math.min(2047, Math.floor(
+      (Date.now() - EPOCH) / 86400000)));
+  const payload = bin(day, 11) + bin(Math.min(15, st.typesDone), 4) +
+                  bin(Math.min(15, st.cleanTypes), 4) +
+                  bin(Math.min(127, st.solved), 7) +
+                  bin(Math.min(127, st.wrong), 7);
+  const bitstr = payload + bin(checksum(payload), 7);
+  let out = "";
+  for (let i = 0; i < 40; i += 5)
+    out += ALPHABET[parseInt(bitstr.substr(i, 5), 2)];
+  return PREFIX + "-" + out.slice(0, 4) + "-" + out.slice(4);
+}
+
+/* ---------------------------------------------------------- состояние
+   Добор до желаемой отметки: вопрос закрывается одним верным ответом и
+   больше не спрашивается; ошибся — вопрос остаётся открытым и вернётся
+   в следующем раунде с новым списком примеров. Раунд — это проход по
+   всем пока не закрытым вопросам по одному разу. После раунда можно
+   забрать код (если закрыто хотя бы MIN_TO_FINISH) или досдать
+   оставшиеся. */
+const T_COUNT = T_TYPES.length;
+const MIN_TO_FINISH = 3;
+
+let st;
+
+function esc(s){ return String(s).replace(/[&<>]/g, c =>
+  ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+
+function markFor(n){
+  for (const [need, m] of SCALE) if (n >= need) return m;
+  return null;
+}
+
+function wordQ(n){
+  const a = n % 100, b = a % 10;
+  if (a > 4 && a < 21) return "вопросов";
+  if (b === 1) return "вопрос";
+  if (b > 1 && b < 5) return "вопроса";
+  return "вопросов";
+}
+
+function newRng(){ return tRng((Date.now() ^ (Math.random() * 1e9)) >>> 0); }
+
+function shuffle(arr, rng){
+  const a = arr.slice();
+  for (let j = a.length - 1; j > 0; j--) {
+    const k = tRand(rng, 0, j);
+    const tmp = a[j]; a[j] = a[k]; a[k] = tmp;
+  }
+  return a;
+}
+
+function freshState(){
+  const s = {
+    closed: Array(T_COUNT).fill(false),
+    clean:  Array(T_COUNT).fill(true),
+    solved: 0, wrong: 0,
+    queue: [], qi: 0, cur: null
+  };
+  Object.defineProperty(s, "typesDone",
+    {get(){ return s.closed.filter(Boolean).length; }});
+  Object.defineProperty(s, "cleanTypes",
+    {get(){ return s.closed.filter((d, i) => d && s.clean[i]).length; }});
+  return s;
+}
+
+function paint(){
+  const box = document.getElementById("types");
+  box.innerHTML = "";
+  for (let i = 0; i < T_COUNT; i++) {
+    const el = document.createElement("span");
+    const isCur = st.cur && st.cur.type === i;
+    el.className = "chip" + (st.closed[i] ? " done" : isCur ? " cur" : "");
+    el.textContent = T_TYPES[i];
+    box.appendChild(el);
+  }
+  const done = st.typesDone;
+  const m = markFor(done);
+  const sb = document.getElementById("scorebox");
+  sb.className = "score" + (m ? " m" + m : "");
+  document.getElementById("mark").textContent = m ? m : "—";
+  document.getElementById("stats").textContent =
+    "Закрыто: " + done + " из " + T_COUNT + ". Решено задач: " + st.solved +
+    ", ошибок: " + st.wrong + ".";
+}
+
+function startRound(){
+  const open = [];
+  for (let i = 0; i < T_COUNT; i++) if (!st.closed[i]) open.push(i);
+  st.queue = shuffle(open, newRng());
+  st.qi = 0;
+  askNext();
+}
+
+function askNext(){
+  if (st.qi >= st.queue.length) { roundEnd(); return; }
+  st.cur = tTask(st.queue[st.qi], newRng());
+  renderTask();
+}
+
+function renderTask(){
+  const t = st.cur;
+  document.getElementById("area").innerHTML =
+    '<div class="card" id="task">' +
+      '<p class="tag">' + T_TYPES[t.type] + ' &middot; решено задач: ' +
+        st.solved + '</p>' +
+      '<div class="q">' + t.question + '</div>' +
+      '<div class="row">' +
+        '<input type="text" id="ans" autocomplete="off" spellcheck="false" ' +
+               'inputmode="numeric" placeholder="целое число">' +
+        '<button class="primary" id="go">Ответить</button>' +
+      '</div>' +
+      '<div class="verdict" id="v"></div>' +
+    '</div>';
+  const input = document.getElementById("ans");
+  input.focus();
+  input.addEventListener("keydown", function(e){
+    if (e.key === "Enter") judge();
+  });
+  document.getElementById("go").addEventListener("click", judge);
+  paint();
+}
+
+function judge(){
+  const t = st.cur;
+  const raw = document.getElementById("ans").value;
+  const ok = tCheck(t, raw);
+  if (ok) { st.closed[t.type] = true; st.solved++; }
+  else { st.wrong++; st.clean[t.type] = false; }
+
+  const card = document.getElementById("task");
+  card.className = "card " + (ok ? "ok" : "err");
+  document.getElementById("ans").disabled = true;
+  document.getElementById("go").disabled = true;
+  document.getElementById("v").className = "verdict " + (ok ? "ok" : "err");
+  document.getElementById("v").innerHTML = ok
+    ? "Правильно — вопрос закрыт."
+    : "Ошибка. Твой ответ: <code>" + esc(raw) + "</code>, верный: <code>" +
+      t.answer + "</code>. Вопрос остался открытым — вернётся при доборе.";
+  card.insertAdjacentHTML("beforeend",
+    '<div class="why">' + t.explain + '</div>' +
+    '<div class="row"><button class="primary" id="nx">Дальше</button></div>');
+  document.getElementById("nx").addEventListener("click", function(){
+    st.qi++;
+    askNext();
+  });
+  paint();
+}
+
+function roundEnd(){
+  st.cur = null;
+  paint();
+  const done = st.typesDone, open = T_COUNT - done;
+  if (done >= T_COUNT) { finish(); return; }
+
+  const m = markFor(done);
+  const up = SCALE.filter(s => s[0] > done).pop();
+  let msg;
+  if (!m) {
+    msg = "Пока закрыто <b>" + done + "</b> из " + T_COUNT + " — этого мало " +
+      "даже на «3» (нужно " + MIN_TO_FINISH + "). Досдай оставшиеся вопросы: " +
+      "примеры будут новые.";
+  } else if (up) {
+    msg = "Наработано на <b>" + m + "</b> (закрыто " + done + " из " + T_COUNT +
+      "). Можно забрать код сейчас, а можно досдать ещё " + open + " " +
+      wordQ(open) + " и дойти до <b>" + up[1] + "</b>.";
+  } else {
+    msg = "Наработано на <b>" + m + "</b> (закрыто " + done + " из " + T_COUNT + ").";
+  }
+  const canFinish = done >= MIN_TO_FINISH;
+  document.getElementById("area").innerHTML =
+    '<div class="card">' +
+      '<h2>Раунд пройден</h2>' +
+      '<p>' + msg + '</p>' +
+      '<div class="row">' +
+        (open > 0 ? '<button class="primary" id="more">Досдать оставшиеся (' +
+          open + ')</button>' : '') +
+        (canFinish ? '<button id="stop"' + (open > 0 ? '' : ' class="primary"') +
+          '>Получить код' + (open > 0 ? ' сейчас' : '') + '</button>' : '') +
+      '</div>' +
+    '</div>';
+  const moreBtn = document.getElementById("more");
+  if (moreBtn) moreBtn.addEventListener("click", startRound);
+  const stopBtn = document.getElementById("stop");
+  if (stopBtn) stopBtn.addEventListener("click", finish);
+}
+
+function finish(){
+  const code = makeCode(st);
+  const m = markFor(st.typesDone);
+  const open = [];
+  for (let i = 0; i < T_COUNT; i++) if (!st.closed[i]) open.push(T_TYPES[i]);
+  document.getElementById("area").innerHTML =
+    '<div class="card">' +
+      '<h2>Работа завершена</h2>' +
+      '<p>Закрыто <b>' + st.typesDone + '</b> из ' + T_COUNT +
+        (m ? ', это отметка <b>' + m + '</b>' : '') + '.' +
+        (open.length ? ' Не закрыто: ' + open.join(", ") + '.' : '') +
+      '</p>' +
+      '<p>Код работы — его и надо сдать:</p>' +
+      '<div class="code">' + code + '</div>' +
+      '<div class="note">Код хранит дату, число закрытых вопросов, число ' +
+        'решённых и неверных задач. Переписывать его руками не нужно: впиши ' +
+        'фамилию и класс, и кнопка откроет форму с уже подставленным кодом.</div>' +
+      '<div class="fields">' +
+        '<div><label for="fam">Фамилия и имя</label>' +
+          '<input type="text" id="fam" autocomplete="off"></div>' +
+        '<div><label for="kls">Класс</label>' +
+          '<input type="text" id="kls" autocomplete="off" value="9"></div>' +
+      '</div>' +
+      '<div class="row">' +
+        '<button id="send" class="primary">Сдать работу</button>' +
+        '<button id="again">Начать заново</button>' +
+      '</div>' +
+      '<p class="stats">«Начать заново» откроет все ' + T_COUNT + ' вопросов с ' +
+        'нуля — для дополнительной тренировки. Сдавать нужно тот код, который ' +
+        'получен сейчас.</p>' +
+    '</div>';
+  document.getElementById("send").addEventListener("click", function(){
+    const fam = document.getElementById("fam").value.trim();
+    if (!fam) { document.getElementById("fam").focus(); return; }
+    const kls = document.getElementById("kls").value.trim() || "9";
+    window.open(FORM.replace("ФАМИЛИЯ", encodeURIComponent(fam))
+                    .replace("КЛАСС", encodeURIComponent(kls))
+                    .replace("КОД", encodeURIComponent(code)), "_blank");
+  });
+  document.getElementById("again").addEventListener("click", resetAll);
+  paint();
+}
+
+function resetAll(){
+  st = freshState();
+  startRound();
+}
+
+resetAll();
+</script>
+<p class="ai-mark" style="margin:34px auto 0;max-width:860px;padding-top:12px;border-top:1px solid #d9dce6;color:#5c6070;font:13px/1.5 "Segoe UI",system-ui,sans-serif">Материалы подготовлены с использованием технологий искусственного интеллекта.</p>
+</body>
+</html>

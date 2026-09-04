@@ -18,6 +18,7 @@
   - [Информационный объём текста](https://svetgenmo.github.io/informatika/9/obem-teksta/) — Задание 1 ОГЭ по вариантам Статграда: вычеркнутое слово
   - *Практикумы по программе*
     - [Глобальная сеть Интернет: IP-адреса и большие данные](https://svetgenmo.github.io/informatika/9/globalnaya-set-internet/) — Обзорный практикум по программе ФГОС, урок без доступа в интернет
+    - [Информационная безопасность](https://svetgenmo.github.io/informatika/9/informacionnaya-bezopasnost/) — Обзорный практикум по программе ФГОС: угрозы, аутентификация, личные данные, фишинг, кибербуллинг
 - **10 класс** — https://svetgenmo.github.io/informatika/10/
   - *Базовый уровень*
     - [Принципы работы компьютера](https://svetgenmo.github.io/informatika/10/principy-raboty-kompyutera/) — Фон Нейман, память, шина — и выбор конфигурации ПК под задачу
