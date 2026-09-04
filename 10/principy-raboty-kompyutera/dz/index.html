@@ -545,11 +545,15 @@ function addTasks(){
    без остатка (20 × 0,75 = 15), поэтому пороги 4/8/12/16/20 переходят в
    3/6/9/12/15 без потери точности. check_homework.py знает об этом
    пересчёте — см. его комментарий.
-   Ловушка: check_homework.py --selftest вырезает браузерный makeCode
-   от «const ALPHABET» и прогоняет в node отдельной функцией — всё, что
-   код внутри читает, обязано быть определено в этом же куске. Поэтому
-   здесь не ссылаемся на SESSION_LEN из базы гена (она снаружи куска),
-   а держим те же 20 отдельной строкой, буквально.
+   Ловушка: check_homework.py --selftest вырезает этот блок целиком
+   (с алфавита кодирования) и прогоняет в node отдельной функцией —
+   всё, что код внутри читает, обязано быть определено в этом же
+   куске. Поэтому здесь не ссылаемся на SESSION_LEN из базы гена (она
+   снаружи куска), а держим те же 20 отдельной строкой, буквально.
+   И да, не писать здесь буквально начало объявления алфавита кодов
+   текстом в комментарии — вырезка ищет его простым поиском по строке,
+   а не разбором JS, и утащит кусок не оттуда, откуда нужно (наступила
+   на это 05.09.2026: комментарий с примером сломал сам себя).
 ------------------------------------------------------------------ */
 const FORM = "https://docs.google.com/forms/d/e/1FAIpQLSfQyhaxcnzn4ZaKSe_ZMsluw7qRQnrw_80H6SfrnYB5EThUIA/viewform?usp=pp_url&entry.853601231=ФАМИЛИЯ&entry.1091635917=КЛАСС&entry.487188307=КОД";
 
@@ -558,8 +562,6 @@ const EPOCH = Date.UTC(2026, 0, 1);
 
 const CODE_MAX = 15;
 const CODE_SESSION_LEN = 20;   // = SESSION_LEN; продублировано нарочно, см. выше
-if (CODE_SESSION_LEN !== SESSION_LEN)
-  console.error("CODE_SESSION_LEN разошёлся с SESSION_LEN — поправь константу выше");
 const toCode = n => Math.max(0, Math.min(CODE_MAX,
   Math.round(n * CODE_MAX / CODE_SESSION_LEN)));
 
@@ -572,11 +574,16 @@ function checksum(bits){
   return cs & 0x7F;
 }
 
+// Поля названы и обработаны буквально как в общем движке (homework.py:
+// typesDone/cleanTypes — оба уже 0..15, никакого пересчёта здесь), это
+// проверяет check_homework.py --selftest, подсовывая готовые состояния
+// напрямую. Пересчёт «верно из 20» -> «из 15» (toCode) делается ДО
+// вызова makeCode, на месте вызова — см. showFinish().
 function makeCode(st){
   const day = Math.max(0, Math.min(2047, Math.floor(
       (Date.now() - EPOCH) / 86400000)));
-  const payload = bin(day, 11) + bin(toCode(st.correct), 4) +
-                  bin(toCode(st.firstRoundRight), 4) +
+  const payload = bin(day, 11) + bin(Math.min(15, st.typesDone), 4) +
+                  bin(Math.min(15, st.cleanTypes), 4) +
                   bin(Math.min(127, st.solved), 7) +
                   bin(Math.min(127, st.wrong), 7);
   const bits = payload + bin(checksum(payload), 7);
@@ -587,8 +594,8 @@ function makeCode(st){
 
 /* ---------------------------------------------------------- состояние
    Граница для check_homework.py --selftest: он вырезает браузерный
-   makeCode от «const ALPHABET» до этого комментария и прогоняет в node
-   (см. homework.py, JS_HARNESS). Дальше в файле — код, трогающий DOM,
+   makeCode от начала алфавита кодов до этого комментария и прогоняет
+   в node (см. homework.py, JS_HARNESS). Дальше в файле — код, трогающий DOM,
    в node он не выполнится и не должен попасть в вырезку. */
 
 /* -------------------------------------------------------------- вывод */
@@ -746,7 +753,9 @@ function showFinish(){
   const mark = markFor(correct);
   const solved = tasks.filter(t => t.status !== "open").length;
   const wrong = tasks.filter(t => t.status === "err").length;
-  const code = makeCode({correct, firstRoundRight, solved, wrong});
+  const code = makeCode({typesDone: toCode(correct),
+                         cleanTypes: toCode(firstRoundRight),
+                         solved, wrong});
 
   document.getElementById("finishPanel").innerHTML = `
     <div class="finish">
@@ -774,6 +783,8 @@ function showFinish(){
 
 document.getElementById("add").addEventListener("click", addTasks);
 document.getElementById("finish").addEventListener("click", showFinish);
+if (CODE_SESSION_LEN !== SESSION_LEN)
+  console.error("CODE_SESSION_LEN разошёлся с SESSION_LEN — поправь константу");
 newRun();
 </script>
 <p class="ai-mark" style="margin:34px auto 0;max-width:860px;padding-top:12px;border-top:1px solid #d9dce6;color:#5c6070;font:13px/1.5 "Segoe UI",system-ui,sans-serif">Материалы подготовлены с использованием технологий искусственного интеллекта.</p>
