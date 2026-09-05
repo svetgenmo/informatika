@@ -1,0 +1,1280 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Кодирование и декодирование — разбор темы</title>
+<meta name="description" content="Разбор задания 2 ОГЭ: кодовая таблица, условие Фано, разбор цепочки слева направо с откатом, шесть типов задач из вариантов Статграда и демо 2027.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E10%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#16181d; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);overflow:hidden;
+     font:24px/1.45 "Segoe UI",system-ui,sans-serif}
+.mono{font-family:Consolas,"Courier New",monospace}
+
+.deck{height:100vh;display:flex;flex-direction:column}
+.stage{flex:1 1 auto;overflow-y:auto;padding:34px 56px 12px}
+.slide{display:none;max-width:1100px;margin:0 auto}
+.slide.on{display:block}
+
+h1{font-size:50px;line-height:1.1;margin:0 0 18px;text-wrap:balance}
+h2{font-size:36px;line-height:1.15;margin:0 0 20px;text-wrap:balance}
+.eyebrow{font-size:16px;letter-spacing:.1em;text-transform:uppercase;
+         color:var(--accent);font-weight:700;margin:0 0 8px}
+.lead{font-size:26px;color:var(--muted);margin:0 0 24px}
+.lead b{color:var(--ink)}
+p.note{margin-top:22px;color:var(--muted);font-size:21px}
+
+.bar{flex:0 0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+     border-top:1px solid var(--line);background:var(--card);padding:12px 24px}
+.bar .spacer{flex:1 1 auto}
+.count{color:var(--muted);font-size:17px;font-variant-numeric:tabular-nums}
+.keys{color:var(--muted);font-size:15px}
+.keys kbd{font:600 13px/1 Consolas,monospace;border:1px solid var(--line);
+     border-bottom-width:2px;border-radius:5px;padding:2px 6px;
+     background:#fff;color:var(--ink)}
+button{font:600 18px/1 inherit;padding:12px 20px;border-radius:10px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);
+       cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.35;cursor:default;border-color:var(--line);
+                color:var(--muted);background:#fff}
+button:focus-visible{outline:3px solid #a9c6e8;outline-offset:2px}
+
+/* ---- блоки разбора ---- */
+.task{border:3px solid var(--accent);border-radius:16px;padding:18px 24px;
+      background:var(--card);font-size:25px;margin:0 0 20px}
+.task p{margin:8px 0}
+.task .ask{margin-top:12px;font-weight:600}
+.steps{display:flex;flex-direction:column;gap:14px}
+.step{border:1px solid var(--line);border-radius:12px;padding:16px 22px;
+      background:#fff;font-size:23px}
+.step.hint{background:var(--hi-bg);border-color:var(--hi-line);color:var(--hi)}
+.step.answer{background:var(--ok-bg);border-color:var(--ok-line);
+             color:var(--ok);font-size:29px;font-weight:700}
+.step .cap{display:block;font-size:15px;letter-spacing:.08em;
+           text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.step.hint .cap{color:var(--hi)}
+.step.answer .cap{color:var(--ok)}
+.step b{color:var(--ink)}
+
+/* ---- кодовая таблица и цепочки ---- */
+table.codetable{border-collapse:collapse;margin:14px auto;font-size:24px}
+table.codetable td{border:2px solid #8f97a8;padding:6px 18px;text-align:center;
+              min-width:52px;background:#fff}
+table.codetable td.c{font:700 24px/1.3 Consolas,"Courier New",monospace}
+table.codetable.pairs{font-size:19px}
+table.codetable.pairs td{padding:3px 12px;min-width:34px}
+table.codetable.pairs td.c{font-size:19px}
+.chain{font:700 32px/1.4 Consolas,"Courier New",monospace;text-align:center;
+       margin:14px 0;letter-spacing:2px}
+.chains{margin:14px 0;text-align:center}
+.chains div{font:700 27px/1.6 Consolas,"Courier New",monospace;
+            letter-spacing:2px}
+
+/* разрез цепочки на коды */
+.cut{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;
+     margin:16px 0 6px}
+.cut .piece{border:2px solid var(--accent);border-radius:10px;
+     padding:8px 14px;background:#fff;text-align:center}
+.cut .piece .c{font:700 24px/1.2 Consolas,monospace;color:var(--accent)}
+.cut .piece .l{font-size:20px;color:var(--ink);font-weight:700}
+.cut .piece.bad{border-color:var(--err);background:var(--err-bg)}
+.cut .piece.bad .c{color:var(--err)}
+
+/* ---- три шага: строго сверху вниз ---- */
+ol.vsteps{list-style:none;counter-reset:v;margin:0;padding:0;
+          display:flex;flex-direction:column;gap:12px}
+ol.vsteps li{counter-increment:v;display:flex;gap:18px;align-items:flex-start;
+             border:1px solid var(--line);border-left:5px solid var(--accent);
+             border-radius:12px;padding:14px 22px;background:#fff}
+ol.vsteps li::before{content:counter(v);flex:0 0 44px;height:44px;
+     border-radius:50%;background:var(--accent);color:#fff;
+     font:700 24px/44px Consolas,monospace;text-align:center}
+ol.vsteps li b{color:var(--accent)}
+ol.vsteps li .txt{font-size:23px;padding-top:6px}
+ol.vsteps li .txt small{display:block;font-size:19px;color:var(--muted);
+     margin-top:4px}
+
+ul.cards{list-style:none;padding:0;margin:0;display:grid;
+         grid-template-columns:repeat(2,1fr);gap:14px 24px}
+ul.cards li{border:1px solid var(--line);border-radius:12px;
+            padding:14px 20px;font-size:23px;background:#fff}
+ul.cards li b{color:var(--accent)}
+ul.cards li small{display:block;font-size:19px;color:var(--muted);
+                  margin-top:4px}
+ul.plain{margin:0;padding-left:26px;font-size:24px}
+ul.plain li{margin:8px 0}
+
+table.grid{border-collapse:collapse;font-size:22px;width:100%}
+table.grid td,table.grid th{border:1px solid var(--line);padding:10px 16px;
+     text-align:left;vertical-align:top}
+table.grid th{background:var(--card);color:var(--muted);font-size:17px;
+     letter-spacing:.05em;text-transform:uppercase;font-weight:600}
+table.grid td.k{font-weight:700;color:var(--accent);white-space:nowrap}
+
+.two{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.box{border:1px solid var(--line);border-radius:14px;padding:18px 22px;
+     background:#fff}
+.box.warm{background:var(--hi-bg);border-color:var(--hi-line)}
+.box.cool{background:var(--ok-bg);border-color:var(--ok-line)}
+.box h3{margin:0 0 8px;font-size:26px;color:var(--accent)}
+.box.warm h3{color:var(--hi)}
+.box.cool h3{color:var(--ok)}
+.box p{margin:6px 0;font-size:21px}
+.box ul{margin:6px 0 0;padding-left:22px;font-size:21px}
+
+@media (max-width:820px){
+  body{font-size:18px}
+  .stage{padding:20px 18px 8px}
+  h1{font-size:32px} h2{font-size:25px} .lead{font-size:20px}
+  .task{font-size:20px} .step{font-size:19px}
+  .chain{font-size:22px} .chains div{font-size:20px}
+  table.codetable{font-size:19px}
+  ul.cards,.two{grid-template-columns:1fr}
+  ol.vsteps li .txt{font-size:19px}
+}
+</style>
+</head>
+<body>
+<div class="deck">
+<div class="stage" id="stage">
+
+  <!-- 1 ------------------------------------------------------------- -->
+  <section class="slide on">
+    <p class="eyebrow">ОГЭ, задание 2</p>
+    <h1>Кодирование и декодирование информации</h1>
+    <p class="lead">Второе задание экзамена. Даны <b>кодовая таблица</b> и
+       <b>цепочка символов</b>. Надо понять, где кончается один код и
+       начинается следующий.</p>
+    <p class="note">Задание стоит 1 балл и решается за две-три минуты —
+       но только если знать, что делать на развилке. Именно развилка и
+       есть вся задача.</p>
+  </section>
+
+  <!-- 2 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">как устроен код</p>
+    <h2>Букву заменяют цепочкой символов</h2>
+    <p class="lead">Каждой букве назначен свой код. Слово кодируют,
+       склеивая коды подряд — <b>без пробелов и разделителей</b>.</p>
+    <table class="codetable">
+      <tr><td>А</td><td>Д</td><td>К</td><td>Н</td><td>О</td><td>С</td></tr>
+      <tr><td class="c">01</td><td class="c">100</td><td class="c">101</td>
+          <td class="c">10</td><td class="c">111</td><td class="c">000</td></tr>
+    </table>
+    <div class="cut">
+      <div class="piece"><div class="c">10</div><div class="l">Н</div></div>
+      <div class="piece"><div class="c">111</div><div class="l">О</div></div>
+      <div class="piece"><div class="c">000</div><div class="l">С</div></div>
+    </div>
+    <p class="lead" style="margin-top:10px">НОС &nbsp;→&nbsp;
+       <span class="mono"><b>10111000</b></span></p>
+    <p class="note">Закодировать легко: смотрим в таблицу и выписываем.
+       Вся работа — в обратную сторону.</p>
+  </section>
+
+  <!-- 3 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">в чём подвох</p>
+    <h2>Разделителей нет — где резать?</h2>
+    <p class="lead">В той же таблице <b>Н&nbsp;=&nbsp;10</b>, а
+       <b>К&nbsp;=&nbsp;101</b> и <b>Д&nbsp;=&nbsp;100</b>. Код одной
+       буквы оказался <b>началом</b> кода другой.</p>
+    <div class="two">
+      <div class="box warm">
+        <h3>Отсюда и берётся развилка</h3>
+        <p>Дошли до <span class="mono">101…</span> — и не знаете сразу:
+           это К целиком или Н, а единица уже от следующей буквы?</p>
+        <p>Проверить можно только одним способом: попробовать и
+           посмотреть, что будет дальше.</p>
+      </div>
+      <div class="box cool">
+        <h3>Когда развилок нет</h3>
+        <p>Если <b>ни один код не является началом другого</b>, разрез
+           единственный и очевидный. Это называют <b>условием Фано</b>.</p>
+        <p>Но экзаменационные задачи почти всегда его нарушают —
+           <b>намеренно</b>. Иначе задачи бы не было.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">метод</p>
+    <h2>Слева направо, с откатом</h2>
+    <ol class="vsteps">
+      <li><span class="txt">Встали в <b>начало</b> цепочки. Смотрим, какие
+          коды с неё начинаются.
+          <small>Обычно один-два. Если один — выбора нет, берём его.</small>
+      </span></li>
+      <li><span class="txt">Берём один вариант, <b>отрезаем</b>,
+          продолжаем с остатка.
+          <small>Отрезанный кусок сразу записываем буквой — иначе
+          запутаетесь.</small></span></li>
+      <li><span class="txt">Упёрлись в <b>тупик</b> — вернулись к
+          развилке.
+          <small>Тупик — это остаток, с которого не начинается ни один
+          код. Часто это просто «остался лишний символ в конце».</small>
+      </span></li>
+    </ol>
+    <p class="note">Главная ошибка: дойти почти до конца, увидеть, что
+       последние символы не складываются, и решить, что ошибся в
+       таблице. Нет — надо вернуться к последней развилке.</p>
+  </section>
+
+  <!-- 5 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">разбираем развилку</p>
+    <h2>Как выглядит тупик</h2>
+    <p class="lead">Та же таблица, цепочка
+       <span class="mono"><b>10111101</b></span>. С начала подходят
+       <b>Н&nbsp;=&nbsp;10</b> и <b>К&nbsp;=&nbsp;101</b>.</p>
+    <div class="two">
+      <div class="box cool">
+        <h3>Берём Н = 10</h3>
+        <div class="cut" style="justify-content:flex-start">
+          <div class="piece"><div class="c">10</div><div class="l">Н</div></div>
+          <div class="piece"><div class="c">111</div><div class="l">О</div></div>
+          <div class="piece"><div class="c">101</div><div class="l">К</div></div>
+        </div>
+        <p>Сошлось до последнего символа: <b>НОК</b>.</p>
+      </div>
+      <div class="box warm">
+        <h3>Берём К = 101</h3>
+        <div class="cut" style="justify-content:flex-start">
+          <div class="piece"><div class="c">101</div><div class="l">К</div></div>
+          <div class="piece"><div class="c">111</div><div class="l">О</div></div>
+          <div class="piece bad"><div class="c">01</div><div class="l">?</div></div>
+        </div>
+        <p>Осталось <span class="mono">01</span> — это А, тоже сходится:
+           <b>КОА</b>. Два разбора!</p>
+      </div>
+    </div>
+    <p class="note">Здесь оба варианта дошли до конца — значит у цепочки
+       <b>две</b> расшифровки. На экзамене такие цепочки и дают в задаче
+       «найди ту, у которой расшифровка одна».</p>
+  </section>
+
+  <!-- 6 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">что даёт однозначность</p>
+    <h2>Три подсказки в условии — и каждая работает по-своему</h2>
+    <table class="grid">
+      <tr><th>что написано в условии</th><th>что это значит для разбора</th></tr>
+      <tr><td class="k">ничего дополнительно</td>
+          <td>цепочка подобрана так, что разрез <b>единственный</b>:
+              все лишние ветки упрутся в тупик</td></tr>
+      <tr><td class="k">«буквы в нём<br>не повторяются»</td>
+          <td>развилку режет <b>не тупик, а оговорка</b>: уже занятую
+              букву второй раз брать нельзя. Без неё разрезов было бы
+              несколько — значит пользоваться ей обязательно</td></tr>
+      <tr><td class="k">«найдите ту,<br>у которой одна<br>расшифровка»</td>
+          <td>мало найти один разрез — надо у <b>каждой</b> цепочки
+              перебрать все и посчитать</td></tr>
+    </table>
+  </section>
+
+  <!-- 7 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">особый случай</p>
+    <h2>Когда все коды одной длины</h2>
+    <p class="lead">Тогда развилок нет вовсе: <b>делим длину цепочки на
+       длину кода</b> и режем на равные куски.</p>
+    <table class="codetable">
+      <tr><td>А</td><td>Б</td><td>В</td><td>Г</td><td>Д</td><td>Е</td></tr>
+      <tr><td class="c">..o..</td><td class="c">.o..o</td><td class="c">.oo.o</td>
+          <td class="c">.oooo</td><td class="c">...o.</td><td class="c">.o.oo</td></tr>
+    </table>
+    <p class="lead">25 символов : 5 = <b>5 букв</b>. Дальше просто
+       выписываем их и смотрим, какие встретились дважды.</p>
+    <p class="note">Такие задачи и спрашивают не текст, а <b>какие буквы
+       повторяются</b>. Ответ — сами буквы, порядок любой: официальный
+       ключ демоверсии так и записан — «АБ; БА».</p>
+  </section>
+
+  <!-- 8 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">одно и то же в разной одежде</p>
+    <h2>Шифр меняется — работа нет</h2>
+    <ul class="cards">
+      <li><b>0 и 1</b><small>«От разведчика получено сообщение», в ответе
+          пароль</small></li>
+      <li><b>точки и тире</b><small>«Разведчик передал радиограмму»,
+          азбука Морзе</small></li>
+      <li><b>@ ~ +</b> или <b># ^ +</b><small>«играли в шпионов и
+          кодировали сообщение собственным шифром»</small></li>
+      <li><b>номера букв<br>в алфавите</b><small>А=1, Б=2, … Я=33 — коды
+          в одну и две цифры</small></li>
+    </ul>
+    <p class="note">Разрезать цепочку из нулей и единиц или из точек и
+       тире — <b>одна и та же работа</b>. Символы кода на решение не
+       влияют никак, они только меняют вид условия.</p>
+  </section>
+
+  <!-- 9 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">как записывают ответ</p>
+    <h2>Ответ сверяет машина, знак в знак</h2>
+    <ul class="plain">
+      <li><b>Расшифровка</b> — буквы подряд, без пробелов и запятых:
+          <span class="mono">КАРЕТА</span>, а не «К А Р Е Т А».</li>
+      <li><b>Количество букв</b> — только число:
+          <span class="mono">5</span>, а не «5 букв».</li>
+      <li><b>Какие буквы повторяются</b> — сами буквы:
+          <span class="mono">АБ</span>.</li>
+    </ul>
+    <p class="note">Информатику сдают за компьютером: ответ вы набираете
+       с клавиатуры в экзаменационной программе. Лишний пробел или
+       приписанное слово — и верное решение засчитано не будет.
+       Набрали — <b>перечитайте, что стоит в поле</b>.</p>
+  </section>
+
+  <!-- 10-13: примеры собирает генератор ------------------------------- -->
+  <section class="slide" data-ex data-type="0"></section>
+  <section class="slide" data-ex data-type="2"></section>
+  <section class="slide" data-ex data-type="4"></section>
+  <section class="slide" data-ex data-type="5"></section>
+
+  <!-- 14 ------------------------------------------------------------ -->
+  <section class="slide">
+    <p class="eyebrow">итог</p>
+    <h2>Задание всегда об одном</h2>
+    <p class="lead">Разрезать цепочку на коды. Различаются только
+       <b>две вещи</b>.</p>
+    <div class="two">
+      <div class="box cool">
+        <h3>1. Чем режется развилка</h3>
+        <p><b>Тупиком</b> — лишняя ветка не доходит до конца</p>
+        <p><b>Оговоркой</b> «буквы не повторяются»</p>
+        <p><b>Ничем</b> — надо самому посчитать разборы у каждой из
+           нескольких цепочек</p>
+        <p><b>Равномерностью</b> кода — развилок нет</p>
+      </div>
+      <div class="box warm">
+        <h3>2. Что спрашивают</h3>
+        <p><b>Сообщение</b> — буквы подряд</p>
+        <p><b>Сколько букв</b> — число</p>
+        <p><b>Какие буквы повторяются</b> — сами буквы</p>
+      </div>
+    </div>
+    <p class="note">Прочитайте вопрос до конца: разобрать цепочку и
+       записать не то, что спросили, — самая обидная потеря балла в этом
+       задании.</p>
+    <p class="note">Дальше — тренажёр: шесть задач, по одной на каждый
+       тип. Таблицы и цепочки у всех свои, проверка сразу.</p>
+  </section>
+
+</div>
+
+<div class="bar">
+  <button id="prev">← Назад</button>
+  <button id="next">Вперёд →</button>
+  <span class="count" id="count"></span>
+  <span class="spacer"></span>
+  <button id="step" class="primary" hidden>Показать</button>
+  <button id="reroll" hidden>Другой пример</button>
+  <span class="ai-mark" style="color:#5c6070;font-size:13px">Материалы подготовлены с использованием технологий искусственного интеллекта.</span>
+  <span class="keys"><kbd>→</kbd> слайд &middot;
+        <kbd>Пробел</kbd> шаг &middot; <kbd>F11</kbd> во весь экран</span>
+</div>
+</div>
+
+<script>
+"use strict";
+
+/* ==== БАЗА: вставлено gen.py, руками не править ==== */
+const WORDS = [
+  "КАРАТЕ",
+  "КАРЕТА",
+  "РАКЕТА",
+  "КАРТА",
+  "ТОРТ",
+  "КОРА",
+  "ОТКАТ",
+  "НОС",
+  "КОД",
+  "ДОК",
+  "ОДА",
+  "САД",
+  "СОК",
+  "СОН",
+  "ДОСКА",
+  "СОДА",
+  "КОСА",
+  "ОКНО",
+  "СКАТ",
+  "СОСНА",
+  "КАНАТ",
+  "НАСОС",
+  "ОСАДОК",
+  "ВОР",
+  "УРА",
+  "ВОДА",
+  "ДАР",
+  "РОД",
+  "РУДА",
+  "ДРОВА",
+  "УДАР",
+  "ДВОР",
+  "ОРДА",
+  "ВОДОРОД",
+  "ВОРОТА",
+  "РОСА",
+  "ВЕТКА",
+  "МИНУС",
+  "ЛИМОН",
+  "МАЛИНА",
+  "СИЛА",
+  "МИНА",
+  "ЛИМАН",
+  "СЛОН",
+  "МОЛОКО",
+  "ОКЕАН",
+  "МОНЕТА",
+  "КОМЕТА",
+  "ЛЕНТА",
+  "МЕТАЛЛ",
+  "ЖИТИЕ",
+  "ДАТЬ",
+  "ВИТЬ",
+  "ЖИТЬ",
+  "МЕТКА",
+  "ЛЕТО",
+  "МОСТ",
+  "ЗИМА",
+  "ЗНАК",
+  "КНИГА",
+  "ИГЛА",
+  "ЛИНИЯ",
+  "МИНА",
+  "ТИНА",
+  "БАНКА",
+  "БЕЛКА",
+  "ГОРА",
+  "ГОД",
+  "ДОМ",
+  "ЛОДКА",
+  "ПОЛЕ",
+  "РЕКА"
+];
+
+const FILLER = [
+  "А",
+  "Б",
+  "В",
+  "Г",
+  "Д",
+  "Е",
+  "Ж",
+  "З",
+  "И",
+  "К",
+  "Л",
+  "М",
+  "Н",
+  "О",
+  "П",
+  "Р",
+  "С",
+  "Т",
+  "У"
+];
+
+const CIPHERS = [
+  {"key": "spy", "syms": ["@", "~", "+"], "lens": [1, 1, 2, 2, 2, 3], "join": " ", "story": "spy"},
+  {"key": "spy2", "syms": ["#", "^", "+"], "lens": [1, 1, 2, 2, 2, 3], "join": " ", "story": "spy"},
+  {"key": "spy3", "syms": ["#", "~", "+"], "lens": [1, 1, 2, 2, 2, 3], "join": " ", "story": "spy"},
+  {"key": "bin", "syms": ["0", "1"], "lens": [2, 3, 3, 3, 3, 3], "join": "", "story": "scout"},
+  {"key": "morse", "syms": ["•", "−"], "lens": [1, 2, 3, 4, 4], "join": " ", "story": "radio"}
+];
+
+const PAIRS = [
+  ["Вася", "Петя"],
+  ["Олег", "Вова"],
+  ["Дима", "Егор"],
+  ["Аня", "Оля"],
+  ["Настя", "Вика"],
+  ["Ваня", "Слава"]
+];
+const CODERS = [
+  {"n": "Валя", "f": true},
+  {"n": "Ваня"},
+  {"n": "Петя"},
+  {"n": "Даша", "f": true},
+  {"n": "Костя"},
+  {"n": "Юля", "f": true}
+];
+const ALPHABET33 = [
+  "А",
+  "Б",
+  "В",
+  "Г",
+  "Д",
+  "Е",
+  "Ё",
+  "Ж",
+  "З",
+  "И",
+  "Й",
+  "К",
+  "Л",
+  "М",
+  "Н",
+  "О",
+  "П",
+  "Р",
+  "С",
+  "Т",
+  "У",
+  "Ф",
+  "Х",
+  "Ц",
+  "Ч",
+  "Ш",
+  "Щ",
+  "Ъ",
+  "Ы",
+  "Ь",
+  "Э",
+  "Ю",
+  "Я"
+];
+
+const TYPES = [
+  {"id": 0, "key": "decode", "uniq": "chain", "ask": "word", "name": "расшифровать сообщение", "rule": "Разбор идёт слева направо. На каждом шаге смотрим, какие коды начинаются с оставшихся символов; неверная ветка рано или поздно упирается в тупик — остаток, с которого не начинается ни один код. Правильное разбиение здесь только одно."},
+  {"id": 1, "key": "count", "uniq": "chain", "ask": "num", "name": "сколько букв в сообщении", "rule": "Сначала всё то же самое: разбираем цепочку на коды слева направо, отбрасывая тупиковые ветки. А в ответ идёт не само сообщение, а сколько в нём получилось букв — прочитайте вопрос до конца."},
+  {"id": 2, "key": "decode-nr", "uniq": "norepeat", "ask": "word", "name": "расшифровать, буквы не повторяются", "rule": "Здесь развилку режет не тупик, а оговорка: буква, уже занятая, второй раз встретиться не может. Без этого условия разборов было бы несколько — значит пользоваться им обязательно."},
+  {"id": 3, "key": "count-nr", "uniq": "norepeat", "ask": "num", "name": "сколько букв, буквы не повторяются", "rule": "Разбираем с оговоркой «буквы не повторяются», а в ответ пишем количество букв. Расшифровать всё равно придётся: по длине цепочки число букв не угадывается, коды разной длины."},
+  {"id": 4, "key": "pick", "uniq": "pick", "ask": "word", "name": "найти единственную расшифровку", "rule": "Здесь мало найти один разбор — надо у каждой цепочки перебрать ВСЕ. Годится та, у которой разбор ровно один; у остальных их два и больше, и именно поэтому они не подходят."},
+  {"id": 5, "key": "repeat", "uniq": "even", "ask": "letters", "name": "равномерный код: какие буквы повторяются", "rule": "Все коды здесь одной длины, поэтому развилок нет вовсе: цепочка режется на равные куски. Длина сообщения делится на длину кода — это и есть число букв."}
+];
+
+const TYPES_TOTAL = TYPES.length;
+const randInt = (lo, hi) => lo + Math.floor(Math.random() * (hi - lo + 1));
+const pick = arr => arr[randInt(0, arr.length - 1)];
+
+function shuffle(arr){
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+const sample = (arr, k) => shuffle(arr).slice(0, k);
+
+function plural(n, one, few, many){
+  const d = n % 10, dd = n % 100;
+  if (d === 1 && dd !== 11) return one;
+  if (d >= 2 && d <= 4 && (dd < 10 || dd >= 20)) return few;
+  return many;
+}
+const letters = n => n + " " + plural(n, "буква", "буквы", "букв");
+
+/* ============================================================ разбор
+   Ядро всей темы: перебрать ВСЕ способы разрезать цепочку на коды.
+   Ни один код в вариантах (кроме одной радиограммы) не префиксный,
+   поэтому «разбор один» — это не свойство таблицы, а свойство цепочки,
+   и проверить его можно только перебором.
+
+   opts.distinct — оговорка «буквы в сообщении не повторяются».
+   opts.limit    — перебор обрывается, как только разборов набралось
+                   столько: дальше их точное число нам не нужно.
+------------------------------------------------------------------ */
+function parseAll(msg, table, opts){
+  const o = opts || {};
+  const limit = o.limit || 40;
+  const out = [];
+  (function rec(i, acc){
+    if (out.length >= limit) return;
+    if (i === msg.length){ out.push(acc.join("")); return; }
+    for (const e of table){
+      if (msg.startsWith(e.c, i)){
+        if (o.distinct && acc.indexOf(e.L) >= 0) continue;
+        acc.push(e.L);
+        rec(i + e.c.length, acc);
+        acc.pop();
+      }
+    }
+  })(0, []);
+  return out;
+}
+
+// Условие Фано: ни один код не начало другого. В вариантах так почти
+// не бывает, и генератор такие таблицы отбраковывает — без развилок
+// задача перестаёт быть задачей.
+function isFano(table){
+  for (const a of table)
+    for (const b of table)
+      if (a !== b && b.c.startsWith(a.c)) return false;
+  return true;
+}
+
+/* Первая ловушка на пути: место, где с остатка начинается ЛИШНИЙ код,
+   и эта ветка заводит в тупик. Именно её и надо показать в разборе —
+   иначе разбор превращается в объявление ответа. */
+function firstTrap(msg, table, opts){
+  const o = opts || {};
+  const right = parseAll(msg, table, Object.assign({limit: 2}, o))[0];
+  if (!right) return null;
+  let i = 0;
+  for (const L of right){
+    const good = table.find(e => e.L === L);
+    for (const e of table){
+      if (e === good || !msg.startsWith(e.c, i)) continue;
+      if (o.distinct && right.slice(0, right.indexOf(L)).indexOf(e.L) >= 0)
+        continue;
+      const rest = msg.slice(i + e.c.length);
+      const tail = parseAll(rest, table, {limit: 1});
+      if (!tail.length)
+        return {at: i, taken: e, instead: good, rest: rest};
+    }
+    i += good.c.length;
+  }
+  return null;
+}
+
+/* ------------------------------------------------------- таблица кода
+   Коды раздаются случайно, но длины взяты с вариантов, а таблица
+   обязана быть НЕ префиксной: иначе разбор идёт без единой развилки и
+   ученик решает не ту задачу, какая будет на экзамене. */
+function buildTable(lets, cipher){
+  for (let attempt = 0; attempt < 400; attempt++){
+    const used = {};
+    const table = [];
+    let ok = true;
+    const lens = shuffle(cipher.lens).slice(0, lets.length);
+    for (let i = 0; i < lets.length; i++){
+      let code = null;
+      for (let k = 0; k < 200; k++){
+        let c = "";
+        for (let j = 0; j < lens[i]; j++) c += pick(cipher.syms);
+        if (!used[c]){ code = c; break; }
+      }
+      if (!code){ ok = false; break; }
+      used[code] = 1;
+      table.push({L: lets[i], c: code});
+    }
+    if (ok && !isFano(table)) return table;
+  }
+  return null;
+}
+
+// Буквы таблицы — по алфавиту, как во всех вариантах: сначала все буквы
+// ответа, потом добивка до нужного размера.
+function tableLetters(word, size){
+  const need = [...new Set(word.split(""))];
+  if (need.length > size) return null;
+  const rest = FILLER.filter(L => need.indexOf(L) < 0);
+  const lets = need.concat(sample(rest, size - need.length));
+  return lets.sort((a, b) => a.localeCompare(b, "ru"));
+}
+
+const encode = (word, table) =>
+  word.split("").map(L => table.find(e => e.L === L).c).join("");
+
+const showChain = (msg, table, cipher) => cipher.join === ""
+  ? msg
+  : msg.split("").join(cipher.join);
+
+/* Порядок кусков условия у сюжетов разный, и придумывать его на месте
+   в каждой странице — верный способ развести три файла. Поэтому задача
+   несёт готовую раскладку: p — абзац, chain — цепочка, table — кодовая
+   таблица, chains — список цепочек. Вопрос («tail») в блоки не входит:
+   страницы показывают его отдельно, он же и подпись к полю ответа. */
+const P = t => ({k: "p", t: t});
+const blocksDecode = (st, chainText) => st.chainFirst
+  ? [P(st.intro), {k: "chain", t: chainText}, P(st.mid), {k: "table"}]
+  : [P(st.intro), {k: "table"}, {k: "chain", t: chainText}];
+
+/* ------------------------------------------------- сюжеты и вопросы
+   Формулировки — из вариантов Статграда и демо ФИПИ, слово в слово.
+   Разница между ними чисто словесная, поэтому сюжет выпадает случайно
+   внутри типа. А вот вопрос обязан согласоваться с сюжетом: у шпионов
+   расшифровывают «сообщение», у разведчика — «пароль», у радиста —
+   «радиограмму». Рассогласование ученик читает как опечатку и застревает
+   на ней вместо задачи. */
+function story(cipher, lets){
+  if (cipher.story === "spy"){
+    const p = pick(PAIRS);
+    return {
+      intro: p[0] + " и " + p[1] + " играли в шпионов и кодировали " +
+             "сообщение собственным шифром. Фрагмент кодовой таблицы " +
+             "приведён ниже.",
+      chainFirst: false, mid: null,
+      askWord: "Расшифруйте сообщение. Получившееся слово (набор букв) " +
+               "запишите в качестве ответа.",
+      askNum: "Определите, из скольких букв состоит сообщение.",
+      askWordNR: "Расшифруйте сообщение, если известно, что буквы в нём " +
+                 "не повторяются. Запишите в ответе расшифрованное " +
+                 "сообщение.",
+      askNumNR: "Определите, из скольких букв состоит сообщение, если " +
+                "известно, что буквы в нём не повторяются."
+    };
+  }
+  if (cipher.story === "scout"){
+    return {
+      intro: "От разведчика было получено сообщение:",
+      chainFirst: true,
+      mid: "В этом сообщении зашифрован пароль – последовательность " +
+           "русских букв. В пароле использовались только буквы " +
+           lets.join(", ") + "; каждая буква кодировалась двоичным " +
+           "словом по такой таблице.",
+      askWord: "Расшифруйте сообщение. Запишите в ответе пароль.",
+      askNum: "Расшифруйте сообщение. В ответе укажите, сколько букв было " +
+              "в пароле."
+    };
+  }
+  return {
+    intro: "Разведчик передал в штаб радиограмму:",
+    chainFirst: true,
+    mid: "При передаче радиограммы было потеряно разбиение на буквы, но " +
+         "известно, что в ней использовались только следующие буквы.",
+    askWord: "Определите текст радиограммы. В ответе запишите " +
+             "получившееся слово (набор букв).",
+    askNum: "Определите текст радиограммы. В ответе укажите, сколько букв " +
+            "было в исходной радиограмме."
+  };
+}
+
+/* ================================================== типы 0-3: разбор
+   Одна цепочка, одна таблица. Различаются два раза по два: чем режется
+   развилка (тупиком или оговоркой) и что спрашивают (слово или число). */
+function makeDecode(t){
+  const norepeat = t.uniq === "norepeat";
+
+  // Оговорка «буквы в нём не повторяются» во ВСЕХ вариантах Статграда
+  // идёт только со шпионским сюжетом. Приделывать её к радиограмме
+  // значит сочинить формулировку, которой на экзамене нет.
+  const pool = norepeat ? CIPHERS.filter(c => c.story === "spy") : CIPHERS;
+
+  for (let attempt = 0; attempt < 600; attempt++){
+    const cipher = pick(pool);
+    const size = cipher.lens.length;
+
+    // Слово либо осмысленное, либо просто набор букв — в вариантах есть
+    // и то и другое (МИНУС и КАРАТЕ рядом с ОЛПМН и БАВГ). Для оговорки
+    // «буквы не повторяются» годятся только слова без повторов.
+    // Ответ «3» на вопрос «сколько букв» ученик угадывает, не решая, —
+    // поэтому там, где спрашивают количество, слово берём подлиннее.
+    const minLen = t.ask === "num" ? 4 : 3;
+
+    let word, lets;
+    if (Math.random() < 0.55){
+      const words = WORDS.filter(w => {
+        const u = new Set(w.split(""));
+        return u.size <= size && w.length >= minLen && w.length <= 7 &&
+               (!norepeat || u.size === w.length);
+      });
+      if (!words.length) continue;
+      word = pick(words);
+      lets = tableLetters(word, size);
+    } else {
+      // «набор букв»: буквы подряд по алфавиту, как в 16.04.2024 и
+      // демо-2027, слово складывается из них случайно
+      const from = randInt(0, FILLER.length - size);
+      lets = FILLER.slice(from, from + size);
+      const n = randInt(4, norepeat ? Math.min(6, size) : 6);
+      word = norepeat ? sample(lets, n).join("")
+                      : Array.from({length: n}, () => pick(lets)).join("");
+    }
+    if (!lets || !word) continue;
+
+    const table = buildTable(lets, cipher);
+    if (!table) continue;
+    const msg = encode(word, table);
+    if (msg.length < 6 || msg.length > 18) continue;
+
+    // Вот здесь и решается, задача это или мусор.
+    const strict = parseAll(msg, table, {distinct: norepeat, limit: 3});
+    if (strict.length !== 1 || strict[0] !== word) continue;
+
+    // Оговорка обязана работать: без неё разборов должно быть больше
+    // одного, иначе тип неотличим от «расшифруй», а оговорка — пустой
+    // звук, который ученик научится пропускать мимо глаз. Заодно берём
+    // лишний разбор — его и покажем в объяснении.
+    let clash = null;
+    if (norepeat){
+      const free = parseAll(msg, table, {limit: 6});
+      if (free.length < 2) continue;
+      for (const p of free){
+        if (p === word) continue;
+        const dup = [...p].find((L, k) => p.indexOf(L) !== k);
+        if (dup){ clash = {p: p, L: dup}; break; }
+      }
+      if (!clash) continue;
+    }
+
+    const trap = firstTrap(msg, table, {distinct: norepeat});
+    if (!trap) continue;              // без единой развилки задачи нет
+
+    const chainText = showChain(msg, table, cipher);
+    const num = t.ask === "num";
+    const st = story(cipher, lets);
+    const ask = norepeat ? (num ? st.askNumNR : st.askWordNR)
+                         : (num ? st.askNum : st.askWord);
+
+    const split = word.split("").map(L => table.find(e => e.L === L).c);
+    const shown = s => showChain(s, table, cipher);
+
+    const steps = [
+      trap.at === 0
+        ? "Разбор идёт слева направо, и развилка здесь на первом же шаге: " +
+          "с начала цепочки начинаются сразу два кода — «" +
+          trap.instead.c + "» (буква " + trap.instead.L + ") и «" +
+          trap.taken.c + "» (буква " + trap.taken.L + ")."
+        : "Разбираем цепочку слева направо. Первым идёт код «" + split[0] +
+          "» — это буква " + word[0] + ".",
+      (trap.at === 0 ? "Второй вариант не годится: если взять «"
+                     : "Развилка: с остатка «" + shown(msg.slice(trap.at)) +
+                       "» начинается ещё и код «" + trap.taken.c +
+                       "» (буква " + trap.taken.L + "). Но если взять «") +
+        trap.taken.c + "», дальше остаётся «" + shown(trap.rest) +
+        "», а так не начинается ни один код — тупик.",
+      "Верное разбиение получается одно: " + split.join(" | ") + "."
+    ];
+    if (clash)
+      steps.push("Оговорка тут не для красоты: без неё цепочка " +
+                 "разбирается ещё и как " + clash.p + ", но там буква " +
+                 clash.L + " встречается дважды — условие это запрещает.");
+    steps.push(num
+      ? "Это " + letters(word.length) + " — их и записываем в ответ."
+      : "Читаем буквы подряд: " + word + ".");
+
+    return {
+      type: t.id, key: t.key, name: t.name, rule: t.rule, ask: t.ask,
+      intro: st.intro, mid: st.mid, chainFirst: st.chainFirst,
+      chain: chainText, table: table.map(e => ({L: e.L, c: e.c})),
+      chains: null, tail: ask, blocks: blocksDecode(st, chainText),
+      answer: num ? String(word.length) : word,
+      steps: steps,
+      meta: {kind: "decode", msg: msg, word: word, distinct: norepeat,
+             table: table.map(e => ({L: e.L, c: e.c})), cipher: cipher.key}
+    };
+  }
+  return null;
+}
+
+/* ============================================ тип 4: найди единственную
+   Дано несколько цепочек, у одной разбор ровно один, у остальных
+   больше. Работа другая: считать разборы, а не искать один. */
+function makePick(t){
+  for (let attempt = 0; attempt < 600; attempt++){
+    const byAlphabet = Math.random() < 0.45;
+    const who = pick(CODERS);
+
+    let table, lets, cipher, word;
+    if (byAlphabet){
+      // «номер буквы в алфавите»: таблица на все 33 буквы, коды —
+      // числа 1..33 без пробелов. Ровно как у Вани в вариантах.
+      table = ALPHABET33.map((L, i) => ({L: L, c: String(i + 1)}));
+      cipher = {syms: [], join: "", key: "alpha"};
+      const pool = WORDS.filter(w => w.length >= 3 && w.length <= 5);
+      word = pick(pool);
+      lets = null;
+    } else {
+      cipher = CIPHERS.find(c => c.key === "bin");
+      const pool = WORDS.filter(w => new Set(w.split("")).size <= 6 &&
+                                     w.length >= 3 && w.length <= 5);
+      word = pick(pool);
+      lets = tableLetters(word, 6);
+      if (!lets) continue;
+      table = buildTable(lets, cipher);
+      if (!table) continue;
+    }
+
+    const right = encode(word, table);
+    if (right.length < 6 || right.length > 10) continue;
+    if (parseAll(right, table, {limit: 3}).length !== 1) continue;
+
+    // Лишние цепочки: той же длины (расхождение до 2 символов, как в
+    // вариантах) и обязательно с несколькими разборами — иначе у задачи
+    // два правильных ответа.
+    const total = byAlphabet ? 4 : 3;
+    const decoys = [];
+    for (let k = 0; k < 800 && decoys.length < total - 1; k++){
+      const n = right.length + randInt(-2, 2);
+      if (n < 5) continue;
+      let s = "";
+      while (s.length < n) s += pick(table).c;
+      if (s.length !== n) continue;
+      if (s === right || decoys.indexOf(s) >= 0) continue;
+      const cnt = parseAll(s, table, {limit: 3}).length;
+      if (cnt >= 2) decoys.push(s);
+    }
+    if (decoys.length < total - 1) continue;
+
+    const chains = shuffle(decoys.concat([right]));
+
+    // Пример неоднозначности в условии — он есть во всех вариантах:
+    // «00010101 может означать не только СКА, но и СНК».
+    let sample2 = null;
+    for (let k = 0; k < 400 && !sample2; k++){
+      let s = "";
+      while (s.length < 8) s += pick(table).c;
+      const p = parseAll(s, table, {limit: 3});
+      if (p.length >= 2 && s !== right && chains.indexOf(s) < 0)
+        sample2 = {s: s, a: p[0], b: p[1]};
+    }
+    if (!sample2) continue;
+
+    const intro = byAlphabet
+      ? who.n + " шифрует русские слова, записывая вместо каждой " +
+        "буквы её номер в алфавите (без пробелов). Номера букв даны в " +
+        "таблице."
+      : who.n + " шифрует русские слова (последовательности букв), " +
+        "записывая вместо каждой буквы её код.";
+
+    const mid = "Некоторые цепочки можно расшифровать не одним способом. " +
+      "Например, " + sample2.s + " может означать не только " + sample2.a +
+      ", но и " + sample2.b + ". Даны " +
+      (total === 3 ? "три" : "четыре") + " кодовые цепочки:";
+
+    const steps = chains.map(s => {
+      const p = parseAll(s, table, {limit: 4});
+      return s + " — " + (p.length === 1
+        ? "разбор один: " + p[0] + ". Это она."
+        : "разборов несколько: " + p.slice(0, 3).join(", ") +
+          (p.length > 3 ? " и другие" : "") + ". Не она.");
+    });
+    steps.unshift("Каждую цепочку надо разобрать ДО КОНЦА всеми " +
+                  "способами: годится та, у которой способ ровно один.");
+    steps.push("Ответ — расшифровка единственной подходящей цепочки: " +
+               word + ".");
+
+    return {
+      type: t.id, key: t.key, name: t.name, rule: t.rule, ask: t.ask,
+      intro: intro, mid: mid,
+      chainFirst: false, chain: null,
+      table: table.map(e => ({L: e.L, c: e.c})),
+      chains: chains,
+      blocks: [P(intro), {k: "table"}, P(mid), {k: "chains"}],
+      tail: "Найдите среди них ту, которая имеет только одну расшифровку, " +
+            "и запишите в ответе расшифрованное слово.",
+      answer: word, steps: steps,
+      meta: {kind: "pick", chains: chains, right: right, word: word,
+             table: table.map(e => ({L: e.L, c: e.c})),
+             alpha: byAlphabet, cipher: cipher.key}
+    };
+  }
+  return null;
+}
+
+/* ====================================== тип 5: равномерный код, повторы
+   Все коды одной длины — развилок нет вовсе, цепочка режется на равные
+   куски. Спрашивают не текст, а какие буквы повторились. */
+function makeRepeat(t){
+  const SYMS = [[".", "o"], ["•", "○"], ["0", "1"]];
+  for (let attempt = 0; attempt < 300; attempt++){
+    const syms = pick(SYMS);
+    const W = randInt(4, 5);                   // длина кода
+    const lets = ALPHABET33.slice(0, 6);       // А…Е, как в вариантах
+    const used = {};
+    const table = [];
+    let ok = true;
+    for (const L of lets){
+      let code = null;
+      for (let k = 0; k < 200; k++){
+        let c = "";
+        for (let j = 0; j < W; j++) c += pick(syms);
+        // одинаковые «все точки» и «все o» читаются плохо
+        if (!used[c] && new Set(c.split("")).size > 1){ code = c; break; }
+      }
+      if (!code){ ok = false; break; }
+      used[code] = 1;
+      table.push({L: L, c: code});
+    }
+    if (!ok) continue;
+
+    // Сообщение из 5 букв, среди них повторяется одна или две — ровно
+    // так в 06.02.2023 (повторяется В) и в демо-2025 (повторяются А и Б).
+    const dup = randInt(1, 2);
+    const chosen = sample(lets, 5 - dup);
+    const seq = chosen.concat(sample(chosen, dup));
+    const word = shuffle(seq).join("");
+    const cnt = {};
+    word.split("").forEach(L => { cnt[L] = (cnt[L] || 0) + 1; });
+    const rep = Object.keys(cnt).filter(L => cnt[L] > 1)
+                      .sort((a, b) => a.localeCompare(b, "ru"));
+    if (!rep.length) continue;
+
+    const msg = encode(word, table);
+    const split = word.split("").map(L => table.find(e => e.L === L).c);
+
+    return {
+      type: t.id, key: t.key, name: t.name, rule: t.rule, ask: t.ask,
+      intro: "Сообщение зашифровано кодом. Используются только " +
+             "приведённые в таблице буквы.",
+      mid: null, chainFirst: false, chain: msg,
+      table: table.map(e => ({L: e.L, c: e.c})), chains: null,
+      blocks: [P("Сообщение зашифровано кодом. Используются только " +
+                 "приведённые в таблице буквы."),
+               {k: "table"}, {k: "chain", t: msg}],
+      tail: "Определите, какие буквы в сообщении повторяются, и запишите " +
+            "их в ответе.",
+      answer: rep.join(""),
+      steps: [
+        "Все коды здесь одной длины — по " + W + " " +
+          plural(W, "символу", "символа", "символов") +
+          ", поэтому развилок нет: цепочку режем на равные куски.",
+        "В сообщении " + msg.length + " " +
+          plural(msg.length, "символ", "символа", "символов") + ", " +
+          msg.length + " : " + W + " = " + letters(word.length) + ".",
+        "Куски: " + split.join(" | ") + " — это " + word.split("").join(" ") +
+          ".",
+        rep.length === 1
+          ? "Дважды встречается только буква " + rep[0] + "."
+          : "Больше одного раза встречаются " + rep.join(" и ") + "."
+      ],
+      meta: {kind: "even", msg: msg, word: word, width: W, rep: rep.join(""),
+             table: table.map(e => ({L: e.L, c: e.c})), cipher: "even"}
+    };
+  }
+  return null;
+}
+
+/* ------------------------------------------------------- диспетчер */
+
+function makeTask(typeId){
+  const t = TYPES[typeId];
+  for (let k = 0; k < 30; k++){
+    const task = t.uniq === "pick" ? makePick(t)
+               : t.uniq === "even" ? makeRepeat(t)
+               : makeDecode(t);
+    if (task) return task;
+  }
+  throw new Error("не удалось собрать задачу типа " + t.key);
+}
+
+/* -------------------------------------------------- проверка ответа
+   Строго, как на экзамене: лишний символ — ошибка. Но ошибку записи
+   всегда называем своим именем, иначе ученик решит, что не понял тему,
+   хотя он просто дописал слово «букв» после числа.
+------------------------------------------------------------------ */
+function verdict(t, raw){
+  const given = String(raw).trim();
+  if (!given) return null;
+  const fold = s => s.toUpperCase().replace(/Ё/g, "Е");
+
+  /* ---- ответ числом (сколько букв) ---- */
+  if (t.ask === "num"){
+    if (given === t.answer) return {ok: true, hint: null};
+    if (/^[А-ЯЁа-яё]+$/.test(given))
+      return {ok: false, hint: "Здесь спрашивают <b>количество букв</b>, " +
+              "а не само сообщение. Расшифруй и посчитай, сколько букв " +
+              "вышло."};
+    if (/^\d+\s*[^\d\s]/.test(given))
+      return {ok: false, hint: "В ответе пишут <b>только число</b>, без " +
+              "слова «букв» и без точки."};
+    if (!/^\d+$/.test(given))
+      return {ok: false, hint: "Ответ здесь — число. Набери только цифры."};
+    return {ok: false, hint: "Число не сходится. Разбирай цепочку слева " +
+            "направо и считай коды, а не символы: коды разной длины."};
+  }
+
+  /* ---- ответ набором букв (какие повторяются) ---- */
+  if (t.ask === "letters"){
+    const norm = s => fold(s).replace(/[\s,;.]/g, "");
+    const sortLetters = s => s.split("").sort((a, b) =>
+        a.localeCompare(b, "ru")).join("");
+    if (sortLetters(norm(given)) === sortLetters(t.answer))
+      return {ok: true, hint: null};    // порядок любой: ключ ФИПИ «АБ; БА»
+    if (/\d/.test(given))
+      return {ok: false, hint: "Ответ здесь — <b>буквы</b>, а не их " +
+              "количество: выпиши сами буквы."};
+    if (norm(given).length > t.answer.length)
+      return {ok: false, hint: "Букв в ответе больше, чем повторяющихся. " +
+              "Выписывают только те, что встретились <b>больше одного " +
+              "раза</b>."};
+    return {ok: false, hint: "Не сходится. Разрежь цепочку на равные " +
+            "куски по длине кода, выпиши буквы и посмотри, какие " +
+            "встретились дважды."};
+  }
+
+  /* ---- ответ словом (расшифровка) ---- */
+  if (fold(given) === fold(t.answer)) return {ok: true, hint: null};
+  if (/\s/.test(given))
+    return {ok: false, hint: "Буквы в ответе пишут <b>подряд, без " +
+            "пробелов</b> — как одно слово."};
+  if (/[.,;:!?«»"'|]/.test(given))
+    return {ok: false, hint: "Знаки препинания и разделители в ответ не " +
+            "переносят — только буквы."};
+  if (/^\d+$/.test(given))
+    return {ok: false, hint: "Здесь спрашивают <b>само сообщение</b>, а не " +
+            "число букв. Выпиши буквы подряд."};
+  if (/[a-zA-Z]/.test(given))
+    return {ok: false, hint: "Ответ набирают <b>русскими буквами</b> — " +
+            "проверь раскладку клавиатуры."};
+
+  // Лишние буквы перечисляем через запятую, а не слитно: «РУНА» вместо
+  // «Р, У, Н, А» читается как слово, и подсказка сбивает с толку.
+  const alien = [...new Set(given.split("").filter(L =>
+      !t.table.some(e => fold(e.L) === fold(L))))];
+  if (alien.length)
+    return {ok: false, hint: alien.length === 1
+      ? "Буквы " + alien[0] + " в кодовой таблице нет — в сообщении её " +
+        "быть не может."
+      : "Букв " + alien.join(", ") + " в кодовой таблице нет — в " +
+        "сообщении их быть не может."};
+  if (given.length !== t.answer.length)
+    return {ok: false, hint: "Букв получилось " + given.length + ", а " +
+            "должно " + t.answer.length + ". Разбор где-то свернул не " +
+            "туда: проверь, не взял ли ты короткий код там, где дальше " +
+            "выходит тупик."};
+  return {ok: false, hint: "Буквы из таблицы, длина верная, но разбиение " +
+          "не то. Пройди цепочку заново слева направо и на каждой " +
+          "развилке проверяй, разбирается ли остаток до конца."};
+}
+/* ==== /БАЗА ==== */
+
+/* ------------------------------------------------------------------
+   Слайды-примеры собираются тем же генератором, что и тренажёр: значит,
+   на доске разбирается ровно та задача, какая потом достанется ученику.
+   Кнопка «Другой пример» перебрасывает таблицу и цепочку — можно
+   разобрать два-три подряд, не уходя со слайда.
+------------------------------------------------------------------ */
+
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
+                          .replace(/>/g, "&gt;");
+
+function codeTable(tbl){
+  if (tbl.length <= 8){
+    const top = tbl.map(e => `<td>${esc(e.L)}</td>`).join("");
+    const bot = tbl.map(e => `<td class="c">${esc(e.c)}</td>`).join("");
+    return `<table class="codetable"><tr>${top}</tr><tr>${bot}</tr></table>`;
+  }
+  const groups = 4;
+  const rows = Math.ceil(tbl.length / groups);
+  let html = "";
+  for (let r = 0; r < rows; r++){
+    let tr = "";
+    for (let g = 0; g < groups; g++){
+      const e = tbl[g * rows + r];
+      tr += e ? `<td>${esc(e.L)}</td><td class="c">${esc(e.c)}</td>`
+              : "<td></td><td></td>";
+    }
+    html += `<tr>${tr}</tr>`;
+  }
+  return `<table class="codetable pairs">${html}</table>`;
+}
+
+// Порядок кусков условия задаёт генератор: у разведчика цепочка идёт до
+// таблицы, у шпионов — после. Повторять этот порядок здесь руками
+// значило бы разводить слайды с тренажёром.
+function condition(t){
+  return t.blocks.map(b =>
+      b.k === "p" ? `<p>${esc(b.t)}</p>`
+    : b.k === "chain" ? `<div class="chain">${esc(b.t)}</div>`
+    : b.k === "chains"
+        ? `<div class="chains">${t.chains.map(c => `<div>${esc(c)}</div>`)
+                                         .join("")}</div>`
+    : codeTable(t.table)).join("");
+}
+
+function buildExample(el){
+  const id = +el.dataset.type;
+  const t = makeTask(id);
+  const steps = t.steps.map((s, i) =>
+      `<div class="step" hidden><span class="cap">шаг ${i + 1}</span>
+         ${esc(s)}</div>`).join("");
+
+  el.innerHTML =
+    `<p class="eyebrow">разбираем вместе</p>
+     <h2>Пример: ${esc(t.name)}</h2>
+     <div class="task">${condition(t)}
+       <div class="ask">${esc(t.tail)}</div></div>
+     <div class="steps">
+       <div class="step hint" hidden><span class="cap">о чём задача</span>
+         ${esc(t.rule)}</div>
+       ${steps}
+       <div class="step answer" hidden><span class="cap">ответ</span>
+         ${esc(t.answer)}</div>
+     </div>`;
+  el.dataset.answer = t.answer;
+}
+
+/* ------------------------------------------------------------------
+   Управление колодой: стрелки листают слайды, пробел раскрывает
+   очередной шаг разбора и только потом уходит дальше.
+------------------------------------------------------------------ */
+
+const slides = [...document.querySelectorAll(".slide")];
+let cur = 0;
+let shown = 0;
+
+const isExample = i => slides[i].hasAttribute("data-ex");
+const stepsOf = i => [...slides[i].querySelectorAll(".steps > .step")];
+
+function show(i){
+  slides[cur].classList.remove("on");
+  cur = Math.max(0, Math.min(slides.length - 1, i));
+  slides[cur].classList.add("on");
+  if (isExample(cur) && !slides[cur].dataset.answer) buildExample(slides[cur]);
+  shown = stepsOf(cur).filter(el => !el.hidden).length;
+  document.getElementById("stage").scrollTop = 0;
+  sync();
+}
+
+function sync(){
+  const total = stepsOf(cur).length;
+  const ex = isExample(cur);
+  document.getElementById("count").textContent =
+      `${cur + 1} / ${slides.length}`;
+  document.getElementById("prev").disabled = cur === 0;
+  document.getElementById("next").disabled = cur === slides.length - 1;
+
+  const stepBtn = document.getElementById("step");
+  stepBtn.hidden = total === 0;
+  document.getElementById("reroll").hidden = !ex;
+  if (total){
+    stepBtn.disabled = shown >= total;
+    stepBtn.textContent =
+        shown === 0 ? (ex ? "Показать разбор" : "Раскрыть")
+      : shown >= total ? (ex ? "Разобрано" : "Всё открыто")
+      : `Дальше (${shown}/${total})`;
+  }
+}
+
+function nextStep(){
+  const steps = stepsOf(cur);
+  if (shown >= steps.length) return false;
+  steps[shown].hidden = false;
+  steps[shown].scrollIntoView({block: "nearest", behavior: "smooth"});
+  shown++;
+  sync();
+  return true;
+}
+
+document.getElementById("prev").addEventListener("click", () => show(cur - 1));
+document.getElementById("next").addEventListener("click", () => show(cur + 1));
+document.getElementById("step").addEventListener("click", nextStep);
+document.getElementById("reroll").addEventListener("click", () => {
+  buildExample(slides[cur]); shown = 0; sync();
+});
+
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowRight" || e.key === "PageDown"){ show(cur + 1); }
+  else if (e.key === "ArrowLeft" || e.key === "PageUp"){ show(cur - 1); }
+  else if (e.key === " " || e.key === "Enter"){
+    // пробел ведёт урок: шаг за шагом, потом на следующий слайд
+    if (!nextStep()) show(cur + 1);
+  } else return;
+  e.preventDefault();
+});
+
+show(0);
+</script>
+</body>
+</html>
