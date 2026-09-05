@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Тенденции развития компьютерных технологий — презентация</title>
+<meta name="description" content="Разбор темы «Тенденции развития компьютерных технологий», 10 класс: закон Мура, параллельные вычисления, многопроцессорные системы, суперкомпьютеры, микроконтроллеры, роботизированные производства.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E10%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ink)}
+body{font:20px/1.5 "Segoe UI",system-ui,sans-serif;overflow:hidden}
+
+.deck{position:relative;height:100vh;width:100vw}
+.slide{position:absolute;inset:0;display:none;flex-direction:column;
+       justify-content:center;padding:60px 80px;max-width:1100px;
+       margin:0 auto}
+.slide.active{display:flex}
+.slide h1{font-size:42px;margin:0 0 18px}
+.slide h2{font-size:30px;margin:0 0 20px;color:var(--accent)}
+.kicker{font-size:15px;letter-spacing:.1em;text-transform:uppercase;
+        color:var(--muted);font-weight:700;margin:0 0 8px}
+.slide p{font-size:22px;margin:10px 0;color:var(--ink)}
+.slide p.lead{font-size:26px;color:var(--muted)}
+.slide ul{font-size:22px;padding-left:30px}
+.slide li{margin:8px 0}
+
+.box{border:2px solid var(--line);border-radius:14px;padding:18px 24px;
+     background:var(--card);margin:14px 0}
+.box.ok{border-color:var(--ok-line);background:var(--ok-bg)}
+.box.hi{border-color:var(--hi-line);background:var(--hi-bg)}
+.box b{color:var(--ink)}
+.box p{font-size:20px;margin:6px 0}
+
+/* ---- лента времени: что делится, а что нет ---- */
+.tape{margin:18px 0}
+.tape .row{display:flex;align-items:center;gap:12px;margin:10px 0}
+.tape .lbl{flex:0 0 190px;font-size:17px;color:var(--muted);text-align:right}
+.tape .bars{display:flex;gap:4px;flex:1 1 auto}
+.seg{height:38px;border-radius:7px;display:flex;align-items:center;
+     justify-content:center;font-size:15px;font-weight:600;color:#fff}
+.seg.seq{background:var(--hi);flex:0 0 22%}
+.seg.par{background:var(--accent);flex:1 1 auto}
+.seg.par.small{flex:0 0 19.5%}
+.tape .time{flex:0 0 110px;font-size:18px;font-weight:700}
+
+/* ---- три вычислителя рядом ---- */
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin:18px 0}
+.three .c{border:2px solid var(--line);border-radius:12px;padding:14px 18px;
+          font-size:18px;background:#fff}
+.three .c b{display:block;margin-bottom:6px;color:var(--accent);
+            font-size:20px}
+.three .c small{color:var(--muted);font-size:15px}
+
+.nav{position:fixed;bottom:0;left:0;right:0;display:flex;
+     align-items:center;gap:14px;padding:10px 24px;font-size:14px;
+     color:var(--muted);background:linear-gradient(transparent,#fff 40%)}
+.dots{display:flex;gap:7px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--line)}
+.dot.cur{background:var(--accent)}
+.hint{margin-left:auto}
+.zone{position:fixed;top:0;bottom:40px;width:15%;z-index:2;cursor:pointer}
+.zone.l{left:0}.zone.r{right:0}
+
+/* Колода рассчитана на проектор; на узком экране (кто-то откроет её с
+   телефона) ленту времени незачем ужимать до нечитаемых огрызков —
+   подписи уезжают наверх, полосы получают всю ширину. */
+@media (max-width:900px){
+  .slide{padding:40px 24px}
+  .slide h1{font-size:32px} .slide h2{font-size:24px}
+  .slide p,.slide ul{font-size:19px}
+  .tape .row{flex-wrap:wrap}
+  .tape .lbl{flex:1 0 100%;text-align:left}
+  .tape .bars{flex:1 1 70%}
+  .tape .time{flex:0 0 70px;text-align:right}
+  .seg{font-size:13px;overflow:hidden}
+  .three{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+<section class="slide active">
+  <p class="kicker">10 класс &middot; урок 2</p>
+  <h1>Тенденции развития компьютерных технологий</h1>
+  <p class="lead">Куда движется техника: почему процессоры перестали
+     ускоряться поодиночке и что из этого вышло.</p>
+</section>
+
+<section class="slide">
+  <p class="kicker">Тенденция 1</p>
+  <h2>Закон Мура и миниатюризация</h2>
+  <p>В 1965 году Гордон Мур заметил: число транзисторов на кристалле
+     микросхемы удваивается примерно каждые два года. Это <b>наблюдение
+     за производством</b>, а не закон природы — и никого ни к чему не
+     обязывает.</p>
+  <p>Работает оно за счёт миниатюризации: элементы микросхем измеряют
+     нанометрами, и на кристалле прежнего размера их помещается всё
+     больше.</p>
+  <div class="box hi"><b>Предел уже виден.</b> Элементы приблизились к
+     размерам атомов, дальше мешает физика — темп удваивания
+     замедлился.</div>
+</section>
+
+<section class="slide">
+  <p class="kicker">Тенденция 2</p>
+  <h2>Частота остановилась — развитие пошло вширь</h2>
+  <p>До середины 2000-х процессоры ускоряли ростом тактовой частоты.
+     Потом рост прекратился: на высокой частоте процессор выделяет
+     столько тепла, что его нечем отвести.</p>
+  <p>Выход нашли не в скорости одного вычислителя, а в их количестве:
+     <b>несколько ядер вместо одного быстрого</b>.</p>
+  <div class="box"><b>Отсюда и вся тема.</b> Раз производительность
+     теперь берут количеством, задачу приходится делить на части — то
+     есть считать параллельно.</div>
+</section>
+
+<section class="slide">
+  <p class="kicker">Параллельные вычисления</p>
+  <h2>Делим задачу на независимые части</h2>
+  <p>Если работу можно разбить на куски, которые не зависят друг от
+     друга, их считают одновременно на разных ядрах — и общее время
+     падает во столько раз, сколько ядер.</p>
+  <div class="box hi"><b>Но делится не всё.</b> Если следующий шаг
+     требует результата предыдущего, одновременно их не выполнить.
+     И программа, написанная как одна последовательность действий, сама
+     по себе на восьми ядрах быстрее не станет — её надо писать
+     параллельной.</div>
+</section>
+
+<section class="slide">
+  <p class="kicker">Параллельные вычисления &middot; счёт</p>
+  <h2>Предел ускорения задаёт последовательная часть</h2>
+  <div class="tape">
+    <div class="row">
+      <span class="lbl">одно ядро</span>
+      <span class="bars">
+        <span class="seg seq">20 с</span>
+        <span class="seg par">80 с — эту часть можно делить</span>
+      </span>
+      <span class="time">100 с</span>
+    </div>
+    <div class="row">
+      <span class="lbl">четыре ядра</span>
+      <span class="bars">
+        <span class="seg seq">20 с</span>
+        <span class="seg par small">20 с</span>
+      </span>
+      <span class="time">40 с</span>
+    </div>
+  </div>
+  <p>Считаем так: <b>20 + 80 / 4 = 40 с</b>. Последовательные 20 секунд
+     не ускоряются никогда.</p>
+  <div class="box ok"><b>Сколько ядер ни добавляй</b>, быстрее 20 секунд
+     эта программа не станет — параллельная часть сжимается, а
+     последовательная остаётся.</div>
+</section>
+
+<section class="slide">
+  <p class="kicker">Многопроцессорные системы</p>
+  <h2>Ядро, процессор, узел</h2>
+  <p><b>Ядро</b> — самостоятельный вычислитель внутри процессора.
+     Четыре ядра выполняют четыре потока команд одновременно.</p>
+  <p><b>Многопроцессорная система</b> — несколько процессоров в одной
+     машине, работающих с общей оперативной памятью.</p>
+  <p><b>Кластер</b> — много отдельных машин («узлов»), соединённых
+     быстрой сетью. Общей памяти у них нет, они обмениваются
+     сообщениями.</p>
+</section>
+
+<section class="slide">
+  <p class="kicker">Суперкомпьютеры</p>
+  <h2>Мощность берут количеством</h2>
+  <p>Суперкомпьютер — это тысячи узлов, занятых одной задачей.
+     Частота ядер у него обычная: выигрыш даёт масштаб, а не скорость
+     одного вычислителя.</p>
+  <p>Производительность меряют во <b>флопсах</b> — операциях с
+     плавающей точкой в секунду. 1 Тфлопс = 1000 Гфлопс. Самые мощные
+     машины мира сводят в список <b>Top500</b>.</p>
+  <div class="box"><b>Пример счёта.</b> 500 узлов × 32 ядра × 200 Гфлопс
+     = 3 200 000 Гфлопс = <b>3200 Тфлопс</b>.</div>
+  <p>Задачи: прогноз погоды, прочность конструкций, разработка лекарств,
+     климат — то, что иначе считалось бы годами.</p>
+</section>
+
+<section class="slide">
+  <p class="kicker">Другой край шкалы</p>
+  <h2>Микроконтроллеры</h2>
+  <p>Целый компьютер на одном кристалле: процессор, память и выводы для
+     датчиков и моторов. Программа записана в него заранее, монитор и
+     клавиатура ему не нужны.</p>
+  <div class="three">
+    <div class="c"><b>Слабый</b><small>мощности хватает — управлять
+       одним устройством</small></div>
+    <div class="c"><b>Экономный</b><small>работает годами от батарейки</small></div>
+    <div class="c"><b>Везде</b><small>техника, автомобили, датчики,
+       карты, игрушки</small></div>
+  </div>
+  <p>Их выпускают миллиардами штук в год — их вокруг гораздо больше,
+     чем «настоящих» компьютеров.</p>
+</section>
+
+<section class="slide">
+  <p class="kicker">Роботизированные производства</p>
+  <h2>Точность и повторяемость, а не сообразительность</h2>
+  <p>Промышленный робот — обычно манипулятор, «рука» на неподвижном
+     основании. Он выполняет <b>заранее написанную программу</b>:
+     сварка, окраска, перенос тяжестей, сборка.</p>
+  <p>Его преимущество не в уме, а в том, что он делает одну и ту же
+     операцию тысячи раз одинаково и работает там, где человеку
+     вредно.</p>
+  <div class="box"><b>Люди не исчезают — меняется работа.</b> Вместо
+     рабочих у конвейера нужны те, кто роботов программирует,
+     настраивает и обслуживает.</div>
+</section>
+
+<section class="slide">
+  <p class="kicker">Дальше — тренажёр</p>
+  <h2>Проверим, как это работает</h2>
+  <p class="lead">Двадцать заданий: пять о тенденциях, десять о
+     параллельных вычислениях, суперкомпьютерах, микроконтроллерах и
+     роботах, пять — на счёт. Открывайте <b>practice.html</b> из общей
+     папки.</p>
+</section>
+
+</div>
+
+<div class="nav">
+  <span id="pos">1 / 10</span>
+  <div class="dots" id="dots"></div>
+  <span class="hint">← → или клик по краям экрана &middot; F11 — во весь экран</span>
+</div>
+<div class="zone l" id="prevZone"></div>
+<div class="zone r" id="nextZone"></div>
+
+<script>
+"use strict";
+const slides = Array.from(document.querySelectorAll(".slide"));
+const dotsBox = document.getElementById("dots");
+slides.forEach((_, i) => {
+  const d = document.createElement("span");
+  d.className = "dot" + (i === 0 ? " cur" : "");
+  dotsBox.appendChild(d);
+});
+const dots = Array.from(dotsBox.children);
+let cur = 0;
+
+function go(i){
+  if (i < 0 || i >= slides.length) return;
+  slides[cur].classList.remove("active");
+  dots[cur].classList.remove("cur");
+  cur = i;
+  slides[cur].classList.add("active");
+  dots[cur].classList.add("cur");
+  document.getElementById("pos").textContent = `${cur + 1} / ${slides.length}`;
+}
+
+document.addEventListener("keydown", e => {
+  if (["ArrowRight", "PageDown", " "].includes(e.key)) go(cur + 1);
+  else if (["ArrowLeft", "PageUp"].includes(e.key)) go(cur - 1);
+  else if (e.key === "Home") go(0);
+  else if (e.key === "End") go(slides.length - 1);
+});
+document.getElementById("prevZone").addEventListener("click", () => go(cur - 1));
+document.getElementById("nextZone").addEventListener("click", () => go(cur + 1));
+</script>
+<p class="ai-mark" style="position:fixed;bottom:2px;right:14px;margin:0;color:#b7bccb;font:11px/1 'Segoe UI',system-ui,sans-serif">Материалы подготовлены с использованием технологий искусственного интеллекта.</p>
+</body>
+</html>
