@@ -17,6 +17,7 @@
   - [Компьютерные сети и адрес в интернете](https://svetgenmo.github.io/informatika/7/adres-v-internete/) — Задание 4 ВПР: структура адреса веб-ресурса
 - **8 класс** — https://svetgenmo.github.io/informatika/8/
   - [Системы счисления](https://svetgenmo.github.io/informatika/8/sistemy-schisleniya/) — Шесть переводов: 2↔10, 8↔10, 16↔10
+  - [Двоичная система счисления](https://svetgenmo.github.io/informatika/8/dvoichnaya-sistema/) — Переводы 2↔10 и все четыре действия
 - **9 класс** — https://svetgenmo.github.io/informatika/9/
   - [Информационный объём текста](https://svetgenmo.github.io/informatika/9/obem-teksta/) — Задание 1 ОГЭ по вариантам Статграда: вычеркнутое слово
   - [Кодирование и декодирование информации](https://svetgenmo.github.io/informatika/9/kodirovanie-dekodirovanie/) — Задание 2 ОГЭ по вариантам Статграда и демо 2027: кодовая таблица и разбор цепочки
