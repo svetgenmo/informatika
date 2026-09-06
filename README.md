@@ -19,6 +19,7 @@
   - [Системы счисления](https://svetgenmo.github.io/informatika/8/sistemy-schisleniya/) — Шесть переводов: 2↔10, 8↔10, 16↔10
   - [Двоичная система счисления](https://svetgenmo.github.io/informatika/8/dvoichnaya-sistema/) — Переводы 2↔10 и все четыре действия
   - [Восьмеричная система счисления](https://svetgenmo.github.io/informatika/8/vosmerichnaya-sistema/) — Триады 2↔8, арифметика и сравнение чисел
+  - [Шестнадцатеричная система счисления](https://svetgenmo.github.io/informatika/8/shestnadcaterichnaya-sistema/) — Тетрады 2↔16, арифметика с ответом в десятичной
 - **9 класс** — https://svetgenmo.github.io/informatika/9/
   - [Информационный объём текста](https://svetgenmo.github.io/informatika/9/obem-teksta/) — Задание 1 ОГЭ по вариантам Статграда: вычеркнутое слово
   - [Кодирование и декодирование информации](https://svetgenmo.github.io/informatika/9/kodirovanie-dekodirovanie/) — Задание 2 ОГЭ по вариантам Статграда и демо 2027: кодовая таблица и разбор цепочки

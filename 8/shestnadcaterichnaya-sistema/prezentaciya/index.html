@@ -1,0 +1,1310 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Шестнадцатеричная система счисления</title>
+<meta name="description" content="Шестнадцатеричная система: откуда в числах буквы, переводы 16↔10, тетрады 2↔16, мост 8↔16 через двоичную, арифметика с ответом в десятичной.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E10%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#16181d; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);overflow:hidden;
+     font:24px/1.45 "Segoe UI",system-ui,sans-serif}
+.mono{font-family:Consolas,"Courier New",monospace}
+
+.deck{height:100vh;display:flex;flex-direction:column}
+.stage{flex:1 1 auto;overflow-y:auto;padding:34px 56px 12px}
+.slide{display:none;max-width:1100px;margin:0 auto}
+.slide.on{display:block}
+
+h1{font-size:52px;line-height:1.1;margin:0 0 18px;text-wrap:balance}
+h2{font-size:37px;line-height:1.15;margin:0 0 20px;text-wrap:balance}
+.eyebrow{font-size:16px;letter-spacing:.1em;text-transform:uppercase;
+         color:var(--accent);font-weight:700;margin:0 0 8px}
+.lead{font-size:26px;color:var(--muted);margin:0 0 24px}
+.lead b{color:var(--ink)}
+p.note{margin-top:22px;color:var(--muted);font-size:21px}
+
+.bar{flex:0 0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+     border-top:1px solid var(--line);background:var(--card);padding:12px 24px}
+.bar .spacer{flex:1 1 auto}
+.count{color:var(--muted);font-size:17px;font-variant-numeric:tabular-nums}
+.keys{color:var(--muted);font-size:15px}
+.keys kbd{font:600 13px/1 Consolas,monospace;border:1px solid var(--line);
+     border-bottom-width:2px;border-radius:5px;padding:2px 6px;
+     background:#fff;color:var(--ink)}
+button{font:600 18px/1 inherit;padding:12px 20px;border-radius:10px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);
+       cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.35;cursor:default;border-color:var(--line);
+                color:var(--muted);background:#fff}
+button:focus-visible{outline:3px solid #a9c6e8;outline-offset:2px}
+
+.task{border:3px solid var(--accent);border-radius:16px;padding:20px 26px;
+      background:var(--card);font-size:31px;margin:0 0 22px}
+.task b{font-family:Consolas,monospace}
+.steps{display:flex;flex-direction:column;gap:14px}
+.step{border:1px solid var(--line);border-radius:12px;padding:16px 22px;
+      background:#fff}
+.step.hint{background:var(--hi-bg);border-color:var(--hi-line);color:var(--hi)}
+.step.answer{background:var(--ok-bg);border-color:var(--ok-line);
+             color:var(--ok);font-size:31px;font-weight:700}
+.step .cap{display:block;font-size:15px;letter-spacing:.08em;
+           text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.step.hint .cap{color:var(--hi)}
+.calc{font:25px/1.6 Consolas,"Courier New",monospace;white-space:pre;
+      overflow-x:auto}
+.step .note{font-size:19px;color:var(--muted);margin:12px 0 0}
+.big{font-size:30px}
+
+table{border-collapse:collapse}
+table.div{font:24px/1.35 Consolas,monospace}
+table.div td{padding:4px 14px;border:0}
+table.div td.rem{color:var(--accent);font-weight:700}
+table.div tr td:last-child{color:var(--muted);font-size:19px}
+
+table.grid{font-size:21px;width:100%}
+table.grid td,table.grid th{border:1px solid var(--line);padding:9px 16px;
+     text-align:left;vertical-align:top}
+table.grid th{background:var(--card);color:var(--muted);font-size:17px;
+     letter-spacing:.05em;text-transform:uppercase;font-weight:600}
+table.grid td.k{font-family:Consolas,monospace;font-weight:700;
+     color:var(--accent);white-space:nowrap}
+
+table.hex{font:21px/1.3 Consolas,monospace;margin-top:6px}
+table.hex td,table.hex th{border:1px solid var(--line);padding:5px 14px;
+     text-align:center}
+table.hex th{background:var(--card);color:var(--muted);font-family:inherit;
+     font-size:16px}
+
+ul.six{list-style:none;padding:0;margin:0;display:grid;
+       grid-template-columns:repeat(2,1fr);gap:12px 26px}
+ul.six li{border:1px solid var(--line);border-radius:12px;padding:14px 20px;
+          font-size:26px;background:#fff}
+ul.six li b{font-family:Consolas,monospace;color:var(--accent)}
+ul.plain{margin:0;padding-left:26px;font-size:24px}
+ul.plain li{margin:8px 0}
+pre.board{font:26px/1.5 Consolas,"Courier New",monospace;background:#fff;
+     border:1px solid var(--line);border-radius:12px;padding:16px 22px;
+     margin:0;overflow-x:auto}
+
+@media (max-width:760px){
+  body{font-size:18px}
+  .stage{padding:20px 18px 8px}
+  h1{font-size:34px} h2{font-size:26px} .lead{font-size:20px}
+  .task{font-size:23px}
+  .calc{font-size:17px} table.div{font-size:17px} pre.board{font-size:17px}
+  ul.six{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="deck">
+<div class="stage" id="stage">
+
+  <!-- 1 ------------------------------------------------------------- -->
+  <section class="slide on">
+    <h1>Шестнадцатеричная система счисления</h1>
+    <p class="lead">Основание 16. Цифр нужно шестнадцать, а привычных
+       всего десять — недостающие взяли буквами.</p>
+    <ul class="plain">
+      <li>откуда в числах взялись буквы;</li>
+      <li>переводы 16 &#8594; 10 и 10 &#8594; 16;</li>
+      <li>тетрады: 2 &#8596; 16 без десятичной;</li>
+      <li>сложение и вычитание — и <b>ответ в десятичной</b>;</li>
+      <li>сравнение чисел из разных систем.</li>
+    </ul>
+  </section>
+
+  <!-- 2 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">откуда буквы</p>
+    <h2>Цифр нужно шестнадцать, а их десять</h2>
+    <p class="lead">В системе с основанием 16 нужны цифры от 0 до 15.
+       Десять уже есть, а для оставшихся шести придумывать новые значки
+       не стали — взяли первые шесть латинских букв.</p>
+    <table class="hex">
+      <tr><th>16</th><td>A</td><td>B</td><td>C</td><td>D</td><td>E</td><td>F</td></tr>
+      <tr><th>10</th><td>10</td><td>11</td><td>12</td><td>13</td><td>14</td><td>15</td></tr>
+    </table>
+    <div class="steps" style="margin-top:20px">
+      <div class="step hint" hidden>
+        <span class="cap">это цифры, а не буквы</span>
+        <span class="mono">A</span> в числе <span class="mono">A4</span> —
+        это <b>10</b>, а не «буква А». Пока читаешь её буквой, ничего не
+        посчитаешь.
+      </div>
+      <div class="step" hidden>
+        <span class="cap">зачем она нужна</span>
+        16 = 2&#8308;, и одна шестнадцатеричная цифра заменяет сразу
+        <b>четыре</b> двоичных разряда. Байт — восемь разрядов — это ровно
+        две шестнадцатеричные цифры. Поэтому в цветах
+        (<span class="mono">#1F5FA8</span>), в адресах памяти и в кодах
+        символов пишут именно так.
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">приём 1</p>
+    <h2>Из шестнадцатеричной в десятичную</h2>
+    <p class="lead">Та же развёрнутая форма. Букву перед счётом заменяем
+       её числом.</p>
+    <div class="steps">
+      <div class="step" hidden>
+        <span class="cap">общее правило</span>
+        <div class="calc">A 4&#8321;&#8326; = 10&#183;16&#185; + 4&#183;16&#8304; = 160 + 4 = <b>164</b>
+1 5 E&#8321;&#8326; = 1&#183;16&#178; + 5&#183;16&#185; + 14&#183;16&#8304; = 256 + 80 + 14 = <b>350</b></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 --><section class="slide" data-ex="hex2dec"></section>
+
+  <!-- 5 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">приём 2</p>
+    <h2>Из десятичной в шестнадцатеричную</h2>
+    <p class="lead">Делим на 16, пока не выйдет 0. Остатки читаем
+       <b>снизу вверх</b>, остаток больше 9 сразу записываем буквой.</p>
+    <div class="steps">
+      <div class="step" hidden>
+        <span class="cap">в столбик</span>
+<div class="calc">350 : 16 = 21  ост. 14 &#8594; E   &#8593;
+ 21 : 16 =  1  ост.  5 &#8594; 5   &#9474;
+  1 : 16 =  0  ост.  1 &#8594; 1   &#9474;
+
+350 = 15E&#8321;&#8326;</div>
+      </div>
+      <div class="step hint" hidden>
+        <span class="cap">частая ошибка</span>
+        Оставить остаток числом: написать «1514» вместо «15E». Остатки
+        от 10 до 15 — это <b>одна</b> цифра, и она буква.
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 --><section class="slide" data-ex="dec2hex"></section>
+
+  <!-- 7 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">главное этого урока</p>
+    <h2>Тетрады: 2 &#8596; 16 без десятичной</h2>
+    <p class="lead">Одна шестнадцатеричная цифра — ровно <b>четыре</b>
+       двоичных разряда. Всё как с триадами, только по четыре.</p>
+    <table class="hex">
+      <tr><th>16</th><td>0</td><td>1</td><td>2</td><td>3</td><td>4</td>
+          <td>5</td><td>6</td><td>7</td></tr>
+      <tr><th>тетрада</th><td>0000</td><td>0001</td><td>0010</td><td>0011</td>
+          <td>0100</td><td>0101</td><td>0110</td><td>0111</td></tr>
+      <tr><th>16</th><td>8</td><td>9</td><td>A</td><td>B</td><td>C</td>
+          <td>D</td><td>E</td><td>F</td></tr>
+      <tr><th>тетрада</th><td>1000</td><td>1001</td><td>1010</td><td>1011</td>
+          <td>1100</td><td>1101</td><td>1110</td><td>1111</td></tr>
+    </table>
+    <div class="steps" style="margin-top:20px">
+      <div class="step" hidden>
+        <span class="cap">2 &#8594; 16 и обратно</span>
+<div class="calc">1011 0101&#8322;  &#8594;    B    5     &#8594;  B5&#8321;&#8326;
+
+     1    B    2&#8321;&#8326;
+  0001 1011 0010          &#8594;  110110010&#8322;</div>
+        <p class="note">Режем справа налево, нули дописываем слева.
+           Ведущие нули в ответе не пишем, внутри числа — обязательно.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 --><section class="slide" data-ex="bin2hex"></section>
+  <!-- 9 --><section class="slide" data-ex="hex2bin"></section>
+
+  <!-- 10 ------------------------------------------------------------ -->
+  <section class="slide">
+    <p class="eyebrow">мост</p>
+    <h2>Из восьмеричной в шестнадцатеричную — через двоичную</h2>
+    <p class="lead">Напрямую нельзя: 8 не степень 16 и 16 не степень 8.
+       Зато обе — степени двойки, и двоичная работает переходником.</p>
+    <div class="steps">
+      <div class="step" hidden>
+        <span class="cap">разобрали на триады, собрали в тетрады</span>
+<div class="calc">253&#8328;
+
+  2    5    3       каждую цифру заменили триадой
+ 010  101  011
+
+ 010101011&#8322;        ведущий ноль убрали:  10101011&#8322;
+
+ 1010 1011&#8322;         теперь режем по четыре, справа
+    A    B          &#8594;  AB&#8321;&#8326;</div>
+      </div>
+      <div class="step hint" hidden>
+        <span class="cap">где ломается</span>
+        Резать надо <b>справа</b>. Начал слева — и все группы съехали, а
+        вместе с ними и ответ. Отдельного задания на 8 &#8594; 16 в ВПР
+        нет, но в задании 2 сравнивать восьмеричное с шестнадцатеричным
+        приходится, и делают это ровно так.
+      </div>
+    </div>
+  </section>
+
+  <!-- 11 ------------------------------------------------------------ -->
+  <section class="slide">
+    <p class="eyebrow">действие 1</p>
+    <h2>Сложение: перенос на шестнадцати</h2>
+    <p class="lead">Буквы перед счётом заменяем числами, дальше как
+       всегда. Дошло до <b>16</b> — вычитаем 16 и переносим 1 влево.</p>
+    <div class="steps">
+      <div class="step" hidden>
+        <span class="cap">в столбик</span>
+<div class="calc">  1     &#8592; перенос
+  7 D
++ 1 A
+  &#9472;&#9472;&#9472;
+  9 7</div>
+        <p class="note">D + A = 13 + 10 = 23; 23 &#8722; 16 = 7 &#8594;
+           пишем 7, переносим 1.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 12 --><section class="slide" data-ex="add"></section>
+
+  <!-- 13 ------------------------------------------------------------ -->
+  <section class="slide">
+    <p class="eyebrow">действие 2</p>
+    <h2>Вычитание: заём даёт шестнадцать</h2>
+    <div class="steps">
+      <div class="step" hidden>
+        <span class="cap">в столбик</span>
+<div class="calc">    &#8226;     &#8592; отсюда занимали
+  1 D 6
+&#8722; 1 B 7
+  &#9472;&#9472;&#9472;&#9472;&#9472;
+    1 F</div>
+        <p class="note">6 меньше 7 — занимаем: 6 + 16 = 22, 22 &#8722; 7 = 15,
+           то есть <b>F</b>.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 14 --><section class="slide" data-ex="sub"></section>
+
+  <!-- 15 ------------------------------------------------------------ -->
+  <section class="slide">
+    <p class="eyebrow">внимание, здесь теряют балл</p>
+    <h2>Посчитал в шестнадцатеричной — ответ пиши в десятичной</h2>
+    <p class="lead">Формулировка ВПР: «Вычислите значение выражения
+       8F&#8321;&#8326; &#8722; 8B&#8321;&#8326;. <b>В ответе запишите
+       вычисленное значение в десятичной системе счисления.</b>»</p>
+    <div class="steps">
+      <div class="step" hidden>
+        <span class="cap">две трети работы — и мимо</span>
+        <div class="calc">8F&#8321;&#8326; &#8722; 8B&#8321;&#8326; = 4&#8321;&#8326;   &#8594;   4&#8321;&#8326; = <b>4</b></div>
+        Здесь совпало. А <span class="mono">9E&#8321;&#8326; &#8722;
+        94&#8321;&#8326; = A&#8321;&#8326;</span>, и в бланк идёт
+        <b>10</b>, а не «A».
+      </div>
+      <div class="step hint" hidden>
+        <span class="cap">сравните с прошлым уроком</span>
+        Восьмеричная арифметика (задание 3) просила ответ
+        <b>в восьмеричной</b>. Шестнадцатеричная — <b>в десятичной</b>.
+        Одно и то же задание, разный формат: читай последнюю строчку
+        условия, а не только первую.
+      </div>
+    </div>
+  </section>
+
+  <!-- 16 ------------------------------------------------------------ -->
+  <section class="slide">
+    <p class="eyebrow">действие 3</p>
+    <h2>Сравнение чисел из разных систем</h2>
+    <p class="lead">Приём один: <b>перевести всё в десятичную</b> и
+       сравнить обычные числа. По длине записи не угадаешь.</p>
+    <div class="steps">
+      <div class="step" hidden>
+        <span class="cap">как это спрашивают</span>
+        <ul class="plain" style="margin:0;font-size:21px">
+          <li>какое из четырёх чисел лежит между <i>b</i> и <i>a</i>;</li>
+          <li>сколько верных неравенств среди трёх;</li>
+          <li>сколько из четырёх чисел больше данного;</li>
+          <li>какое из трёх наибольшее (ответ — в десятичной);</li>
+          <li>сколько натуральных чисел между двумя границами.</li>
+        </ul>
+      </div>
+      <div class="step" hidden>
+        <span class="cap">чем можно пользоваться</span>
+        В бланке ВПР рядом с этим заданием <b>напечатана таблица триад и
+        тетрад</b>. Это не шпаргалка, а часть задания — она там есть у
+        всех.
+      </div>
+    </div>
+  </section>
+
+  <!-- 17 --><section class="slide" data-ex="compare"></section>
+
+  <!-- 18 ------------------------------------------------------------ -->
+  <section class="slide">
+    <h2>Итого — семь умений</h2>
+    <ul class="six">
+      <li><b>16 &#8594; 10</b><br><span class="note">развёрнутая форма</span></li>
+      <li><b>10 &#8594; 16</b><br><span class="note">деление с остатком</span></li>
+      <li><b>2 &#8594; 16</b><br><span class="note">тетрады, справа налево</span></li>
+      <li><b>16 &#8594; 2</b><br><span class="note">каждую цифру тетрадой</span></li>
+      <li><b>+</b><br><span class="note">перенос на шестнадцати</span></li>
+      <li><b>&#8722;</b><br><span class="note">заём даёт шестнадцать</span></li>
+      <li><b>сравнение</b><br><span class="note">всё в десятичную</span></li>
+    </ul>
+    <p class="note">Открываем тренажёр: четырнадцать задач, по две на
+       умение. Семь умений — «5», шесть — «4», пять — «3». Следующий
+       урок — контрольная по всему разделу.</p>
+  </section>
+
+
+<div class="bar">
+  <button id="prev">← Назад</button>
+  <button id="next">Вперёд →</button>
+  <span class="count" id="count"></span>
+  <span class="spacer"></span>
+  <button id="step" class="primary" hidden>Показать</button>
+  <button id="reroll" hidden>Другой пример</button>
+  <span class="ai-mark" style="color:#5c6070;font-size:13px">Материалы подготовлены с использованием технологий искусственного интеллекта.</span>
+  <span class="keys"><kbd>→</kbd> слайд &middot;
+        <kbd>Пробел</kbd> шаг &middot; <kbd>F11</kbd> во весь экран</span>
+</div>
+</div>
+
+<script>
+"use strict";
+/* ==== ГЕНЕРАТОР: вставлено gen.py, руками не править ==== */
+/* ==================================================================
+   nslib.js — общая библиотека раздела «Системы счисления», 8 класс.
+
+   Один источник на четыре урока (двоичная, восьмеричная,
+   шестнадцатеричная, контрольная): перевод чисел, арифметика в
+   столбик и разборы к ней. В html не правится руками — вставляется
+   между маркерами прогоном `uv run gen.py --sync`.
+
+   Работает и в браузере, и в node: в node уходит через module.exports,
+   и этим пользуется `gen.py --selftest`, который прогоняет генераторы
+   тысячами и пересчитывает каждый ответ своей арифметикой на Python.
+
+   Случайность всегда приходит снаружи — функцией rnd() в [0,1).
+   Благодаря этому самопроверка гоняет генератор с заданным зерном и
+   получает то же самое, что увидит ученик.
+================================================================== */
+"use strict";
+
+var NS = (function () {
+
+const DIGITS = "0123456789ABCDEF";
+
+// именительный: «двоичное число»
+const NAMES = {2: "двоичное", 8: "восьмеричное", 10: "десятичное",
+               16: "шестнадцатеричное"};
+// винительный: «в двоичную систему»
+const NAMES_ACC = {2: "двоичную", 8: "восьмеричную", 10: "десятичную",
+                   16: "шестнадцатеричную"};
+// предложный: «в двоичной системе»
+const NAMES_PREP = {2: "двоичной", 8: "восьмеричной", 10: "десятичной",
+                    16: "шестнадцатеричной"};
+
+const SUP = {0:"⁰",1:"¹",2:"²",3:"³",4:"⁴",5:"⁵",6:"⁶",7:"⁷",8:"⁸",9:"⁹"};
+
+function toBase(n, base) {
+  if (n === 0) return "0";
+  let out = "";
+  while (n > 0) { out = DIGITS[n % base] + out; n = Math.floor(n / base); }
+  return out;
+}
+
+function fromBase(s, base) {
+  let n = 0;
+  for (const ch of String(s).toUpperCase()) n = n * base + DIGITS.indexOf(ch);
+  return n;
+}
+
+function randInt(rnd, lo, hi) {          // включительно
+  return lo + Math.floor(rnd() * (hi - lo + 1));
+}
+
+function pick(rnd, arr) { return arr[Math.floor(rnd() * arr.length)]; }
+
+// согласование числительного: 1 число, 2 числа, 5 чисел
+function plural(n, one, few, many) {
+  const a = Math.abs(n) % 100, b = a % 10;
+  if (a > 10 && a < 20) return many;
+  if (b > 1 && b < 5) return few;
+  return b === 1 ? one : many;
+}
+
+// число в записи с основанием-индексом: 1011<sub>2</sub>
+function num(s, base) { return `<b>${s}<sub>${base}</sub></b>`; }
+
+const esc = v => String(v == null ? "" : v).replace(/&/g, "&amp;")
+                                           .replace(/</g, "&lt;");
+
+/* ------------------------------------------------------ столбик
+   Разряды разносим пробелом: так ученик видит колонки, а не строку
+   цифр, и перенос над колонкой встаёт на своё место.               */
+
+function colRow(label, digits, width, sign) {
+  const cells = (" ".repeat(Math.max(0, width - digits.length)) + digits).split("");
+  return (sign || " ") + " " + cells.join(" ") + (label ? "   " + label : "");
+}
+
+function colRule(width) {
+  return "  " + "─".repeat(width * 2 - 1);
+}
+
+/* ---------------------------------------------------- сложение
+   Возвращает {answer, html}. Работает в любом основании: перенос
+   случается там, где сумма разряда дошла до основания.             */
+
+function addSolution(a, b, base) {
+  const A = toBase(a, base), B = toBase(b, base);
+  const R = toBase(a + b, base);
+  const w = R.length;
+  const ad = (" ".repeat(w - A.length) + A).split("");
+  const bd = (" ".repeat(w - B.length) + B).split("");
+
+  // перенос, приходящий В колонку j (нумерация слева, как на экране)
+  const carryIn = new Array(w).fill(0);
+  let carry = 0;
+  for (let j = w - 1; j >= 0; j--) {
+    carryIn[j] = carry;
+    const x = ad[j] === " " ? 0 : DIGITS.indexOf(ad[j]);
+    const y = bd[j] === " " ? 0 : DIGITS.indexOf(bd[j]);
+    const s = x + y + carry;
+    carry = s >= base ? 1 : 0;
+  }
+  // Перенос в самую левую колонку показываем только если над ней есть
+  // слагаемые. Если результат стал длиннее обоих слагаемых, эта колонка
+  // и ЕСТЬ вынесенный перенос — писать над ней единицу значит писать её
+  // дважды.
+  const extra = R.length > Math.max(A.length, B.length);
+  const carryRow = carryIn
+      .map((c, j) => (c && (j > 0 || !extra)) ? "1" : " ").join("");
+
+  const lines = [];
+  if (carryRow.trim()) lines.push(colRow("← перенос", carryRow, w));
+  lines.push(colRow("", ad.join(""), w));
+  lines.push(colRow("", bd.join(""), w, "+"));
+  lines.push(colRule(w));
+  lines.push(colRow("", R, w));
+
+  const rule = base === 2
+    ? "В двоичной 1 + 1 = 10₂: пишем 0, единицу переносим в старший разряд."
+    : `В ${NAMES_PREP[base]} перенос случается, когда сумма разряда дошла до ${base}: ` +
+      `вычитаем ${base} и переносим 1 влево.`;
+  return {
+    answer: R,
+    html: `<div class="calc">${lines.join("\n")}</div>` +
+          `<p class="note">${rule}</p>`
+  };
+}
+
+/* --------------------------------------------------- вычитание */
+
+function subSolution(a, b, base) {
+  const A = toBase(a, base), B = toBase(b, base);
+  const R = toBase(a - b, base);
+  const w = A.length;
+  const ad = A.split("");
+  const bd = (" ".repeat(w - B.length) + B).split("");
+
+  // из какой колонки занимали
+  const borrowFrom = new Array(w).fill(false);
+  let borrow = 0;
+  for (let j = w - 1; j >= 0; j--) {
+    const x = DIGITS.indexOf(ad[j]) - borrow;
+    const y = bd[j] === " " ? 0 : DIGITS.indexOf(bd[j]);
+    if (x < y) { borrow = 1; if (j > 0) borrowFrom[j - 1] = true; }
+    else borrow = 0;
+  }
+  const borrowRow = borrowFrom.map(f => f ? "•" : " ").join("");
+
+  const lines = [];
+  if (borrowRow.trim()) lines.push(colRow("← отсюда занимали", borrowRow, w));
+  lines.push(colRow("", A, w));
+  lines.push(colRow("", bd.join(""), w, "−"));
+  lines.push(colRule(w));
+  lines.push(colRow("", " ".repeat(w - R.length) + R, w));
+
+  const rule = base === 2
+    ? "Не хватает — занимаем у соседа слева: одна его единица даёт 10₂ = две единицы."
+    : `Не хватает — занимаем у соседа слева: его единица даёт ${base} единиц этого разряда.`;
+  return {
+    answer: R,
+    html: `<div class="calc">${lines.join("\n")}</div>` +
+          `<p class="note">${rule}</p>`
+  };
+}
+
+/* --------------------------------------------------- умножение
+   Только для двоичной: там умножение и есть сдвиг со сложением, и
+   разбор это показывает буквально.                                 */
+
+function mulSolutionBin(a, b) {
+  const A = toBase(a, 2), B = toBase(b, 2);
+  const R = toBase(a * b, 2);
+  const w = R.length;
+
+  // частичные произведения выписываем в том порядке, в каком их пишут
+  // рукой: сначала от младшей цифры множителя, потом со сдвигом влево
+  const parts = [];
+  const bd = B.split("");
+  for (let k = bd.length - 1; k >= 0; k--) {
+    const shift = bd.length - 1 - k;
+    if (bd[k] === "1") parts.push(A + "0".repeat(shift));
+  }
+
+  const lines = [];
+  lines.push(colRow("", A, w));
+  lines.push(colRow("", " ".repeat(w - B.length) + B, w, "×"));
+  lines.push(colRule(w));
+  for (const p of parts) lines.push(colRow("", " ".repeat(w - p.length) + p, w));
+  if (parts.length > 1) {
+    lines.push(colRule(w));
+    lines.push(colRow("", " ".repeat(w - R.length) + R, w));
+  }
+
+  return {
+    answer: R,
+    html: `<div class="calc">${lines.join("\n")}</div>` +
+      `<p class="note">Умножать в двоичной проще, чем в десятичной: ` +
+      `цифра множителя либо 0 (строка пустая, её не пишем), либо 1 — ` +
+      `тогда сносим множимое, сдвинув его на номер разряда. Остаётся сложить.</p>`
+  };
+}
+
+/* ----------------------------------------------------- деление
+   Уголок: на каждом шаге сносим очередную цифру и смотрим, влезает
+   ли делитель. Делимое всегда подобрано так, что делится нацело.   */
+
+function divSolutionBin(a, b) {
+  const A = toBase(a, 2), B = toBase(b, 2);
+  const Q = toBase(a / b, 2);
+  const w = A.length;
+  const LEAD = 2;                    // левое поле, чтобы влез знак «−»
+
+  // шаги: на каждом сносим очередную цифру и смотрим, влезает ли делитель
+  const steps = [];
+  let rem = 0;
+  for (let i = 0; i < A.length; i++) {
+    rem = rem * 2 + (A[i] === "1" ? 1 : 0);
+    if (rem >= b) {
+      steps.push({end: i + 1, top: toBase(rem, 2), rest: toBase(rem - b, 2)});
+      rem -= b;
+    }
+  }
+
+  // всё, что стоит в столбик, выравнивается правым краем по колонке
+  // делимого, на которой шаг закончился
+  const at = (end, text) => " ".repeat(LEAD + end - text.length) + text;
+
+  const lines = [];
+  const corner = " ".repeat(LEAD + w) + " │ ";
+  lines.push(" ".repeat(LEAD) + A + " │ " + B);
+  lines.push(" ".repeat(LEAD + w) + " ├" + "─".repeat(B.length + 2));
+  lines.push(corner + Q + "   ← частное");
+  lines.push("");
+
+  for (const s of steps) {
+    const width = Math.max(s.top.length, B.length) + 1;   // +1 под «−»
+    lines.push(at(s.end, s.top));
+    lines.push(at(s.end, "−" + B));
+    lines.push(at(s.end, "─".repeat(width)));
+    lines.push(at(s.end, s.rest));
+  }
+  lines.push("");
+  lines.push(" ".repeat(LEAD) + "остаток 0 — делится нацело");
+
+  return {
+    answer: Q,
+    html: `<div class="calc">${lines.join("\n")}</div>` +
+      `<p class="note">Сносим цифры делимого по одной. Влезает делитель — ` +
+      `в частное идёт 1 и делаем вычитание, не влезает — идёт 0. ` +
+      `Проверка: ${Q}<sub>2</sub> × ${B}<sub>2</sub> = ${A}<sub>2</sub>.</p>`
+  };
+}
+
+/* ------------------------------------------- переводы и разборы */
+
+// развёрнутая форма: из системы с основанием base в десятичную
+function expandSolution(src, base) {
+  const d = [...src], L = d.length;
+  const terms = d.map((ch, k) => {
+    const p = L - 1 - k, v = DIGITS.indexOf(ch);
+    return {p, v, val: v * Math.pow(base, p)};
+  });
+  const n = terms.reduce((s, t) => s + t.val, 0);
+  const wid = d.map(ch => ch.length);
+  return {
+    answer: String(n),
+    html: `<div class="calc">позиции: ` +
+      d.map((ch, k) => String(L - 1 - k).padStart(wid[k], " ")).join(" ") +
+      `\nчисло:   ${d.join(" ")}\n\n` +
+      terms.map(t => `${t.v}·${base}${SUP[t.p]}`).join(" + ") + `\n= ` +
+      terms.map(t => t.val).join(" + ") + `\n= ${n}</div>`
+  };
+}
+
+// деление с остатком: из десятичной в систему с основанием base
+function divideSolution(n, base) {
+  const rows = [];
+  let x = n;
+  while (x > 0) {
+    const r = x % base;
+    rows.push({from: x, q: Math.floor(x / base), r, ch: DIGITS[r], letter: r > 9});
+    x = Math.floor(x / base);
+  }
+  const w = String(n).length;
+  const p = (v, k) => String(v).padStart(k, " ");
+  const table = rows.map(r =>
+    `<tr><td>${p(r.from, w)}</td><td>:</td><td>${base}</td><td>=</td>` +
+    `<td>${p(r.q, w)}</td><td>ост.</td><td class="rem">${p(r.r, 2)}</td>` +
+    `<td>${r.letter ? "&rarr; " + r.ch : ""}</td></tr>`).join("");
+  const digits = rows.map(r => r.ch).reverse().join("");
+  return {
+    answer: digits,
+    html: `<table class="div">${table}</table>` +
+      `<div class="calc">\nчитаем снизу вверх:  ` +
+      rows.map(r => r.ch).reverse().join("  ") +
+      `\n${n} = ${digits}<sub>${base}</sub></div>`
+  };
+}
+
+/* ------------------------------------------ триады и тетрады
+   Двоичная ↔ восьмеричная (по 3 разряда) и ↔ шестнадцатеричная
+   (по 4). Через десятичную такие переводы не делают: группировка
+   быстрее и на ВПР именно её и ждут.                              */
+
+const GROUP = {8: 3, 16: 4};
+
+function chunkFromBin(bin, base) {
+  const k = GROUP[base];
+  const padded = "0".repeat((k - bin.length % k) % k) + bin;
+  const groups = [];
+  for (let i = 0; i < padded.length; i += k) groups.push(padded.slice(i, i + k));
+  const digits = groups.map(g => DIGITS[parseInt(g, 2)]);
+  return {padded, groups, digits, answer: digits.join("").replace(/^0+(?=.)/, "")};
+}
+
+function groupsToBaseSolution(bin, base) {
+  const k = GROUP[base];
+  const c = chunkFromBin(bin, base);
+  const word = k === 3 ? "триады" : "тетрады";
+  const padNote = c.padded.length !== bin.length
+    ? `\nслева дописали нули до целого числа ${word === "триады" ? "триад" : "тетрад"}: ${c.padded}`
+    : "";
+  return {
+    answer: c.answer,
+    html: `<div class="calc">разбиваем справа налево по ${k} разряда${padNote}\n\n` +
+      c.groups.join("  ") + `\n` +
+      c.groups.map((g, i) => c.digits[i].padStart(g.length, " ")).join("  ") +
+      `\n\n${bin}<sub>2</sub> = ${c.answer}<sub>${base}</sub></div>` +
+      `<p class="note">Каждая ${word === "триады" ? "триада" : "тетрада"} — ` +
+      `ровно одна цифра ${NAMES_PREP[base]} системы. Через десятичную идти не надо.</p>`
+  };
+}
+
+function groupsToBinSolution(src, base) {
+  const k = GROUP[base];
+  const word = k === 3 ? "триадой" : "тетрадой";
+  const groups = [...src].map(ch => toBase(DIGITS.indexOf(ch), 2).padStart(k, "0"));
+  const answer = groups.join("").replace(/^0+(?=.)/, "");
+  return {
+    answer,
+    html: `<div class="calc">каждую цифру заменяем ${word} из ${k} разрядов\n\n` +
+      [...src].map(ch => ch.padStart(k, " ")).join("  ") + `\n` +
+      groups.join("  ") +
+      `\n\n${src}<sub>${base}</sub> = ${answer}<sub>2</sub></div>` +
+      `<p class="note">Ведущие нули в ответе не пишем, внутри числа — обязательно.</p>`
+  };
+}
+
+/* ------------------------------- сравнение чисел (задание 2 ВПР)
+   Шесть форм — все, какие дали замеры (vpr-bank\portal-8.md и
+   bank.json). Сливать их нельзя: они спрашивают разное, хотя решаются
+   одним приёмом — перевести всё в десятичную и сравнить.
+
+   Параметр `bases` говорит, какие недесятичные основания участвуют
+   кроме двоичного: у урока 8-й системы это [8], у 16-й [16], на
+   контрольной [8, 16].
+
+   В бланке ВПР рядом с этим заданием печатается таблица триад и
+   тетрад — значит она положена и здесь. Прячем её только на время
+   работы, а не убираем совсем.                                        */
+
+function sub(n, base) { return `${n}<sub>${base}</sub>`; }
+
+// запись числа в случайном из разрешённых оснований
+function inSomeBase(rnd, n, bases) {
+  const b = pick(rnd, bases);
+  return {b, text: sub(toBase(n, b), b)};
+}
+
+// «b < c < a»: четыре двоичных числа, ровно одно попадает в промежуток
+function genBetween(rnd, bases) {
+  let lo, hi, inside, outside;
+  for (;;) {
+    lo = randInt(rnd, 64, 230);
+    hi = lo + randInt(rnd, 3, 9);
+    if (hi > 250) continue;
+    const room = [];
+    for (let x = lo + 1; x < hi; x++) room.push(x);
+    if (room.length < 2) continue;
+    inside = pick(rnd, room);
+    // отвлекающие берём ЗА границами и на самих границах: попасть в
+    // промежуток второй раз они не могут по построению
+    const out = [lo, hi, lo - randInt(rnd, 1, 6), hi + randInt(rnd, 1, 6)];
+    outside = [...new Set(out)].filter(v => v > 0 && (v <= lo || v >= hi));
+    if (outside.length >= 3) break;
+  }
+  const wrong = [];
+  while (wrong.length < 3) {
+    const v = outside.splice(Math.floor(rnd() * outside.length), 1)[0];
+    if (!wrong.includes(v)) wrong.push(v);
+  }
+
+  const values = [inside, ...wrong];
+  // перемешиваем, запоминая, где оказался верный
+  for (let i = values.length - 1; i > 0; i--) {
+    const j = Math.floor(rnd() * (i + 1));
+    [values[i], values[j]] = [values[j], values[i]];
+  }
+  const idx = values.indexOf(inside) + 1;
+
+  // границы: либо обе в десятичной, либо одна в «своей» системе
+  const bothDec = rnd() < 0.35;
+  const loTxt = bothDec ? sub(lo, 10) : inSomeBase(rnd, lo, bases).text;
+  const hiTxt = bothDec ? sub(hi, 10) : inSomeBase(rnd, hi, bases).text;
+
+  const opts = values.map((v, k) =>
+    `${k + 1}) ${toBase(v, 2)}<sub>2</sub>`).join("&nbsp;&nbsp; ");
+
+  return {
+    q: `Дано: <b>a = ${hiTxt}</b>, <b>b = ${loTxt}</b>. Какое из чисел ` +
+       `<i>c</i>, записанных в двоичной системе, отвечает условию ` +
+       `<b>b &lt; c &lt; a</b>? В ответе укажите номер.<br>${opts}`,
+    answer: String(idx), answerBase: 10,
+    solution:
+      `<div class="calc">переводим границы в десятичную:\n` +
+      `  b = ${lo}\n  a = ${hi}\n\n` +
+      values.map((v, k) =>
+        `${k + 1}) ${toBase(v, 2)}₂ = ${v}` +
+        (v === inside ? "   ← между b и a" :
+         v === lo ? "   это само b" :
+         v === hi ? "   это само a" :
+         v < lo ? "   меньше b" : "   больше a")).join("\n") +
+      `</div><p class="note">Записи в разных системах «на глаз» не ` +
+      `сравнивают: сначала всё в десятичную, потом сравнение.</p>`,
+    meta: {kind: "compare", answer: idx}
+  };
+}
+
+// «Сколько верных неравенств среди перечисленных»
+function genCountTrue(rnd, bases) {
+  const left = randInt(rnd, 100, 230);
+  const L = `${toBase(left, 2)}<sub>2</sub>`;
+  const rights = [];
+  const rows = [];
+  let trues = 0;
+  const kinds = [10, ...bases];
+  for (let i = 0; i < 3; i++) {
+    const b = kinds[i % kinds.length];
+    // числа рядом с left, чтобы ответ нельзя было угадать по размеру
+    const v = left + randInt(rnd, -40, 40);
+    if (v === left || v < 8) { i--; continue; }
+    rights.push({b, v});
+    if (left > v) trues++;
+    rows.push(`${toBase(left, 2)}<sub>2</sub> &gt; ${sub(toBase(v, b), b)}`);
+  }
+  return {
+    q: `Сколько верных неравенств среди перечисленных:<br>` +
+       rows.join(";<br>") + `.<br>Ответ запишите числом.`,
+    answer: String(trues), answerBase: 10,
+    solution:
+      `<div class="calc">${toBase(left, 2)}₂ = ${left}\n\n` +
+      rights.map(r =>
+        `${left} > ${r.v}  —  ${left > r.v ? "верно" : "неверно"}` +
+        (r.b === 10 ? "" :
+         `   (${toBase(r.v, r.b)} в ${NAMES_PREP[r.b]} это ${r.v})`)).join("\n") +
+      `\n\nверных: ${trues}</div>`,
+    meta: {kind: "compare", answer: trues}
+  };
+}
+
+// «Даны 4 двоичных числа. Сколько среди них больше, чем X»
+function genCountGreater(rnd, bases) {
+  const b = pick(rnd, bases);
+  const bound = randInt(rnd, 120, 210);
+  const nums = [];
+  while (nums.length < 4) {
+    const v = bound + randInt(rnd, -45, 45);
+    if (v === bound || v < 64 || v > 255 || nums.includes(v)) continue;
+    nums.push(v);
+  }
+  const cnt = nums.filter(v => v > bound).length;
+  return {
+    q: `Даны 4 целых числа, записанные в двоичной системе счисления:<br>` +
+       `<b>${nums.map(v => toBase(v, 2)).join(", ")}</b>.<br>` +
+       `Сколько среди них чисел, б&oacute;льших, чем ` +
+       `<b>${sub(toBase(bound, b), b)}</b>? Ответ запишите числом.`,
+    answer: String(cnt), answerBase: 10,
+    solution:
+      `<div class="calc">${toBase(bound, b)}<sub>${b}</sub> = ${bound}\n\n` +
+      nums.map(v => `${toBase(v, 2)}₂ = ${v}` +
+        (v > bound ? "   больше" : "   не больше")).join("\n") +
+      `\n\nбольше: ${cnt}</div>`,
+    meta: {kind: "compare", answer: cnt}
+  };
+}
+
+// «Выберите наибольшее; ответ в десятичной»
+function genMaxOfThree(rnd, bases) {
+  // основания разные: в замере это всегда три разные системы
+  const kinds = [2, ...bases, 10].slice(0, 3);
+  const vals = [];
+  while (vals.length < 3) {
+    const v = randInt(rnd, 90, 250);
+    if (vals.some(x => x.v === v)) continue;
+    vals.push({v, b: kinds[vals.length]});
+  }
+  const best = Math.max(...vals.map(x => x.v));
+  return {
+    q: `Выберите наибольшее из чисел: ` +
+       vals.map(x => `<b>${sub(toBase(x.v, x.b), x.b)}</b>`).join(", ") +
+       `. В ответе запишите выбранное число <b>в десятичной системе ` +
+       `счисления</b>.`,
+    answer: String(best), answerBase: 10,
+    solution:
+      `<div class="calc">` +
+      vals.map(x => `${toBase(x.v, x.b)}<sub>${x.b}</sub> = ${x.v}` +
+        (x.v === best ? "   ← наибольшее" : "")).join("\n") +
+      `\n\nответ: ${best}</div>` +
+      // напоминание про формат уместно, только если наибольшее записано
+      // НЕ в десятичной: иначе оно советует не делать того, чего никто
+      // и не сделает
+      (vals.find(x => x.v === best).b === 10 ? "" :
+       `<p class="note">Ответ просят в десятичной — записать сюда ` +
+       `${toBase(best, vals.find(x => x.v === best).b)} будет ошибкой: ` +
+       `это то же число, но не в той системе.</p>`),
+    meta: {kind: "compare", answer: best}
+  };
+}
+
+// «Сколько натуральных чисел удовлетворяет неравенству»
+function genCountBetween(rnd, bases) {
+  const b = pick(rnd, bases);
+  const lo = randInt(rnd, 100, 240);
+  const gap = randInt(rnd, 2, 7);
+  const hi = lo + gap;
+  return {
+    q: `Определите количество натуральных чисел, удовлетворяющих ` +
+       `неравенству <b>${sub(toBase(lo, b), b)} &lt; x &lt; ` +
+       `${sub(toBase(hi, b), b)}</b>. Ответ запишите в десятичной ` +
+       `системе счисления.`,
+    answer: String(gap - 1), answerBase: 10,
+    solution:
+      `<div class="calc">${toBase(lo, b)}<sub>${b}</sub> = ${lo}\n` +
+      `${toBase(hi, b)}<sub>${b}</sub> = ${hi}\n\n` +
+      `между ними: ${lo + 1} … ${hi - 1}\n` +
+      `это ${hi - 1} − ${lo + 1} + 1 = ${gap - 1} ` +
+      `${plural(gap - 1, "число", "числа", "чисел")}</div>` +
+      `<p class="note">Неравенство строгое — сами границы не считаем.</p>`,
+    meta: {kind: "compare", answer: gap - 1}
+  };
+}
+
+const COMPARE_FORMS = [genBetween, genCountTrue, genCountGreater,
+                       genMaxOfThree, genCountBetween];
+
+// Один тип задачи «сравнение» на урок: форма выбирается случайно из
+// пяти. Так ученик не привыкает к одной формулировке — на ВПР ему
+// достанется какая-то одна, и заранее неизвестно какая.
+function genCompare(rnd, bases) {
+  return pick(rnd, COMPARE_FORMS)(rnd, bases);
+}
+
+// таблица триад и тетрад — та же, что печатают в бланке ВПР
+const TRIAD_TABLE = `<table class="conv">
+  <tr><th>8</th><th>триада</th><th>16</th><th>тетрада</th>
+      <th>16</th><th>тетрада</th></tr>
+  <tr><td>0</td><td>000</td><td>0</td><td>0000</td><td>8</td><td>1000</td></tr>
+  <tr><td>1</td><td>001</td><td>1</td><td>0001</td><td>9</td><td>1001</td></tr>
+  <tr><td>2</td><td>010</td><td>2</td><td>0010</td><td>A</td><td>1010</td></tr>
+  <tr><td>3</td><td>011</td><td>3</td><td>0011</td><td>B</td><td>1011</td></tr>
+  <tr><td>4</td><td>100</td><td>4</td><td>0100</td><td>C</td><td>1100</td></tr>
+  <tr><td>5</td><td>101</td><td>5</td><td>0101</td><td>D</td><td>1101</td></tr>
+  <tr><td>6</td><td>110</td><td>6</td><td>0110</td><td>E</td><td>1110</td></tr>
+  <tr><td>7</td><td>111</td><td>7</td><td>0111</td><td>F</td><td>1111</td></tr>
+</table>`;
+
+/* ------------------------------------------------- нормализация
+   Ответ сверяется знак в знак: на ВПР его читает машина. Убираем
+   только то, что записью числа не является, — пробелы по краям и
+   приписанное основание.                                          */
+
+function normalize(raw) {
+  let s = String(raw).trim().toUpperCase().replace(/[\s ]/g, "");
+  s = s.replace(/[₀₁₂₃₄₅₆₇₈₉]+$/, "");
+  s = s.replace(/\((?:2|8|10|16)\)$/, "");
+  s = s.replace(/_.*$/, "");
+  return s.replace(/^\+/, "");
+}
+
+// цифра, которой в этой системе быть не может: это не описка, а
+// непонимание, и назвать его полезнее, чем молча поставить минус
+function badDigit(s, base) {
+  for (const ch of s) {
+    const v = DIGITS.indexOf(ch);
+    if (v < 0 || v >= base) return ch;
+  }
+  return null;
+}
+
+return {
+  DIGITS, NAMES, NAMES_ACC, NAMES_PREP, SUP, GROUP,
+  toBase, fromBase, randInt, pick, plural, num, esc,
+  addSolution, subSolution, mulSolutionBin, divSolutionBin,
+  expandSolution, divideSolution,
+  chunkFromBin, groupsToBaseSolution, groupsToBinSolution,
+  genCompare, COMPARE_FORMS, TRIAD_TABLE,
+  normalize, badDigit
+};
+})();
+
+/* ==================================================================
+   Урок 5, шестнадцатеричная система счисления — семь типов задач.
+
+   Замер (vpr-bank\portal-8.md, vpr-bank\bank.json):
+
+   * задание 1 ВПР — переводы 16 ↔ 10 и 2 ↔ 16 через тетрады;
+   * задание 3 ВПР — арифметика. И вот здесь главное отличие от урока 4:
+     у ШЕСТНАДЦАТЕРИЧНЫХ задач ответ просят **в десятичной системе**.
+     Четыре формулировки из пяти на портале звучат «Вычислите значение
+     выражения 8F₁₆ − 8B₁₆. В ответе запишите вычисленное значение в
+     десятичной системе счисления». У восьмеричных — наоборот, ответ в
+     восьмеричной. Это не оформление: ученик считает в шестнадцатеричной,
+     а пишет в десятичной, и половина потерь именно здесь;
+   * задание 2 ВПР — сравнение, седьмым типом (общий генератор раздела,
+     основания [16]).
+
+   Три формы условия для арифметики, все из замера:
+     «Вычислите значение выражения 8F₁₆ − 8B₁₆.» — с индексами;
+     «Найдите значение выражения 8F − 80 в шестнадцатеричной системе
+      счисления.» — основание словами, без индексов;
+     «Вычислите значение выражения AD₁₆ − 251₈.» — слагаемые в РАЗНЫХ
+      системах, ответ всё равно в десятичной.
+   Последняя редкая, поэтому и выпадает редко — но выпадает: на ВПР она
+   встретилась.
+
+   Разности в вариантах маленькие (8F−8B = 4, 9E−94 = 10, 1D7−1A6 = 49),
+   и это не случайность: считать просят точно, а не много. Держим тот же
+   масштаб.
+
+   Файл вставляется в html прогоном `uv run gen.py --sync` и правится
+   только здесь.
+================================================================== */
+"use strict";
+
+var TASKS = (function (NS) {
+
+const {toBase, randInt, num} = NS;
+
+const TAIL_DEC = "В ответе запишите вычисленное значение в десятичной " +
+                 "системе счисления.";
+
+// три формы условия из замера
+function opQuestion(rnd, a, b, sign, mixedBase) {
+  const A = toBase(a, 16);
+  const r = rnd();
+  if (mixedBase) {
+    // слагаемые в разных системах: 16-я и 8-я
+    return `Вычислите значение выражения ${num(A, 16)} ${sign} ` +
+           `${num(toBase(b, 8), 8)}. ${TAIL_DEC}`;
+  }
+  const B = toBase(b, 16);
+  if (r < 0.35) {
+    // основание названо словами, индексов нет
+    return `Найдите значение выражения <b>${A}</b> ${sign} <b>${B}</b> ` +
+           `в шестнадцатеричной системе счисления. ${TAIL_DEC}`;
+  }
+  return `Вычислите значение выражения ${num(A, 16)} ${sign} ` +
+         `${num(B, 16)}. ${TAIL_DEC}`;
+}
+
+// разбор к арифметике: считаем в шестнадцатеричной, ответ переводим
+function arithSolution(a, b, sign, mixedBase) {
+  const inner = sign === "+" ? NS.addSolution(a, b, 16)
+                             : NS.subSolution(a, b, 16);
+  const res = sign === "+" ? a + b : a - b;
+  const bTxt = mixedBase
+    ? `${toBase(b, 8)}<sub>8</sub> = ${toBase(b, 16)}<sub>16</sub>`
+    : null;
+  return {
+    answer: String(res),
+    html:
+      (bTxt ? `<p class="note">Слагаемые в разных системах — сначала ` +
+              `приводим второе к шестнадцатеричной: ${bTxt}.</p>` : "") +
+      inner.html +
+      `<div class="calc">${toBase(res, 16)}<sub>16</sub> = ${res}</div>` +
+      `<p class="note">Ответ просят <b>в десятичной</b>: пишем ` +
+      `<b>${res}</b>, а не ${toBase(res, 16)}. Это самая частая потеря ` +
+      `балла в этом задании.</p>`
+  };
+}
+
+const TYPES = [
+  {
+    id: "hex2dec", title: "16 → 10",
+    gen(rnd) {
+      let n;
+      // пусть в записи почти всегда будет буква: иначе задача
+      // вырождается в «прочитай двузначное число»
+      do { n = randInt(rnd, 40, 255); }
+      while (n % 16 < 10 && Math.floor(n / 16) % 16 < 10 && rnd() < 0.85);
+      const src = toBase(n, 16);
+      const s = NS.expandSolution(src, 16);
+      return {
+        q: `Переведите шестнадцатеричное число ${num(src, 16)} в ` +
+           `десятичную систему счисления.`,
+        answer: s.answer, answerBase: 10, solution: s.html,
+        meta: {kind: "toDec", base: 16, n}
+      };
+    }
+  },
+  {
+    id: "dec2hex", title: "10 → 16",
+    gen(rnd) {
+      const n = randInt(rnd, 60, 500);
+      const s = NS.divideSolution(n, 16);
+      return {
+        q: `Переведите число <b>${n}</b> из десятичной системы счисления ` +
+           `в шестнадцатеричную систему счисления. В ответе укажите ` +
+           `шестнадцатеричное число. Основание системы счисления ` +
+           `указывать не нужно.`,
+        answer: s.answer, answerBase: 16, solution: s.html,
+        meta: {kind: "fromDec", base: 16, n}
+      };
+    }
+  },
+  {
+    id: "bin2hex", title: "2 → 16 (тетрады)",
+    gen(rnd) {
+      const n = randInt(rnd, 40, 500);
+      const bin = toBase(n, 2);
+      const s = NS.groupsToBaseSolution(bin, 16);
+      return {
+        q: `Переведите двоичное число ${num(bin, 2)} в шестнадцатеричную ` +
+           `систему счисления. Основание системы писать не нужно.`,
+        answer: s.answer, answerBase: 16, solution: s.html,
+        meta: {kind: "binToBase", base: 16, n}
+      };
+    }
+  },
+  {
+    id: "hex2bin", title: "16 → 2 (тетрады)",
+    gen(rnd) {
+      let n;
+      do { n = randInt(rnd, 40, 500); }
+      while (!/[A-F]/.test(toBase(n, 16)) && rnd() < 0.8);
+      const hex = toBase(n, 16);
+      const s = NS.groupsToBinSolution(hex, 16);
+      return {
+        q: `Переведите шестнадцатеричное число ${num(hex, 16)} в ` +
+           `двоичную систему счисления. Основание системы писать не нужно.`,
+        answer: s.answer, answerBase: 2, solution: s.html,
+        meta: {kind: "baseToBin", base: 16, n}
+      };
+    }
+  },
+  {
+    id: "add", title: "сложение",
+    gen(rnd) {
+      let a, b;
+      do {
+        a = randInt(rnd, 0x40, 0xC0);
+        b = randInt(rnd, 0x18, 0x90);
+      } while (!hasCarry(a, b, 16) || a + b > 0x1FF);
+      const mixed = rnd() < 0.18;         // редкая форма из замера
+      const s = arithSolution(a, b, "+", mixed);
+      return {
+        q: opQuestion(rnd, a, b, "+", mixed),
+        answer: s.answer, answerBase: 10, solution: s.html,
+        meta: {kind: "addDec", a, b}
+      };
+    }
+  },
+  {
+    id: "sub", title: "вычитание",
+    gen(rnd) {
+      let a, b;
+      do {
+        a = randInt(rnd, 0x80, 0x1E0);
+        // разность держим небольшой — в вариантах она 4, 10, 49
+        b = a - randInt(rnd, 3, 0x40);
+      } while (b < 0x20 || !hasBorrow(a, b, 16));
+      const mixed = rnd() < 0.18;
+      const s = arithSolution(a, b, "−", mixed);
+      return {
+        q: opQuestion(rnd, a, b, "−", mixed),
+        answer: s.answer, answerBase: 10, solution: s.html,
+        meta: {kind: "subDec", a, b}
+      };
+    }
+  },
+  {
+    id: "compare", title: "сравнение",
+    gen(rnd) {
+      return NS.genCompare(rnd, [16]);
+    }
+  }
+];
+
+// Перенос и заём — то, ради чего эти задачи и нужны: без них считать в
+// шестнадцатеричной не отличается от счёта в десятичной.
+function hasCarry(a, b, base) {
+  while (a > 0 || b > 0) {
+    if (a % base + b % base >= base) return true;
+    a = Math.floor(a / base);
+    b = Math.floor(b / base);
+  }
+  return false;
+}
+
+function hasBorrow(a, b, base) {
+  while (b > 0) {
+    if (a % base < b % base) return true;
+    a = Math.floor(a / base);
+    b = Math.floor(b / base);
+  }
+  return false;
+}
+
+const SCALE = {7: 5, 6: 4, 5: 3};
+
+return {TYPES, SCALE, TOPIC: "hex-system"};
+})(NS);
+/* ==== /ГЕНЕРАТОР ==== */
+
+/* ------------------------------------------------------------------
+   Слайды-примеры собираются тем же генератором, что и тренажёр:
+   кнопка «Другой пример» перебрасывает числа, и можно разобрать
+   два-три случая подряд, не выходя со слайда. Второго набора примеров
+   для презентации не заводим — разъедется.
+------------------------------------------------------------------ */
+
+const TITLES = {
+  hex2dec: "Пример: из шестнадцатеричной в десятичную",
+  dec2hex: "Пример: из десятичной в шестнадцатеричную",
+  bin2hex: "Пример: из двоичной в шестнадцатеричную",
+  hex2bin: "Пример: из шестнадцатеричной в двоичную",
+  add:     "Пример: сложение",
+  sub:     "Пример: вычитание",
+  compare: "Пример: сравнение"
+};
+
+const slides = [...document.querySelectorAll(".slide")];
+let cur = 0;
+let shown = 0;
+
+const isExample = i => slides[i].hasAttribute("data-ex");
+// Раскрываются только шаги внутри .steps. Блок .step сам по себе виден
+// всегда и шагом не считается.
+const stepsOf = i => [...slides[i].querySelectorAll(".steps > .step")];
+
+function buildExample(i){
+  const el = slides[i];
+  const id = el.dataset.ex;
+  const type = TASKS.TYPES.find(t => t.id === id);
+  const t = type.gen(Math.random);
+  el.innerHTML =
+    `<p class="eyebrow">пример</p>
+     <h2>${TITLES[id] || "Пример"}</h2>
+     <div class="task">${t.q}</div>
+     <div class="steps">
+       <div class="step" hidden>
+         <span class="cap">как считаем</span>${t.solution}</div>
+       <div class="step answer" hidden>Ответ: ${t.answer}</div>
+     </div>`;
+  shown = 0;
+}
+
+function show(i){
+  slides[cur].classList.remove("on");
+  cur = Math.max(0, Math.min(slides.length - 1, i));
+  slides[cur].classList.add("on");
+  if (isExample(cur) && !slides[cur].dataset.built){
+    buildExample(cur);
+    slides[cur].dataset.built = "1";
+  }
+  shown = stepsOf(cur).filter(el => !el.hidden).length;
+  document.getElementById("stage").scrollTop = 0;
+  sync();
+}
+
+function sync(){
+  const total = stepsOf(cur).length;
+  const ex = isExample(cur);
+  document.getElementById("count").textContent =
+      `${cur + 1} / ${slides.length}`;
+  document.getElementById("prev").disabled = cur === 0;
+  document.getElementById("next").disabled = cur === slides.length - 1;
+
+  const stepBtn = document.getElementById("step");
+  stepBtn.hidden = total === 0;
+  document.getElementById("reroll").hidden = !ex;
+  if (total){
+    stepBtn.disabled = shown >= total;
+    stepBtn.textContent =
+        shown === 0 ? (ex ? "Показать решение" : "Раскрыть")
+      : shown >= total ? (ex ? "Решение разобрано" : "Всё открыто")
+      : `Дальше (${shown}/${total})`;
+  }
+}
+
+function nextStep(){
+  const steps = stepsOf(cur);
+  if (shown >= steps.length) return false;
+  steps[shown].hidden = false;
+  steps[shown].scrollIntoView({block: "nearest", behavior: "smooth"});
+  shown++;
+  sync();
+  return true;
+}
+
+document.getElementById("prev").addEventListener("click", () => show(cur - 1));
+document.getElementById("next").addEventListener("click", () => show(cur + 1));
+document.getElementById("step").addEventListener("click", nextStep);
+document.getElementById("reroll").addEventListener("click", () => {
+  buildExample(cur); sync();
+});
+
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowRight" || e.key === "PageDown"){ show(cur + 1); }
+  else if (e.key === "ArrowLeft" || e.key === "PageUp"){ show(cur - 1); }
+  else if (e.key === " " || e.key === "Enter"){
+    // пробел ведёт урок: шаг за шагом, потом на следующий слайд
+    if (!nextStep()) show(cur + 1);
+  } else return;
+  e.preventDefault();
+});
+
+show(0);
+</script>
+</body>
+</html>

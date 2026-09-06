@@ -1,0 +1,1223 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Шестнадцатеричная система — тренажёр</title>
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{margin:0;padding:20px 16px 60px;
+     font:17px/1.5 "Segoe UI",system-ui,sans-serif}
+.wrap{max-width:900px;margin:0 auto}
+
+h1{font-size:22px;margin:0 0 4px}
+.sub{color:var(--muted);font-size:15px;margin:0 0 18px}
+
+.panel{display:flex;align-items:center;gap:18px;flex-wrap:wrap;
+       border:2px solid var(--accent);border-radius:12px;
+       padding:12px 18px;background:var(--card);margin-bottom:20px;
+       position:sticky;top:0;z-index:5}
+.mark{display:flex;align-items:baseline;gap:10px}
+.mark span{color:var(--muted);font-size:15px}
+.mark b{font:700 40px/1 "Segoe UI",system-ui,sans-serif;min-width:44px;
+        text-align:center;border-radius:8px;padding:2px 10px;
+        background:#fff;border:2px solid var(--line)}
+.m5{color:var(--ok);border-color:var(--ok-line)!important}
+.m4{color:var(--accent);border-color:#a9c6e8!important}
+.m3{color:#8a5a00;border-color:#e6c98a!important}
+.m2{color:var(--err);border-color:var(--err-line)!important}
+.stats{color:var(--muted);font-size:14px;line-height:1.35}
+.spacer{flex:1 1 auto}
+button{font:600 15px/1 inherit;padding:11px 16px;border-radius:9px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);
+       cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+
+/* ---- список освоенных типов ---- */
+.types{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 18px}
+.chip{font-size:13px;border:1px solid var(--line);border-radius:20px;
+      padding:4px 12px;color:var(--muted);background:#fff}
+.chip.done{border-color:var(--ok-line);background:var(--ok-bg);
+           color:var(--ok);font-weight:600}
+.chip i{font-style:normal;opacity:.7}
+
+/* ---- задачи ---- */
+.task{border:1px solid var(--line);border-radius:12px;padding:14px 16px;
+      margin-bottom:12px;background:#fff}
+.task.ok{border-color:var(--ok-line);background:var(--ok-bg)}
+.task.err{border-color:var(--err-line);background:var(--err-bg)}
+.task .q{display:flex;gap:12px;align-items:flex-start}
+.num{flex:0 0 28px;height:28px;border-radius:50%;background:var(--accent);
+     color:#fff;font:700 15px/28px sans-serif;text-align:center}
+.task.ok .num{background:var(--ok)}
+.task.err .num{background:var(--err)}
+.text{flex:1 1 auto;padding-top:3px}
+.text b{font-family:Consolas,"Courier New",monospace;font-size:1.08em}
+sub{font-size:.75em}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+     margin:12px 0 0 40px}
+.tail{margin:12px 0 0 40px}
+input[type=text]{font:600 19px/1 Consolas,"Courier New",monospace;
+     padding:10px 12px;width:220px;border:2px solid var(--line);
+     border-radius:9px;background:#fff;color:var(--ink)}
+input[type=text]:focus{outline:none;border-color:var(--accent)}
+input[type=text]:disabled{background:#f1f2f6;color:var(--muted)}
+.verdict{border-radius:10px;padding:10px 14px;font-weight:600}
+.verdict.ok{background:var(--ok-bg);border:1px solid var(--ok-line);color:var(--ok)}
+.verdict.err{background:var(--err-bg);border:1px solid var(--err-line);color:var(--err)}
+.solution{margin-top:10px;border:1px solid var(--hi-line);
+          background:var(--hi-bg);border-radius:10px;padding:12px 16px;
+          color:var(--ink)}
+.solution .cap{display:block;font-size:13px;letter-spacing:.06em;
+     text-transform:uppercase;color:var(--hi);margin-bottom:8px;
+     font-weight:700}
+.calc{font:16px/1.6 Consolas,"Courier New",monospace;white-space:pre;
+      overflow-x:auto}
+.note{margin:10px 0 0;font-size:14px;color:var(--muted)}
+table.div{border-collapse:collapse;font:16px/1.4 Consolas,monospace}
+table.div td{padding:2px 10px;border:0}
+table.div td.rem{color:var(--accent);font-weight:700}
+.retry{margin-top:10px}
+
+details{margin-top:26px;border:1px solid var(--line);border-radius:12px;
+        padding:12px 18px;background:var(--card)}
+summary{cursor:pointer;font-weight:600;font-size:17px}
+details h3{font-size:16px;margin:18px 0 6px}
+details p{margin:6px 0}
+pre{background:#fff;border:1px solid var(--line);border-radius:8px;
+    padding:10px 12px;overflow-x:auto;font:14px/1.45 Consolas,monospace;
+    margin:6px 0}
+table{border-collapse:collapse;font:14px/1.4 Consolas,monospace;margin:6px 0}
+td,th{border:1px solid var(--line);padding:3px 9px;text-align:center}
+th{background:#fff;font-family:inherit;color:var(--muted)}
+.done{margin:18px 0 0;padding:12px 16px;border-radius:10px;
+      background:var(--ok-bg);border:1px solid var(--ok-line);
+      color:var(--ok);font-weight:600}
+.more{margin:18px 0 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Шестнадцатеричная система счисления — тренажёр</h1>
+<p class="sub">Четырнадцать заданий: по два на каждое из семи умений.
+   Умение засчитывается, когда решены <b>обе</b> его задачи. Ошибся —
+   увидишь разбор и получишь новую попытку.</p>
+
+<div class="panel">
+  <div class="mark">
+    <span>Оценка</span><b id="mark">—</b>
+  </div>
+  <div class="stats" id="stats"></div>
+  <div class="spacer"></div>
+  <button id="again">Начать заново</button>
+</div>
+
+<div class="types" id="types"></div>
+
+<div id="tasks"></div>
+<div id="done"></div>
+<div class="more" id="more"></div>
+
+<details>
+  <summary>Подсказка: шестнадцатеричная система и действия в ней</summary>
+
+  <h3>Что такое шестнадцатеричная система</h3>
+  <p>Основание 16, а цифр в привычном смысле только десять. Недостающие
+     шесть взяли буквами — и это <b>цифры</b>, а не буквы:</p>
+  <table class="hex">
+    <tr><th>16</th><td>A</td><td>B</td><td>C</td><td>D</td><td>E</td><td>F</td></tr>
+    <tr><th>10</th><td>10</td><td>11</td><td>12</td><td>13</td><td>14</td><td>15</td></tr>
+  </table>
+
+  <h3>Из шестнадцатеричной в десятичную — развёрнутая форма</h3>
+<pre>A 4&#8321;&#8326; = 10&#183;16&#185; + 4&#183;16&#8304; = 160 + 4 = 164</pre>
+
+  <h3>Из десятичной в шестнадцатеричную — деление с остатком</h3>
+  <p>Делим на 16, пока не выйдет 0. Остатки читаем <b>снизу вверх</b>,
+     остатки больше 9 сразу записываем буквой.</p>
+<pre>350 : 16 = 21  ост. 14 &#8594; E   &#8593;
+ 21 : 16 =  1  ост.  5 &#8594; 5   &#9474;
+  1 : 16 =  0  ост.  1 &#8594; 1   &#9474;   350 = 15E&#8321;&#8326;</pre>
+
+  <h3>Двоичная и шестнадцатеричная — через тетрады</h3>
+  <p>16 = 2&#8308;, поэтому <b>одна шестнадцатеричная цифра = ровно четыре
+     двоичных разряда</b>. Через десятичную такие переводы не делают.</p>
+<pre>2 &#8594; 16:  разбиваем справа налево по четыре
+  1011 0101&#8322;  &#8594;   B    5    &#8594;  B5&#8321;&#8326;
+
+16 &#8594; 2:  каждую цифру заменяем тетрадой
+      1    B    2&#8321;&#8326;
+   0001 1011 0010        &#8594;  110110010&#8322;</pre>
+
+  <table class="hex">
+    <tr><th>16</th><td>0</td><td>1</td><td>2</td><td>3</td><td>4</td>
+        <td>5</td><td>6</td><td>7</td></tr>
+    <tr><th>тетрада</th><td>0000</td><td>0001</td><td>0010</td><td>0011</td>
+        <td>0100</td><td>0101</td><td>0110</td><td>0111</td></tr>
+    <tr><th>16</th><td>8</td><td>9</td><td>A</td><td>B</td><td>C</td>
+        <td>D</td><td>E</td><td>F</td></tr>
+    <tr><th>тетрада</th><td>1000</td><td>1001</td><td>1010</td><td>1011</td>
+        <td>1100</td><td>1101</td><td>1110</td><td>1111</td></tr>
+  </table>
+
+  <h3>Восьмеричная и шестнадцатеричная — мост через двоичную</h3>
+  <p>Напрямую 8 &#8594; 16 не переводят: 8 не степень 16. Идут через
+     двоичную — <b>триады в тетрады</b>.</p>
+<pre>253&#8328;  &#8594;  010 101 011&#8322;  &#8594;  собрали заново по четыре:
+       &#8594;  1010 1011  &#8594;  AB&#8321;&#8326;</pre>
+
+  <h3>Сложение</h3>
+  <p>Складываем разряд с разрядом. Дошло до <b>16</b> — вычитаем 16 и
+     переносим 1 влево. Буквы перед счётом удобно заменить числами:
+     D = 13, A = 10.</p>
+<pre>  1     &#8592; перенос
+  7 D
++ 1 A
+  &#9472;&#9472;&#9472;
+  9 7</pre>
+  <p>13 + 10 = 23, 23 &#8722; 16 = 7 &#8594; пишем 7, переносим 1.</p>
+
+  <h3>Вычитание</h3>
+  <p>Не хватает — занимаем у соседа слева. Его единица даёт
+     <b>16 единиц</b> нашего разряда.</p>
+<pre>    &#8226;     &#8592; отсюда занимали
+  1 D 6
+&#8722; 1 B 7
+  &#9472;&#9472;&#9472;&#9472;&#9472;
+    1 F</pre>
+
+  <h3>Сравнение чисел из разных систем</h3>
+  <p>«На глаз» записи из разных систем не сравнивают. Приём один:
+     <b>перевести всё в десятичную</b> и сравнить обычные числа.</p>
+
+  <h3>Помни — здесь теряют больше всего</h3>
+  <p>&#8212; У шестнадцатеричной арифметики ответ просят
+     <b>в десятичной</b>: «вычислите 8F&#8321;&#8326; &#8722; 8B&#8321;&#8326;,
+     ответ запишите в десятичной системе счисления». Посчитал 4 в
+     шестнадцатеричной — переведи и напиши 4 в десятичной. У
+     восьмеричных задач было наоборот.</p>
+  <p>&#8212; A&#8211;F — это числа 10&#8211;15, а не буквы. В ответе,
+     где просят десятичную запись, букв быть не может вовсе.</p>
+</details>
+
+</div>
+
+<script>
+"use strict";
+/* ==== ГЕНЕРАТОР: вставлено gen.py, руками не править ==== */
+/* ==================================================================
+   nslib.js — общая библиотека раздела «Системы счисления», 8 класс.
+
+   Один источник на четыре урока (двоичная, восьмеричная,
+   шестнадцатеричная, контрольная): перевод чисел, арифметика в
+   столбик и разборы к ней. В html не правится руками — вставляется
+   между маркерами прогоном `uv run gen.py --sync`.
+
+   Работает и в браузере, и в node: в node уходит через module.exports,
+   и этим пользуется `gen.py --selftest`, который прогоняет генераторы
+   тысячами и пересчитывает каждый ответ своей арифметикой на Python.
+
+   Случайность всегда приходит снаружи — функцией rnd() в [0,1).
+   Благодаря этому самопроверка гоняет генератор с заданным зерном и
+   получает то же самое, что увидит ученик.
+================================================================== */
+"use strict";
+
+var NS = (function () {
+
+const DIGITS = "0123456789ABCDEF";
+
+// именительный: «двоичное число»
+const NAMES = {2: "двоичное", 8: "восьмеричное", 10: "десятичное",
+               16: "шестнадцатеричное"};
+// винительный: «в двоичную систему»
+const NAMES_ACC = {2: "двоичную", 8: "восьмеричную", 10: "десятичную",
+                   16: "шестнадцатеричную"};
+// предложный: «в двоичной системе»
+const NAMES_PREP = {2: "двоичной", 8: "восьмеричной", 10: "десятичной",
+                    16: "шестнадцатеричной"};
+
+const SUP = {0:"⁰",1:"¹",2:"²",3:"³",4:"⁴",5:"⁵",6:"⁶",7:"⁷",8:"⁸",9:"⁹"};
+
+function toBase(n, base) {
+  if (n === 0) return "0";
+  let out = "";
+  while (n > 0) { out = DIGITS[n % base] + out; n = Math.floor(n / base); }
+  return out;
+}
+
+function fromBase(s, base) {
+  let n = 0;
+  for (const ch of String(s).toUpperCase()) n = n * base + DIGITS.indexOf(ch);
+  return n;
+}
+
+function randInt(rnd, lo, hi) {          // включительно
+  return lo + Math.floor(rnd() * (hi - lo + 1));
+}
+
+function pick(rnd, arr) { return arr[Math.floor(rnd() * arr.length)]; }
+
+// согласование числительного: 1 число, 2 числа, 5 чисел
+function plural(n, one, few, many) {
+  const a = Math.abs(n) % 100, b = a % 10;
+  if (a > 10 && a < 20) return many;
+  if (b > 1 && b < 5) return few;
+  return b === 1 ? one : many;
+}
+
+// число в записи с основанием-индексом: 1011<sub>2</sub>
+function num(s, base) { return `<b>${s}<sub>${base}</sub></b>`; }
+
+const esc = v => String(v == null ? "" : v).replace(/&/g, "&amp;")
+                                           .replace(/</g, "&lt;");
+
+/* ------------------------------------------------------ столбик
+   Разряды разносим пробелом: так ученик видит колонки, а не строку
+   цифр, и перенос над колонкой встаёт на своё место.               */
+
+function colRow(label, digits, width, sign) {
+  const cells = (" ".repeat(Math.max(0, width - digits.length)) + digits).split("");
+  return (sign || " ") + " " + cells.join(" ") + (label ? "   " + label : "");
+}
+
+function colRule(width) {
+  return "  " + "─".repeat(width * 2 - 1);
+}
+
+/* ---------------------------------------------------- сложение
+   Возвращает {answer, html}. Работает в любом основании: перенос
+   случается там, где сумма разряда дошла до основания.             */
+
+function addSolution(a, b, base) {
+  const A = toBase(a, base), B = toBase(b, base);
+  const R = toBase(a + b, base);
+  const w = R.length;
+  const ad = (" ".repeat(w - A.length) + A).split("");
+  const bd = (" ".repeat(w - B.length) + B).split("");
+
+  // перенос, приходящий В колонку j (нумерация слева, как на экране)
+  const carryIn = new Array(w).fill(0);
+  let carry = 0;
+  for (let j = w - 1; j >= 0; j--) {
+    carryIn[j] = carry;
+    const x = ad[j] === " " ? 0 : DIGITS.indexOf(ad[j]);
+    const y = bd[j] === " " ? 0 : DIGITS.indexOf(bd[j]);
+    const s = x + y + carry;
+    carry = s >= base ? 1 : 0;
+  }
+  // Перенос в самую левую колонку показываем только если над ней есть
+  // слагаемые. Если результат стал длиннее обоих слагаемых, эта колонка
+  // и ЕСТЬ вынесенный перенос — писать над ней единицу значит писать её
+  // дважды.
+  const extra = R.length > Math.max(A.length, B.length);
+  const carryRow = carryIn
+      .map((c, j) => (c && (j > 0 || !extra)) ? "1" : " ").join("");
+
+  const lines = [];
+  if (carryRow.trim()) lines.push(colRow("← перенос", carryRow, w));
+  lines.push(colRow("", ad.join(""), w));
+  lines.push(colRow("", bd.join(""), w, "+"));
+  lines.push(colRule(w));
+  lines.push(colRow("", R, w));
+
+  const rule = base === 2
+    ? "В двоичной 1 + 1 = 10₂: пишем 0, единицу переносим в старший разряд."
+    : `В ${NAMES_PREP[base]} перенос случается, когда сумма разряда дошла до ${base}: ` +
+      `вычитаем ${base} и переносим 1 влево.`;
+  return {
+    answer: R,
+    html: `<div class="calc">${lines.join("\n")}</div>` +
+          `<p class="note">${rule}</p>`
+  };
+}
+
+/* --------------------------------------------------- вычитание */
+
+function subSolution(a, b, base) {
+  const A = toBase(a, base), B = toBase(b, base);
+  const R = toBase(a - b, base);
+  const w = A.length;
+  const ad = A.split("");
+  const bd = (" ".repeat(w - B.length) + B).split("");
+
+  // из какой колонки занимали
+  const borrowFrom = new Array(w).fill(false);
+  let borrow = 0;
+  for (let j = w - 1; j >= 0; j--) {
+    const x = DIGITS.indexOf(ad[j]) - borrow;
+    const y = bd[j] === " " ? 0 : DIGITS.indexOf(bd[j]);
+    if (x < y) { borrow = 1; if (j > 0) borrowFrom[j - 1] = true; }
+    else borrow = 0;
+  }
+  const borrowRow = borrowFrom.map(f => f ? "•" : " ").join("");
+
+  const lines = [];
+  if (borrowRow.trim()) lines.push(colRow("← отсюда занимали", borrowRow, w));
+  lines.push(colRow("", A, w));
+  lines.push(colRow("", bd.join(""), w, "−"));
+  lines.push(colRule(w));
+  lines.push(colRow("", " ".repeat(w - R.length) + R, w));
+
+  const rule = base === 2
+    ? "Не хватает — занимаем у соседа слева: одна его единица даёт 10₂ = две единицы."
+    : `Не хватает — занимаем у соседа слева: его единица даёт ${base} единиц этого разряда.`;
+  return {
+    answer: R,
+    html: `<div class="calc">${lines.join("\n")}</div>` +
+          `<p class="note">${rule}</p>`
+  };
+}
+
+/* --------------------------------------------------- умножение
+   Только для двоичной: там умножение и есть сдвиг со сложением, и
+   разбор это показывает буквально.                                 */
+
+function mulSolutionBin(a, b) {
+  const A = toBase(a, 2), B = toBase(b, 2);
+  const R = toBase(a * b, 2);
+  const w = R.length;
+
+  // частичные произведения выписываем в том порядке, в каком их пишут
+  // рукой: сначала от младшей цифры множителя, потом со сдвигом влево
+  const parts = [];
+  const bd = B.split("");
+  for (let k = bd.length - 1; k >= 0; k--) {
+    const shift = bd.length - 1 - k;
+    if (bd[k] === "1") parts.push(A + "0".repeat(shift));
+  }
+
+  const lines = [];
+  lines.push(colRow("", A, w));
+  lines.push(colRow("", " ".repeat(w - B.length) + B, w, "×"));
+  lines.push(colRule(w));
+  for (const p of parts) lines.push(colRow("", " ".repeat(w - p.length) + p, w));
+  if (parts.length > 1) {
+    lines.push(colRule(w));
+    lines.push(colRow("", " ".repeat(w - R.length) + R, w));
+  }
+
+  return {
+    answer: R,
+    html: `<div class="calc">${lines.join("\n")}</div>` +
+      `<p class="note">Умножать в двоичной проще, чем в десятичной: ` +
+      `цифра множителя либо 0 (строка пустая, её не пишем), либо 1 — ` +
+      `тогда сносим множимое, сдвинув его на номер разряда. Остаётся сложить.</p>`
+  };
+}
+
+/* ----------------------------------------------------- деление
+   Уголок: на каждом шаге сносим очередную цифру и смотрим, влезает
+   ли делитель. Делимое всегда подобрано так, что делится нацело.   */
+
+function divSolutionBin(a, b) {
+  const A = toBase(a, 2), B = toBase(b, 2);
+  const Q = toBase(a / b, 2);
+  const w = A.length;
+  const LEAD = 2;                    // левое поле, чтобы влез знак «−»
+
+  // шаги: на каждом сносим очередную цифру и смотрим, влезает ли делитель
+  const steps = [];
+  let rem = 0;
+  for (let i = 0; i < A.length; i++) {
+    rem = rem * 2 + (A[i] === "1" ? 1 : 0);
+    if (rem >= b) {
+      steps.push({end: i + 1, top: toBase(rem, 2), rest: toBase(rem - b, 2)});
+      rem -= b;
+    }
+  }
+
+  // всё, что стоит в столбик, выравнивается правым краем по колонке
+  // делимого, на которой шаг закончился
+  const at = (end, text) => " ".repeat(LEAD + end - text.length) + text;
+
+  const lines = [];
+  const corner = " ".repeat(LEAD + w) + " │ ";
+  lines.push(" ".repeat(LEAD) + A + " │ " + B);
+  lines.push(" ".repeat(LEAD + w) + " ├" + "─".repeat(B.length + 2));
+  lines.push(corner + Q + "   ← частное");
+  lines.push("");
+
+  for (const s of steps) {
+    const width = Math.max(s.top.length, B.length) + 1;   // +1 под «−»
+    lines.push(at(s.end, s.top));
+    lines.push(at(s.end, "−" + B));
+    lines.push(at(s.end, "─".repeat(width)));
+    lines.push(at(s.end, s.rest));
+  }
+  lines.push("");
+  lines.push(" ".repeat(LEAD) + "остаток 0 — делится нацело");
+
+  return {
+    answer: Q,
+    html: `<div class="calc">${lines.join("\n")}</div>` +
+      `<p class="note">Сносим цифры делимого по одной. Влезает делитель — ` +
+      `в частное идёт 1 и делаем вычитание, не влезает — идёт 0. ` +
+      `Проверка: ${Q}<sub>2</sub> × ${B}<sub>2</sub> = ${A}<sub>2</sub>.</p>`
+  };
+}
+
+/* ------------------------------------------- переводы и разборы */
+
+// развёрнутая форма: из системы с основанием base в десятичную
+function expandSolution(src, base) {
+  const d = [...src], L = d.length;
+  const terms = d.map((ch, k) => {
+    const p = L - 1 - k, v = DIGITS.indexOf(ch);
+    return {p, v, val: v * Math.pow(base, p)};
+  });
+  const n = terms.reduce((s, t) => s + t.val, 0);
+  const wid = d.map(ch => ch.length);
+  return {
+    answer: String(n),
+    html: `<div class="calc">позиции: ` +
+      d.map((ch, k) => String(L - 1 - k).padStart(wid[k], " ")).join(" ") +
+      `\nчисло:   ${d.join(" ")}\n\n` +
+      terms.map(t => `${t.v}·${base}${SUP[t.p]}`).join(" + ") + `\n= ` +
+      terms.map(t => t.val).join(" + ") + `\n= ${n}</div>`
+  };
+}
+
+// деление с остатком: из десятичной в систему с основанием base
+function divideSolution(n, base) {
+  const rows = [];
+  let x = n;
+  while (x > 0) {
+    const r = x % base;
+    rows.push({from: x, q: Math.floor(x / base), r, ch: DIGITS[r], letter: r > 9});
+    x = Math.floor(x / base);
+  }
+  const w = String(n).length;
+  const p = (v, k) => String(v).padStart(k, " ");
+  const table = rows.map(r =>
+    `<tr><td>${p(r.from, w)}</td><td>:</td><td>${base}</td><td>=</td>` +
+    `<td>${p(r.q, w)}</td><td>ост.</td><td class="rem">${p(r.r, 2)}</td>` +
+    `<td>${r.letter ? "&rarr; " + r.ch : ""}</td></tr>`).join("");
+  const digits = rows.map(r => r.ch).reverse().join("");
+  return {
+    answer: digits,
+    html: `<table class="div">${table}</table>` +
+      `<div class="calc">\nчитаем снизу вверх:  ` +
+      rows.map(r => r.ch).reverse().join("  ") +
+      `\n${n} = ${digits}<sub>${base}</sub></div>`
+  };
+}
+
+/* ------------------------------------------ триады и тетрады
+   Двоичная ↔ восьмеричная (по 3 разряда) и ↔ шестнадцатеричная
+   (по 4). Через десятичную такие переводы не делают: группировка
+   быстрее и на ВПР именно её и ждут.                              */
+
+const GROUP = {8: 3, 16: 4};
+
+function chunkFromBin(bin, base) {
+  const k = GROUP[base];
+  const padded = "0".repeat((k - bin.length % k) % k) + bin;
+  const groups = [];
+  for (let i = 0; i < padded.length; i += k) groups.push(padded.slice(i, i + k));
+  const digits = groups.map(g => DIGITS[parseInt(g, 2)]);
+  return {padded, groups, digits, answer: digits.join("").replace(/^0+(?=.)/, "")};
+}
+
+function groupsToBaseSolution(bin, base) {
+  const k = GROUP[base];
+  const c = chunkFromBin(bin, base);
+  const word = k === 3 ? "триады" : "тетрады";
+  const padNote = c.padded.length !== bin.length
+    ? `\nслева дописали нули до целого числа ${word === "триады" ? "триад" : "тетрад"}: ${c.padded}`
+    : "";
+  return {
+    answer: c.answer,
+    html: `<div class="calc">разбиваем справа налево по ${k} разряда${padNote}\n\n` +
+      c.groups.join("  ") + `\n` +
+      c.groups.map((g, i) => c.digits[i].padStart(g.length, " ")).join("  ") +
+      `\n\n${bin}<sub>2</sub> = ${c.answer}<sub>${base}</sub></div>` +
+      `<p class="note">Каждая ${word === "триады" ? "триада" : "тетрада"} — ` +
+      `ровно одна цифра ${NAMES_PREP[base]} системы. Через десятичную идти не надо.</p>`
+  };
+}
+
+function groupsToBinSolution(src, base) {
+  const k = GROUP[base];
+  const word = k === 3 ? "триадой" : "тетрадой";
+  const groups = [...src].map(ch => toBase(DIGITS.indexOf(ch), 2).padStart(k, "0"));
+  const answer = groups.join("").replace(/^0+(?=.)/, "");
+  return {
+    answer,
+    html: `<div class="calc">каждую цифру заменяем ${word} из ${k} разрядов\n\n` +
+      [...src].map(ch => ch.padStart(k, " ")).join("  ") + `\n` +
+      groups.join("  ") +
+      `\n\n${src}<sub>${base}</sub> = ${answer}<sub>2</sub></div>` +
+      `<p class="note">Ведущие нули в ответе не пишем, внутри числа — обязательно.</p>`
+  };
+}
+
+/* ------------------------------- сравнение чисел (задание 2 ВПР)
+   Шесть форм — все, какие дали замеры (vpr-bank\portal-8.md и
+   bank.json). Сливать их нельзя: они спрашивают разное, хотя решаются
+   одним приёмом — перевести всё в десятичную и сравнить.
+
+   Параметр `bases` говорит, какие недесятичные основания участвуют
+   кроме двоичного: у урока 8-й системы это [8], у 16-й [16], на
+   контрольной [8, 16].
+
+   В бланке ВПР рядом с этим заданием печатается таблица триад и
+   тетрад — значит она положена и здесь. Прячем её только на время
+   работы, а не убираем совсем.                                        */
+
+function sub(n, base) { return `${n}<sub>${base}</sub>`; }
+
+// запись числа в случайном из разрешённых оснований
+function inSomeBase(rnd, n, bases) {
+  const b = pick(rnd, bases);
+  return {b, text: sub(toBase(n, b), b)};
+}
+
+// «b < c < a»: четыре двоичных числа, ровно одно попадает в промежуток
+function genBetween(rnd, bases) {
+  let lo, hi, inside, outside;
+  for (;;) {
+    lo = randInt(rnd, 64, 230);
+    hi = lo + randInt(rnd, 3, 9);
+    if (hi > 250) continue;
+    const room = [];
+    for (let x = lo + 1; x < hi; x++) room.push(x);
+    if (room.length < 2) continue;
+    inside = pick(rnd, room);
+    // отвлекающие берём ЗА границами и на самих границах: попасть в
+    // промежуток второй раз они не могут по построению
+    const out = [lo, hi, lo - randInt(rnd, 1, 6), hi + randInt(rnd, 1, 6)];
+    outside = [...new Set(out)].filter(v => v > 0 && (v <= lo || v >= hi));
+    if (outside.length >= 3) break;
+  }
+  const wrong = [];
+  while (wrong.length < 3) {
+    const v = outside.splice(Math.floor(rnd() * outside.length), 1)[0];
+    if (!wrong.includes(v)) wrong.push(v);
+  }
+
+  const values = [inside, ...wrong];
+  // перемешиваем, запоминая, где оказался верный
+  for (let i = values.length - 1; i > 0; i--) {
+    const j = Math.floor(rnd() * (i + 1));
+    [values[i], values[j]] = [values[j], values[i]];
+  }
+  const idx = values.indexOf(inside) + 1;
+
+  // границы: либо обе в десятичной, либо одна в «своей» системе
+  const bothDec = rnd() < 0.35;
+  const loTxt = bothDec ? sub(lo, 10) : inSomeBase(rnd, lo, bases).text;
+  const hiTxt = bothDec ? sub(hi, 10) : inSomeBase(rnd, hi, bases).text;
+
+  const opts = values.map((v, k) =>
+    `${k + 1}) ${toBase(v, 2)}<sub>2</sub>`).join("&nbsp;&nbsp; ");
+
+  return {
+    q: `Дано: <b>a = ${hiTxt}</b>, <b>b = ${loTxt}</b>. Какое из чисел ` +
+       `<i>c</i>, записанных в двоичной системе, отвечает условию ` +
+       `<b>b &lt; c &lt; a</b>? В ответе укажите номер.<br>${opts}`,
+    answer: String(idx), answerBase: 10,
+    solution:
+      `<div class="calc">переводим границы в десятичную:\n` +
+      `  b = ${lo}\n  a = ${hi}\n\n` +
+      values.map((v, k) =>
+        `${k + 1}) ${toBase(v, 2)}₂ = ${v}` +
+        (v === inside ? "   ← между b и a" :
+         v === lo ? "   это само b" :
+         v === hi ? "   это само a" :
+         v < lo ? "   меньше b" : "   больше a")).join("\n") +
+      `</div><p class="note">Записи в разных системах «на глаз» не ` +
+      `сравнивают: сначала всё в десятичную, потом сравнение.</p>`,
+    meta: {kind: "compare", answer: idx}
+  };
+}
+
+// «Сколько верных неравенств среди перечисленных»
+function genCountTrue(rnd, bases) {
+  const left = randInt(rnd, 100, 230);
+  const L = `${toBase(left, 2)}<sub>2</sub>`;
+  const rights = [];
+  const rows = [];
+  let trues = 0;
+  const kinds = [10, ...bases];
+  for (let i = 0; i < 3; i++) {
+    const b = kinds[i % kinds.length];
+    // числа рядом с left, чтобы ответ нельзя было угадать по размеру
+    const v = left + randInt(rnd, -40, 40);
+    if (v === left || v < 8) { i--; continue; }
+    rights.push({b, v});
+    if (left > v) trues++;
+    rows.push(`${toBase(left, 2)}<sub>2</sub> &gt; ${sub(toBase(v, b), b)}`);
+  }
+  return {
+    q: `Сколько верных неравенств среди перечисленных:<br>` +
+       rows.join(";<br>") + `.<br>Ответ запишите числом.`,
+    answer: String(trues), answerBase: 10,
+    solution:
+      `<div class="calc">${toBase(left, 2)}₂ = ${left}\n\n` +
+      rights.map(r =>
+        `${left} > ${r.v}  —  ${left > r.v ? "верно" : "неверно"}` +
+        (r.b === 10 ? "" :
+         `   (${toBase(r.v, r.b)} в ${NAMES_PREP[r.b]} это ${r.v})`)).join("\n") +
+      `\n\nверных: ${trues}</div>`,
+    meta: {kind: "compare", answer: trues}
+  };
+}
+
+// «Даны 4 двоичных числа. Сколько среди них больше, чем X»
+function genCountGreater(rnd, bases) {
+  const b = pick(rnd, bases);
+  const bound = randInt(rnd, 120, 210);
+  const nums = [];
+  while (nums.length < 4) {
+    const v = bound + randInt(rnd, -45, 45);
+    if (v === bound || v < 64 || v > 255 || nums.includes(v)) continue;
+    nums.push(v);
+  }
+  const cnt = nums.filter(v => v > bound).length;
+  return {
+    q: `Даны 4 целых числа, записанные в двоичной системе счисления:<br>` +
+       `<b>${nums.map(v => toBase(v, 2)).join(", ")}</b>.<br>` +
+       `Сколько среди них чисел, б&oacute;льших, чем ` +
+       `<b>${sub(toBase(bound, b), b)}</b>? Ответ запишите числом.`,
+    answer: String(cnt), answerBase: 10,
+    solution:
+      `<div class="calc">${toBase(bound, b)}<sub>${b}</sub> = ${bound}\n\n` +
+      nums.map(v => `${toBase(v, 2)}₂ = ${v}` +
+        (v > bound ? "   больше" : "   не больше")).join("\n") +
+      `\n\nбольше: ${cnt}</div>`,
+    meta: {kind: "compare", answer: cnt}
+  };
+}
+
+// «Выберите наибольшее; ответ в десятичной»
+function genMaxOfThree(rnd, bases) {
+  // основания разные: в замере это всегда три разные системы
+  const kinds = [2, ...bases, 10].slice(0, 3);
+  const vals = [];
+  while (vals.length < 3) {
+    const v = randInt(rnd, 90, 250);
+    if (vals.some(x => x.v === v)) continue;
+    vals.push({v, b: kinds[vals.length]});
+  }
+  const best = Math.max(...vals.map(x => x.v));
+  return {
+    q: `Выберите наибольшее из чисел: ` +
+       vals.map(x => `<b>${sub(toBase(x.v, x.b), x.b)}</b>`).join(", ") +
+       `. В ответе запишите выбранное число <b>в десятичной системе ` +
+       `счисления</b>.`,
+    answer: String(best), answerBase: 10,
+    solution:
+      `<div class="calc">` +
+      vals.map(x => `${toBase(x.v, x.b)}<sub>${x.b}</sub> = ${x.v}` +
+        (x.v === best ? "   ← наибольшее" : "")).join("\n") +
+      `\n\nответ: ${best}</div>` +
+      // напоминание про формат уместно, только если наибольшее записано
+      // НЕ в десятичной: иначе оно советует не делать того, чего никто
+      // и не сделает
+      (vals.find(x => x.v === best).b === 10 ? "" :
+       `<p class="note">Ответ просят в десятичной — записать сюда ` +
+       `${toBase(best, vals.find(x => x.v === best).b)} будет ошибкой: ` +
+       `это то же число, но не в той системе.</p>`),
+    meta: {kind: "compare", answer: best}
+  };
+}
+
+// «Сколько натуральных чисел удовлетворяет неравенству»
+function genCountBetween(rnd, bases) {
+  const b = pick(rnd, bases);
+  const lo = randInt(rnd, 100, 240);
+  const gap = randInt(rnd, 2, 7);
+  const hi = lo + gap;
+  return {
+    q: `Определите количество натуральных чисел, удовлетворяющих ` +
+       `неравенству <b>${sub(toBase(lo, b), b)} &lt; x &lt; ` +
+       `${sub(toBase(hi, b), b)}</b>. Ответ запишите в десятичной ` +
+       `системе счисления.`,
+    answer: String(gap - 1), answerBase: 10,
+    solution:
+      `<div class="calc">${toBase(lo, b)}<sub>${b}</sub> = ${lo}\n` +
+      `${toBase(hi, b)}<sub>${b}</sub> = ${hi}\n\n` +
+      `между ними: ${lo + 1} … ${hi - 1}\n` +
+      `это ${hi - 1} − ${lo + 1} + 1 = ${gap - 1} ` +
+      `${plural(gap - 1, "число", "числа", "чисел")}</div>` +
+      `<p class="note">Неравенство строгое — сами границы не считаем.</p>`,
+    meta: {kind: "compare", answer: gap - 1}
+  };
+}
+
+const COMPARE_FORMS = [genBetween, genCountTrue, genCountGreater,
+                       genMaxOfThree, genCountBetween];
+
+// Один тип задачи «сравнение» на урок: форма выбирается случайно из
+// пяти. Так ученик не привыкает к одной формулировке — на ВПР ему
+// достанется какая-то одна, и заранее неизвестно какая.
+function genCompare(rnd, bases) {
+  return pick(rnd, COMPARE_FORMS)(rnd, bases);
+}
+
+// таблица триад и тетрад — та же, что печатают в бланке ВПР
+const TRIAD_TABLE = `<table class="conv">
+  <tr><th>8</th><th>триада</th><th>16</th><th>тетрада</th>
+      <th>16</th><th>тетрада</th></tr>
+  <tr><td>0</td><td>000</td><td>0</td><td>0000</td><td>8</td><td>1000</td></tr>
+  <tr><td>1</td><td>001</td><td>1</td><td>0001</td><td>9</td><td>1001</td></tr>
+  <tr><td>2</td><td>010</td><td>2</td><td>0010</td><td>A</td><td>1010</td></tr>
+  <tr><td>3</td><td>011</td><td>3</td><td>0011</td><td>B</td><td>1011</td></tr>
+  <tr><td>4</td><td>100</td><td>4</td><td>0100</td><td>C</td><td>1100</td></tr>
+  <tr><td>5</td><td>101</td><td>5</td><td>0101</td><td>D</td><td>1101</td></tr>
+  <tr><td>6</td><td>110</td><td>6</td><td>0110</td><td>E</td><td>1110</td></tr>
+  <tr><td>7</td><td>111</td><td>7</td><td>0111</td><td>F</td><td>1111</td></tr>
+</table>`;
+
+/* ------------------------------------------------- нормализация
+   Ответ сверяется знак в знак: на ВПР его читает машина. Убираем
+   только то, что записью числа не является, — пробелы по краям и
+   приписанное основание.                                          */
+
+function normalize(raw) {
+  let s = String(raw).trim().toUpperCase().replace(/[\s ]/g, "");
+  s = s.replace(/[₀₁₂₃₄₅₆₇₈₉]+$/, "");
+  s = s.replace(/\((?:2|8|10|16)\)$/, "");
+  s = s.replace(/_.*$/, "");
+  return s.replace(/^\+/, "");
+}
+
+// цифра, которой в этой системе быть не может: это не описка, а
+// непонимание, и назвать его полезнее, чем молча поставить минус
+function badDigit(s, base) {
+  for (const ch of s) {
+    const v = DIGITS.indexOf(ch);
+    if (v < 0 || v >= base) return ch;
+  }
+  return null;
+}
+
+return {
+  DIGITS, NAMES, NAMES_ACC, NAMES_PREP, SUP, GROUP,
+  toBase, fromBase, randInt, pick, plural, num, esc,
+  addSolution, subSolution, mulSolutionBin, divSolutionBin,
+  expandSolution, divideSolution,
+  chunkFromBin, groupsToBaseSolution, groupsToBinSolution,
+  genCompare, COMPARE_FORMS, TRIAD_TABLE,
+  normalize, badDigit
+};
+})();
+
+/* ==================================================================
+   Урок 5, шестнадцатеричная система счисления — семь типов задач.
+
+   Замер (vpr-bank\portal-8.md, vpr-bank\bank.json):
+
+   * задание 1 ВПР — переводы 16 ↔ 10 и 2 ↔ 16 через тетрады;
+   * задание 3 ВПР — арифметика. И вот здесь главное отличие от урока 4:
+     у ШЕСТНАДЦАТЕРИЧНЫХ задач ответ просят **в десятичной системе**.
+     Четыре формулировки из пяти на портале звучат «Вычислите значение
+     выражения 8F₁₆ − 8B₁₆. В ответе запишите вычисленное значение в
+     десятичной системе счисления». У восьмеричных — наоборот, ответ в
+     восьмеричной. Это не оформление: ученик считает в шестнадцатеричной,
+     а пишет в десятичной, и половина потерь именно здесь;
+   * задание 2 ВПР — сравнение, седьмым типом (общий генератор раздела,
+     основания [16]).
+
+   Три формы условия для арифметики, все из замера:
+     «Вычислите значение выражения 8F₁₆ − 8B₁₆.» — с индексами;
+     «Найдите значение выражения 8F − 80 в шестнадцатеричной системе
+      счисления.» — основание словами, без индексов;
+     «Вычислите значение выражения AD₁₆ − 251₈.» — слагаемые в РАЗНЫХ
+      системах, ответ всё равно в десятичной.
+   Последняя редкая, поэтому и выпадает редко — но выпадает: на ВПР она
+   встретилась.
+
+   Разности в вариантах маленькие (8F−8B = 4, 9E−94 = 10, 1D7−1A6 = 49),
+   и это не случайность: считать просят точно, а не много. Держим тот же
+   масштаб.
+
+   Файл вставляется в html прогоном `uv run gen.py --sync` и правится
+   только здесь.
+================================================================== */
+"use strict";
+
+var TASKS = (function (NS) {
+
+const {toBase, randInt, num} = NS;
+
+const TAIL_DEC = "В ответе запишите вычисленное значение в десятичной " +
+                 "системе счисления.";
+
+// три формы условия из замера
+function opQuestion(rnd, a, b, sign, mixedBase) {
+  const A = toBase(a, 16);
+  const r = rnd();
+  if (mixedBase) {
+    // слагаемые в разных системах: 16-я и 8-я
+    return `Вычислите значение выражения ${num(A, 16)} ${sign} ` +
+           `${num(toBase(b, 8), 8)}. ${TAIL_DEC}`;
+  }
+  const B = toBase(b, 16);
+  if (r < 0.35) {
+    // основание названо словами, индексов нет
+    return `Найдите значение выражения <b>${A}</b> ${sign} <b>${B}</b> ` +
+           `в шестнадцатеричной системе счисления. ${TAIL_DEC}`;
+  }
+  return `Вычислите значение выражения ${num(A, 16)} ${sign} ` +
+         `${num(B, 16)}. ${TAIL_DEC}`;
+}
+
+// разбор к арифметике: считаем в шестнадцатеричной, ответ переводим
+function arithSolution(a, b, sign, mixedBase) {
+  const inner = sign === "+" ? NS.addSolution(a, b, 16)
+                             : NS.subSolution(a, b, 16);
+  const res = sign === "+" ? a + b : a - b;
+  const bTxt = mixedBase
+    ? `${toBase(b, 8)}<sub>8</sub> = ${toBase(b, 16)}<sub>16</sub>`
+    : null;
+  return {
+    answer: String(res),
+    html:
+      (bTxt ? `<p class="note">Слагаемые в разных системах — сначала ` +
+              `приводим второе к шестнадцатеричной: ${bTxt}.</p>` : "") +
+      inner.html +
+      `<div class="calc">${toBase(res, 16)}<sub>16</sub> = ${res}</div>` +
+      `<p class="note">Ответ просят <b>в десятичной</b>: пишем ` +
+      `<b>${res}</b>, а не ${toBase(res, 16)}. Это самая частая потеря ` +
+      `балла в этом задании.</p>`
+  };
+}
+
+const TYPES = [
+  {
+    id: "hex2dec", title: "16 → 10",
+    gen(rnd) {
+      let n;
+      // пусть в записи почти всегда будет буква: иначе задача
+      // вырождается в «прочитай двузначное число»
+      do { n = randInt(rnd, 40, 255); }
+      while (n % 16 < 10 && Math.floor(n / 16) % 16 < 10 && rnd() < 0.85);
+      const src = toBase(n, 16);
+      const s = NS.expandSolution(src, 16);
+      return {
+        q: `Переведите шестнадцатеричное число ${num(src, 16)} в ` +
+           `десятичную систему счисления.`,
+        answer: s.answer, answerBase: 10, solution: s.html,
+        meta: {kind: "toDec", base: 16, n}
+      };
+    }
+  },
+  {
+    id: "dec2hex", title: "10 → 16",
+    gen(rnd) {
+      const n = randInt(rnd, 60, 500);
+      const s = NS.divideSolution(n, 16);
+      return {
+        q: `Переведите число <b>${n}</b> из десятичной системы счисления ` +
+           `в шестнадцатеричную систему счисления. В ответе укажите ` +
+           `шестнадцатеричное число. Основание системы счисления ` +
+           `указывать не нужно.`,
+        answer: s.answer, answerBase: 16, solution: s.html,
+        meta: {kind: "fromDec", base: 16, n}
+      };
+    }
+  },
+  {
+    id: "bin2hex", title: "2 → 16 (тетрады)",
+    gen(rnd) {
+      const n = randInt(rnd, 40, 500);
+      const bin = toBase(n, 2);
+      const s = NS.groupsToBaseSolution(bin, 16);
+      return {
+        q: `Переведите двоичное число ${num(bin, 2)} в шестнадцатеричную ` +
+           `систему счисления. Основание системы писать не нужно.`,
+        answer: s.answer, answerBase: 16, solution: s.html,
+        meta: {kind: "binToBase", base: 16, n}
+      };
+    }
+  },
+  {
+    id: "hex2bin", title: "16 → 2 (тетрады)",
+    gen(rnd) {
+      let n;
+      do { n = randInt(rnd, 40, 500); }
+      while (!/[A-F]/.test(toBase(n, 16)) && rnd() < 0.8);
+      const hex = toBase(n, 16);
+      const s = NS.groupsToBinSolution(hex, 16);
+      return {
+        q: `Переведите шестнадцатеричное число ${num(hex, 16)} в ` +
+           `двоичную систему счисления. Основание системы писать не нужно.`,
+        answer: s.answer, answerBase: 2, solution: s.html,
+        meta: {kind: "baseToBin", base: 16, n}
+      };
+    }
+  },
+  {
+    id: "add", title: "сложение",
+    gen(rnd) {
+      let a, b;
+      do {
+        a = randInt(rnd, 0x40, 0xC0);
+        b = randInt(rnd, 0x18, 0x90);
+      } while (!hasCarry(a, b, 16) || a + b > 0x1FF);
+      const mixed = rnd() < 0.18;         // редкая форма из замера
+      const s = arithSolution(a, b, "+", mixed);
+      return {
+        q: opQuestion(rnd, a, b, "+", mixed),
+        answer: s.answer, answerBase: 10, solution: s.html,
+        meta: {kind: "addDec", a, b}
+      };
+    }
+  },
+  {
+    id: "sub", title: "вычитание",
+    gen(rnd) {
+      let a, b;
+      do {
+        a = randInt(rnd, 0x80, 0x1E0);
+        // разность держим небольшой — в вариантах она 4, 10, 49
+        b = a - randInt(rnd, 3, 0x40);
+      } while (b < 0x20 || !hasBorrow(a, b, 16));
+      const mixed = rnd() < 0.18;
+      const s = arithSolution(a, b, "−", mixed);
+      return {
+        q: opQuestion(rnd, a, b, "−", mixed),
+        answer: s.answer, answerBase: 10, solution: s.html,
+        meta: {kind: "subDec", a, b}
+      };
+    }
+  },
+  {
+    id: "compare", title: "сравнение",
+    gen(rnd) {
+      return NS.genCompare(rnd, [16]);
+    }
+  }
+];
+
+// Перенос и заём — то, ради чего эти задачи и нужны: без них считать в
+// шестнадцатеричной не отличается от счёта в десятичной.
+function hasCarry(a, b, base) {
+  while (a > 0 || b > 0) {
+    if (a % base + b % base >= base) return true;
+    a = Math.floor(a / base);
+    b = Math.floor(b / base);
+  }
+  return false;
+}
+
+function hasBorrow(a, b, base) {
+  while (b > 0) {
+    if (a % base < b % base) return true;
+    a = Math.floor(a / base);
+    b = Math.floor(b / base);
+  }
+  return false;
+}
+
+const SCALE = {7: 5, 6: 4, 5: 3};
+
+return {TYPES, SCALE, TOPIC: "hex-system"};
+})(NS);
+/* ==== /ГЕНЕРАТОР ==== */
+
+/* ------------------------------------------------------------------
+   Тренажёр: два круга по всем типам. В каждом круге типы перемешаны,
+   чтобы одинаковые задачи не шли подряд и работа читалась как два
+   прохода, а не как шесть пар.
+
+   Оценка считается по ОСВОЕННЫМ ТИПАМ, а не по числу верных ответов:
+   иначе добор ломает счёт. Тип освоен, когда решены обе его задачи.
+------------------------------------------------------------------ */
+
+const TYPES = TASKS.TYPES;
+const SCALE = TASKS.SCALE;
+const PER_TYPE = 2;
+const rnd = Math.random;
+
+let tasks = [];        // {type, task, status, given, bad}
+let firstTry = [];     // по типам: ни одной ошибки
+
+const shuffled = arr => {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(rnd() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+};
+
+function makeTask(ti){
+  return {type: ti, task: TYPES[ti].gen(rnd), status: "open",
+          given: "", bad: null};
+}
+
+function newRun(){
+  tasks = [];
+  for (let round = 0; round < PER_TYPE; round++)
+    for (const ti of shuffled(TYPES.map((_, i) => i)))
+      tasks.push(makeTask(ti));
+  firstTry = TYPES.map(() => true);
+  render();
+  const first = document.querySelector("input[type=text]:not(:disabled)");
+  if (first) first.focus();
+}
+
+const okCount = ti => tasks.filter(t => t.type === ti && t.status === "ok").length;
+const isMastered = ti => okCount(ti) >= PER_TYPE;
+const mastered = () => TYPES.filter((_, i) => isMastered(i)).length;
+const markFor = m => SCALE[m] || 2;
+const openLeft = () => tasks.some(t => t.status === "open");
+
+/* ------------------------------------------------------------ проверка */
+
+function check(i){
+  const t = tasks[i];
+  if (t.status !== "open") return;
+  const input = document.getElementById("in" + i);
+  const given = NS.normalize(input.value);
+  if (!given) return;                    // пустое ответом не считаем
+  t.given = input.value.trim();
+  if (given === t.task.answer){
+    t.status = "ok";
+    render();
+    focusNextOpen(i + 1);
+  } else {
+    t.status = "err";
+    t.bad = NS.badDigit(given, t.task.answerBase);
+    firstTry[t.type] = false;
+    render();
+  }
+}
+
+// Новая задача того же типа вместо неверной: тип закрывается только
+// двумя верными, поэтому ошибку надо отработать, а не отложить.
+function retry(i){
+  const ti = tasks[i].type;
+  tasks[i] = makeTask(ti);
+  render();
+  const el = document.getElementById("in" + i);
+  if (el){ el.focus(); el.scrollIntoView({block:"center", behavior:"smooth"}); }
+}
+
+// Добор: доносим ровно столько задач, сколько не хватает до двух
+// верных по каждому незакрытому типу.
+function addMore(){
+  for (let ti = 0; ti < TYPES.length; ti++){
+    const need = PER_TYPE - okCount(ti);
+    const have = tasks.filter(t => t.type === ti && t.status !== "ok").length;
+    for (let k = have; k < need; k++) tasks.push(makeTask(ti));
+  }
+  render();
+  const el = document.querySelector("input[type=text]:not(:disabled)");
+  if (el){ el.focus(); el.scrollIntoView({block:"center", behavior:"smooth"}); }
+}
+
+function focusNextOpen(from){
+  let idx = tasks.findIndex((t, k) => k >= from && t.status === "open");
+  if (idx < 0) idx = tasks.findIndex(t => t.status === "open");
+  if (idx < 0) return;
+  const el = document.getElementById("in" + idx);
+  if (el) el.focus();
+}
+
+/* -------------------------------------------------------------- вывод */
+
+const esc = v => String(v == null ? "" : v).replace(/"/g, "&quot;");
+
+function render(){
+  const box = document.getElementById("tasks");
+  box.innerHTML = "";
+
+  tasks.forEach((t, i) => {
+    const card = document.createElement("div");
+    card.className = "task" + (t.status === "open" ? "" : " " + t.status);
+
+    let tail = "";
+    if (t.status === "ok"){
+      tail = `<div class="tail"><span class="verdict ok">Правильно</span></div>`;
+    } else if (t.status === "err"){
+      const why = t.bad
+        ? `В этой системе счисления нет цифры <b>${t.bad}</b>. ` : "";
+      tail = `<div class="tail">
+        <div class="verdict err">Ошибка. ${why}Правильный ответ: <b>${t.task.answer}</b></div>
+        <div class="solution"><span class="cap">разбор</span>${t.task.solution}</div>
+        <button class="retry" data-retry="${i}">Ещё задача этого типа</button>
+      </div>`;
+    }
+
+    card.innerHTML = `
+      <div class="q">
+        <div class="num">${i + 1}</div>
+        <div class="text">${t.task.q}</div>
+      </div>
+      <div class="row">
+        <input type="text" id="in${i}" autocomplete="off"
+               spellcheck="false" placeholder="ответ"
+               value="${t.status === "open" ? "" : esc(t.given)}"
+               ${t.status === "open" ? "" : "disabled"}>
+        ${t.status === "open" ? `<button data-check="${i}">Проверить</button>` : ""}
+      </div>
+      ${tail}`;
+    box.appendChild(card);
+  });
+
+  box.querySelectorAll("button[data-check]").forEach(b =>
+    b.addEventListener("click", () => check(+b.dataset.check)));
+  box.querySelectorAll("button[data-retry]").forEach(b =>
+    b.addEventListener("click", () => retry(+b.dataset.retry)));
+  box.querySelectorAll("input[type=text]").forEach(inp =>
+    inp.addEventListener("keydown", e => {
+      if (e.key === "Enter"){ e.preventDefault(); check(+inp.id.slice(2)); }
+    }));
+
+  updatePanel();
+}
+
+function updatePanel(){
+  const m = mastered();
+  const mark = markFor(m);
+  const started = tasks.some(t => t.status !== "open");
+
+  const el = document.getElementById("mark");
+  // до первого ответа — прочерк: двойка на чистом листе никого ещё не
+  // характеризует, а урок только начался
+  el.textContent = started ? mark : "—";
+  el.className = started ? "m" + mark : "";
+
+  const clean = TYPES.filter((_, i) => isMastered(i) && firstTry[i]).length;
+  document.getElementById("stats").innerHTML =
+    `освоено умений: <b>${m}</b> из ${TYPES.length}<br>` +
+    `без единой ошибки: <b>${clean}</b> из ${TYPES.length}`;
+
+  document.getElementById("types").innerHTML = TYPES.map((t, i) =>
+    `<span class="chip${isMastered(i) ? " done" : ""}">${t.title}` +
+    ` <i>${okCount(i)}/${PER_TYPE}</i></span>`).join("");
+
+  const allDone = m === TYPES.length;
+  document.getElementById("done").innerHTML = allDone
+    ? `<div class="done">Все ${TYPES.length} умений освоены. Оценка ${mark}.</div>`
+    : "";
+
+  const more = document.getElementById("more");
+  more.innerHTML = (!allDone && !openLeft())
+    ? `<button class="primary" id="addmore">Добавить задачи по незакрытому</button>`
+    : "";
+  const btn = document.getElementById("addmore");
+  if (btn) btn.addEventListener("click", addMore);
+}
+
+document.getElementById("again").addEventListener("click", newRun);
+newRun();
+</script>
+<p class="ai-mark" style="margin:34px auto 0;max-width:860px;padding-top:12px;border-top:1px solid #d9dce6;color:#5c6070;font:13px/1.5 'Segoe UI',system-ui,sans-serif">Материалы подготовлены с использованием технологий искусственного интеллекта.</p>
+</body>
+</html>
