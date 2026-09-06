@@ -416,11 +416,14 @@ var NS = (function () {
 const DIGITS = "0123456789ABCDEF";
 
 // именительный: «двоичное число»
-const NAMES = {2: "двоичное", 8: "восьмеричное", 16: "шестнадцатеричное"};
+const NAMES = {2: "двоичное", 8: "восьмеричное", 10: "десятичное",
+               16: "шестнадцатеричное"};
 // винительный: «в двоичную систему»
-const NAMES_ACC = {2: "двоичную", 8: "восьмеричную", 16: "шестнадцатеричную"};
+const NAMES_ACC = {2: "двоичную", 8: "восьмеричную", 10: "десятичную",
+                   16: "шестнадцатеричную"};
 // предложный: «в двоичной системе»
-const NAMES_PREP = {2: "двоичной", 8: "восьмеричной", 16: "шестнадцатеричной"};
+const NAMES_PREP = {2: "двоичной", 8: "восьмеричной", 10: "десятичной",
+                    16: "шестнадцатеричной"};
 
 const SUP = {0:"⁰",1:"¹",2:"²",3:"³",4:"⁴",5:"⁵",6:"⁶",7:"⁷",8:"⁸",9:"⁹"};
 
@@ -442,6 +445,14 @@ function randInt(rnd, lo, hi) {          // включительно
 }
 
 function pick(rnd, arr) { return arr[Math.floor(rnd() * arr.length)]; }
+
+// согласование числительного: 1 число, 2 числа, 5 чисел
+function plural(n, one, few, many) {
+  const a = Math.abs(n) % 100, b = a % 10;
+  if (a > 10 && a < 20) return many;
+  if (b > 1 && b < 5) return few;
+  return b === 1 ? one : many;
+}
 
 // число в записи с основанием-индексом: 1011<sub>2</sub>
 function num(s, base) { return `<b>${s}<sub>${base}</sub></b>`; }
@@ -483,7 +494,13 @@ function addSolution(a, b, base) {
     const s = x + y + carry;
     carry = s >= base ? 1 : 0;
   }
-  const carryRow = carryIn.map((c, j) => (c && j > 0) ? "1" : " ").join("");
+  // Перенос в самую левую колонку показываем только если над ней есть
+  // слагаемые. Если результат стал длиннее обоих слагаемых, эта колонка
+  // и ЕСТЬ вынесенный перенос — писать над ней единицу значит писать её
+  // дважды.
+  const extra = R.length > Math.max(A.length, B.length);
+  const carryRow = carryIn
+      .map((c, j) => (c && (j > 0 || !extra)) ? "1" : " ").join("");
 
   const lines = [];
   if (carryRow.trim()) lines.push(colRow("← перенос", carryRow, w));
@@ -723,6 +740,224 @@ function groupsToBinSolution(src, base) {
   };
 }
 
+/* ------------------------------- сравнение чисел (задание 2 ВПР)
+   Шесть форм — все, какие дали замеры (vpr-bank\portal-8.md и
+   bank.json). Сливать их нельзя: они спрашивают разное, хотя решаются
+   одним приёмом — перевести всё в десятичную и сравнить.
+
+   Параметр `bases` говорит, какие недесятичные основания участвуют
+   кроме двоичного: у урока 8-й системы это [8], у 16-й [16], на
+   контрольной [8, 16].
+
+   В бланке ВПР рядом с этим заданием печатается таблица триад и
+   тетрад — значит она положена и здесь. Прячем её только на время
+   работы, а не убираем совсем.                                        */
+
+function sub(n, base) { return `${n}<sub>${base}</sub>`; }
+
+// запись числа в случайном из разрешённых оснований
+function inSomeBase(rnd, n, bases) {
+  const b = pick(rnd, bases);
+  return {b, text: sub(toBase(n, b), b)};
+}
+
+// «b < c < a»: четыре двоичных числа, ровно одно попадает в промежуток
+function genBetween(rnd, bases) {
+  let lo, hi, inside, outside;
+  for (;;) {
+    lo = randInt(rnd, 64, 230);
+    hi = lo + randInt(rnd, 3, 9);
+    if (hi > 250) continue;
+    const room = [];
+    for (let x = lo + 1; x < hi; x++) room.push(x);
+    if (room.length < 2) continue;
+    inside = pick(rnd, room);
+    // отвлекающие берём ЗА границами и на самих границах: попасть в
+    // промежуток второй раз они не могут по построению
+    const out = [lo, hi, lo - randInt(rnd, 1, 6), hi + randInt(rnd, 1, 6)];
+    outside = [...new Set(out)].filter(v => v > 0 && (v <= lo || v >= hi));
+    if (outside.length >= 3) break;
+  }
+  const wrong = [];
+  while (wrong.length < 3) {
+    const v = outside.splice(Math.floor(rnd() * outside.length), 1)[0];
+    if (!wrong.includes(v)) wrong.push(v);
+  }
+
+  const values = [inside, ...wrong];
+  // перемешиваем, запоминая, где оказался верный
+  for (let i = values.length - 1; i > 0; i--) {
+    const j = Math.floor(rnd() * (i + 1));
+    [values[i], values[j]] = [values[j], values[i]];
+  }
+  const idx = values.indexOf(inside) + 1;
+
+  // границы: либо обе в десятичной, либо одна в «своей» системе
+  const bothDec = rnd() < 0.35;
+  const loTxt = bothDec ? sub(lo, 10) : inSomeBase(rnd, lo, bases).text;
+  const hiTxt = bothDec ? sub(hi, 10) : inSomeBase(rnd, hi, bases).text;
+
+  const opts = values.map((v, k) =>
+    `${k + 1}) ${toBase(v, 2)}<sub>2</sub>`).join("&nbsp;&nbsp; ");
+
+  return {
+    q: `Дано: <b>a = ${hiTxt}</b>, <b>b = ${loTxt}</b>. Какое из чисел ` +
+       `<i>c</i>, записанных в двоичной системе, отвечает условию ` +
+       `<b>b &lt; c &lt; a</b>? В ответе укажите номер.<br>${opts}`,
+    answer: String(idx), answerBase: 10,
+    solution:
+      `<div class="calc">переводим границы в десятичную:\n` +
+      `  b = ${lo}\n  a = ${hi}\n\n` +
+      values.map((v, k) =>
+        `${k + 1}) ${toBase(v, 2)}₂ = ${v}` +
+        (v === inside ? "   ← между b и a" :
+         v === lo ? "   это само b" :
+         v === hi ? "   это само a" :
+         v < lo ? "   меньше b" : "   больше a")).join("\n") +
+      `</div><p class="note">Записи в разных системах «на глаз» не ` +
+      `сравнивают: сначала всё в десятичную, потом сравнение.</p>`,
+    meta: {kind: "compare", answer: idx}
+  };
+}
+
+// «Сколько верных неравенств среди перечисленных»
+function genCountTrue(rnd, bases) {
+  const left = randInt(rnd, 100, 230);
+  const L = `${toBase(left, 2)}<sub>2</sub>`;
+  const rights = [];
+  const rows = [];
+  let trues = 0;
+  const kinds = [10, ...bases];
+  for (let i = 0; i < 3; i++) {
+    const b = kinds[i % kinds.length];
+    // числа рядом с left, чтобы ответ нельзя было угадать по размеру
+    const v = left + randInt(rnd, -40, 40);
+    if (v === left || v < 8) { i--; continue; }
+    rights.push({b, v});
+    if (left > v) trues++;
+    rows.push(`${toBase(left, 2)}<sub>2</sub> &gt; ${sub(toBase(v, b), b)}`);
+  }
+  return {
+    q: `Сколько верных неравенств среди перечисленных:<br>` +
+       rows.join(";<br>") + `.<br>Ответ запишите числом.`,
+    answer: String(trues), answerBase: 10,
+    solution:
+      `<div class="calc">${toBase(left, 2)}₂ = ${left}\n\n` +
+      rights.map(r =>
+        `${left} > ${r.v}  —  ${left > r.v ? "верно" : "неверно"}` +
+        (r.b === 10 ? "" :
+         `   (${toBase(r.v, r.b)} в ${NAMES_PREP[r.b]} это ${r.v})`)).join("\n") +
+      `\n\nверных: ${trues}</div>`,
+    meta: {kind: "compare", answer: trues}
+  };
+}
+
+// «Даны 4 двоичных числа. Сколько среди них больше, чем X»
+function genCountGreater(rnd, bases) {
+  const b = pick(rnd, bases);
+  const bound = randInt(rnd, 120, 210);
+  const nums = [];
+  while (nums.length < 4) {
+    const v = bound + randInt(rnd, -45, 45);
+    if (v === bound || v < 64 || v > 255 || nums.includes(v)) continue;
+    nums.push(v);
+  }
+  const cnt = nums.filter(v => v > bound).length;
+  return {
+    q: `Даны 4 целых числа, записанные в двоичной системе счисления:<br>` +
+       `<b>${nums.map(v => toBase(v, 2)).join(", ")}</b>.<br>` +
+       `Сколько среди них чисел, б&oacute;льших, чем ` +
+       `<b>${sub(toBase(bound, b), b)}</b>? Ответ запишите числом.`,
+    answer: String(cnt), answerBase: 10,
+    solution:
+      `<div class="calc">${toBase(bound, b)}<sub>${b}</sub> = ${bound}\n\n` +
+      nums.map(v => `${toBase(v, 2)}₂ = ${v}` +
+        (v > bound ? "   больше" : "   не больше")).join("\n") +
+      `\n\nбольше: ${cnt}</div>`,
+    meta: {kind: "compare", answer: cnt}
+  };
+}
+
+// «Выберите наибольшее; ответ в десятичной»
+function genMaxOfThree(rnd, bases) {
+  // основания разные: в замере это всегда три разные системы
+  const kinds = [2, ...bases, 10].slice(0, 3);
+  const vals = [];
+  while (vals.length < 3) {
+    const v = randInt(rnd, 90, 250);
+    if (vals.some(x => x.v === v)) continue;
+    vals.push({v, b: kinds[vals.length]});
+  }
+  const best = Math.max(...vals.map(x => x.v));
+  return {
+    q: `Выберите наибольшее из чисел: ` +
+       vals.map(x => `<b>${sub(toBase(x.v, x.b), x.b)}</b>`).join(", ") +
+       `. В ответе запишите выбранное число <b>в десятичной системе ` +
+       `счисления</b>.`,
+    answer: String(best), answerBase: 10,
+    solution:
+      `<div class="calc">` +
+      vals.map(x => `${toBase(x.v, x.b)}<sub>${x.b}</sub> = ${x.v}` +
+        (x.v === best ? "   ← наибольшее" : "")).join("\n") +
+      `\n\nответ: ${best}</div>` +
+      // напоминание про формат уместно, только если наибольшее записано
+      // НЕ в десятичной: иначе оно советует не делать того, чего никто
+      // и не сделает
+      (vals.find(x => x.v === best).b === 10 ? "" :
+       `<p class="note">Ответ просят в десятичной — записать сюда ` +
+       `${toBase(best, vals.find(x => x.v === best).b)} будет ошибкой: ` +
+       `это то же число, но не в той системе.</p>`),
+    meta: {kind: "compare", answer: best}
+  };
+}
+
+// «Сколько натуральных чисел удовлетворяет неравенству»
+function genCountBetween(rnd, bases) {
+  const b = pick(rnd, bases);
+  const lo = randInt(rnd, 100, 240);
+  const gap = randInt(rnd, 2, 7);
+  const hi = lo + gap;
+  return {
+    q: `Определите количество натуральных чисел, удовлетворяющих ` +
+       `неравенству <b>${sub(toBase(lo, b), b)} &lt; x &lt; ` +
+       `${sub(toBase(hi, b), b)}</b>. Ответ запишите в десятичной ` +
+       `системе счисления.`,
+    answer: String(gap - 1), answerBase: 10,
+    solution:
+      `<div class="calc">${toBase(lo, b)}<sub>${b}</sub> = ${lo}\n` +
+      `${toBase(hi, b)}<sub>${b}</sub> = ${hi}\n\n` +
+      `между ними: ${lo + 1} … ${hi - 1}\n` +
+      `это ${hi - 1} − ${lo + 1} + 1 = ${gap - 1} ` +
+      `${plural(gap - 1, "число", "числа", "чисел")}</div>` +
+      `<p class="note">Неравенство строгое — сами границы не считаем.</p>`,
+    meta: {kind: "compare", answer: gap - 1}
+  };
+}
+
+const COMPARE_FORMS = [genBetween, genCountTrue, genCountGreater,
+                       genMaxOfThree, genCountBetween];
+
+// Один тип задачи «сравнение» на урок: форма выбирается случайно из
+// пяти. Так ученик не привыкает к одной формулировке — на ВПР ему
+// достанется какая-то одна, и заранее неизвестно какая.
+function genCompare(rnd, bases) {
+  return pick(rnd, COMPARE_FORMS)(rnd, bases);
+}
+
+// таблица триад и тетрад — та же, что печатают в бланке ВПР
+const TRIAD_TABLE = `<table class="conv">
+  <tr><th>8</th><th>триада</th><th>16</th><th>тетрада</th>
+      <th>16</th><th>тетрада</th></tr>
+  <tr><td>0</td><td>000</td><td>0</td><td>0000</td><td>8</td><td>1000</td></tr>
+  <tr><td>1</td><td>001</td><td>1</td><td>0001</td><td>9</td><td>1001</td></tr>
+  <tr><td>2</td><td>010</td><td>2</td><td>0010</td><td>A</td><td>1010</td></tr>
+  <tr><td>3</td><td>011</td><td>3</td><td>0011</td><td>B</td><td>1011</td></tr>
+  <tr><td>4</td><td>100</td><td>4</td><td>0100</td><td>C</td><td>1100</td></tr>
+  <tr><td>5</td><td>101</td><td>5</td><td>0101</td><td>D</td><td>1101</td></tr>
+  <tr><td>6</td><td>110</td><td>6</td><td>0110</td><td>E</td><td>1110</td></tr>
+  <tr><td>7</td><td>111</td><td>7</td><td>0111</td><td>F</td><td>1111</td></tr>
+</table>`;
+
 /* ------------------------------------------------- нормализация
    Ответ сверяется знак в знак: на ВПР его читает машина. Убираем
    только то, что записью числа не является, — пробелы по краям и
@@ -748,10 +983,11 @@ function badDigit(s, base) {
 
 return {
   DIGITS, NAMES, NAMES_ACC, NAMES_PREP, SUP, GROUP,
-  toBase, fromBase, randInt, pick, num, esc,
+  toBase, fromBase, randInt, pick, plural, num, esc,
   addSolution, subSolution, mulSolutionBin, divSolutionBin,
   expandSolution, divideSolution,
   chunkFromBin, groupsToBaseSolution, groupsToBinSolution,
+  genCompare, COMPARE_FORMS, TRIAD_TABLE,
   normalize, badDigit
 };
 })();
