@@ -14,6 +14,7 @@
   - [Устройство компьютера](https://svetgenmo.github.io/informatika/7/ustroystvo-kompyutera/) — Задание 1 ВПР: ввод, вывод, память, обработка, сеть
   - [Файлы и папки](https://svetgenmo.github.io/informatika/7/fayly-i-papki/) — Задание 2 ВПР: полное имя файла и путь к нему
   - [Типы файлов и архивация](https://svetgenmo.github.io/informatika/7/tipy-faylov/) — Задание 3 ВПР: расширения и типы файлов
+  - [Компьютерные сети и адрес в интернете](https://svetgenmo.github.io/informatika/7/adres-v-internete/) — Задание 4 ВПР: структура адреса веб-ресурса
 - **8 класс** — https://svetgenmo.github.io/informatika/8/
   - [Системы счисления](https://svetgenmo.github.io/informatika/8/sistemy-schisleniya/) — Шесть переводов: 2↔10, 8↔10, 16↔10
 - **9 класс** — https://svetgenmo.github.io/informatika/9/
