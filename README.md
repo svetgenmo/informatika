@@ -16,6 +16,8 @@
   - [Типы файлов и архивация](https://svetgenmo.github.io/informatika/7/tipy-faylov/) — Задание 3 ВПР: расширения и типы файлов
   - [Компьютерные сети и адрес в интернете](https://svetgenmo.github.io/informatika/7/adres-v-internete/) — Задание 4 ВПР: структура адреса веб-ресурса
   - [Поиск информации](https://svetgenmo.github.io/informatika/7/poisk-v-faylah/) — Задание 13 ВПР: поиск в файлах и в интернете
+  - [История компьютеров и программное обеспечение](https://svetgenmo.github.io/informatika/7/istoriya-i-po/) — Две темы программы плюс повторение заданий 1–3 ВПР
+  - [Вирусы и безопасность в сети](https://svetgenmo.github.io/informatika/7/virusy-i-bezopasnost/) — Две темы программы плюс повторение заданий 1–4 ВПР
 - **8 класс** — https://svetgenmo.github.io/informatika/8/
   - [Системы счисления](https://svetgenmo.github.io/informatika/8/sistemy-schisleniya/) — Шесть переводов: 2↔10, 8↔10, 16↔10
   - [Двоичная система счисления](https://svetgenmo.github.io/informatika/8/dvoichnaya-sistema/) — Переводы 2↔10 и все четыре действия
