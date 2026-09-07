@@ -183,7 +183,12 @@ button:disabled{opacity:.4;cursor:default;border-color:var(--line);color:var(--m
     <li><code>row[4]</code> — F с листа; не сошлось — расстановка не та.</li>
   </ul>
   <p>Четыре строки с <code>index</code> — по одной на переменную. После них
-     выражение F пишется прямо, как в условии: никаких <code>def</code>.</p>
+     выражение F пишется прямо, как в условии: никаких <code>def</code>.
+     Те же четыре строки можно записать одной:</p>
+<pre>x, y, z, w = [row[p.index(v)] for v in 'xyzw']</pre>
+  <p>Справа список из четырёх значений, по одному на букву, слева он
+     распаковывается в четыре переменные. Порядок букв в
+     <code>'xyzw'</code> и имён слева обязан совпадать.</p>
 
   <h3>Если в таблице есть пропуски</h3>
 <pre>for a1, a2, a3 in product([0, 1], repeat=3):
@@ -650,7 +655,9 @@ function lType0(rng) {
 
 /* Ядро метода: p — строка имён по столбцам, p.index('x') — номер столбца
    с x, row[...] — его значение. Два поворота: спросить одну переменную
-   (чистая механика index) или F целиком (механика плюс перевод логики). */
+   (чистая механика index) или F целиком (механика плюс перевод логики).
+   Чтение переменных — то четырьмя строками, то одной (списковое выражение
+   с распаковкой): обе формы есть на слайдах, читать надо уметь обе. */
 function lType1(rng) {
   const names = ['x', 'y', 'z', 'w'];
   const f = lFormula(rng, names, false).node;
@@ -659,7 +666,9 @@ function lType1(rng) {
   const fres = tRand(rng, 0, 1);            /* последняя клетка — F с листа */
   const env = {};
   p.forEach((nm, i) => { env[nm] = row[i]; });
-  const reads = names.map(nm => nm + " = row[p.index('" + nm + "')]");
+  const reads = rng() < 0.5
+    ? names.map(nm => nm + " = row[p.index('" + nm + "')]")
+    : [names.join(', ') + " = [row[p.index(v)] for v in '" + names.join('') + "']"];
   const head = "p = '" + p.join('') + "'\nrow = (" + row.join(', ') + ', ' +
                fres + ')\n' + reads.join('\n');
   const places = names.map(nm => '<code>p.index(\'' + nm + '\')</code> = ' +
