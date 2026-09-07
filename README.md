@@ -39,7 +39,7 @@
 - **11 класс** — https://svetgenmo.github.io/informatika/11/
   - *Подготовка к ЕГЭ*
     - [Схема дорог и таблица](https://svetgenmo.github.io/informatika/11/graf-i-tablica/) — Задание 1 ЕГЭ: анализ информационных моделей
-    - [Таблицы истинности: itertools и словарь](https://svetgenmo.github.io/informatika/11/tablica-istinnosti/) — Задание 2 ЕГЭ: программный метод решения
+    - [Таблицы истинности: перебор расстановок](https://svetgenmo.github.io/informatika/11/tablica-istinnosti/) — Задание 2 ЕГЭ: программный метод решения
   - *Практикумы по программе*
     - [Количество информации и сжатие данных](https://svetgenmo.github.io/informatika/11/informaciya-i-szhatie/) — Обзорный практикум по содержанию ФГОС к первой паре 11 класса
     - [Код Хаффмана и условие Фано](https://svetgenmo.github.io/informatika/11/kod-huffmana/) — Обзорный практикум по содержанию ФГОС ко второй паре 11 класса

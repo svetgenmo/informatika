@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Задание 2 ЕГЭ: itertools и словарь — презентация</title>
-<meta name="description" content="Презентация к разбору задания 2 ЕГЭ в 11 классе (углублённый): второй способ решения — permutations, zip, dict и раскрытие словаря двумя звёздочками; перебор пропусков через product.">
+<title>Задание 2 ЕГЭ: перебор расстановок — презентация</title>
+<meta name="description" content="Презентация к разбору задания 2 ЕГЭ в 11 классе (углублённый): второй способ решения — permutations перебирает расстановки, index находит столбец каждой переменной; перебор пропусков через product.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E11%3C/text%3E%3C/svg%3E">
 <style>
 :root{
@@ -77,11 +77,11 @@ button:disabled{opacity:.4;cursor:default;border-color:var(--line);color:var(--m
 
 <section class="slide on">
   <h1>Задание 2:<br>таблицы истинности</h1>
-  <p class="lead">Второй способ решения — <code>itertools</code> и словарь.<br>
+  <p class="lead">Второй способ решения — перебор расстановок.<br>
   11 класс, углублённый уровень.</p>
   <p>Перебор вложенными циклами вы уже знаете. Сегодня — способ, при котором
-  программа сама подбирает, какая переменная стоит в каком столбце, и делает
-  это в четыре строки.</p>
+  программа сама подбирает, какая переменная стоит в каком столбце. Приём тот
+  же, что в задании 1: перебрать все расстановки и проверить каждую.</p>
 </section>
 
 <section class="slide">
@@ -109,14 +109,12 @@ button:disabled{opacity:.4;cursor:default;border-color:var(--line);color:var(--m
 
 <section class="slide">
   <h2>Как мы это делали: вложенные циклы</h2>
-  <pre><code>def f(x, y, z, w):
-    return ((x &lt;= y) or (z == x)) and (w &lt;= z)
-
-for x in range(2):
+  <pre><code>for x in range(2):
     for y in range(2):
         for z in range(2):
             for w in range(2):
-                if f(x, y, z, w) == 1:
+                F = ((x &lt;= y) or (z == x)) and (w &lt;= z)
+                if F == 1:
                     print(x, y, z, w)</code></pre>
   <p>Программа печатает все наборы, на которых F = 1, — а дальше человек
   <b>глазами</b> прикладывает их к строкам фрагмента.</p>
@@ -139,99 +137,92 @@ for x in range(2):
 
 <section class="slide">
   <h1>Пусть столбцы<br>перебирает программа</h1>
-  <p class="lead">Вся идея второго способа — в одной строке:</p>
-  <pre><code>for p in permutations('xyzw'):</code></pre>
+  <p class="lead">Вся идея второго способа — в двух строках:</p>
+  <pre><code>for p in permutations('xyzw'):
+    p = ''.join(p)</code></pre>
   <p><code>permutations</code> из модуля <code>itertools</code> выдаёт все 24
-  расстановки букв: <code>('x','y','z','w')</code>,
-  <code>('x','y','w','z')</code>, … Каждая — гипотеза: «в первом столбце
-  <code>p[0]</code>, во втором <code>p[1]</code>, и так далее».</p>
+  расстановки букв, <code>join</code> склеивает каждую в строку:
+  <code>'xyzw'</code>, <code>'xywz'</code>, … <code>'zwxy'</code>. Каждая —
+  гипотеза: «в первом столбце z, во втором w, в третьем x, в четвёртом y».
+  Ровно как расстановка букв по пунктам в задании 1.</p>
   <div class="steps">
     <div class="step" hidden>
       <div class="box warn big">
-        Осталось научиться <b>проверять гипотезу</b>: подставить значения из
-        строки таблицы в функцию — с учётом того, что имена переехали.
+        Осталось научиться <b>проверять гипотезу</b>: взять из строки таблицы
+        значение каждой переменной — с учётом того, что столбцы переставлены.
       </div>
     </div>
   </div>
 </section>
 
 <section class="slide">
-  <h2>Задача подстановки</h2>
-  <p>Пусть гипотеза <code>p = ('z','w','x','y')</code>, а строка таблицы
-  <code>row = (0, 0, 1, 1)</code>.</p>
+  <h2>Где стоит x: <code>index</code></h2>
+  <p>Пусть гипотеза <code>p = 'zwxy'</code>, а строка таблицы
+  <code>row = (0, 0, 1, 1, 1)</code> — четыре значения и пятым F.</p>
   <table class="mini">
-    <tr><th>столбец</th><td>1</td><td>2</td><td>3</td><td>4</td></tr>
-    <tr><th>переменная <code>p</code></th><td>z</td><td>w</td><td>x</td><td>y</td></tr>
-    <tr><th>значение <code>row</code></th><td>0</td><td>0</td><td>1</td><td>1</td></tr>
+    <tr><th>номер (с нуля)</th><td>0</td><td>1</td><td>2</td><td>3</td><td>4</td></tr>
+    <tr><th>буква <code>p</code></th><td>z</td><td>w</td><td>x</td><td>y</td><td>F</td></tr>
+    <tr><th>значение <code>row</code></th><td>0</td><td>0</td><td>1</td><td>1</td><td>1</td></tr>
   </table>
-  <div class="steps">
-    <div class="step" hidden>
-      <p class="big">Нужно вызвать <code>f(x=1, y=1, z=0, w=0)</code>.
-      Но <code>p</code> меняется на каждом шаге цикла — вручную не распишешь.</p>
-    </div>
-    <div class="step" hidden>
-      <div class="box warn big">
-        Три шага: <b>zip</b> склеивает, <b>dict</b> собирает,
-        <b>две звёздочки</b> раскрывают.
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="slide">
-  <h2>Шаг 1: <code>zip</code> — склеить по порядку</h2>
-  <pre><code>p   = ('z', 'w', 'x', 'y')
-row = ( 0 ,  0 ,  1 ,  1 )
-
-list(zip(p, row))
-<span class="out">[('z', 0), ('w', 0), ('x', 1), ('y', 1)]</span></code></pre>
-  <p><code>zip</code> берёт первый элемент оттуда и отсюда, второй оттуда и
-  отсюда — получаются пары «имя — значение».</p>
-  <div class="steps">
-    <div class="step" hidden>
-      <div class="box warn">
-        Порядок аргументов важен: <code>zip(row, p)</code> дало бы пары
-        <code>(0, 'z')</code> — числа стали бы именами.
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="slide">
-  <h2>Шаг 2: <code>dict</code> — собрать словарь</h2>
-  <pre><code>dict(zip(p, row))
-<span class="out">{'z': 0, 'w': 0, 'x': 1, 'y': 1}</span></code></pre>
-  <p>Словарь — это набор пар «ключ: значение». Из списка пар он собирается
-  одним вызовом.</p>
-  <div class="steps">
-    <div class="step" hidden>
-      <p>Теперь у нас есть готовый ответ на вопрос «чему равна каждая
-      переменная в этой строке при этой гипотезе».</p>
-    </div>
-  </div>
-</section>
-
-<section class="slide">
-  <h2>Шаг 3: <code>**</code> — раскрыть в аргументы</h2>
-  <pre><code>d = {'z': 0, 'w': 0, 'x': 1, 'y': 1}
-
-f(**d)          <span class="c"># то же самое, что</span>
-f(z=0, w=0, x=1, y=1)</code></pre>
-  <p>Две звёздочки перед словарём означают: «каждую пару ключ-значение передай
-  как <b>именованный аргумент</b>».</p>
+  <pre><code>p.index('x')          <span class="out">2</span>   <span class="c"># номер места буквы x в строке p</span>
+row[p.index('x')]     <span class="out">1</span>   <span class="c"># значение из этого столбца</span></code></pre>
   <div class="steps">
     <div class="step" hidden>
       <div class="box good big">
-        Поэтому <b>порядок в <code>def</code> не важен</b>: аргументы попадают
-        по именам, а не по местам. <code>f(z=0, w=0, x=1, y=1)</code> и
-        <code>f(x=1, y=1, z=0, w=0)</code> — один и тот же вызов.
+        <code>index</code> отвечает на вопрос «в каком столбце стоит x» — при
+        любой гипотезе. Одна строка, и значение x найдено.
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Четыре переменные — четыре строки</h2>
+  <pre><code>x = row[p.index('x')]
+y = row[p.index('y')]
+z = row[p.index('z')]
+w = row[p.index('w')]
+
+F = ((x &lt;= y) or (z == x)) and (w &lt;= z)</code></pre>
+  <p>После четырёх строк <code>x</code>, <code>y</code>, <code>z</code>,
+  <code>w</code> — обычные переменные Python со значениями из этой строки
+  таблицы. Выражение F пишется прямо, как в условии.</p>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="box warn">
+        Никаких <code>def</code> и вызовов функции: значения уже лежат в
+        переменных, функция не нужна.
       </div>
     </div>
     <div class="step" hidden>
+      <div class="box bad">
+        Типичная ошибка — скопировать строку и забыть поправить букву внутри
+        <code>index</code>: <code>y = row[p.index('x')]</code>. Две переменные
+        читают один столбец, и программа врёт молча.
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Сверяем с F</h2>
+  <pre><code>table = [(0, 0, 1, 1, 1),
+         (0, 0, 1, 0, 0),
+         (0, 1, 1, 1, 0)]</code></pre>
+  <p>Таблица переписывается с листа <b>как есть</b>: строка за строкой, вместе
+  со значением F. F — пятое число, а номера считаются с нуля, значит
+  <code>row[4]</code>.</p>
+  <div class="steps">
+    <div class="step" hidden>
+      <pre><code>if F != row[4]:
+    ok = False</code></pre>
+      <p>Посчитали F по гипотезе — сравнили с F на листе. Не сошлось хотя бы в
+      одной строке — гипотеза <b>не та</b>.</p>
+    </div>
+    <div class="step" hidden>
       <div class="box warn">
-        Одна звёздочка вместо двух — <code>f(*d)</code> — тихая беда: словарь
-        перебирается по ключам, и в функцию уйдут <b>буквы</b> вместо чисел.
-        Программа не упадёт, а ответ будет мусорный.
+        Три переменные — три строки с <code>index</code>, а F лежит в
+        <code>row[3]</code>.
       </div>
     </div>
   </div>
@@ -239,43 +230,52 @@ f(z=0, w=0, x=1, y=1)</code></pre>
 
 <section class="slide">
   <h2>Собираем проверку гипотезы</h2>
-  <pre><code>table = [(0, 0, 1, 1), (0, 0, 1, 0), (0, 1, 1, 1)]
-res   = [1, 0, 0]
-
-<span class="c"># значения функции для всех строк при гипотезе p</span>
-[f(**dict(zip(p, row))) for row in table]</code></pre>
-  <p>Список сравниваем с <code>res</code> — столбцом F из условия.
-  Совпал во всех строках — гипотеза верна.</p>
+  <pre><code>ok = True
+for row in table:
+    x = row[p.index('x')]
+    y = row[p.index('y')]
+    z = row[p.index('z')]
+    w = row[p.index('w')]
+    F = ((x &lt;= y) or (z == x)) and (w &lt;= z)
+    if F != row[4]:
+        ok = False
+if ok:
+    print(p)</code></pre>
   <div class="steps">
     <div class="step" hidden>
-      <pre><code>if [f(**dict(zip(p, row))) for row in table] == res:
-    print(*p, sep='')</code></pre>
-      <p><code>*p</code> разворачивает кортеж, <code>sep=''</code> убирает
-      пробелы между буквами — ответ печатается сразу в нужном виде.</p>
+      <p><code>ok</code> взводится в <code>True</code> для каждой расстановки
+      заново; строки таблицы могут его только сбросить. Прошла все строки —
+      печатаем: <code>p</code> уже строка, ответ выходит в нужном виде.</p>
     </div>
   </div>
 </section>
 
 <section class="slide">
   <h2>Решение целиком</h2>
-  <pre><code>from itertools import permutations
+  <pre><code>from itertools import *
 
-def f(x, y, z, w):
-    return ((x &lt;= y) or (z == x)) and (w &lt;= z)
-
-table = [(0, 0, 1, 1), (0, 0, 1, 0), (0, 1, 1, 1)]
-res = [1, 0, 0]
+table = [(0, 0, 1, 1, 1), (0, 0, 1, 0, 0), (0, 1, 1, 1, 0)]
 
 for p in permutations('xyzw'):
-    if [f(**dict(zip(p, row))) for row in table] == res:
-        print(*p, sep='')
+    p = ''.join(p)
+    ok = True
+    for row in table:
+        x = row[p.index('x')]
+        y = row[p.index('y')]
+        z = row[p.index('z')]
+        w = row[p.index('w')]
+        F = ((x &lt;= y) or (z == x)) and (w &lt;= z)
+        if F != row[4]:
+            ok = False
+    if ok:
+        print(p)
 
 <span class="out">zwxy</span></code></pre>
   <div class="steps">
     <div class="step" hidden>
       <div class="box good big">
-        Меняется от задачи к задаче только <b>три строки</b>: функция,
-        <code>table</code> и <code>res</code>. Остальное переносится без правок.
+        От задачи к задаче меняются <b>две строки</b>: <code>table</code> и
+        <code>F</code>. Остальное переносится без правок.
       </div>
     </div>
   </div>
@@ -310,6 +310,11 @@ for p in permutations('xyzw'):
         цепочку сравнений. Лишние скобки не мешают, пропущенные — меняют смысл.
       </div>
     </div>
+    <div class="step" hidden>
+      <p>F получается <code>True</code> или <code>False</code>, а на листе 1
+      или 0. Сравнение <code>F != row[4]</code> это понимает:
+      <code>True == 1</code>, <code>False == 0</code>.</p>
+    </div>
   </div>
 </section>
 
@@ -331,18 +336,23 @@ for p in permutations('xyzw'):
   <pre><code>from itertools import *
 
 for a1, a2, a3, a4 in product([0, 1], repeat=4):
-    table = [(a1, a2, 0, 0), (1, 0, a3, 0), (1, 0, 1, a4)]
+    table = [(a1, a2, 0, 0, 0), (1, 0, a3, 0, 0), (1, 0, 1, a4, 0)]
     if len(table) == len(set(table)):
         for p in permutations('xyzw'):
-            if [f(**dict(zip(p, row))) for row in table] == [0, 0, 0]:
-                print(*p, sep='')
+            p = ''.join(p)
+            ok = True
+            for row in table:
+                ...             <span class="c"># те же строки, что и раньше</span>
+            if ok:
+                print(p)
 
 <span class="out">wzyx</span></code></pre>
   <div class="steps">
     <div class="step" hidden>
       <div class="box warn big">
         <code>product([0, 1], repeat=4)</code> — все 16 наборов из нулей и
-        единиц. Пропуски просто становятся переменными цикла.
+        единиц. Пропуски просто становятся переменными цикла, а в
+        <code>table</code> на их месте стоят <code>a1</code>…<code>a4</code>.
       </div>
     </div>
   </div>
@@ -359,7 +369,8 @@ for a1, a2, a3, a4 in product([0, 1], repeat=4):
   <div class="steps">
     <div class="step" hidden>
       <p><code>set(table)</code> — множество, повторы в нём схлопываются.
-      Длины разошлись — значит повтор был.</p>
+      Длины разошлись — значит повтор был. Что в строках есть ещё и F, не
+      мешает: одинаковые строки одинаковы и вместе с F.</p>
     </div>
     <div class="step" hidden>
       <div class="box bad big">
@@ -383,7 +394,11 @@ for a1, a2, a3, a4 in product([0, 1], repeat=4):
   </table>
   <pre><code>ps = set()
 for p in permutations('xyz'):
-    if [f(**dict(zip(p, row))) for row in table] == res:
+    p = ''.join(p)
+    ok = True
+    for row in table:
+        ...
+    if ok:
         ps.add(p)
 print(len(ps))
 
@@ -403,35 +418,45 @@ print(len(ps))
     <tr><th>Ошибка</th><th>Что получится</th></tr>
     <tr><td><code>x &lt; y</code> вместо <code>x &lt;= y</code></td>
         <td>импликация становится неверной при x = y = 1</td></tr>
-    <tr><td><code>f(*d)</code> вместо <code>f(**d)</code></td>
-        <td>в функцию уходят буквы, программа врёт молча</td></tr>
-    <tr><td><code>zip(row, p)</code></td>
-        <td>ключами словаря становятся числа — ошибка при вызове</td></tr>
+    <tr><td><code>y = row[p.index('x')]</code></td>
+        <td>две переменные из одного столбца — программа врёт молча</td></tr>
+    <tr><td><code>row[3]</code> вместо <code>row[4]</code></td>
+        <td>F сравнивается не с F, а с последним столбцом переменных</td></tr>
+    <tr><td><code>permutations('xyz')</code> при четырёх переменных</td>
+        <td><code>ValueError</code>: <code>p.index('w')</code> не находит букву</td></tr>
+    <tr><td><code>ok = False</code> в начале</td>
+        <td>ничего не печатается: сбросить флаг можно, взвести — нечем</td></tr>
     <tr><td>забыть <code>set(table)</code></td>
         <td>лишние ответы там, где ответ один</td></tr>
     <tr><td><code>from itertools import *</code> забыт</td>
         <td><code>NameError</code>: <code>permutations</code> не определено</td></tr>
   </table>
-  <p class="lead" style="margin-top:20px">А вот <code>print(p)</code> вместо
-  <code>print(*p, sep='')</code> ошибкой не считается: ответ вы всё равно
-  вписываете руками, и кортеж на экране читается не хуже.</p>
+  <p class="lead" style="margin-top:20px">А вот пропущенное
+  <code>p = ''.join(p)</code> ошибкой не считается: <code>index</code> на
+  кортеже работает так же, а ответ вы всё равно вписываете руками — кортеж
+  на экране читается не хуже.</p>
 </section>
 
 <section class="slide">
   <h2>Шаблон: держите под рукой</h2>
   <pre><code>from itertools import *
 
-def f(x, y, z, w):
-    return ...              <span class="c"># выражение F: → это &lt;=, ≡ это ==</span>
-
-res = [0, 0, 0]             <span class="c"># столбец F</span>
-
 for a1, a2, a3 in product([0, 1], repeat=3):
-    table = [(a1, 0, 1, a2), (1, 1, a3, 0), (0, 1, 1, 1)]
+    table = [(a1, 0, 1, a2, 0), (1, 1, a3, 0, 0), (0, 1, 1, 1, 0)]
     if len(table) == len(set(table)):
         for p in permutations('xyzw'):
-            if [f(**dict(zip(p, row))) for row in table] == res:
-                print(*p, sep='')</code></pre>
+            p = ''.join(p)
+            ok = True
+            for row in table:
+                x = row[p.index('x')]
+                y = row[p.index('y')]
+                z = row[p.index('z')]
+                w = row[p.index('w')]
+                F = ...             <span class="c"># выражение: → это &lt;=, ≡ это ==</span>
+                if F != row[4]:
+                    ok = False
+            if ok:
+                print(p)</code></pre>
   <p>Столько же строк решает и задачу без пропусков: тогда <code>table</code>
   записывается сразу, а внешний <code>for</code> и проверка на повторы не
   нужны.</p>
@@ -440,9 +465,9 @@ for a1, a2, a3 in product([0, 1], repeat=3):
 <section class="slide">
   <h1>За работу</h1>
   <p class="lead">Открывайте практикум.</p>
-  <p>Первые четыре типа задач — про то, как этот код устроен: их считают в
-  голове. Задания 2 решайте программой: набрали один раз — дальше меняете
-  только функцию, <code>table</code> и <code>res</code>.</p>
+  <p>Шесть задач. Первые четыре — про то, как этот код устроен: их считают
+  в голове. Два задания 2 решайте программой: набрали один раз — дальше
+  меняете только <code>table</code> и строку с <code>F</code>.</p>
 </section>
 
 </div>
