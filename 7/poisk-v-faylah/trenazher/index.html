@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Поиск в файлах — тренажёр</title>
+<meta name="description" content="Тренажёр к заданию 13 ВПР по информатике, 7 класс: поиск ответа в текстовом файле средствами операционной системы и текстового редактора.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='16' font-weight='700' fill='%23fff' text-anchor='middle'%3E13%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{margin:0;padding:20px 16px 60px;
+     font:17px/1.5 "Segoe UI",system-ui,sans-serif}
+.wrap{max-width:860px;margin:0 auto}
+
+h1{font-size:22px;margin:0 0 4px}
+.sub{color:var(--muted);font-size:15px;margin:0 0 18px}
+
+/* ---- где взять файлы ---- */
+.files{border:1px solid var(--line);border-left:5px solid var(--accent);
+       border-radius:10px;padding:14px 18px;margin-bottom:18px;
+       background:var(--card);font-size:16px}
+.files h2{font-size:15px;margin:0 0 8px;color:var(--muted);
+          letter-spacing:.04em;text-transform:uppercase}
+.files ul{margin:0;padding-left:20px}
+.files li{margin:4px 0}
+.files b{font-family:Consolas,"Courier New",monospace}
+.files .zip{color:var(--hi);font-weight:600}
+
+/* ---- панель оценки ---- */
+.panel{display:flex;align-items:center;gap:18px;flex-wrap:wrap;
+       border:2px solid var(--accent);border-radius:12px;
+       padding:12px 18px;background:var(--card);margin-bottom:20px;
+       position:sticky;top:0;z-index:5}
+.mark{display:flex;align-items:baseline;gap:10px}
+.mark span{color:var(--muted);font-size:15px}
+.mark b{font:700 40px/1 "Segoe UI",system-ui,sans-serif;min-width:44px;
+        text-align:center;border-radius:8px;padding:2px 10px;
+        background:#fff;border:2px solid var(--line)}
+.m5{color:var(--ok);border-color:var(--ok-line)!important}
+.m4{color:var(--accent);border-color:#a9c6e8!important}
+.m3{color:#8a5a00;border-color:#e6c98a!important}
+.m2{color:var(--err);border-color:var(--err-line)!important}
+.stats{color:var(--muted);font-size:14px;line-height:1.35}
+.spacer{flex:1 1 auto}
+button{font:600 15px/1 inherit;padding:11px 16px;border-radius:9px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);
+       cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);
+                color:var(--muted);background:#fff}
+button:focus-visible{outline:3px solid #a9c6e8;outline-offset:2px}
+
+/* ---- вопросы ---- */
+.task{border:1px solid var(--line);border-radius:12px;padding:14px 18px;
+      margin-bottom:14px;background:#fff}
+.task.ok{border-color:var(--ok-line);background:var(--ok-bg)}
+.task.err{border-color:var(--err-line);background:var(--err-bg)}
+.q{display:flex;gap:12px;align-items:flex-start}
+.num{flex:0 0 28px;height:28px;border-radius:50%;background:var(--accent);
+     color:#fff;font:700 15px/28px sans-serif;text-align:center}
+.task.ok .num{background:var(--ok)}
+.task.err .num{background:var(--err)}
+.text{flex:1 1 auto;padding-top:3px}
+.src{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
+.src b{color:var(--accent);font-weight:600}
+.src .zip{color:var(--hi);font-weight:600}
+.kind{display:inline-block;margin-left:8px;font-size:12px;font-weight:600;
+      color:var(--muted);border:1px solid var(--line);border-radius:20px;
+      padding:1px 8px;vertical-align:2px}
+
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;
+     margin:14px 0 0 40px}
+input[type=text]{font:600 18px/1 "Segoe UI",system-ui,sans-serif;
+     padding:11px 14px;width:260px;
+     border:2px solid var(--line);border-radius:9px;background:#fff;
+     color:var(--ink)}
+input[type=text]:focus{outline:none;border-color:var(--accent)}
+input[type=text]:disabled{background:#f1f2f6;color:var(--muted)}
+.verdict{font-weight:700}
+.verdict.ok{color:var(--ok)}
+.verdict.err{color:var(--err)}
+
+.why{margin:12px 0 0 40px;border-left:4px solid var(--hi-line);
+     background:var(--hi-bg);border-radius:0 8px 8px 0;
+     padding:8px 14px;color:var(--ink);font-size:15px}
+.why b{font-family:Consolas,"Courier New",monospace;
+       background:#fff;border:1px solid var(--hi-line);border-radius:5px;
+       padding:1px 6px}
+
+.done{margin:18px 0 0;padding:12px 16px;border-radius:10px;
+      background:var(--ok-bg);border:1px solid var(--ok-line);
+      color:var(--ok);font-weight:600}
+
+details{margin-top:26px;border:1px solid var(--line);border-radius:12px;
+        padding:12px 18px;background:var(--card)}
+summary{cursor:pointer;font-weight:600;font-size:17px}
+details h3{font-size:16px;margin:18px 0 6px}
+details p{margin:6px 0}
+details code{font:600 15px/1.4 Consolas,"Courier New",monospace;
+             background:#fff;border:1px solid var(--line);border-radius:5px;
+             padding:1px 5px}
+table{border-collapse:collapse;margin:6px 0;font-size:15px}
+td,th{border:1px solid var(--line);padding:5px 10px;text-align:left}
+th{background:#fff;color:var(--muted);font-size:14px}
+
+@media (max-width:700px){ .row,.why{margin-left:0} }
+
+.files a,.howto a{color:var(--accent);font-weight:600;
+                  font-family:Consolas,"Courier New",monospace}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Поиск в файлах — тренажёр</h1>
+<p class="sub">Двенадцать вопросов к четырём книгам: по три к каждой.
+   Ответ <b>не написан нигде на этой странице</b> — его надо найти в
+   файле. Набор вопросов при каждом запуске новый.</p>
+
+<div class="files">
+  <h2>Где взять файлы</h2>
+  <ul id="filelist"></ul>
+</div>
+
+<div class="panel">
+  <div class="mark">
+    <span>Оценка</span><b id="mark">—</b>
+  </div>
+  <div class="stats" id="stats"></div>
+  <div class="spacer"></div>
+  <button id="again">Начать заново</button>
+</div>
+
+<div id="tasks"></div>
+<div id="done"></div>
+
+<details>
+  <summary>Подсказка: как искать в файле</summary>
+
+  <h3>Ctrl + F — главная кнопка этого задания</h3>
+  <p>Открой файл в текстовом редакторе (Блокнот, Word, WordPad) и нажми
+     <code>Ctrl</code> + <code>F</code>. Появится строка поиска: вписал
+     слово — редактор сам перескочит на него в тексте.</p>
+  <p><code>F3</code> — следующее совпадение, если первое оказалось не
+     тем.</p>
+
+  <h3>Что вписывать в поиск</h3>
+  <p>Не весь вопрос, а <b>одно приметное слово из него</b> — такое,
+     которое точно есть в книге и встречается редко.</p>
+  <table>
+    <tr><th>вопрос</th><th>что искать</th></tr>
+    <tr><td>Сколько раз Остап закапывал букварь?</td>
+        <td><code>закапывал</code></td></tr>
+    <tr><td>Как звали коня Казбича?</td><td><code>скакун</code></td></tr>
+    <tr><td>Кем служит Лизанька?</td><td><code>Лизанька</code></td></tr>
+  </table>
+  <p>Слово вроде «который» или «сказал» не годится: совпадений будут
+     сотни.</p>
+
+  <h3>Ищи основу слова, а не всё целиком</h3>
+  <p>В книге слово стоит в своём падеже: не «ясень», а «ясенем», не
+     «конь», а «коня». Поэтому ищи <b>корень</b>: <code>ясен</code>,
+     <code>кон</code>, <code>закапыв</code>.</p>
+
+  <h3>Архив сначала распакуй</h3>
+  <p>Если файл лежит в архиве, работать с ним прямо оттуда нельзя.
+     Правой кнопкой по архиву → «Извлечь всё» → и только потом
+     открывай.</p>
+
+  <h3>Найти сам файл — тоже часть задания</h3>
+  <p>Если файлов много, ищи нужный поиском операционной системы: открой
+     папку и начни печатать имя в строке поиска справа вверху.</p>
+
+  <h3>Как записывают ответ</h3>
+  <p>Одним словом или числом, как просит вопрос. Числа — цифрами:
+     <code>25</code>, а не «двадцать пять». Падеж — тот, который назван
+     в вопросе.</p>
+</details>
+
+</div>
+
+<script>
+"use strict";
+
+/* ==== БАНК: вставлено gen.py, руками не править ==== */
+const BANK = {"perText":3,"total":12,"texts":[{"id":"asya","file":"Тургенев. Ася.txt","author":"И. С. Тургенев","title":"Ася","where":"лежит прямо в папке «Тексты»","zip":""},{"id":"bulba","file":"Гоголь. Тарас Бульба.txt","author":"Н. В. Гоголь","title":"Тарас Бульба","where":"внутри архива «Проза.zip» — сначала распакуй","zip":"Проза.zip"},{"id":"geroy","file":"Лермонтов. Герой нашего времени.txt","author":"М. Ю. Лермонтов","title":"Герой нашего времени","where":"внутри архива «Проза.zip» — сначала распакуй","zip":"Проза.zip"},{"id":"gore","file":"Грибоедов. Горе от ума.txt","author":"А. С. Грибоедов","title":"Горе от ума","where":"внутри архива «Драматургия.zip» — сначала распакуй","zip":"Драматургия.zip"}],"questions":[{"id":1,"text":"asya","kind":"название","q":"Студенты приехали в городок Л. на особый торжественный пир. Как называется такой пир?","hint":"торжественный пир","fp":["56ee6594"]},{"id":2,"text":"asya","kind":"имя","q":"Под старым ясенем стояла каменная скамья, а из ветвей ясеня печально выглядывала маленькая статуя. Чья это была статуя? Ответ дайте в именительном падеже.","hint":"ясенем","fp":["4c778cf9"]},{"id":3,"text":"asya","kind":"название","q":"Ася бросила из окна ветку цветка, и герой хранил этот высохший цветок всю жизнь. Что это за цветок?","hint":"высохший цветок","fp":["4e34a2ef"]},{"id":4,"text":"asya","kind":"число","q":"Сколько лет было рассказчику Н. Н., когда произошла эта история? Ответ запишите цифрами.","hint":"Мне было тогда лет","fp":["8c4b4676"]},{"id":5,"text":"asya","kind":"число","q":"В скольких верстах от Рейна лежит городок З.? Ответ запишите цифрами.","hint":"Городок З.","fp":["9ebdd4b7"]},{"id":6,"text":"asya","kind":"имя","q":"Мать Аси была бывшей горничной. Как её звали? Ответ дайте в именительном падеже.","hint":"горничной","fp":["69dd8e5d"]},{"id":7,"text":"bulba","kind":"место","q":"В какой бурсе учились сыновья Тараса Бульбы? Ответ дайте одним словом — прилагательным, как в тексте.","hint":"бурсе","fp":["f22e7095","87947d84"]},{"id":8,"text":"bulba","kind":"число","q":"Сколько раз Остап закапывал в землю свой букварь? Ответ запишите цифрами.","hint":"закапывал","fp":["ed2437e1"]},{"id":9,"text":"bulba","kind":"имя","q":"Как звали младшего сына Тараса Бульбы?","hint":"Будьте здоровы, сынки","fp":["af59a91a"]},{"id":10,"text":"bulba","kind":"имя","q":"Как звали старшего сына Тараса Бульбы?","hint":"старший сын","fp":["b435bda6"]},{"id":11,"text":"bulba","kind":"место","q":"В какой город Тарас велел везти себя, чтобы ещё раз увидеть сына? Ответ дайте в именительном падеже.","hint":"Вези меня в","fp":["d3b98a7a"]},{"id":12,"text":"bulba","kind":"место","q":"На какой город решило идти войско, узнав, что там много казны и богатых обывателей? Ответ дайте в именительном падеже.","hint":"было много казны","fp":["612b520e"]},{"id":13,"text":"geroy","kind":"место","q":"Максим Максимыч десять лет стоял с ротой в крепости у Каменного Брода. В какой местности была эта крепость? Ответ дайте в именительном падеже.","hint":"Каменного Брода","fp":["bb6cad8a","540b8b13","756a00c1"]},{"id":14,"text":"geroy","kind":"имя","q":"Как звали коня Казбича? Ответ дайте в именительном падеже.","hint":"голос моего","fp":["b8918668"]},{"id":15,"text":"geroy","kind":"число","q":"Табун из скольких кобыл Азамат готов был отдать за коня Казбича? Ответ запишите цифрами.","hint":"табун в","fp":["8b1974b3"]},{"id":16,"text":"geroy","kind":"число","q":"Сколько лет Максим Максимыч простоял с ротою в крепости? Ответ запишите цифрами.","hint":"стоял там в крепости","fp":["4c2c1205"]},{"id":17,"text":"geroy","kind":"занятие","q":"Какого народа был родом поручик Вулич? Ответ дайте в именительном падеже единственного числа.","hint":"Он был родом","fp":["e613b375"]},{"id":18,"text":"geroy","kind":"место","q":"Какой городок назван самым скверным из всех приморских городов России? Ответ дайте в именительном падеже.","hint":"приморских городов","fp":["32e069d1"]},{"id":19,"text":"gore","kind":"занятие","q":"Кем служит Лизанька в доме Фамусова?","hint":"Лизанька","fp":["dd10f83e"]},{"id":20,"text":"gore","kind":"занятие","q":"Кем служит у Фамусова Алексей Степанович Молчалин?","hint":"Молчалин","fp":["61f3196d"]},{"id":21,"text":"gore","kind":"число","q":"Сколько дочерей у князя и княгини Тугоуховских? Ответ запишите цифрами.","hint":"Тугоуховский","fp":["f7999041"]},{"id":22,"text":"gore","kind":"занятие","q":"Какое воинское звание у Сергея Сергеевича Скалозуба?","hint":"Скалозуб, Сергей","fp":["8c960196"]},{"id":23,"text":"gore","kind":"место","q":"В каком городе происходит действие комедии? Ответ дайте в именительном падеже.","hint":"Действие в","fp":["23da32b5","017432dc","1eda2ad6"]},{"id":24,"text":"gore","kind":"занятие","q":"Кем служит Павел Афанасьевич Фамусов? Ответ дайте одним словом — так, как названа его должность в списке действующих лиц.","hint":"Павел Афанасьевич","fp":["305299c6"]}]};
+/* ==== /БАНК ==== */
+
+const TEXTS = BANK.texts;
+const TOTAL = BANK.total;
+const byId = {};
+TEXTS.forEach(t => { byId[t.id] = t; });
+
+// Шкала мягче базовой на один шаг — как во всех темах этого раздела.
+const SCALE = [[11, 5], [9, 4], [7, 3]];
+const markFor = n => (SCALE.find(s => n >= s[0]) || [0, 2])[1];
+
+let tasks = [];
+let firstTry = 0;
+
+const shuffle = a => {
+  const x = a.slice();
+  for (let i = x.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [x[i], x[j]] = [x[j], x[i]];
+  }
+  return x;
+};
+
+/* --------------------------------------------------------- отпечатки
+   Ответов на странице нет — есть отпечатки. Тот же FNV-1a с солью по
+   номеру вопроса, что и в gen.py: страница может проверить ответ, но
+   не может его показать. Совпадение двух реализаций проверяется
+   прогоном (gen.py --check и node).
+------------------------------------------------------------------ */
+
+function norm(s){
+  return String(s).normalize("NFKC").toLowerCase().replace(/ё/g, "е")
+    .replace(/[^0-9a-zа-я]+/g, "");
+}
+
+function fingerprint(s, salt){
+  let h = (0x811C9DC5 ^ (Math.imul(salt, 0x9E3779B1) >>> 0)) >>> 0;
+  const bytes = new TextEncoder().encode(salt + ":" + norm(s));
+  for (const ch of bytes) h = Math.imul(h ^ ch, 0x01000193) >>> 0;
+  return h.toString(16).padStart(8, "0");
+}
+
+/* ------------------------------------------------------------- набор */
+
+// По три вопроса из каждой книги: так в наборе всегда есть и файл
+// россыпью, и файл из архива, а наборы у соседей не совпадают.
+function newRun(){
+  firstTry = 0;
+  const picked = [];
+  TEXTS.forEach(t => {
+    const pool = BANK.questions.filter(q => q.text === t.id);
+    picked.push(...shuffle(pool).slice(0, BANK.perText));
+  });
+  tasks = shuffle(picked).map(q =>
+      Object.assign({}, q, {status: "open", tries: 0, given: "", draft: ""}));
+  renderFiles();
+  render();
+  const el = document.getElementById("in0");
+  if (el) el.focus();
+}
+
+const solved = () => tasks.filter(t => t.status === "ok").length;
+const allAnswered = () => tasks.every(t => t.status === "ok");
+
+/* ----------------------------------------------------------- проверка */
+
+function check(i){
+  const t = tasks[i];
+  if (!t || t.status === "ok") return;
+  const el = document.getElementById("in" + i);
+  const given = (el ? el.value : "").trim();
+  if (!given) return;
+
+  if (!norm(given)){
+    t.draft = given;
+    t.note = "в ответе должно быть слово или число";
+    render();
+    return;
+  }
+
+  t.given = given;
+  t.note = "";
+  if (t.fp.indexOf(fingerprint(given, t.id)) >= 0){
+    t.status = "ok";
+    if (t.tries === 0) firstTry++;
+  } else {
+    t.status = "err";
+    t.tries++;
+    t.draft = given;
+  }
+  render();
+  if (t.status === "ok") focusNextOpen(i + 1);
+}
+
+function focusNextOpen(from){
+  let idx = tasks.findIndex((t, k) => k >= from && t.status !== "ok");
+  if (idx < 0) idx = tasks.findIndex(t => t.status !== "ok");
+  if (idx < 0) return;
+  const el = document.getElementById("in" + idx);
+  if (el) el.focus();
+}
+
+/* -------------------------------------------------------------- вывод */
+
+function captureDrafts(){
+  tasks.forEach((t, i) => {
+    if (t.status === "ok") return;
+    const el = document.getElementById("in" + i);
+    if (el) t.draft = el.value;
+  });
+}
+
+// Дорога до папки «Тексты» зависит от того, откуда открыта страница:
+// с сайта она лежит в подпапке (/dz/), из общей папки — рядом с ними.
+const FILES_BASE = /\/$/.test(location.pathname) ? "../Тексты/" : "Тексты/";
+const fileLink = t => `<a href="${FILES_BASE}${encodeURIComponent(
+    t.zip || t.file)}" download>${esc(t.zip || t.file)}</a>`;
+
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
+                          .replace(/>/g, "&gt;");
+
+function renderFiles(){
+  document.getElementById("filelist").innerHTML = TEXTS.map(t =>
+    `<li><b>${esc(t.file)}</b> — ${t.zip
+       ? `<span class="zip">${esc(t.where)}</span>`
+       : esc(t.where)}<br>скачать: ${fileLink(t)}</li>`).join("");
+}
+
+function render(){
+  captureDrafts();
+  const box = document.getElementById("tasks");
+  box.innerHTML = "";
+
+  tasks.forEach((t, i) => {
+    const src = byId[t.text];
+    const card = document.createElement("div");
+    card.className = "task" + (t.status === "open" ? "" : " " + t.status);
+    card.id = "card" + i;
+
+    let tail;
+    if (t.status === "ok"){
+      tail = `<div class="row">
+                <input type="text" value="${esc(t.given)}" disabled>
+                <span class="verdict ok">Правильно</span>
+              </div>`;
+    } else {
+      // Правильного ответа страница не знает — только отпечаток. Поэтому
+      // при ошибке она подсказывает, ЧТО искать, а не что написать.
+      const note = t.note
+        ? `<span class="verdict err">${esc(t.note)}</span>`
+        : (t.status === "err"
+            ? `<span class="verdict err">Не то</span>` : "");
+      tail = `<div class="row">
+                <input type="text" id="in${i}" autocomplete="off"
+                       spellcheck="false" placeholder="ответ"
+                       value="${esc(t.draft || "")}">
+                <button data-check="${i}">Проверить</button>
+                ${note}
+              </div>` +
+             (t.tries > 0
+               ? `<div class="why">Открой файл и поищи в нём
+                    <b>${esc(t.hint)}</b> — ответ рядом.
+                    ${t.tries > 1 ? "Ищи не всё слово целиком, "
+                      + "а его начало: в книге оно стоит в своём падеже."
+                      : ""}</div>`
+               : "");
+    }
+
+    card.innerHTML = `
+      <div class="q">
+        <div class="num">${i + 1}</div>
+        <div class="text">
+          <span class="src">${esc(src.author)}, «${esc(src.title)}» —
+            файл <b>${esc(src.file)}</b>,
+            ${src.zip ? `<span class="zip">${esc(src.where)}</span>`
+                      : esc(src.where)}</span>
+          ${esc(t.q)}<span class="kind">${esc(t.kind)}</span>
+        </div>
+      </div>
+      ${tail}`;
+    box.appendChild(card);
+  });
+
+  box.querySelectorAll("button[data-check]").forEach(b => {
+    b.addEventListener("click", () => check(+b.dataset.check));
+  });
+  box.querySelectorAll("input[type=text]:not(:disabled)").forEach(inp => {
+    inp.addEventListener("keydown", e => {
+      if (e.key === "Enter"){ e.preventDefault(); check(+inp.id.slice(2)); }
+    });
+  });
+
+  updatePanel();
+}
+
+function updatePanel(){
+  const n = solved();
+  const mark = markFor(n);
+  const started = tasks.some(t => t.status !== "open");
+  const el = document.getElementById("mark");
+  el.textContent = started ? mark : "—";
+  el.className = started ? "m" + mark : "";
+
+  const nextUp = SCALE.filter(s => s[0] > n).pop();
+  document.getElementById("stats").innerHTML =
+    `найдено ответов: <b>${n}</b> из ${TOTAL}<br>` +
+    `с первой попытки: <b>${firstTry}</b> из ${TOTAL}` +
+    (nextUp ? `<br>до оценки ${nextUp[1]} осталось найти: ` +
+              `<b>${nextUp[0] - n}</b>` : "");
+
+  document.getElementById("done").innerHTML = allAnswered()
+    ? `<div class="done">Все ${TOTAL} ответов найдены. Оценка ${mark}.</div>`
+    : "";
+}
+
+document.getElementById("again").addEventListener("click", newRun);
+newRun();
+</script>
+<p class="ai-mark" style="margin:34px auto 0;max-width:860px;padding-top:12px;border-top:1px solid #d9dce6;color:#5c6070;font:13px/1.5 'Segoe UI',system-ui,sans-serif">Материалы подготовлены с использованием технологий искусственного интеллекта.</p>
+</body>
+</html>
