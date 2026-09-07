@@ -298,12 +298,31 @@ function lBreakNode(node, op, st) {
   return {op: self, a: a, b: lBreakNode(node.b, op, st)};
 }
 
-/* Математическая запись. Внешние скобки у корня не нужны. */
-function lMath(node, top) {
+/* Математическая запись — как в условиях ЕГЭ: скобки только там, где без
+   них порядок действий другой. Приоритеты: ¬, затем ∧, ∨, →, ≡ (замер
+   по задачам kompege, 07.09.2026). Цепочки ∧ и ∨ пишутся без скобок,
+   → внутри → и ≡ внутри ≡ — всегда в скобках. Узел с флагом paren
+   берётся в скобки и там, где можно без них: так на ЕГЭ обычно пишут
+   конъюнкции внутри дизъюнкции — (x ∧ ¬z ∧ ¬w) ∨ (x ∧ ¬z ∧ y).
+   Второй аргумент — операция родителя; всё, что не строка, значит корень. */
+const L_PREC = {eq: 1, impl: 2, or: 3, and: 4};
+
+function lMath(node, parent) {
   if (node.op === 'v') return node.name;
-  if (node.op === 'not') return '¬' + lMath(node.a, false);
-  const s = lMath(node.a, false) + ' ' + L_SIGN[node.op] + ' ' + lMath(node.b, false);
-  return top ? s : '(' + s + ')';
+  if (node.op === 'not') {
+    const inner = lMath(node.a, 'not');
+    return '¬' + (node.a.op === 'v' ? inner : '(' + inner + ')');
+  }
+  const s = lMath(node.a, node.op) + ' ' + L_SIGN[node.op] + ' ' + lMath(node.b, node.op);
+  if (typeof parent !== 'string' || parent === 'not') return s;
+  const np = L_PREC[node.op], pp = L_PREC[parent];
+  let paren;
+  if (np < pp) paren = true;
+  else if (np === pp) paren = !(node.op === 'and' || node.op === 'or');
+  /* Импликацию внутри эквивалентности ФИПИ берёт в скобки, хотя по
+     приоритетам можно и без них: (x → y) ≡ (z → w). Делаем так же. */
+  else paren = !!node.paren || (node.op === 'impl' && parent === 'eq');
+  return paren ? '(' + s + ')' : s;
 }
 
 /* Запись на Python. Скобки ставятся всюду, и это не перестраховка:
@@ -415,6 +434,113 @@ function lFormula(rng, names, strong) {
     /* Импликация или эквивалентность обязана быть: ради них и заводится
        перевод в `<=` и `==`, на них же чаще всего и ошибаются. */
     if (!lHasOp(f, ['impl', 'eq'])) continue;
+    const truth = lTruth(f, names);
+    if (!lDependsAll(truth, names.length)) continue;
+    if (strong && !lAsymmetric(truth, names.length)) continue;
+    return {node: f, truth: truth};
+  }
+  return null;
+}
+
+/* ------------------------------------------- формулы как на ЕГЭ (замер) */
+
+/* Замер по 14 задачам kompege (список Светы, 07.09.2026: демо 2027, волны
+   2026, ЕГКР, две авторские с ловушками на порядок действий). Формулы
+   двух семейств:
+     A — импликации и эквивалентности: ядро из →/≡ над литералами и
+         скобками, часто ¬ перед скобкой, сверху ∨ или ∧ с литералом:
+         ((x ≡ ¬y) → ¬(w → x)) ∨ ¬z, ¬((x → w) → (w ≡ z)) ∧ y,
+         ¬(z → x) ∨ (y → w) ∨ ¬y — 9 задач из 14;
+     B — дизъюнкция конъюнкций: (x ∧ ¬z ∧ ¬w) ∨ (x ∧ ¬z ∧ y), три полных
+         минтерма, реже ¬(x ∨ y) ∧ ¬w ∨ ¬(z ∨ w) ∧ y — 5 из 14.
+   Переменных всегда четыре, каждая существенна; листьев 4–7, одна
+   переменная может входить дважды. */
+
+function lLit(rng, v) {
+  return rng() < 0.4 ? {op: 'not', a: {op: 'v', name: v}} : {op: 'v', name: v};
+}
+
+function lFamilyA(rng, names) {
+  /* Первые четыре листа — все четыре имени, дальше имя берётся из тех,
+     что встретились только раз: на ЕГЭ переменная входит не больше двух
+     раз, а (y ≡ ¬y) и x ∧ ¬y ∨ x — не задачи, а мусор. */
+  const pool = tShuffle(rng, names);
+  const used = {};
+  let k = 0;
+  const nextVar = (avoid) => {
+    let v;
+    if (k < pool.length) v = pool[k++];
+    else {
+      const free = names.filter(nm => (used[nm] || 0) < 2 && nm !== avoid);
+      v = free.length ? tPick(rng, free) : tPick(rng, names.filter(nm => nm !== avoid));
+    }
+    used[v] = (used[v] || 0) + 1;
+    return v;
+  };
+  const lit = (avoid) => lLit(rng, nextVar(avoid));
+  const pair = () => {
+    const r = rng();
+    /* Изредка ∨ или ∧ внутри ≡/→ без скобок: x ≡ y ∨ y — ловушка на
+       порядок действий, как в авторской задаче 18576. */
+    const op = r < 0.55 ? 'impl' : r < 0.85 ? 'eq' : (rng() < 0.5 ? 'or' : 'and');
+    const a = lit();
+    return {op: op, a: a, b: lit(a.op === 'v' ? a.name : a.a.name)};
+  };
+  const sub = () => {
+    const r = rng();
+    if (r < 0.4) return lit();
+    const q = pair();
+    return r < 0.75 ? q : {op: 'not', a: q};
+  };
+  let core = {op: rng() < 0.7 ? 'impl' : 'eq', a: sub(), b: sub()};
+  if (rng() < 0.3) core = {op: 'not', a: core};
+  const r = rng();
+  if (r < 0.55) return {op: 'or', a: core, b: lit()};
+  if (r < 0.75) return {op: 'and', a: core, b: lit()};
+  return {op: 'or', a: {op: 'or', a: core, b: pair()}, b: lit()};
+}
+
+function lFamilyB(rng, names) {
+  const n = names.length;
+  if (rng() < 0.15 && n === 4) {
+    /* ¬(a ∨ b) ∧ ¬c ∨ ¬(d ∨ e) ∧ f — де Морган и ∧ над ∨ без скобок
+       (авторская задача 16368, на волнах ФИПИ такого не было). */
+    const term = () => {
+      const v = tShuffle(rng, names).slice(0, 3);
+      return {op: 'and',
+              a: {op: 'not', a: {op: 'or', a: {op: 'v', name: v[0]}, b: {op: 'v', name: v[1]}}},
+              b: lLit(rng, v[2])};
+    };
+    return {op: 'or', a: term(), b: term()};
+  }
+  const terms = tRand(rng, 2, 3);
+  const m = rng() < 0.5 ? n - 1 : n;           /* литералов в конъюнкции */
+  const paren = rng() < 0.8;                   /* скобки вокруг конъюнкций */
+  const seen = new Set();
+  const list = [];
+  for (let guard = 0; guard < 40 && list.length < terms; guard++) {
+    const vars = tShuffle(rng, names).slice(0, m).sort();
+    const lits = vars.map(v => lLit(rng, v));
+    const key = lits.map(t => (t.op === 'not' ? '¬' : '') + (t.a ? t.a.name : t.name)).join('');
+    if (seen.has(key)) continue;
+    seen.add(key);
+    let node = lits[0];
+    for (let i = 1; i < lits.length; i++) node = {op: 'and', a: node, b: lits[i]};
+    node.paren = paren;
+    list.push(node);
+  }
+  let f = list[0];
+  for (let i = 1; i < list.length; i++) f = {op: 'or', a: f, b: list[i]};
+  return f;
+}
+
+/* Формула в экзаменационной форме. `strong` — требовать асимметрии (ответ
+   должен быть единственным). Возвращает {node, truth}. */
+function lFormulaExam(rng, names, strong) {
+  for (let guard = 0; guard < 300; guard++) {
+    /* Семейство A режется отбором сильнее, поэтому берём его чаще: после
+       фильтров выходит около двух третей, как в замере (9 из 14). */
+    const f = rng() < 0.8 ? lFamilyA(rng, names) : lFamilyB(rng, names);
     const truth = lTruth(f, names);
     if (!lDependsAll(truth, names.length)) continue;
     if (strong && !lAsymmetric(truth, names.length)) continue;
@@ -560,30 +686,48 @@ function lProgram(names, table, res, py) {
 }
 
 const L_ASK = 'Определите, какому столбцу таблицы соответствует каждая из ' +
-  'переменных. В ответе напишите буквы в том порядке, в котором идут ' +
-  'соответствующие им столбцы, подряд и без разделителей.';
+  'переменных w, x, y, z. В ответе напишите буквы в том порядке, в котором ' +
+  'идут соответствующие им столбцы, подряд и без разделителей.';
+
+function lIntro(f) {
+  return 'Миша заполнял таблицу истинности логической функции <b class="fx">F = ' +
+    lMath(f) + '</b>, но успел заполнить лишь фрагмент из трёх различных её ' +
+    'строк, даже не указав, какому столбцу таблицы соответствует каждая из ' +
+    'переменных w, x, y, z.';
+}
 
 /* ------------------------------------------- заготовка задания 2 (ядро) */
 
 /* Возвращает функцию, истинную расстановку и фрагмент таблицы, у которого
-   подходящая расстановка РОВНО ОДНА. Всё остальное строится поверх. */
-function lPuzzle(rng, n, rowsCount) {
-  const names = n === 4 ? ['x', 'y', 'z', 'w'] : ['x', 'y', 'z'];
-  for (let guard = 0; guard < 30; guard++) {
-    const g = lFormula(rng, names, true);
+   подходящая расстановка РОВНО ОДНА. Всё остальное строится поверх.
+
+   Форма снята с 14 задач kompege (07.09.2026): в фрагменте всегда три
+   строки, и F в них ОДИНАКОВОЕ — это то значение, которое функция
+   принимает реже. В 13 задачах из 14 таких строк у функции ровно три, то
+   есть фрагмент — это все строки с этим F; в одной — четыре, взяты три.
+   Отсюда и отбор: функция годится, если редкое значение встречается три
+   или четыре раза. */
+function lPuzzle(rng) {
+  const names = ['x', 'y', 'z', 'w'];
+  for (let guard = 0; guard < 200; guard++) {
+    const g = lFormulaExam(rng, names, true);
     if (!g) continue;
-    /* Функция уже отобрана асимметричной, поэтому подходящий набор строк
-       почти наверняка найдётся — пробуем наборы, а не новые функции. */
-    for (let attempt = 0; attempt < 40; attempt++) {
-      const p0 = tShuffle(rng, names);
-      const all = tShuffle(rng, lAllRows(n)).slice(0, rowsCount);
-      /* Строка таблицы — значения по СТОЛБЦАМ: в столбце i стоит p0[i]. */
-      const table = all.map(vals => p0.map(nm => vals[names.indexOf(nm)]));
-      const res = all.map(vals => g.truth[parseInt(vals.join(''), 2)]);
-      if (lSolveT(g.truth, names, table, res).length !== 1) continue;
-      return {f: g.node, truth: g.truth, names, p0, table, res,
-              answer: p0.join('')};
-    }
+    const ones = g.truth.filter(v => v).length;
+    const fval = ones < 8 ? 1 : ones > 8 ? 0 : tRand(rng, 0, 1);
+    const rare = [];
+    g.truth.forEach((v, m) => { if (v === fval) rare.push(m); });
+    if (rare.length < 3 || rare.length > 4) continue;
+    const picked = tShuffle(rng, rare).slice(0, 3);
+    const p0 = tShuffle(rng, names);
+    /* Строка таблицы — значения по СТОЛБЦАМ: в столбце i стоит p0[i]. */
+    const table = picked.map(m => {
+      const vals = lRowOf(m, 4);
+      return p0.map(nm => vals[names.indexOf(nm)]);
+    });
+    const res = picked.map(() => fval);
+    if (lSolveT(g.truth, names, table, res).length !== 1) continue;
+    return {f: g.node, truth: g.truth, names, p0, table, res,
+            answer: p0.join('')};
   }
   return null;
 }
@@ -593,7 +737,7 @@ function lPuzzle(rng, n, rowsCount) {
 function lType0(rng) {
   const n = rng() < 0.5 ? 3 : 4;
   const names = n === 4 ? ['x', 'y', 'z', 'w'] : ['x', 'y', 'z'];
-  const g = lFormula(rng, names, false);
+  const g = lFormulaExam(rng, names, false) || lFormula(rng, names, false);
   const f = g.node;
   const vals = names.map(() => tRand(rng, 0, 1));
   const val = lEval(f, lEnv(names, vals));
@@ -601,13 +745,15 @@ function lType0(rng) {
   return {
     type: 0, kind: 'n' + n, form: 'bit',
     question: 'Логическая функция F задаётся выражением <b class="fx">F = ' +
-      lMath(f, true) + '</b>. Чему равно значение F при <b>' + given + '</b>?',
+      lMath(f) + '</b>. Чему равно значение F при <b>' + given + '</b>?',
     answer: String(val),
-    explain: 'На Python это же выражение записывается так: <code>' +
-      esc2(lPy(f, true)) + '</code>. Импликация <b>→</b> — это <code>&lt;=</code>, ' +
-      'эквивалентность <b>≡</b> — это <code>==</code>. Подставив значения, ' +
-      'получаем <b>' + val + '</b>.',
-    meta: {vars: names, py: lPy(f, true), assign: vals, want: val}
+    explain: 'На Python это же выражение записывается так, со всеми ' +
+      'скобками: <code>' + esc2(lPy(f, true)) + '</code>. Порядок действий в ' +
+      'условии: сначала <b>¬</b>, потом <b>∧</b>, потом <b>∨</b>, потом ' +
+      '<b>→</b>, последней <b>≡</b>. Импликация <b>→</b> — это ' +
+      '<code>&lt;=</code>, эквивалентность <b>≡</b> — это <code>==</code>. ' +
+      'Подставив значения, получаем <b>' + val + '</b>.',
+    meta: {vars: names, py: lPy(f, true), math: lMath(f), assign: vals, want: val}
   };
 }
 
@@ -620,7 +766,7 @@ function lType0(rng) {
    с распаковкой): обе формы есть на слайдах, читать надо уметь обе. */
 function lType1(rng) {
   const names = ['x', 'y', 'z', 'w'];
-  const f = lFormula(rng, names, false).node;
+  const f = (lFormulaExam(rng, names, false) || lFormula(rng, names, false)).node;
   const p = tShuffle(rng, names);
   const row = names.map(() => tRand(rng, 0, 1));
   const fres = tRand(rng, 0, 1);            /* последняя клетка — F с листа */
@@ -661,7 +807,7 @@ function lType1(rng) {
       'с нуля: ' + places + '. Отсюда ' +
       names.map(nm => nm + ' = ' + env[nm]).join(', ') +
       '. Подставляем в выражение и получаем <b>' + val + '</b>.',
-    meta: {vars: names, py: lPy(f, true),
+    meta: {vars: names, py: lPy(f, true), math: lMath(f),
            assign: names.map(nm => env[nm]), want: val}
   };
 }
@@ -752,7 +898,7 @@ function lType2(rng) {
     return {
       type: 2, kind: 'ways', form: 'int',
       question: 'Логическая функция F задаётся выражением <b class="fx">F = ' +
-        lMath(f, true) + '</b>. Приведён фрагмент таблицы истинности функции F, ' +
+        lMath(f) + '</b>. Приведён фрагмент таблицы истинности функции F, ' +
         'содержащий неповторяющиеся наборы аргументов.' +
         lTable(table, res, names) +
         'Сколько существует различных расстановок переменных ' +
@@ -762,8 +908,8 @@ function lType2(rng) {
         'подходят ' + sols.length + ' — ' + sols.join(', ') + '. В программе ' +
         'вместо <code>print(p)</code> подходящие расстановки складывают в ' +
         '<code>set()</code> и печатают <code>len</code>.',
-      meta: {vars: names, py: lPy(f, true), table: table, res: res,
-             count: 'ways', want: sols.length}
+      meta: {vars: names, py: lPy(f, true), math: lMath(f), table: table,
+             res: res, count: 'ways', want: sols.length}
     };
   }
   return lType2(rng);
@@ -834,7 +980,7 @@ function lBreaks(rng, lines, names, res) {
 
 function lType3(rng) {
   for (let guard = 0; guard < 60; guard++) {
-    const z = lPuzzle(rng, 4, 3);
+    const z = lPuzzle(rng);
     if (!z) continue;
     const lines = lProgram(z.names, z.table, z.res, lPy(z.f, true));
     /* Порча обязана менять ответ. Считаем, что напечатает испорченная
@@ -855,7 +1001,7 @@ function lType3(rng) {
     return {
       type: 3, kind: 'line' + b.line, form: 'int',
       question: 'Логическая функция F задаётся выражением <b class="fx">F = ' +
-        lMath(z.f, true) + '</b>, и по этому фрагменту таблицы истинности ' +
+        lMath(z.f) + '</b>, и по этому фрагменту таблицы истинности ' +
         'надо определить, какому столбцу соответствует каждая переменная.' +
         lTable(z.table, z.res, z.names) +
         'Верный ответ программа не печатает: ровно в одной строке ошибка. ' +
@@ -865,8 +1011,8 @@ function lType3(rng) {
       explain: 'Ошибка в строке <b>' + b.line + '</b>. ' + b.why +
         ' Правильно так: <code>' + esc2(lines[b.line - 1].trim()) + '</code>. ' +
         'Верный ответ задания — <b>' + z.answer + '</b>.',
-      meta: {vars: z.names, py: lPy(z.f, true), table: z.table, res: z.res,
-             good: lines, bad: bad, badLine: b.line, want: z.answer}
+      meta: {vars: z.names, py: lPy(z.f, true), math: lMath(z.f), table: z.table,
+             res: z.res, good: lines, bad: bad, badLine: b.line, want: z.answer}
     };
   }
   return lType3(rng);          /* другой тип подсовывать нельзя: у него своя meta */
@@ -876,21 +1022,18 @@ function lType3(rng) {
 
 function lType4(rng) {
   for (let guard = 0; guard < 40; guard++) {
-    const z = lPuzzle(rng, 4, 3);
+    const z = lPuzzle(rng);
     if (!z) continue;
     return {
       type: 4, kind: 'plain', form: 'letters',
-      question: 'Логическая функция F задаётся выражением <b class="fx">F = ' +
-        lMath(z.f, true) + '</b>. Дан фрагмент таблицы истинности функции F ' +
-        'из трёх различных строк — какой переменной соответствует каждый ' +
-        'столбец, неизвестно.' + lTable(z.table, z.res, z.names) + L_ASK,
+      question: lIntro(z.f) + lTable(z.table, z.res, z.names) + L_ASK,
       answer: z.answer,
       explain: 'Подходит ровно одна расстановка — <b>' + z.answer + '</b>. ' +
-        'На Python: <code>F = ' + esc2(lPy(z.f, true)) +
+        'На Python, со всеми скобками: <code>F = ' + esc2(lPy(z.f, true)) +
         '</code>, таблица со значениями F в конце каждой строки — <code>' +
         esc2(lTableLiteral(z.table, z.res)) + '</code>.',
-      meta: {vars: z.names, py: lPy(z.f, true), table: z.table, res: z.res,
-             want: z.answer}
+      meta: {vars: z.names, py: lPy(z.f, true), math: lMath(z.f), table: z.table,
+             res: z.res, want: z.answer}
     };
   }
   return lType4(rng);
@@ -898,31 +1041,54 @@ function lType4(rng) {
 
 /* --------------------------------- тип 5: задание 2 с пропусками */
 
+/* Пропуски по замеру: пять пустых клеток по строкам 1-2-2 (половина
+   задач; без условия «строки различны» ответ там почти всегда не
+   единственный), семь по 3-2-2 (почти вторая половина), изредка восемь по
+   3-3-2. Строка с тремя пропусками — то есть с одной известной клеткой —
+   на ЕГЭ обычное дело.
+
+   Сначала выбирается число пропусков, потом под него подбирается
+   раскладка: при семи пропусках единственный ответ даёт лишь одна
+   раскладка из сотни, и если тянуть раскладку наугад вместе с числом
+   пропусков, семёрки почти не выпадают. */
+const L_HOLE_PATTERNS = [
+  {pattern: [1, 2, 2], weight: 5, layouts: 12},
+  {pattern: [3, 2, 2], weight: 4, layouts: 60},
+  {pattern: [3, 3, 2], weight: 1, layouts: 80}
+];
+
 function lType5(rng) {
-  for (let guard = 0; guard < 300; guard++) {
-    const z = lPuzzle(rng, 4, 3);
+  const total = L_HOLE_PATTERNS.reduce((acc, h) => acc + h.weight, 0);
+  let pick = rng() * total, shape = L_HOLE_PATTERNS[0];
+  for (const h of L_HOLE_PATTERNS) { pick -= h.weight; if (pick < 0) { shape = h; break; } }
+  for (let guard = 0; guard < 60; guard++) {
+    const z = lPuzzle(rng);
     if (!z) continue;
-    /* Пропуски: не больше двух в строке, иначе строка перестаёт держать. */
-    const cells = [];
-    for (let r = 0; r < 3; r++)
-      for (const c of tShuffle(rng, [0, 1, 2, 3]).slice(0, 2)) cells.push([r, c]);
-    const holes = tShuffle(rng, cells).slice(0, tRand(rng, 4, 5))
-      .sort((u, v) => u[0] - v[0] || u[1] - v[1]);   /* a1, a2, … слева направо */
-    const table = z.table.map(r => r.slice());
-    holes.forEach(([r, c]) => { table[r][c] = -1; });
-    const strict = lSolveHoles(z.truth, z.names, table, z.res, holes, true);
-    if (strict.length !== 1 || strict[0] !== z.answer) continue;
-    const loose = lSolveHoles(z.truth, z.names, table, z.res, holes, false);
-    /* Первые 200 попыток берём только задачи-ловушки: без условия
-       «строки различны» ответ перестаёт быть единственным, и забывший
-       про него получает лишние варианты. */
-    if (guard < 200 && loose.length < 2) continue;
+    for (let attempt = 0; attempt < shape.layouts; attempt++) {
+      const pattern = tShuffle(rng, shape.pattern);
+      const holes = [];
+      pattern.forEach((k, r) => {
+        for (const c of tShuffle(rng, [0, 1, 2, 3]).slice(0, k)) holes.push([r, c]);
+      });
+      holes.sort((u, v) => u[0] - v[0] || u[1] - v[1]);   /* a1, a2, … слева направо */
+      const table = z.table.map(r => r.slice());
+      holes.forEach(([r, c]) => { table[r][c] = -1; });
+      const strict = lSolveHoles(z.truth, z.names, table, z.res, holes, true);
+      if (strict.length !== 1 || strict[0] !== z.answer) continue;
+      const loose = lSolveHoles(z.truth, z.names, table, z.res, holes, false);
+      /* При пяти пропусках берём только задачи-ловушки (как на ЕГЭ): без
+         условия «строки различны» ответ перестаёт быть единственным. */
+      if (holes.length === 5 && guard < 40 && loose.length < 2) continue;
+      return lHolesTask(z, table, holes, loose);
+    }
+  }
+  return lType5(rng);
+}
+
+function lHolesTask(z, table, holes, loose) {
     return {
       type: 5, kind: loose.length > 1 ? 'trap' : 'plain', form: 'letters',
-      question: 'Логическая функция F задаётся выражением <b class="fx">F = ' +
-        lMath(z.f, true) + '</b>. Дан частично заполненный фрагмент таблицы ' +
-        'истинности функции F, содержащий <b>неповторяющиеся</b> строки.' +
-        lTable(table, z.res, z.names) + L_ASK,
+      question: lIntro(z.f) + lTable(table, z.res, z.names) + L_ASK,
       answer: z.answer,
       explain: 'Пропуски перебираются через <code>product([0, 1], repeat=' +
         holes.length + ')</code>: <code>table = ' +
@@ -933,11 +1099,10 @@ function lType5(rng) {
             'работает наравне с самой функцией. '
           : '') +
         'Верный ответ — <b>' + z.answer + '</b>.',
-      meta: {vars: z.names, py: lPy(z.f, true), table: table, res: z.res,
-             holes: holes, want: z.answer, loose: loose.length}
+      meta: {vars: z.names, py: lPy(z.f, true), math: lMath(z.f), table: table,
+             res: z.res, holes: holes, want: z.answer, loose: loose.length,
+             gaps: holes.length}
     };
-  }
-  return lType5(rng);
 }
 
 /* ------------------------------------------------------------- сборка */
