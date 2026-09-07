@@ -146,8 +146,9 @@ label{display:block;font-size:14px;color:var(--muted);margin-bottom:3px}
     <p class="stats">Шаблон нарочно картинкой: скопировать нельзя, набрать
     придётся самому — иначе метод не станет твоим. Без пропусков всё то же,
     только <code>table</code> записывается сразу, а внешний <code>for</code> и
-    проверка на повторяющиеся строки не нужны. Три переменные —
-    <code>'xyz'</code>, три строки с <code>index</code> и
+    проверка на повторяющиеся строки не нужны; пропусков может быть и
+    семь — тогда <code>a1</code>…<code>a7</code> и <code>repeat=7</code>.
+    Три переменные — <code>'xyz'</code>, три строки с <code>index</code> и
     <code>row[3]</code>.</p>
   </details>
 </div>
@@ -199,8 +200,12 @@ label{display:block;font-size:14px;color:var(--muted);margin-bottom:3px}
      2 «счёт вариантов»         сколько раз считается F / сколько расстановок
                                 подходит / сколько заполнений у пропусков
      3 «ошибка в программе»     в решении испорчена одна строка, назвать номер
-     4 «задание 2»              фрагмент таблицы без пропусков, ответ буквами
-     5 «задание 2 с пропусками» то же, но часть клеток пуста
+     4 «задание 2: пять пропусков» фрагмент с пятью пустыми клетками (1-2-2),
+                                ответ держится на условии «строки различны»
+     5 «задание 2: семь пропусков» семь (3-2-2) или восемь (3-3-2) пустых
+                                клеток: есть строка с одной известной
+   Оба — форма настоящего задания 2 по замеру kompege (07.09.2026); задач
+   без пропусков на ЕГЭ не бывает, и у нас их нет (Света, 07.09.2026).
 
    Единственность ответа встроена в отбор: генератор сам перебирает все
    перестановки имён и берёт задачу, только если подходит ровно одна
@@ -216,8 +221,8 @@ const L_TYPES = [
   'расстановка и index',
   'счёт вариантов',
   'ошибка в программе',
-  'задание 2',
-  'задание 2 с пропусками'
+  'задание 2: пять пропусков',
+  'задание 2: семь пропусков'
 ];
 
 /* ----------------------------------------------------------- случайность */
@@ -1018,49 +1023,27 @@ function lType3(rng) {
   return lType3(rng);          /* другой тип подсовывать нельзя: у него своя meta */
 }
 
-/* ------------------------------------------------- тип 4: задание 2 */
-
-function lType4(rng) {
-  for (let guard = 0; guard < 40; guard++) {
-    const z = lPuzzle(rng);
-    if (!z) continue;
-    return {
-      type: 4, kind: 'plain', form: 'letters',
-      question: lIntro(z.f) + lTable(z.table, z.res, z.names) + L_ASK,
-      answer: z.answer,
-      explain: 'Подходит ровно одна расстановка — <b>' + z.answer + '</b>. ' +
-        'На Python, со всеми скобками: <code>F = ' + esc2(lPy(z.f, true)) +
-        '</code>, таблица со значениями F в конце каждой строки — <code>' +
-        esc2(lTableLiteral(z.table, z.res)) + '</code>.',
-      meta: {vars: z.names, py: lPy(z.f, true), math: lMath(z.f), table: z.table,
-             res: z.res, want: z.answer}
-    };
-  }
-  return lType4(rng);
-}
-
-/* --------------------------------- тип 5: задание 2 с пропусками */
+/* ------------------------- типы 4 и 5: задание 2 с пропусками (замер) */
 
 /* Пропуски по замеру: пять пустых клеток по строкам 1-2-2 (половина
    задач; без условия «строки различны» ответ там почти всегда не
    единственный), семь по 3-2-2 (почти вторая половина), изредка восемь по
    3-3-2. Строка с тремя пропусками — то есть с одной известной клеткой —
-   на ЕГЭ обычное дело.
+   на ЕГЭ обычное дело. Тип 4 — пятёрки, тип 5 — семёрки и восьмёрки.
 
-   Сначала выбирается число пропусков, потом под него подбирается
-   раскладка: при семи пропусках единственный ответ даёт лишь одна
-   раскладка из сотни, и если тянуть раскладку наугад вместе с числом
-   пропусков, семёрки почти не выпадают. */
-const L_HOLE_PATTERNS = [
-  {pattern: [1, 2, 2], weight: 5, layouts: 12},
-  {pattern: [3, 2, 2], weight: 4, layouts: 60},
-  {pattern: [3, 3, 2], weight: 1, layouts: 80}
-];
+   Число пропусков задано типом, раскладка под него подбирается: при семи
+   пропусках единственный ответ даёт лишь одна раскладка из сотни. */
+const L_HOLE_SHAPES = {
+  4: [{pattern: [1, 2, 2], weight: 1, layouts: 12}],
+  5: [{pattern: [3, 2, 2], weight: 4, layouts: 60},
+      {pattern: [3, 3, 2], weight: 1, layouts: 80}]
+};
 
-function lType5(rng) {
-  const total = L_HOLE_PATTERNS.reduce((acc, h) => acc + h.weight, 0);
-  let pick = rng() * total, shape = L_HOLE_PATTERNS[0];
-  for (const h of L_HOLE_PATTERNS) { pick -= h.weight; if (pick < 0) { shape = h; break; } }
+function lHoles(rng, type) {
+  const shapes = L_HOLE_SHAPES[type];
+  const total = shapes.reduce((acc, h) => acc + h.weight, 0);
+  let pick = rng() * total, shape = shapes[0];
+  for (const h of shapes) { pick -= h.weight; if (pick < 0) { shape = h; break; } }
   for (let guard = 0; guard < 60; guard++) {
     const z = lPuzzle(rng);
     if (!z) continue;
@@ -1079,15 +1062,22 @@ function lType5(rng) {
       /* При пяти пропусках берём только задачи-ловушки (как на ЕГЭ): без
          условия «строки различны» ответ перестаёт быть единственным. */
       if (holes.length === 5 && guard < 40 && loose.length < 2) continue;
-      return lHolesTask(z, table, holes, loose);
+      const t = lHolesTask(z, table, holes, loose);
+      t.type = type;
+      return t;
     }
   }
-  return lType5(rng);
+  return lHoles(rng, type);
 }
+
+function lType4(rng) { return lHoles(rng, 4); }
+
+function lType5(rng) { return lHoles(rng, 5); }
 
 function lHolesTask(z, table, holes, loose) {
     return {
-      type: 5, kind: loose.length > 1 ? 'trap' : 'plain', form: 'letters',
+      type: 5, kind: (loose.length > 1 ? 'trap' : 'plain') + holes.length,
+      form: 'letters',
       question: lIntro(z.f) + lTable(table, z.res, z.names) + L_ASK,
       answer: z.answer,
       explain: 'Пропуски перебираются через <code>product([0, 1], repeat=' +
@@ -1120,14 +1110,15 @@ function lMake(type, rng) {
    программой.
 
    Проверочная (Света, 31.08.2026): восемь задач, четыре теоретических
-   вместе на один балл, четыре с кодом по баллу — одна без пропусков и три
-   с пропусками, таких на ЕГЭ больше. Всего пять баллов.
+   вместе на один балл, четыре с кодом по баллу. С 07.09.2026 все четыре —
+   задание 2 с пропусками, как на ЕГЭ: два с пятью, два с семью (задач
+   без пропусков на экзамене не бывает). Всего пять баллов.
 
    Практикум (Света, 07.09.2026): шесть задач, по одной на тип. Балл за
    каждую, всего шесть — та же лестница, что у домашней работы. */
 const L_WORKS = {
   test: {
-    plan: [0, 1, 2, 3, 4, 5, 5, 5], theory: 4, theoryPoint: true,
+    plan: [0, 1, 2, 3, 4, 4, 5, 5], theory: 4, theoryPoint: true,
     max: 5, scale: [[5, 5], [4, 4], [3, 3]]
   },
   practice: {
