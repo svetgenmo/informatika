@@ -106,12 +106,15 @@ details.help pre{font-family:Consolas,"Cascadia Mono",monospace;
 <div class="intro">
   <dl>
     <dt>Что нужно сделать</dt>
-    <dd>Шесть задач — по одной на каждый вопрос темы. На каждую задачу
-        <b>одна попытка</b>: ответил — сразу видно, верно или нет, и как это
-        решается. Времени нужно около десяти минут.</dd>
-    <dt>Отметка</dt>
-    <dd>Сколько задач решено верно, столько и наработано: шесть — «5»,
-        пять — «4», три или четыре — «3».</dd>
+    <dd>Шесть задач — по одной на каждый вопрос темы. Ответил верно — вопрос
+        закрыт. Ошибся — сразу видно, как это решается, а вопрос остаётся
+        открытым: его можно сдать ещё раз с новыми числами. Сколько закрыл,
+        столько и наработал. Времени нужно около десяти минут.</dd>
+    <dt>Отметка и добор</dt>
+    <dd>Закрыто 6 из 6 — «5», 5 — «4», 3 или 4 — «3». Дойдя до нужной
+        отметки, можно остановиться и забрать код сразу, а можно
+        <b>досдать оставшиеся вопросы</b> и получить код получше — решать
+        самому, до какой отметки добирать.</dd>
     <dt>Ответ — целое число</dt>
     <dd>Без единиц измерения и без пробелов: <code>34</code>, а не
         <code>34 бита</code>. На КЕГЭ ответ читает машина, и здесь так же.</dd>
@@ -525,57 +528,98 @@ function makeCode(st){
   return PREFIX + "-" + out.slice(0, 4) + "-" + out.slice(4);
 }
 
-/* ---------------------------------------------------------- состояние */
-let list, idx, st;
+/* ---------------------------------------------------------- состояние
+   Добор до желаемой отметки: вопрос закрывается одним верным ответом и
+   больше не спрашивается; ошибся — вопрос остаётся открытым и вернётся
+   в следующем раунде с новыми числами. Раунд — это проход по всем пока
+   не закрытым вопросам по одному разу. После раунда можно забрать код
+   (если закрыто хотя бы MIN_TO_FINISH) или досдать оставшиеся. */
+const T_COUNT = T_TYPES.length;
+const MIN_TO_FINISH = 3;
 
-function reset(){
-  list = tMake((Date.now() ^ (Math.random() * 1e9)) >>> 0);
-  idx = 0;
-  st = {done: 0, wrong: 0, result: Array(6).fill(null)};
-  /* Имена полей канонические: их читает и makeCode, и сверка из
-     check_homework.py --selftest. Попытка одна, поэтому «закрыто» и
-     «закрыто без ошибок» здесь одно и то же. */
-  Object.defineProperty(st, "typesDone", {get(){ return st.done; }});
-  Object.defineProperty(st, "cleanTypes", {get(){ return st.done; }});
-  Object.defineProperty(st, "solved", {get(){ return st.done; }});
-  paint();
-  nextTask();
-}
+let st;
+
+function esc(s){ return String(s).replace(/[&<>]/g, c =>
+  ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
 
 function markFor(n){
   for (const [need, m] of SCALE) if (n >= need) return m;
   return null;
 }
 
-function esc(s){ return String(s).replace(/[&<>]/g, c =>
-  ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+function wordQ(n){
+  const a = n % 100, b = a % 10;
+  if (a > 4 && a < 21) return "вопросов";
+  if (b === 1) return "вопрос";
+  if (b > 1 && b < 5) return "вопроса";
+  return "вопросов";
+}
+
+function newRng(){ return tRng((Date.now() ^ (Math.random() * 1e9)) >>> 0); }
+
+function shuffle(arr, rng){
+  const a = arr.slice();
+  for (let j = a.length - 1; j > 0; j--) {
+    const k = tRand(rng, 0, j);
+    const tmp = a[j]; a[j] = a[k]; a[k] = tmp;
+  }
+  return a;
+}
+
+function freshState(){
+  const s = {
+    closed: Array(T_COUNT).fill(false),
+    clean:  Array(T_COUNT).fill(true),
+    solved: 0, wrong: 0,
+    queue: [], qi: 0, cur: null
+  };
+  Object.defineProperty(s, "typesDone",
+    {get(){ return s.closed.filter(Boolean).length; }});
+  Object.defineProperty(s, "cleanTypes",
+    {get(){ return s.closed.filter((d, i) => d && s.clean[i]).length; }});
+  return s;
+}
 
 function paint(){
   const box = document.getElementById("types");
   box.innerHTML = "";
-  list.forEach(function(t, i){
+  for (let i = 0; i < T_COUNT; i++) {
     const el = document.createElement("span");
-    const r = st.result[i];
-    el.className = "chip" + (r === true ? " done" : r === false ? " miss"
-                             : i === idx ? " cur" : "");
-    el.textContent = T_TYPES[t.type];
+    const isCur = st.cur && st.cur.type === i;
+    el.className = "chip" + (st.closed[i] ? " done" : isCur ? " cur" : "");
+    el.textContent = T_TYPES[i];
     box.appendChild(el);
-  });
-  const m = markFor(st.done);
+  }
+  const done = st.typesDone;
+  const m = markFor(done);
   const sb = document.getElementById("scorebox");
   sb.className = "score" + (m ? " m" + m : "");
   document.getElementById("mark").textContent = m ? m : "—";
   document.getElementById("stats").textContent =
-    "Решено верно: " + st.done + " из 6. Задача " +
-    Math.min(idx + 1, 6) + " из 6.";
+    "Закрыто: " + done + " из " + T_COUNT + ". Решено задач: " + st.solved +
+    ", ошибок: " + st.wrong + ".";
 }
 
-function nextTask(){
-  if (idx >= list.length) return finish();
-  const t = list[idx];
+function startRound(){
+  const open = [];
+  for (let i = 0; i < T_COUNT; i++) if (!st.closed[i]) open.push(i);
+  st.queue = shuffle(open, newRng());
+  st.qi = 0;
+  askNext();
+}
+
+function askNext(){
+  if (st.qi >= st.queue.length) { roundEnd(); return; }
+  st.cur = tTask(st.queue[st.qi], newRng());
+  renderTask();
+}
+
+function renderTask(){
+  const t = st.cur;
   document.getElementById("area").innerHTML =
     '<div class="card" id="task">' +
-      '<p class="tag">Задача ' + (idx + 1) + ' из 6 — ' + T_TYPES[t.type] + '</p>' +
+      '<p class="tag">' + T_TYPES[t.type] + ' &middot; решено задач: ' +
+        st.solved + '</p>' +
       '<div class="q">' + t.question + '</div>' +
       '<div class="row">' +
         '<input type="text" id="ans" autocomplete="off" spellcheck="false" ' +
@@ -594,11 +638,11 @@ function nextTask(){
 }
 
 function judge(){
-  const t = list[idx];
+  const t = st.cur;
   const raw = document.getElementById("ans").value;
   const ok = tCheck(t, raw);
-  st.result[idx] = ok;
-  if (ok) st.done++; else st.wrong++;
+  if (ok) { st.closed[t.type] = true; st.solved++; }
+  else { st.wrong++; st.clean[t.type] = false; }
 
   const card = document.getElementById("task");
   card.className = "card " + (ok ? "ok" : "err");
@@ -606,37 +650,74 @@ function judge(){
   document.getElementById("go").disabled = true;
   document.getElementById("v").className = "verdict " + (ok ? "ok" : "err");
   document.getElementById("v").innerHTML = ok
-    ? "Правильно."
+    ? "Правильно — вопрос закрыт."
     : "Ошибка. Твой ответ: <code>" + esc(raw) + "</code>, верный: <code>" +
-      t.answer + "</code>.";
+      t.answer + "</code>. Вопрос остался открытым — вернётся при доборе.";
   card.insertAdjacentHTML("beforeend",
     '<div class="why">' + t.explain + '</div>' +
-    '<div class="row"><button class="primary" id="nx">' +
-    (idx === 5 ? "Завершить" : "Дальше") + '</button></div>');
+    '<div class="row"><button class="primary" id="nx">Дальше</button></div>');
   document.getElementById("nx").addEventListener("click", function(){
-    idx++;
-    nextTask();
+    st.qi++;
+    askNext();
   });
   paint();
 }
 
+function roundEnd(){
+  st.cur = null;
+  paint();
+  const done = st.typesDone, open = T_COUNT - done;
+  if (done >= T_COUNT) { finish(); return; }
+
+  const m = markFor(done);
+  const up = SCALE.filter(s => s[0] > done).pop();
+  let msg;
+  if (!m) {
+    msg = "Пока закрыто <b>" + done + "</b> из " + T_COUNT + " — этого мало " +
+      "даже на «3» (нужно " + MIN_TO_FINISH + "). Досдай оставшиеся вопросы: " +
+      "числа будут новые.";
+  } else if (up) {
+    msg = "Наработано на <b>" + m + "</b> (закрыто " + done + " из " + T_COUNT +
+      "). Можно забрать код сейчас, а можно досдать ещё " + open + " " +
+      wordQ(open) + " и дойти до <b>" + up[1] + "</b>.";
+  } else {
+    msg = "Наработано на <b>" + m + "</b> (закрыто " + done + " из " + T_COUNT + ").";
+  }
+  const canFinish = done >= MIN_TO_FINISH;
+  document.getElementById("area").innerHTML =
+    '<div class="card">' +
+      '<h2>Раунд пройден</h2>' +
+      '<p>' + msg + '</p>' +
+      '<div class="row">' +
+        (open > 0 ? '<button class="primary" id="more">Досдать оставшиеся (' +
+          open + ')</button>' : '') +
+        (canFinish ? '<button id="stop"' + (open > 0 ? '' : ' class="primary"') +
+          '>Получить код' + (open > 0 ? ' сейчас' : '') + '</button>' : '') +
+      '</div>' +
+    '</div>';
+  const moreBtn = document.getElementById("more");
+  if (moreBtn) moreBtn.addEventListener("click", startRound);
+  const stopBtn = document.getElementById("stop");
+  if (stopBtn) stopBtn.addEventListener("click", finish);
+}
+
 function finish(){
   const code = makeCode(st);
-  const m = markFor(st.done);
-  const missed = list.filter(function(t, i){ return st.result[i] === false; })
-                     .map(function(t){ return T_TYPES[t.type]; });
+  const m = markFor(st.typesDone);
+  const open = [];
+  for (let i = 0; i < T_COUNT; i++) if (!st.closed[i]) open.push(T_TYPES[i]);
   document.getElementById("area").innerHTML =
     '<div class="card">' +
       '<h2>Работа завершена</h2>' +
-      '<p>Верно решено <b>' + st.done + '</b> из 6' +
+      '<p>Закрыто <b>' + st.typesDone + '</b> из ' + T_COUNT +
         (m ? ', это отметка <b>' + m + '</b>' : '') + '.' +
-        (missed.length ? ' Не получилось: ' + missed.join(", ") + '.' : '') +
+        (open.length ? ' Не закрыто: ' + open.join(", ") + '.' : '') +
       '</p>' +
       '<p>Код работы — его и надо сдать:</p>' +
       '<div class="code">' + code + '</div>' +
-      '<div class="note">Код хранит дату, число решённых задач и число ошибок. ' +
-        'Переписывать его руками не нужно: впиши фамилию и класс, и кнопка ' +
-        'откроет форму с уже подставленным кодом.</div>' +
+      '<div class="note">Код хранит дату, число закрытых вопросов, число ' +
+        'решённых и неверных задач. Переписывать его руками не нужно: впиши ' +
+        'фамилию и класс, и кнопка откроет форму с уже подставленным кодом.</div>' +
       '<div class="fields">' +
         '<div><label for="fam">Фамилия и имя</label>' +
           '<input type="text" id="fam" autocomplete="off"></div>' +
@@ -645,10 +726,11 @@ function finish(){
       '</div>' +
       '<div class="row">' +
         '<button id="send" class="primary">Сдать работу</button>' +
-        '<button id="again">Ещё подход</button>' +
+        '<button id="again">Начать заново</button>' +
       '</div>' +
-      '<p class="stats">«Ещё подход» даёт новый вариант для тренировки. ' +
-        'Сдавать нужно тот код, который получен в первый раз.</p>' +
+      '<p class="stats">«Начать заново» откроет все ' + T_COUNT + ' вопросов с ' +
+        'нуля — для дополнительной тренировки. Сдавать нужно тот код, который ' +
+        'получен сейчас.</p>' +
     '</div>';
   document.getElementById("send").addEventListener("click", function(){
     const fam = document.getElementById("fam").value.trim();
@@ -658,11 +740,16 @@ function finish(){
                     .replace("КЛАСС", encodeURIComponent(kls))
                     .replace("КОД", encodeURIComponent(code)), "_blank");
   });
-  document.getElementById("again").addEventListener("click", reset);
+  document.getElementById("again").addEventListener("click", resetAll);
   paint();
 }
 
-reset();
+function resetAll(){
+  st = freshState();
+  startRound();
+}
+
+resetAll();
 </script>
 <p class="ai-mark" style="margin:34px auto 0;max-width:860px;padding-top:12px;border-top:1px solid #d9dce6;color:#5c6070;font:13px/1.5 "Segoe UI",system-ui,sans-serif">Материалы подготовлены с использованием технологий искусственного интеллекта.</p>
 </body>
