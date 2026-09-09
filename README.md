@@ -26,6 +26,7 @@
 - **9 класс** — https://svetgenmo.github.io/informatika/9/
   - [Информационный объём текста](https://svetgenmo.github.io/informatika/9/obem-teksta/) — Задание 1 ОГЭ по вариантам Статграда: вычеркнутое слово
   - [Кодирование и декодирование информации](https://svetgenmo.github.io/informatika/9/kodirovanie-dekodirovanie/) — Задание 2 ОГЭ по вариантам Статграда и демо 2027: кодовая таблица и разбор цепочки
+  - [Значение логического выражения](https://svetgenmo.github.io/informatika/9/logicheskoe-vyrazhenie/) — Задание 3 ОГЭ по вариантам Статграда и демо 2027: И, ИЛИ, НЕ на числовой прямой и свойства числа
   - *Практикумы по программе*
     - [Глобальная сеть Интернет: IP-адреса и большие данные](https://svetgenmo.github.io/informatika/9/globalnaya-set-internet/) — Обзорный практикум по программе ФГОС, урок без доступа в интернет
     - [Информационная безопасность](https://svetgenmo.github.io/informatika/9/informacionnaya-bezopasnost/) — Обзорный практикум по программе ФГОС: угрозы, аутентификация, личные данные, фишинг, кибербуллинг

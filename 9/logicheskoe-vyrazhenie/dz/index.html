@@ -1,0 +1,1278 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Значение логического выражения — домашнее задание</title>
+<meta name="description" content="Домашнее задание к заданию 3 ОГЭ по информатике, 9 класс: семь типов задач на значение логического выражения, код работы и сдача формой.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E%26%238743;%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{margin:0;padding:20px 16px 60px;
+     font:17px/1.5 "Segoe UI",system-ui,sans-serif}
+.wrap{max-width:820px;margin:0 auto}
+h1{font-size:22px;margin:0 0 4px}
+.sub{color:var(--muted);font-size:15px;margin:0 0 18px}
+
+button{font:600 15px/1 inherit;padding:11px 16px;border-radius:9px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);
+       cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);
+                color:var(--muted);background:#fff}
+button:focus-visible{outline:3px solid #a9c6e8;outline-offset:2px}
+
+/* ---- как устроено ---- */
+.howto{border:1px solid var(--line);border-radius:12px;padding:4px 18px 12px;
+       background:var(--card);margin-bottom:20px}
+.howto dt{font-weight:700;margin-top:12px}
+.howto dd{margin:4px 0 0;color:var(--muted)}
+.howto dd b{color:var(--ink)}
+table.steps{border-collapse:collapse;margin:8px 0 6px;font-size:15px}
+table.steps td,table.steps th{border:1px solid var(--line);padding:4px 10px}
+table.steps th{background:#fff;color:var(--muted);font-size:14px;
+               font-weight:600}
+table.steps td.m{font-weight:700;text-align:center;color:var(--accent)}
+
+/* ---- прогресс по типам ---- */
+.progress{border:2px solid var(--accent);border-radius:12px;
+          padding:12px 18px;background:var(--card);margin-bottom:20px}
+.ptop{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.ptop h2{font-size:16px;margin:0;color:var(--muted);font-weight:600}
+.sp{flex:1 1 auto}
+.score{display:flex;align-items:baseline;gap:8px}
+.score span{color:var(--muted);font-size:14px}
+.score b{font:700 30px/1 "Segoe UI",system-ui,sans-serif;min-width:38px;
+         text-align:center;border-radius:8px;padding:2px 8px;background:#fff;
+         border:2px solid var(--line)}
+.m5{color:var(--ok);border-color:var(--ok-line)!important}
+.m4{color:var(--accent);border-color:#a9c6e8!important}
+.m3{color:#8a5a00;border-color:#e6c98a!important}
+.m2{color:var(--err);border-color:var(--err-line)!important}
+.types{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.type{display:flex;align-items:center;gap:8px;border:1px solid var(--line);
+      border-radius:20px;padding:4px 12px;background:#fff;font-size:14px}
+.type.done{border-color:var(--ok-line);background:var(--ok-bg);
+           color:var(--ok);font-weight:600}
+.dots{display:flex;gap:3px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--line)}
+.dot.full{background:var(--accent)}
+.type.done .dot.full{background:var(--ok)}
+.need{margin:12px 0 0;font-size:15px;color:var(--muted)}
+
+/* ---- карточка задачи ---- */
+.card{border:1px solid var(--line);border-radius:12px;padding:16px 20px;
+      background:#fff}
+.kicker{font-size:12px;font-weight:600;color:var(--muted);
+        text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px}
+.card p{margin:8px 0}
+/* Само выражение — крупно и по центру, как его набирают в вариантах:
+   отдельной строкой, а не внутри абзаца. */
+.expr{font-size:21px;text-align:center;margin:16px 0;line-height:1.5}
+.ask{margin-top:14px;font-weight:600}
+.ask small{display:block;font-weight:400;color:var(--muted);margin-top:3px}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:14px}
+input[type=text]{font:700 19px/1 Consolas,"Courier New",monospace;
+     padding:11px 14px;width:200px;letter-spacing:1px;
+     border:2px solid var(--line);border-radius:9px;background:#fff;
+     color:var(--ink)}
+input[type=text]:focus{outline:none;border-color:var(--accent)}
+input[type=text]:disabled{background:#f1f2f6;color:var(--muted)}
+.verdict{margin-top:14px;padding:10px 14px;border-radius:9px;font-weight:600}
+.verdict.ok{background:var(--ok-bg);border:1px solid var(--ok-line);
+            color:var(--ok)}
+.verdict.err{background:var(--err-bg);border:1px solid var(--err-line);
+             color:var(--err)}
+.solution{margin-top:12px;border-left:4px solid var(--line);
+          padding:2px 0 2px 14px;color:var(--muted);font-size:15px}
+.solution .cap{display:block;font-size:12px;font-weight:600;
+               text-transform:uppercase;letter-spacing:.04em}
+.solution ol{margin:4px 0 0;padding-left:20px}
+.solution li{margin:2px 0}
+.solution .rule{margin-top:8px;color:var(--ink)}
+
+/* ---- финиш ---- */
+.finish{border:2px solid var(--ok-line);border-radius:12px;padding:16px 20px;
+        background:var(--ok-bg)}
+.finish h2{margin:0 0 6px;font-size:20px;color:var(--ok)}
+.stats{color:var(--muted);font-size:15px;margin:6px 0}
+.code{font:700 30px/1.2 Consolas,"Courier New",monospace;letter-spacing:2px;
+      background:#fff;border:2px dashed var(--ok-line);border-radius:10px;
+      padding:14px 18px;margin:14px 0;text-align:center;user-select:all}
+.send{margin-top:14px;display:flex;gap:12px;align-items:flex-end;
+      flex-wrap:wrap}
+.send label{font-size:14px;color:var(--muted);display:flex;
+            flex-direction:column;gap:4px}
+.send input{font:600 16px/1 inherit;padding:10px 12px;width:200px;
+            border:2px solid var(--line);border-radius:9px;background:#fff}
+.send .note{flex:1 1 100%;margin:2px 0 0}
+
+details{margin-top:26px;border:1px solid var(--line);border-radius:12px;
+        padding:12px 18px;background:var(--card)}
+details summary{cursor:pointer;font-weight:600;font-size:17px}
+details h3{font-size:16px;margin:18px 0 6px}
+details p{margin:6px 0}
+details table.hex{border-collapse:collapse;margin:6px 0;font-size:15px}
+details table.hex td,details table.hex th{border:1px solid var(--line);
+     padding:5px 10px;text-align:left}
+details table.hex th{background:#fff;color:var(--muted);font-size:14px}
+code{font:600 15px/1.4 Consolas,"Courier New",monospace;background:#fff;
+     border:1px solid var(--line);border-radius:4px;padding:1px 5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Домашнее задание — значение логического выражения</h1>
+<p class="sub">Задание 3 ОГЭ. Дано условие про число, и надо понять,
+   каким числам оно подходит: назвать крайнее из них или сосчитать, сколько
+   их всего. Здесь все семь типов, которые встречаются в вариантах.</p>
+
+<div class="howto">
+  <dl>
+    <dt>Как устроено</dt>
+    <dd>Задачи идут по одной. Тип считается <b>закрытым</b>, когда
+        ответишь по нему верно <b>два раза подряд</b>. Ошибся — счёт по
+        этому типу начинается заново, зато сразу увидишь весь ход
+        решения.</dd>
+
+    <dt>Сколько решать</dt>
+    <dd><b>Сколько хочешь — на какую оценку наработаешь, такую и
+        получишь.</b>
+        <table class="steps">
+          <tr><th>закрыто типов</th><th>оценка</th>
+              <th>задач минимум</th></tr>
+          <tr><td>5 из 7</td><td class="m">3</td><td>10</td></tr>
+          <tr><td>6 из 7</td><td class="m">4</td><td>12</td></tr>
+          <tr><td>7 из 7</td><td class="m">5</td><td>14</td></tr>
+        </table>
+        Задач будет больше, если ошибаться. Остановиться можно в любой
+        момент — кнопка «Закончить и получить код».</dd>
+
+    <dt>Что получишь</dt>
+    <dd><b>Код работы</b> — в нём записано, сколько типов ты закрыл,
+        сколько решил задач и сколько было ошибок.</dd>
+
+    <dt>Как сдать</dt>
+    <dd>В конце появится кнопка <b>«Сдать работу»</b>: впишешь фамилию
+        и класс, кнопка сама откроет форму с уже вписанным кодом.
+        Останется нажать «Отправить». Переписывать код руками не надо —
+        именно на этом чаще всего и ошибаются.</dd>
+  </dl>
+</div>
+
+<div class="progress">
+  <div class="ptop">
+    <h2>Что осталось закрыть</h2>
+    <span class="sp"></span>
+    <div class="score">
+      <span>наработано на</span><b id="mark">—</b>
+    </div>
+    <button id="finish" class="primary" disabled>Закончить и получить код</button>
+  </div>
+  <div class="types" id="types"></div>
+  <p class="need" id="need"></p>
+</div>
+
+<div id="main"></div>
+
+<details>
+  <summary>Подсказка: как решается задание 3</summary>
+
+  <h3>Что тут вообще происходит</h3>
+  <p>Дано условие про число — например <code>(x&nbsp;&gt;&nbsp;20) И НЕ
+     (x чётное)</code>. Для одних чисел оно верно, для других нет.
+     Спрашивают либо <b>крайнее</b> из подходящих чисел (самое маленькое
+     или самое большое), либо <b>сколько</b> их всего.</p>
+
+  <h3>Три слова, из которых всё собрано</h3>
+  <table class="hex">
+    <tr><th>связка</th><th>когда ИСТИННО</th><th>когда ЛОЖНО</th></tr>
+    <tr><td><b>И</b></td><td>верны <b>обе</b> части</td>
+        <td>хотя бы одна часть неверна</td></tr>
+    <tr><td><b>ИЛИ</b></td><td>верна <b>хотя бы одна</b> часть</td>
+        <td>неверны обе части</td></tr>
+    <tr><td><b>НЕ</b></td><td>то, что внутри, — неверно</td>
+        <td>то, что внутри, — верно</td></tr>
+  </table>
+  <p>Больше в задании&nbsp;3 ничего нет. Вся сложность — в аккуратности.</p>
+
+  <h3>Порядок действий</h3>
+  <ol>
+    <li>Прочитать вопрос до конца: спрашивают, где выражение
+        <b>истинно</b> или где <b>ложно</b>? Наименьшее число или
+        наибольшее? А может, сколько их?</li>
+    <li>Разобрать каждую скобку отдельно: какие числа ей подходят.</li>
+    <li>Соединить связкой: И — общая часть, ИЛИ — всё вместе.</li>
+    <li>Идти с того края, о котором спрашивают, и проверять числа
+        подряд. Первое, где сходится всё, — ответ.</li>
+  </ol>
+
+  <h3>Если спрашивают «где ЛОЖНО»</h3>
+  <p>Это не другое задание, а то же самое наоборот. Удобно перевернуть
+     сразу всё выражение: <b>И</b> становится <b>ИЛИ</b>, <b>ИЛИ</b>
+     становится <b>И</b>, а каждая часть — своей противоположностью.
+     <code>НЕ (A ИЛИ B)</code> — это «ни&nbsp;A, ни&nbsp;B»;
+     <code>НЕ (A И B)</code> — это «хотя бы одно не выполнено».</p>
+
+  <h3>Что значат слова про число</h3>
+  <table class="hex">
+    <tr><th>в условии</th><th>что проверять</th></tr>
+    <tr><td>x чётное / нечётное</td><td>последнюю цифру</td></tr>
+    <tr><td>x кратно 7 / делится на 7</td><td>это одно и то же:
+        7, 14, 21, 28 …</td></tr>
+    <tr><td>Первая цифра чётная</td><td>старшую цифру записи:
+        у 341 это 3</td></tr>
+    <tr><td>Сумма цифр больше 18</td><td>сложить все цифры и
+        сравнить</td></tr>
+    <tr><td>x — пятизначное</td><td>от 10000 до 99999</td></tr>
+  </table>
+
+  <h3>Где теряют балл</h3>
+  <p>Почти всегда — на краю. «Наибольшее двузначное» — это 99, а не 100;
+     «пятизначное» начинается с 10000, а не с 9999. И ещё: если
+     подходящие числа просят <b>сосчитать</b>, легко потерять первое или
+     последнее — выписывайте их подряд, а не в уме.</p>
+
+  <h3>Как записывают ответ</h3>
+  <p>Только цифры: <code>43</code>. Без слова «чисел», без точки, без
+     пробелов и без нуля впереди. Информатику сдают за компьютером, и
+     ответ сверяет машина — знак в знак.</p>
+</details>
+
+</div>
+
+<script>
+"use strict";
+
+/* ==== БАЗА: вставлено gen.py, руками не править ==== */
+const RANGES = [
+  {"id": "nat", "lo": 1, "hi": 0, "one": ["натуральное число x", "натуральное число x"], "many": ["натуральных чисел", "натуральных чисел x"]},
+  {"id": "d2", "lo": 10, "hi": 99, "one": ["двузначное число x", "натуральное двузначное число x"], "many": ["двузначных чисел x", "натуральных двузначных чисел x"]},
+  {"id": "d3", "lo": 100, "hi": 999, "one": ["трёхзначное число x", "натуральное трёхзначное число x"], "many": ["трёхзначных чисел x", "натуральных трёхзначных чисел x"]},
+  {"id": "d4", "lo": 1000, "hi": 9999, "one": ["четырёхзначное число x", "натуральное четырёхзначное число x"], "many": ["четырёхзначных чисел x", "натуральных четырёхзначных чисел x"]}
+];
+
+const DIGIT_WORDS = {"3": "трёхзначное", "4": "четырёхзначное", "5": "пятизначное", "6": "шестизначное"};
+const VERBS_EDGE = ["Напишите", "Определите"];
+const VERBS_COUNT = ["Определите", "Посчитайте", "Напишите"];
+const NOUNS = ["высказывание", "логическое выражение"];
+
+const TYPES = [
+  {"id": 0, "key": "cmp", "ask": "edge", "name": "два сравнения на прямой", "rule": "Каждое сравнение — это луч на числовой прямой. И — общая часть двух лучей, ИЛИ — всё, что накрыто хотя бы одним. Ответ ищут на краю получившегося промежутка, и почти всегда он — соседнее число с границей, а не сама граница."},
+  {"id": 1, "key": "nest", "ask": "edge", "name": "скобки и отрицание скобки", "rule": "Отрицание перед скобкой переворачивает её целиком: НЕ (A ИЛИ B) — это «ни A, ни B», а НЕ (A И B) — «хотя бы одно не выполнено». Разбирают такое изнутри наружу: сначала внутренняя скобка, потом внешняя связка."},
+  {"id": 2, "key": "prop-edge", "ask": "edge", "name": "сравнение и свойство числа — край", "rule": "Сравнение задаёт промежуток, свойство (чётность или кратность) прореживает его. Идти надо с того края, о котором спрашивают, и делать шаг за шагом: первое же число, у которого сходится и то и другое, — ответ."},
+  {"id": 3, "key": "prop-count", "ask": "count", "name": "свойства числа — сколько таких", "rule": "Здесь мало найти одно число — нужны все. Выписывают подходящие подряд от начала диапазона до конца и считают; чаще всего теряют края — само число 10 или 99."},
+  {"id": 4, "key": "digit-edge", "ask": "edge", "name": "цифры числа — край", "rule": "Условие про первую цифру или про сумму цифр проверяется не делением, а взглядом на запись числа. Начинают с края разряда и спускаются (или поднимаются) до первого числа, где сходится всё сразу."},
+  {"id": 5, "key": "digit-count", "ask": "count", "name": "цифры числа — сколько таких", "rule": "Первая цифра режет диапазон на десятки, делимость — прореживает внутри. Удобно перебирать не все числа подряд, а сразу кратные: их немного, и у каждого остаётся проверить только первую цифру."},
+  {"id": 6, "key": "len-edge", "ask": "edge", "name": "разрядность: край разряда", "rule": "«x — пятизначное» значит от 10000 до 99999. Границы разряда надо помнить наизусть: ответ всегда стоит рядом с ними — первое или последнее число разряда, у которого сходится второе условие."}
+];
+
+const TYPES_TOTAL = TYPES.length;
+
+const randInt = (lo, hi) => lo + Math.floor(Math.random() * (hi - lo + 1));
+const pick = arr => arr[randInt(0, arr.length - 1)];
+const maybe = p => Math.random() < p;
+
+function shuffle(arr){
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+const sample = (arr, k) => shuffle(arr).slice(0, k);
+const rangeById = id => RANGES.find(r => r.id === id);
+
+/* --------------------------------------------------- дерево выражения
+   Выражение — дерево: листья это условия про число, узлы — И, ИЛИ, НЕ.
+   Такое представление нужно не для красоты: по нему считается ответ,
+   по нему же собирается текст и подсчитываются «ошибочные» ответы для
+   подсказок. Одно описание — три применения, разойтись нечему.       */
+
+const NOT = a => ({k: "not", a: a});
+const AND = (a, b) => ({k: "and", a: a, b: b});
+const OR  = (a, b) => ({k: "or",  a: a, b: b});
+const CONN = (a, b) => maybe(0.5) ? AND(a, b) : OR(a, b);
+const CMP = (op, n) => ({k: "cmp", op: op, n: n});
+const OPS = ["<", ">", "\u2265", "\u2264"];
+const cmpAny = n => CMP(pick(OPS), n);
+const perhapsNot = (nd, p) => maybe(p === undefined ? 0.4 : p) ? NOT(nd) : nd;
+
+const firstDigit = x => +String(x)[0];
+const digitSum = x => String(x).split("")
+                               .reduce((a, c) => a + (+c), 0);
+
+function ev(nd, x){
+  switch (nd.k){
+    case "and": return ev(nd.a, x) && ev(nd.b, x);
+    case "or":  return ev(nd.a, x) || ev(nd.b, x);
+    case "not": return !ev(nd.a, x);
+    case "T":   return true;
+    case "cmp":
+      if (nd.op === ">") return x > nd.n;
+      if (nd.op === "<") return x < nd.n;
+      if (nd.op === "\u2265") return x >= nd.n;
+      if (nd.op === "\u2264") return x <= nd.n;
+      return x === nd.n;
+    case "par": return (x % 2 === 0) === nd.even;
+    case "div": return x % nd.n === 0;
+    case "fd":  return (firstDigit(x) % 2 === 0) === nd.even;
+    case "ds":  return nd.op === ">" ? digitSum(x) > nd.n
+                                     : digitSum(x) < nd.n;
+    case "len": return String(x).length === nd.d;
+  }
+  return false;
+}
+
+// Обход дерева: и для сбора листьев, и для замен. Копия дерева всегда
+// новая — портить исходное нельзя, оно уходит в meta на проверку.
+function walk(nd, fn){
+  const out = fn(nd);
+  if (out) return out;
+  if (nd.k === "not") return NOT(walk(nd.a, fn));
+  if (nd.k === "and") return AND(walk(nd.a, fn), walk(nd.b, fn));
+  if (nd.k === "or")  return OR(walk(nd.a, fn), walk(nd.b, fn));
+  return nd;
+}
+// перевернуть все связки: И <-> ИЛИ
+function swapConn(nd){
+  if (nd.k === "not") return NOT(swapConn(nd.a));
+  if (nd.k === "and") return OR(swapConn(nd.a), swapConn(nd.b));
+  if (nd.k === "or")  return AND(swapConn(nd.a), swapConn(nd.b));
+  return nd;
+}
+// снять первое попавшееся НЕ
+function dropNot(nd){
+  let done = false;
+  const rec = n => {
+    if (n.k === "not"){
+      if (!done){ done = true; return rec(n.a); }
+      return NOT(rec(n.a));
+    }
+    if (n.k === "and") return AND(rec(n.a), rec(n.b));
+    if (n.k === "or")  return OR(rec(n.a), rec(n.b));
+    return n;
+  };
+  const out = rec(nd);
+  return done ? out : null;
+}
+function hasNot(nd){
+  if (nd.k === "not") return true;
+  if (nd.k === "and" || nd.k === "or")
+    return hasNot(nd.a) || hasNot(nd.b);
+  return false;
+}
+
+/* ------------------------------------------------------------ решение
+   Множество решений считается перебором — как его и считает ученик.
+   У натуральных верхней границы нет, поэтому берём её из самих чисел
+   условия и отдельно проверяем ХВОСТ: если выше границы решения ещё
+   встречаются, множество бесконечно. Тогда «наибольшее» и «сколько
+   таких» ответа не имеют, и задача бракуется.                        */
+
+const TAIL = 400;          // длина хвоста, на котором ловим бесконечность
+
+function topBound(nd, rng){
+  if (rng.hi) return rng.hi;
+  let m = 60;
+  (function rec(n){
+    if (n.k === "and" || n.k === "or"){ rec(n.a); rec(n.b); return; }
+    if (n.k === "not"){ rec(n.a); return; }
+    if (n.k === "cmp" || n.k === "div" || n.k === "ds")
+      m = Math.max(m, n.n);
+    if (n.k === "len") m = Math.max(m, Math.pow(10, n.d) - 1);
+  })(nd);
+  return m + 40;
+}
+
+const capOk = (cap, x) => !cap
+    || (cap.op === "<" ? x < cap.n : x > cap.n);
+
+// Диапазон бывает узкий (двузначные, трёхзначные — сотни чисел) и
+// широкий: «x — пятизначное» тянет перебор до ста тысяч. Узкий
+// перебираем целиком — тогда известно и всё множество, и его размер.
+// Широкий сканируем с краёв с ранним выходом: там спрашивают только
+// край, а всё множество ни в разборе, ни в проверке не нужно.
+const FULL = 20000;         // до какой ширины перебираем целиком
+const SCAN = 30000;         // сколько шагов даём сканированию с края
+
+function solve(nd, rng, pol, cap){
+  const hi = topBound(nd, rng), lo = rng.lo;
+  const ok = x => capOk(cap, x) && ev(nd, x) === pol;
+
+  let unb = false;
+  if (!rng.hi)
+    for (let x = hi + 1; x <= hi + TAIL; x++)
+      if (ok(x)){ unb = true; break; }
+
+  if (hi - lo <= FULL){
+    const S = [];
+    for (let x = lo; x <= hi; x++) if (ok(x)) S.push(x);
+    return {S: S, first: S.length ? S[0] : null,
+            last: S.length ? S[S.length - 1] : null,
+            count: S.length, lo: lo, hi: hi, unb: unb};
+  }
+  let first = null, last = null;
+  for (let x = lo, i = 0; x <= hi && i < SCAN; x++, i++)
+    if (ok(x)){ first = x; break; }
+  for (let x = hi, i = 0; x >= lo && i < SCAN; x--, i++)
+    if (ok(x)){ last = x; break; }
+  return {S: null, first: first, last: last, count: null,
+          lo: lo, hi: hi, unb: unb};
+}
+
+// Ответ по уже решённому множеству. null — ответа нет (пусто, бесконечно
+// или не нашлось в пределах скана): для подсказок это законный исход,
+// для самой задачи брак.
+function answerOf(sol, ask){
+  if (ask === "min") return sol.first === null ? null : String(sol.first);
+  if (sol.unb) return null;
+  if (ask === "max") return sol.last === null ? null : String(sol.last);
+  return sol.count === null ? null : String(sol.count);
+}
+const answerFor = (nd, rng, pol, cap, ask) =>
+    answerOf(solve(nd, rng, pol, cap), ask);
+
+/* ------------------------------------------------------- текст условия
+   Сегменты {t, b}: b=1 — полужирным. Так в вариантах набраны сами
+   слова НЕ, И, ИЛИ и слово «ложно» — выделение не подсказка, а
+   типографика оригинала, и убирать её нельзя (лишать ученика привычного
+   вида условия — то же самое, что менять его).                       */
+
+const S_ = (t, b) => ({t: t, b: b ? 1 : 0});
+const OPW = {and: " И ", or: " ИЛИ "};
+
+function leafText(nd){
+  switch (nd.k){
+    case "cmp": return "x " + nd.op + " " + nd.n;
+    case "par": return "x " + (nd.even ? "чётное" : "нечётное");
+    case "div": return "x " + nd.word + " " + nd.n;
+    case "fd":  return "Первая цифра " + (nd.even ? "чётная" : "нечётная");
+    case "ds":  return "Сумма цифр числа x "
+                       + (nd.op === ">" ? "больше " : "меньше ") + nd.n;
+    case "len": return "x \u2014 " + DIGIT_WORDS[nd.d];
+  }
+  return "?";
+}
+
+// Скобки ставятся по правилу вариантов: лист всегда в скобках, составная
+// часть — тоже, если она операнд другой связки или стоит под НЕ.
+function exprSegs(nd, top){
+  const out = [];
+  if (nd.k === "not"){
+    out.push(S_("НЕ ", 1));
+    out.push(S_("("));
+    if (nd.a.k === "and" || nd.a.k === "or")
+      exprSegs(nd.a, true).forEach(s => out.push(s));
+    else out.push(S_(leafText(nd.a)));
+    out.push(S_(")"));
+    return out;
+  }
+  if (nd.k === "and" || nd.k === "or"){
+    if (!top) out.push(S_("("));
+    exprSegs(nd.a, false).forEach(s => out.push(s));
+    out.push(S_(OPW[nd.k], 1));
+    exprSegs(nd.b, false).forEach(s => out.push(s));
+    if (!top) out.push(S_(")"));
+    return out;
+  }
+  out.push(S_("(" + leafText(nd) + ")"));
+  return out;
+}
+
+const segsText = segs => segs.map(s => s.t).join("");
+
+/* ----------------------------------------------------------- условие */
+
+function questionSegs(t){
+  const rng = t.rng, v = t.variantWords;
+  const out = [];
+  if (t.ask === "count"){
+    out.push(S_(v.verb + " количество " + rng.many[v.wordIdx]
+                + (t.cap ? ", " + capWords(t.cap) + "," : "")
+                + ", для которых "));
+    out.push(S_(t.pol ? "истинно " : "ложно ", t.pol ? 0 : 1));
+    out.push(S_(v.noun + ":"));
+    return out;
+  }
+  const which = t.ask === "min" ? "наименьшее "
+              : t.ask === "max" ? "наибольшее " : "";
+  out.push(S_(v.verb + " " + which + rng.one[v.wordIdx]
+              + (t.cap ? ", " + capWords(t.cap) : "")
+              + ", для которого "));
+  out.push(S_(t.pol ? "истинно " : "ложно ", t.pol ? 0 : 1));
+  out.push(S_(v.noun + ":"));
+  return out;
+}
+
+const capWords = cap => (cap.op === "<" ? "меньшее " : "большее ") + cap.n;
+
+/* ------------------------------------------------------------- разбор
+   Не объявление ответа, а ход: что требуется, что означает каждая
+   скобка, какие числа остались, где среди них ответ.                 */
+
+function needWords(nd, pol){
+  const what = pol ? "истинно" : "ложно";
+  if (nd.k === "not")
+    return "Спрашивают, где высказывание " + what.toUpperCase()
+         + ". Снаружи стоит НЕ, значит внутренняя скобка должна быть "
+         + (pol ? "ложной" : "истинной") + ".";
+  if (nd.k === "and")
+    return "Спрашивают, где высказывание " + what.toUpperCase()
+         + ". Связка И " + (pol
+            ? "истинна, только когда истинны ОБЕ части."
+            : "ложна, когда ложна ХОТЯ БЫ ОДНА часть.");
+  if (nd.k === "or")
+    return "Спрашивают, где высказывание " + what.toUpperCase()
+         + ". Связка ИЛИ " + (pol
+            ? "истинна, когда истинна ХОТЯ БЫ ОДНА часть."
+            : "ложна, только когда ложны ОБЕ части.");
+  return "Спрашивают, где высказывание " + what.toUpperCase() + ".";
+}
+
+function leafMeaning(nd){
+  switch (nd.k){
+    case "cmp":
+      if (nd.op === ">") return "(x > " + nd.n + ") — это x от "
+                                + (nd.n + 1) + " и выше";
+      if (nd.op === "\u2265") return "(x \u2265 " + nd.n + ") — это x от "
+                                + nd.n + " и выше";
+      if (nd.op === "<") return "(x < " + nd.n + ") — это x до "
+                                + (nd.n - 1) + " включительно";
+      if (nd.op === "\u2264") return "(x \u2264 " + nd.n + ") — это x до "
+                                + nd.n + " включительно";
+      return "(x = " + nd.n + ") — верно ровно для одного числа " + nd.n;
+    case "par": return "(x " + (nd.even ? "чётное" : "нечётное")
+                       + ") — числа, оканчивающиеся на "
+                       + (nd.even ? "0, 2, 4, 6, 8" : "1, 3, 5, 7, 9");
+    case "div": return "(x " + nd.word + " " + nd.n + ") — это "
+                       + nd.n + ", " + (2 * nd.n) + ", " + (3 * nd.n)
+                       + " и так далее";
+    case "fd":  return "(Первая цифра " + (nd.even ? "чётная" : "нечётная")
+                       + ") — старшая цифра записи равна "
+                       + (nd.even ? "2, 4, 6 или 8" : "1, 3, 5, 7 или 9");
+    case "ds":  return "(Сумма цифр числа x "
+                       + (nd.op === ">" ? "больше " : "меньше ") + nd.n
+                       + ") — цифры складывают и сравнивают с " + nd.n;
+    case "len": return "(x — " + DIGIT_WORDS[nd.d] + ") — это числа от "
+                       + Math.pow(10, nd.d - 1) + " до "
+                       + (Math.pow(10, nd.d) - 1);
+  }
+  return "";
+}
+
+function leavesOf(nd){
+  if (nd.k === "not") return leavesOf(nd.a);
+  if (nd.k === "and" || nd.k === "or")
+    return leavesOf(nd.a).concat(leavesOf(nd.b));
+  return [nd];
+}
+
+// Как показать найденное. Пока чисел немного — выписываем их: ученик
+// должен увидеть, что множество конечно и его правда можно перебрать.
+// Дальше описываем словами. Врать здесь нельзя: верхняя граница перебора
+// у натуральных выдумана нами, и выдавать её за конец множества —
+// значит учить неправде.
+function setWords(t, sol){
+  if (sol.unb)
+    return "Подходящих чисел бесконечно много — нас интересует только "
+         + (t.ask === "min" ? "самое маленькое." : "самое большое.");
+  if (sol.S && sol.S.length <= 12)
+    return "Подходят числа: " + sol.S.join(", ") + ".";
+  if (sol.S)
+    return "Подходящих чисел " + sol.S.length + ": от " + sol.S[0]
+         + " до " + sol.S[sol.S.length - 1] + " ("
+         + sol.S.slice(0, 5).join(", ") + ", …).";
+  return "Подходящие числа лежат от " + sol.first + " до " + sol.last + ".";
+}
+
+// Проверка края — то место, где теряют балл: сосед ответа обязан не
+// подходить, иначе ответом было бы он.
+function edgeCheck(t, sol){
+  const ans = +t.answer;
+  const nb = t.ask === "min" ? ans - 1 : ans + 1;
+  if (nb < sol.lo || (sol.hi && nb > sol.hi)) return null;
+  return "Проверка края: " + nb + " не подходит, " + ans + " подходит — "
+       + "значит " + (t.ask === "min" ? "меньше" : "больше")
+       + " взять нельзя.";
+}
+
+function buildSteps(t, sol){
+  const steps = [needWords(t.tree, t.pol)];
+  leavesOf(t.tree).forEach(l => steps.push(leafMeaning(l)));
+  if (t.cap)
+    steps.push("В условии есть добавка «" + capWords(t.cap)
+               + "» — она сужает поиск ещё до разбора выражения.");
+  steps.push(setWords(t, sol));
+  if (t.ask === "min" || t.ask === "max"){
+    const chk = edgeCheck(t, sol);
+    if (chk) steps.push(chk);
+    steps.push((t.ask === "min" ? "Наименьшее" : "Наибольшее")
+               + " подходящее число — " + t.answer + ".");
+  } else if (t.ask === "any"){
+    steps.push("Подходит ровно одно число — " + t.answer
+               + ", его и пишем в ответ.");
+  } else {
+    steps.push("Их количество — " + t.answer + ".");
+  }
+  return steps;
+}
+
+/* ------------------------------------------------- ошибочные ответы
+   Считаем ответы, которые получаются при типичных сбоях хода. Дважды
+   полезно: генератор бракует задачу, где сбой даёт тот же ответ (такая
+   задача не отличает понявшего от угадавшего), а страница узнаёт сбой
+   по введённому числу и говорит про него прямо.                      */
+
+function foilsFor(t){
+  const out = [];
+  const add = (a, why) => {
+    if (a && a !== t.answer && !out.some(f => f.a === a))
+      out.push({a: a, why: why});
+  };
+  add(answerFor(swapConn(t.tree), t.rng, t.pol, t.cap, t.ask),
+      "Похоже, перепутана связка. <b>И</b> — нужны обе части сразу, "
+      + "<b>ИЛИ</b> — достаточно одной.");
+  add(answerFor(t.tree, t.rng, !t.pol, t.cap, t.ask),
+      "Это ответ на обратный вопрос: спрашивают, где высказывание <b>"
+      + (t.pol ? "истинно" : "ложно") + "</b>.");
+  const dn = dropNot(t.tree);
+  if (dn) add(answerFor(dn, t.rng, t.pol, t.cap, t.ask),
+      "Похоже, потеряно <b>НЕ</b>: отрицание переворачивает то, к чему "
+      + "относится, целиком.");
+  if (t.ask === "min" || t.ask === "max")
+    add(answerFor(t.tree, t.rng, t.pol, t.cap,
+                  t.ask === "min" ? "max" : "min"),
+        "Спрашивают <b>" + (t.ask === "min" ? "наименьшее" : "наибольшее")
+        + "</b> из подходящих, а это другой край.");
+  return out;
+}
+
+/* Инвариант «обе половины работают». Вычёркиваем одну сторону ГЛАВНОЙ
+   связки — МНОЖЕСТВО решений обязано измениться. Иначе половина условия
+   ничего не значит: так вышло бы у «НЕ (x ≤ 48) И НЕ (x < 48)», где
+   вторая половина повторяет первую.
+
+   Именно множество, а не ответ. Ответ от половины условия зависит не
+   всегда, и у ФИПИ тоже: в «(x ≥ 8) И НЕ (x > 9)» наибольшее — 9, и
+   девятку даёт уже одна вторая скобка. Требовать здесь изменения
+   ответа значит выбросить форму, которая на экзамене есть.          */
+function dropPart(nd, i){
+  const rec = n => {
+    if (n.k === "not"){
+      const inner = rec(n.a);
+      return inner === null ? null : NOT(inner);
+    }
+    if (n.k === "and" || n.k === "or") return i === 0 ? n.b : n.a;
+    return null;
+  };
+  return rec(nd);
+}
+
+// Отпечаток множества: по нему сравниваем «до» и «после» вычёркивания.
+const setKey = sol => sol.S ? sol.S.join(",")
+                            : sol.first + ".." + sol.last + (sol.unb ? "+" : "");
+
+function bothPartsMatter(t, sol){
+  const key = setKey(sol);
+  for (let i = 0; i < 2; i++){
+    const cut = dropPart(t.tree, i);
+    if (cut === null) return false;          // выражение без связки
+    if (setKey(solve(cut, t.rng, t.pol, t.cap)) === key) return false;
+  }
+  return true;
+}
+
+/* ------------------------------------------------------ сборка задачи */
+
+const DIVW = () => maybe(0.5) ? "делится на" : "кратно";
+const divNode = n => ({k: "div", n: n, word: DIVW()});
+const parNode = () => ({k: "par", even: maybe(0.5)});
+const fdNode = () => ({k: "fd", even: maybe(0.5)});
+
+// Деревья по типам. Числа близкие: в вариантах граница и ответ почти
+// всегда стоят рядом (49 и 50, 8 и 9, 20 и 15) — задача про край, а не
+// про арифметику.
+function treeFor(key){
+  if (key === "cmp"){
+    const b = randInt(5, 70);
+    // числа РАЗНЫЕ: у одинаковых «(x ≥ 45) И (x ≤ 45)» схлопывается в
+    // равенство, и решать нечего. В вариантах этой формы числа всегда
+    // соседние, но не совпадают: 49 и 50, 8 и 9, 20 и 15.
+    const n2 = b + pick([1, 1, 2, 3]);
+    return CONN(perhapsNot(cmpAny(b)), perhapsNot(cmpAny(n2)));
+  }
+  if (key === "nest"){
+    const b = randInt(3, 40);
+    const ns = [b, b + 1, b + 2];
+    const L = () => cmpAny(pick(ns));
+    const form = randInt(0, 3);
+    if (form === 0) return NOT(CONN(L(), L()));
+    if (form === 1) return CONN(L(), NOT(CONN(L(), L())));
+    if (form === 2) return CONN(AND(NOT(L()),
+                                    NOT(maybe(0.5) ? CMP("=", pick(ns))
+                                                   : L())), L());
+    return CONN(L(), CONN(L(), L()));
+  }
+  if (key === "prop-edge"){
+    const prop = maybe(0.5) ? parNode() : divNode(pick([3, 4, 5, 6, 7, 9]));
+    return CONN(perhapsNot(cmpAny(0), 0), perhapsNot(prop));
+  }
+  if (key === "prop-count"){
+    const a = maybe(0.5) ? parNode() : divNode(pick([3, 4, 5, 6, 7, 9, 11]));
+    const b = maybe(0.45) ? cmpAny(0)
+                          : (maybe(0.5) ? parNode()
+                                        : divNode(pick([7, 9, 11, 13, 15])));
+    return CONN(perhapsNot(a), perhapsNot(b));
+  }
+  if (key === "digit-edge"){
+    const a = maybe(0.6) ? fdNode()
+                         : {k: "ds", op: maybe(0.5) ? ">" : "<", n: 0};
+    return CONN(perhapsNot(a), perhapsNot(divNode(pick([3, 4, 5, 6, 9]))));
+  }
+  if (key === "digit-count"){
+    const b = maybe(0.75) ? divNode(pick([4, 5, 6, 7, 9, 10, 11]))
+                          : parNode();
+    return CONN(perhapsNot(fdNode()), perhapsNot(b));
+  }
+  // len-edge. Разрядность 4 и 5 — как в вариантах (16.04.2024);
+  // шестизначные увели бы перебор в сотни тысяч шагов, а ход решения
+  // от этого не меняется.
+  const d = pick([4, 5]);
+  const other = pick(["div", "par", "fd", "ds"]);
+  const b = other === "div" ? divNode(pick([3, 4, 5, 6, 7, 9]))
+          : other === "par" ? parNode()
+          : other === "fd"  ? fdNode()
+          : {k: "ds", op: maybe(0.5) ? ">" : "<", n: 0};
+  // Отрицание достаётся и разрядности: тогда при вопросе «где ложно»
+  // по Де Моргану снова получается «x той самой разрядности И …» —
+  // форма, которая на экзамене встречается наравне с прямой.
+  return CONN(perhapsNot(b), perhapsNot({k: "len", d: d}, 0.35));
+}
+
+// Числа в сравнениях и в «сумме цифр» зависят от диапазона: сравнение с
+// 49 внутри трёхзначных ничего не режет. Поэтому нули, поставленные
+// выше, заполняются здесь — когда диапазон уже выбран.
+function fillNumbers(nd, rng, key){
+  return walk(nd, n => {
+    if (n.k === "cmp" && n.n === 0){
+      if (rng.hi){
+        const span = rng.hi - rng.lo;
+        return CMP(n.op, rng.lo + randInt(Math.floor(span * 0.15),
+                                          Math.floor(span * 0.85)));
+      }
+      return CMP(n.op, randInt(5, 60));
+    }
+    if (n.k === "ds" && n.n === 0){
+      const dig = rng.hi ? String(rng.hi).length : 5;
+      const mid = Math.round(dig * 4.5);
+      return {k: "ds", op: n.op,
+              n: mid + randInt(-2, 2)};
+    }
+    return null;
+  });
+}
+
+function rangeFor(key){
+  if (key === "cmp" || key === "nest" || key === "len-edge")
+    return rangeById("nat");
+  if (key === "prop-edge") return rangeById(maybe(0.55) ? "d2" : "d3");
+  if (key === "prop-count") return rangeById(maybe(0.8) ? "d2" : "nat");
+  if (key === "digit-edge") return rangeById(maybe(0.5) ? "d3" : "d4");
+  return rangeById("d2");                                // digit-count
+}
+
+// «наибольшее двузначное число x, меньшее 45» — форма из варианта
+// 18.04.2023. Добавка сужает диапазон ещё до разбора выражения; ставим
+// её только к двузначным и только вместе с вопросом про край.
+function capFor(rng, ask){
+  if (rng.id !== "d2" || ask === "count" || !maybe(0.3)) return null;
+  return ask === "max" ? {op: "<", n: randInt(35, 90)}
+                       : {op: ">", n: randInt(15, 70)};
+}
+
+// Сравнения внутри выражения, чтобы посмотреть на их числа.
+function cmpConsts(nd){
+  if (nd.k === "not") return cmpConsts(nd.a);
+  if (nd.k === "and" || nd.k === "or")
+    return cmpConsts(nd.a).concat(cmpConsts(nd.b));
+  return nd.k === "cmp" ? [nd.n] : [];
+}
+
+// Связка главного уровня с поправкой на «ложно»: ложное ИЛИ по
+// Де Моргану работает как И, и в вариантах задачи «найди край по
+// свойству» устроены именно так — через эффективное И.
+function effConn(nd, pol){
+  const core = nd.k === "not" ? nd.a : nd;
+  const flip = nd.k === "not" ? !pol : pol;
+  if (core.k !== "and" && core.k !== "or") return null;
+  return (core.k === "and") === flip ? "and" : "or";
+}
+
+function tryMake(type){
+  const rng = rangeFor(type.key);
+  const ask = type.ask === "count" ? "count"
+                                   : (maybe(0.5) ? "min" : "max");
+  const cap = capFor(rng, ask);
+  const tree = fillNumbers(treeFor(type.key), rng, type.key);
+  const pol = maybe(0.3) ? false : true;      // в вариантах «ложно» — четверть
+
+  // Где спрашивают край по свойству числа, в вариантах связка всегда
+  // И — «(x > 20) И НЕ (x чётное)», «НЕ (x кратно 5) И (x —
+  // пятизначное)». Через ИЛИ такая задача разваливается: свойство
+  // перестаёт прореживать промежуток и работает только одна половина.
+  if (type.key === "prop-edge" || type.key === "digit-edge"
+      || type.key === "len-edge")
+    if (effConn(tree, pol) !== "and") return null;
+
+  // Все сравнения с одним и тем же числом вырождают выражение в
+  // равенство: «НЕ ((x > 25) ИЛИ (x < 25))» — это просто x = 25.
+  const cs = cmpConsts(tree);
+  if (cs.length > 1 && cs.every(n => n === cs[0])) return null;
+
+  const sol = solve(tree, rng, pol, cap);
+  const ans = answerOf(sol, ask);
+  if (!ans) return null;
+
+  // край диапазона ответом не берём: такое число называют, не читая
+  // выражения
+  if (ask === "min" && sol.first === rng.lo) return null;
+  if (ask === "max" && rng.hi && sol.last === rng.hi) return null;
+  if (ask === "count" && (sol.count < 2 || sol.count > 15)) return null;
+  if (ask !== "count" && rng.id === "nat" && +ans > 400
+      && type.key !== "len-edge") return null;
+  // У двух плоских сравнений множество обязано быть КОНЕЧНЫМ: два луча
+  // должны пересечься в промежуток. Так и во всех вариантах этой формы
+  // (18.10.2022 — одно число, 12.12.2023 — {8, 9}, 15.10.2024 —
+  // {15…19}); луч в бесконечность оставляем типу со скобками.
+  if (type.key === "cmp" && (sol.unb || sol.count > 25)) return null;
+  // у разрядности ответ обязан стоять рядом с границей разряда, иначе
+  // тип вырождается в обычную кратность
+  if (type.key === "len-edge"){
+    const d = leavesOf(tree).find(l => l.k === "len").d;
+    const edge = ask === "min" ? Math.pow(10, d - 1)
+                               : Math.pow(10, d) - 1;
+    if (+ans === edge || Math.abs(+ans - edge) > 12) return null;
+  }
+
+  // «Напишите натуральное число x, для которого ложно…» — форма из
+  // 18.10.2022: слова «наименьшее» нет, потому что подходит ровно одно
+  // число. Ставим её только тогда, когда это правда так.
+  let asked = ask;
+  if (ask !== "count" && sol.count === 1 && maybe(0.4)) asked = "any";
+
+  const t = {
+    type: type.id, key: type.key, name: type.name, rule: type.rule,
+    ask: asked, pol: pol, rng: rng, cap: cap, tree: tree, answer: ans,
+    variantWords: {verb: pick(ask === "count" ? VERBS_COUNT : VERBS_EDGE),
+                   noun: pick(NOUNS), wordIdx: randInt(0, 1)}
+  };
+
+  if (!bothPartsMatter(t, sol)) return null;
+
+  // Типичные сбои обязаны давать ДРУГОЙ ответ. Если хотя бы один даёт
+  // тот же — задача не отличает понявшего от угадавшего.
+  const swapA = answerFor(swapConn(tree), rng, pol, cap, ask);
+  if (swapA === ans) return null;
+  const polA = answerFor(tree, rng, !pol, cap, ask);
+  if (polA === ans) return null;
+  if (hasNot(tree)){
+    const dn = dropNot(tree);
+    if (dn && answerFor(dn, rng, pol, cap, ask) === ans) return null;
+  }
+
+  t.foils = foilsFor(t);
+  t.steps = buildSteps(t, sol);
+  t.inSet = (sol.S && sol.S.length <= 200) ? sol.S : [];
+  t.blocks = [{k: "p", segs: questionSegs(t)},
+              {k: "expr", segs: exprSegs(t.tree, true)}];
+  t.tail = "Запишите найденное число в ответ.";
+  t.plain = segsText(t.blocks[0].segs) + " " + segsText(t.blocks[1].segs);
+  t.meta = {range: rng.id, tree: tree, pol: pol, ask: ask, cap: cap,
+            count: sol.count, first: sol.first, last: sol.last};
+  return t;
+}
+
+function makeTask(typeId){
+  const type = TYPES[typeId];
+  for (let i = 0; i < 4000; i++){
+    const t = tryMake(type);
+    if (t) return t;
+  }
+  throw new Error("не собралась задача типа " + type.key);
+}
+
+/* ------------------------------------------------------------ проверка
+   Ответ — число, и сверяется он знак в знак: на экзамене ответ читает
+   машина, «5 чисел» и «5» для неё не одно и то же.                   */
+
+function verdict(t, raw){
+  const given = String(raw).trim();
+  if (!given) return null;
+  if (given === t.answer) return {ok: true, hint: null};
+
+  if (/^\d+[\s.,]*$/.test(given) && given.replace(/[\s.,]/g, "") === t.answer)
+    return {ok: false, hint: "Число верное, но записано с лишним знаком. "
+            + "В ответ идут <b>только цифры</b> — без точки и пробелов."};
+  if (/^0\d+$/.test(given) && String(+given) === t.answer)
+    return {ok: false, hint: "Число верное, но с лишним нулём впереди. "
+            + "Ответ на экзамене сверяет машина: <b>012</b> и <b>12</b> "
+            + "для неё разные ответы."};
+  if (!/^\d+$/.test(given))
+    return {ok: false, hint: "Ответ здесь — <b>число</b>. Набери только "
+            + "цифры, без слов, пробелов и знаков."};
+
+  for (const f of t.foils)
+    if (given === f.a) return {ok: false, hint: f.why};
+
+  if ((t.ask === "min" || t.ask === "max")
+      && t.inSet.indexOf(+given) >= 0)
+    return {ok: false, hint: "Это число условию удовлетворяет, но "
+            + "спрашивают <b>"
+            + (t.ask === "min" ? "наименьшее" : "наибольшее")
+            + "</b> из подходящих."};
+
+  if (t.ask === "count")
+    return {ok: false, hint: "Не сходится. Выпиши подходящие числа "
+            + "подряд от начала диапазона и пересчитай — чаще всего "
+            + "теряют самое первое или самое последнее."};
+  return {ok: false, hint: "Не сходится. Разбери выражение по частям: "
+          + "что даёт каждая скобка отдельно, и только потом — связка."};
+}
+/* ==== /БАЗА ==== */
+
+// Два верных подряд, а не три: случайное попадание они всё равно
+// отсекают, но объём укладывается в норматив времени на домашнюю работу.
+const STREAK = 2;
+
+// Ступени. Домашнее задание добровольное — ученик набирает столько,
+// сколько ему нужно, и останавливается. Шкала та же, что в тренажёре.
+const SCALE = [[7, 5], [6, 4], [5, 3]];
+const MIN_TO_FINISH = 5;                 // ниже сдавать нечего
+function markFor(done){
+  for (const s of SCALE) if (done >= s[0]) return s[1];
+  return 2;
+}
+
+/* ------------------------------------------------------------ квитанция
+   Код несёт цифры работы и контрольную сумму. Ключа нигде нет — иначе
+   страницу нельзя было бы просто положить на школьную платформу. Смысл
+   кода не в том, чтобы его нельзя было подделать, а в том, что подделать
+   его дольше, чем решить.
+------------------------------------------------------------------ */
+/* Ссылку на форму ставит скрипт set_form_link.py из корня кабинета:
+   в ней зашиты номера полей формы, на глаз их не подобрать. Пусто —
+   страница показывает старый порядок «открой форму и впиши код». */
+const FORM = "https://docs.google.com/forms/d/e/1FAIpQLSfQyhaxcnzn4ZaKSe_ZMsluw7qRQnrw_80H6SfrnYB5EThUIA/viewform?usp=pp_url&entry.853601231=ФАМИЛИЯ&entry.1091635917=КЛАСС&entry.487188307=КОД";
+
+const ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+const EPOCH = Date.UTC(2026, 0, 1);
+
+const bin = (v, w) => v.toString(2).padStart(w, "0");
+
+// Считаем по семибитным кускам строки, а не через parseInt всей нагрузки:
+// в ней 33 бита, а побитовые операции в JS работают с 32-битными числами
+// и старший бит молча потерялся бы.
+function checksum(bitstr){
+  let cs = 0x5B;
+  for (let i = 0; i < bitstr.length; i += 7)
+    cs ^= parseInt(bitstr.substr(i, 7).padEnd(7, "0"), 2);
+  return cs & 0x7F;
+}
+
+function makeCode(st){
+  const day = Math.max(0, Math.min(2047, Math.floor(
+      (Date.now() - EPOCH) / 86400000)));
+  const payload = bin(day, 11) + bin(Math.min(15, st.typesDone), 4) +
+                  bin(Math.min(15, st.cleanTypes), 4) +
+                  bin(Math.min(127, st.solved), 7) +
+                  bin(Math.min(127, st.wrong), 7);
+  const bitstr = payload + bin(checksum(payload), 7);
+  let out = "";
+  for (let i = 0; i < 40; i += 5)
+    out += ALPHABET[parseInt(bitstr.substr(i, 5), 2)];
+  return "LV-" + out.slice(0, 4) + "-" + out.slice(4);
+}
+
+/* --------------------------------------------------------- состояние */
+
+const st = {
+  streak: TYPES.map(() => 0),
+  done:   TYPES.map(() => false),
+  clean:  TYPES.map(() => true),   // закрыт без единой ошибки
+  solved: 0, wrong: 0,
+  cur: null, answered: false, given: ""
+};
+Object.defineProperty(st, "typesDone",
+  {get(){ return st.done.filter(Boolean).length; }});
+Object.defineProperty(st, "cleanTypes",
+  {get(){ return st.done.filter((d, i) => d && st.clean[i]).length; }});
+
+function pickType(){
+  const open = TYPES.filter(t => !st.done[t.id]);
+  if (!open.length) return null;
+  // берём тот, где серия длиннее нуля — не бросаем начатое на полпути
+  const started = open.filter(t => st.streak[t.id] > 0);
+  const pool = started.length ? started : open;
+  return pool[randInt(0, pool.length - 1)];
+}
+
+function nextTask(){
+  const t = pickType();
+  if (!t){ renderFinish(); return; }
+  st.cur = makeTask(t.id);
+  st.answered = false;
+  st.given = "";
+  render();
+}
+
+function answer(){
+  if (st.answered) return;
+  const given = document.getElementById("ans").value.trim();
+  if (!given) return;                    // пустое — не считаем ответом
+  const t = st.cur, v = verdict(t, given);
+  st.given = given;
+  st.answered = true;
+  t.hint = v.hint;
+  t.ok = v.ok;
+  if (v.ok){
+    st.solved++;
+    st.streak[t.type]++;
+    if (st.streak[t.type] >= STREAK) st.done[t.type] = true;
+  } else {
+    st.wrong++;
+    st.streak[t.type] = 0;
+    st.clean[t.type] = false;
+  }
+  render();
+}
+
+/* ------------------------------------------------------------- вывод */
+
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
+                          .replace(/>/g, "&gt;");
+
+// Сегменты условия {t, b}: b=1 — полужирным. Так набраны НЕ, И, ИЛИ и
+// слово «ложно» — ровно как в вариантах Статграда и в демо ФИПИ.
+const segsHtml = segs => segs.map(s =>
+    s.b ? `<b>${esc(s.t)}</b>` : esc(s.t)).join("");
+
+function condition(t){
+  return t.blocks.map(b => b.k === "expr"
+      ? `<div class="expr">${segsHtml(b.segs)}</div>`
+      : `<p>${segsHtml(b.segs)}</p>`).join("");
+}
+
+const HOWTO = "Только цифры: без слов, пробелов и нуля впереди.";
+
+// Разбор показывает ход решения целиком. «Верный ответ 43» не учит
+// ничему: важно, на каком шаге ты свернул не туда.
+function explain(t){
+  return `<div class="solution"><span class="cap">как это решается</span>
+          <ol>${t.steps.map(s => `<li>${esc(s)}</li>`).join("")}</ol>
+          <div class="rule">${esc(t.rule)}</div></div>`;
+}
+
+function renderTypes(){
+  document.getElementById("types").innerHTML = TYPES.map(t => {
+    const dots = Array.from({length: STREAK}, (_, k) =>
+      `<span class="dot${k < st.streak[t.id] || st.done[t.id]
+         ? " full" : ""}"></span>`).join("");
+    return `<div class="type${st.done[t.id] ? " done" : ""}">
+              <span class="nm">${esc(t.name)}</span>
+              <span class="dots">${dots}</span></div>`;
+  }).join("");
+
+  const done = st.typesDone;
+  const mark = markFor(done);
+  const el = document.getElementById("mark");
+  // до первой ступени оценки ещё нет — прочерк, не двойка
+  el.textContent = done >= MIN_TO_FINISH ? mark : "—";
+  el.className = done >= MIN_TO_FINISH ? "m" + mark : "";
+
+  const btn = document.getElementById("finish");
+  btn.disabled = done < MIN_TO_FINISH;
+  btn.textContent = done >= MIN_TO_FINISH
+      ? `Закончить и получить код (на ${mark})`
+      : "Закончить и получить код";
+
+  const need = document.getElementById("need");
+  const up = SCALE.filter(s => s[0] > done).pop();
+  const kinds = n => {
+    const a = n % 100, b = a % 10;
+    if (a > 4 && a < 21) return "типов";
+    if (b === 1) return "тип";
+    if (b > 1 && b < 5) return "типа";
+    return "типов";
+  };
+  if (!up){
+    need.innerHTML = "Закрыто всё, что нужно на пятёрку. " +
+                     "Забирай код и сдавай.";
+  } else if (done >= MIN_TO_FINISH){
+    need.innerHTML = `Можно остановиться прямо сейчас — это <b>${mark}</b>. ` +
+        `Закрой ещё <b>${up[0] - done}</b> ${kinds(up[0] - done)} — ` +
+        `и будет <b>${up[1]}</b>.`;
+  } else {
+    const left = MIN_TO_FINISH - done;
+    need.innerHTML = `Закрой ещё <b>${left}</b> ${kinds(left)}, ` +
+        `чтобы получить код на <b>3</b>.`;
+  }
+}
+
+function render(){
+  renderTypes();
+  const t = st.cur;
+  const main = document.getElementById("main");
+  if (!t) return;
+
+  let tail = "";
+  if (st.answered){
+    tail = t.ok
+      ? `<div class="verdict ok">Правильно${
+          st.done[t.type] ? ` — «${esc(t.name)}» закрыто`
+                          : `, подряд: ${st.streak[t.type]} из ${STREAK}`}</div>`
+      : `<div class="verdict err">Ошибка. ${t.hint
+           ? t.hint + " " : `Верный ответ: ${esc(t.answer)}. `}
+           Серия по этому типу начинается заново.</div>` + explain(t);
+  }
+
+  main.innerHTML = `
+    <div class="card">
+      <div class="kicker">${esc(t.name)} &middot; решено задач:
+           ${st.solved}</div>
+      ${condition(t)}
+      <div class="ask">${esc(t.tail)}<small>${HOWTO}</small></div>
+      <div class="row">
+        <input type="text" id="ans" autocomplete="off"
+               spellcheck="false" placeholder="ответ" maxlength="12"
+               inputmode="numeric" value="${esc(st.given || "")}"
+               ${st.answered ? "disabled" : ""}>
+        <button class="primary" id="go">${
+          st.answered ? "Следующая задача" : "Проверить"}</button>
+      </div>
+      ${tail}
+    </div>`;
+
+  const btn = document.getElementById("go");
+  btn.addEventListener("click", () => st.answered ? nextTask() : answer());
+  const inp = document.getElementById("ans");
+  if (!st.answered){
+    inp.addEventListener("keydown", e => {
+      if (e.key === "Enter"){ e.preventDefault(); answer(); }
+    });
+    inp.focus();
+  } else btn.focus();
+}
+
+/* Кнопка «Сдать»: фамилию и класс страница помнит между заходами, код
+   подставляет сам. Переписывать код руками не нужно — именно на
+   переписывании и брались «код не разобрался». */
+function wireSend(code){
+  const fam = document.getElementById("fam");
+  const send = document.getElementById("send");
+  if (!fam || !send) return;
+  const kls = document.getElementById("kls");
+  const note = document.getElementById("sendnote");
+  // Класс страница не подставляет: одну и ту же страницу открывают
+  // разные классы параллели. Но что вписали в прошлый раз — помнит.
+  try {
+    fam.value = localStorage.getItem("hw-fam") || "";
+    kls.value = localStorage.getItem("hw-kls") || "";
+  } catch (e) {}
+  send.addEventListener("click", () => {
+    const f = fam.value.trim(), k = kls.value.trim();
+    if (!f || !k){
+      note.textContent = "Впиши фамилию и класс — иначе непонятно, "
+                       + "чья это работа.";
+      (f ? kls : fam).focus();
+      return;
+    }
+    try {
+      localStorage.setItem("hw-fam", f);
+      localStorage.setItem("hw-kls", k);
+    } catch (e) {}
+    const url = FORM.replace("ФАМИЛИЯ", encodeURIComponent(f))
+                    .replace("КЛАСС", encodeURIComponent(k))
+                    .replace("КОД", encodeURIComponent(code));
+    window.open(url, "_blank", "noopener");
+    note.textContent = "Форма открылась в новой вкладке. Не забудь нажать "
+                     + "в ней «Отправить».";
+  });
+}
+
+function renderFinish(){
+  renderTypes();
+  const done = st.typesDone, mark = markFor(done);
+  const all = done >= TYPES_TOTAL;
+  const code = makeCode(st);
+  const up = SCALE.filter(s => s[0] > done).pop();
+
+  // Остановиться можно на любой ступени, поэтому «дальше» — не подачка,
+  // а обычный ход: закрыл ещё один тип, забрал код получше.
+  const more = !up
+    ? `<button id="more">Потренироваться ещё</button>
+       <span class="stats">оценку это уже не изменит,
+             но перед ОГЭ полезно</span>`
+    : `<button id="back" class="primary">Решать дальше — до ${up[1]}</button>
+       <span class="stats">код останется, просто получишь новый,
+             когда закроешь ещё ${up[0] - done}</span>`;
+
+  document.getElementById("main").innerHTML = `
+    <div class="finish">
+      <h2>${all ? "Готово — закрыты все семь типов"
+                : `Готово — наработано на ${mark}`}</h2>
+      <p class="stats">Закрыто типов: <b>${done}</b> из
+         ${TYPES_TOTAL} &middot; решено задач: <b>${st.solved}</b> &middot;
+         ошибок: <b>${st.wrong}</b> &middot;
+         закрыто без единой ошибки: <b>${st.cleanTypes}</b></p>
+      <div class="code">${code}</div>
+      <p class="stats">Это код твоей работы. Он у каждого свой и зависит
+         от того, сколько и как ты решал.</p>
+      ${FORM ? `<div class="send">
+        <label>Фамилия
+          <input id="fam" autocomplete="off" placeholder="как в журнале"></label>
+        <label>Класс
+          <input id="kls" autocomplete="off" placeholder="9б"
+                 style="width:110px"></label>
+        <button id="send" class="primary">Сдать работу</button>
+        <p class="stats note" id="sendnote">Кнопка откроет форму: фамилия,
+           класс и код уже будут вписаны — останется нажать
+           «Отправить».</p>
+      </div>` : `<div class="send">
+        <p class="stats note">Форму сдачи ещё не подключили — код впиши в
+           неё сам(а), ссылку даст учитель.</p>
+      </div>`}
+    </div>
+    <div class="card"><div class="row">${more}</div></div>`;
+
+  wireSend(code);
+  const back = document.getElementById("back") || document.getElementById("more");
+  if (back) back.addEventListener("click", () => {
+    // закрыто всё до единого — открываем счёт заново, иначе просто
+    // продолжаем с оставшимися типами
+    if (all) TYPES.forEach(t => { st.done[t.id] = false; st.streak[t.id] = 0; });
+    nextTask();
+  });
+}
+
+document.getElementById("finish").addEventListener("click", () => {
+  if (st.typesDone >= MIN_TO_FINISH) renderFinish();
+});
+
+nextTask();
+</script>
+<p class="ai-mark" style='margin:34px auto 0;max-width:860px;padding-top:12px;border-top:1px solid #d9dce6;color:#5c6070;font:13px/1.5 "Segoe UI",system-ui,sans-serif'>Материалы подготовлены с использованием технологий искусственного интеллекта.</p>
+</body>
+</html>
