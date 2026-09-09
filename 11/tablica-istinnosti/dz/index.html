@@ -197,8 +197,8 @@ label{display:block;font-size:14px;color:var(--muted);margin-bottom:3px}
    Шесть типов:
      0 «значение функции»       перевод ∧ ∨ ¬ → ≡ в Python, ответ 0/1
      1 «расстановка и index»    что даёт row[p.index('x')] — ядро метода, 0/1
-     2 «счёт вариантов»         сколько раз считается F / сколько расстановок
-                                подходит / сколько заполнений у пропусков
+     2 «счёт вариантов»         сколько раз считается F / сколько заполнений
+                                перебирает product — чистая арифметика
      3 «ошибка в программе»     в решении испорчена одна строка, назвать номер
      4 «задание 2: пять пропусков» фрагмент с пятью пустыми клетками (1-2-2),
                                 ответ держится на условии «строки различны»
@@ -208,8 +208,11 @@ label{display:block;font-size:14px;color:var(--muted);margin-bottom:3px}
    без пропусков на ЕГЭ не бывает, и у нас их нет (Света, 07.09.2026).
 
    Единственность ответа встроена в отбор: генератор сам перебирает все
-   перестановки имён и берёт задачу, только если подходит ровно одна
-   (для типа 2 kind=ways — наоборот, подходить должно несколько).
+   перестановки имён и берёт задачу, только если подходит ровно одна.
+
+   Поворот «сколько расстановок подходит» убран 09.09.2026: на уроке в нём
+   вязли, потому что он подписан теорией, а считается только программой;
+   проверяет он то же, что задания 2, и на ЕГЭ 2026 не встречался.
 
    Машинные поля лежат в task.meta: по ним gen.py --selftest пересчитывает
    ответ НАСТОЯЩИМ Python — выражение F выполняется как есть, а программа
@@ -820,8 +823,7 @@ function lType1(rng) {
 /* --------------------------------------------- тип 2: счёт вариантов */
 
 function lType2(rng) {
-  const turn = rng();
-  if (turn < 0.34) {
+  if (rng() < 0.5) {
     /* Сколько раз будет вычислено F — арифметика перебора. Ответ не зависит
        от данных именно потому, что в цикле по строкам нет break. */
     const n = rng() < 0.5 ? 3 : 4;
@@ -848,7 +850,7 @@ function lType2(rng) {
       meta: {count: 'calls', n: n, rows: rows}
     };
   }
-  if (turn < 0.67) {
+  {
     /* Сколько заполнений перебирает product — по числу пустых клеток. */
     const k = tRand(rng, 3, 6);
     const names = ['x', 'y', 'z', 'w'];
@@ -886,38 +888,6 @@ function lType2(rng) {
       meta: {count: 'fills', holes: k}
     };
   }
-  /* Сколько расстановок подходит: тут ответов заведомо несколько. */
-  for (let guard = 0; guard < 120; guard++) {
-    const n = 3;
-    const names = ['x', 'y', 'z'];
-    const g = lFormula(rng, names, false);
-    if (!g) continue;
-    const f = g.node;
-    const rowsCount = tRand(rng, 2, 3);
-    const all = tShuffle(rng, lAllRows(n)).slice(0, rowsCount);
-    const p0 = tShuffle(rng, names);
-    const table = all.map(vals => p0.map(nm => vals[names.indexOf(nm)]));
-    const res = all.map(vals => g.truth[parseInt(vals.join(''), 2)]);
-    const sols = lSolveT(g.truth, names, table, res);
-    if (sols.length < 2 || sols.length > 5) continue;
-    return {
-      type: 2, kind: 'ways', form: 'int',
-      question: 'Логическая функция F задаётся выражением <b class="fx">F = ' +
-        lMath(f) + '</b>. Приведён фрагмент таблицы истинности функции F, ' +
-        'содержащий неповторяющиеся наборы аргументов.' +
-        lTable(table, res, names) +
-        'Сколько существует различных расстановок переменных ' +
-        names.join(', ') + ' по столбцам, подходящих под этот фрагмент?',
-      answer: String(sols.length),
-      explain: 'Здесь фрагмент не определяет расстановку однозначно: ' +
-        'подходят ' + sols.length + ' — ' + sols.join(', ') + '. В программе ' +
-        'вместо <code>print(p)</code> подходящие расстановки складывают в ' +
-        '<code>set()</code> и печатают <code>len</code>.',
-      meta: {vars: names, py: lPy(f, true), math: lMath(f), table: table,
-             res: res, count: 'ways', want: sols.length}
-    };
-  }
-  return lType2(rng);
 }
 
 /* --------------------------------------- тип 3: ошибка в программе */
