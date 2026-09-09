@@ -51,9 +51,11 @@ details{margin-top:10px;border:1px dashed var(--line);border-radius:9px;padding:
 summary{cursor:pointer;color:var(--accent);font-weight:600}
 button{font:600 15px/1 inherit;padding:10px 15px;border-radius:9px;
        border:1px solid var(--accent);background:#fff;color:var(--accent);cursor:pointer}
-button:hover{background:#eaf1fa}
+button:hover:not(:disabled){background:#eaf1fa}
 button.primary{background:var(--accent);color:#fff}
-button.primary:hover{background:#194f8c}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);
+                color:var(--muted);background:#fff}
 input[type=text]{font:16px/1 Consolas,monospace;padding:9px 11px;border-radius:8px;
                  border:1px solid var(--line);width:100%;max-width:320px}
 .panel{display:flex;align-items:center;gap:16px;flex-wrap:wrap;
@@ -152,12 +154,16 @@ table.shown td,table.shown th{text-align:center;padding:5px 12px}
 переменные. Заполняя её, вы выполняете программу вместо процессора и почти
 всегда именно в этот момент видите ошибку.</p>
 <p>Четыре задачи, при каждом открытии новые. Считать <b>на бумаге или в
-уме</b>: запустив программу, вы узнаете ответ, но не научитесь.</p>
+уме</b>: запустив программу, вы узнаете ответ, но не научитесь. Задачу
+можно поправить и отправить снова сколько угодно раз; если тип дался не
+с первого захода, кнопка «Добавить задачи» даст по нему ещё одну — с
+другими числами.</p>
 
 <div class="panel">
-  <div><b id="score">0</b> <span class="stats">верно из 4</span></div>
+  <div><b id="score">0</b> <span class="stats">верно из <b id="total">4</b></span></div>
   <div class="stats" id="first"></div>
   <div class="spacer"></div>
+  <button id="add" class="primary" disabled>Добавить задачи</button>
   <button id="again">Новые задачи</button>
 </div>
 <div id="trainer"></div>
@@ -750,6 +756,18 @@ function tMake(seed) {
 const seenTypes = new Set();
 let tasks = [], state = [], firstTry = 0;
 const solvedCount = () => state.filter(s => s.ok).length;
+const allSolved = () => state.length > 0 && state.every(s => s.ok);
+
+// Типы, где последняя по счёту задача этого типа далась не с первого
+// раза, — их и предлагает донабрать «Добавить задачи». Смотрим именно
+// последнюю: если добор уже сдан чисто, тип из списка уходит.
+function stumbledTypes(){
+  const latest = {};
+  tasks.forEach((t, i) => { latest[t.type] = i; });
+  const set = new Set();
+  Object.values(latest).forEach(i => { if (state[i].wrong) set.add(tasks[i].type); });
+  return set;
+}
 
 function esc(s){ return String(s).replace(/[&<>]/g, c =>
   ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
@@ -778,9 +796,16 @@ function gridTable(t, idx){
 
 function paint(){
   document.getElementById("score").textContent = solvedCount();
+  document.getElementById("total").textContent = tasks.length;
   document.getElementById("first").textContent =
     "с первой попытки: " + firstTry + " · освоено типов за занятие: " +
     seenTypes.size + " из " + T_TYPES.length;
+
+  const need = stumbledTypes().size;
+  const btn = document.getElementById("add");
+  btn.disabled = !(allSolved() && need > 0);
+  btn.textContent = need && allSolved()
+      ? "Добавить задачи (" + need + ")" : "Добавить задачи";
 }
 
 function render(){
@@ -791,7 +816,8 @@ function render(){
     div.className = "task";
     div.id = "task" + idx;
     div.innerHTML =
-      '<p class="tag">Задача ' + (idx + 1) + ' · ' + T_TYPES[t.type] + '</p>' +
+      '<p class="tag">Задача ' + (idx + 1) + ' · ' + T_TYPES[t.type] +
+      (state[idx].extra ? ' <span class="badge gray">добор</span>' : '') + '</p>' +
       '<pre><code>' + esc(t.code) + '</code></pre>' +
       '<p>' + t.question + '</p>' +
       (t.type === 3 ? shownTable(t) : '') +
@@ -859,6 +885,7 @@ function judge(idx){
     v.innerHTML = "Пока нет. " + why +
       (t.type === 0 ? "Красным отмечены клетки, которые не сошлись — исправь их и проверь снова."
                     : "Пройди программу по шагам ещё раз: где-то шаг лишний или пропущенный.");
+    s.wrong = true;
   }
   paint();
 }
@@ -866,11 +893,28 @@ function judge(idx){
 function newSet(){
   const seed = (Date.now() ^ (Math.random() * 1e9)) >>> 0;
   tasks = tMake(seed);
-  state = tasks.map(() => ({ tries: 0, ok: false }));
+  state = tasks.map(() => ({ tries: 0, ok: false, wrong: false, extra: false }));
   render();
 }
 
+// «Добавить задачи»: по одной свежей задаче на каждый тип, где споткнулись.
+// Числа новые — просто поправить старый ответ тут не выйдет, придётся
+// решать заново.
+function addTasks(){
+  const need = [...stumbledTypes()];
+  if (!need.length) return;
+  need.forEach(type => {
+    const seed = (Date.now() ^ (Math.random() * 1e9) ^ (type * 97)) >>> 0;
+    tasks.push(tTask(type, tRng(seed)));
+    state.push({ tries: 0, ok: false, wrong: false, extra: true });
+  });
+  render();
+  const first = document.getElementById("task" + (tasks.length - need.length));
+  if (first) first.scrollIntoView({ block: "center", behavior: "smooth" });
+}
+
 document.getElementById("again").addEventListener("click", newSet);
+document.getElementById("add").addEventListener("click", addTasks);
 newSet();
 </script>
 <p class="ai-mark" style="margin:34px auto 0;max-width:860px;padding-top:12px;border-top:1px solid #d9dce6;color:#5c6070;font:13px/1.5 "Segoe UI",system-ui,sans-serif">Материалы подготовлены с использованием технологий искусственного интеллекта.</p>
