@@ -142,9 +142,9 @@ code{font:600 15px/1.4 Consolas,"Courier New",monospace;background:#fff;
   <dl>
     <dt>Как устроено</dt>
     <dd>Задачи идут по одной. Тип считается <b>закрытым</b>, когда
-        ответишь по нему верно <b>два раза подряд</b>. Ошибся — счёт по
-        этому типу начинается заново, зато сразу увидишь весь ход
-        решения.</dd>
+        ответишь по нему верно. Ошибся — сразу увидишь весь ход решения,
+        а следующая задача будет того же типа: применишь разбор по
+        горячим следам.</dd>
 
     <dt>Сколько решать</dt>
     <dd><b>Сколько хочешь — на какую оценку наработаешь, такую и
@@ -152,9 +152,9 @@ code{font:600 15px/1.4 Consolas,"Courier New",monospace;background:#fff;
         <table class="steps">
           <tr><th>закрыто типов</th><th>оценка</th>
               <th>задач минимум</th></tr>
-          <tr><td>5 из 7</td><td class="m">3</td><td>10</td></tr>
-          <tr><td>6 из 7</td><td class="m">4</td><td>12</td></tr>
-          <tr><td>7 из 7</td><td class="m">5</td><td>14</td></tr>
+          <tr><td>5 из 7</td><td class="m">3</td><td>5</td></tr>
+          <tr><td>6 из 7</td><td class="m">4</td><td>6</td></tr>
+          <tr><td>7 из 7</td><td class="m">5</td><td>7</td></tr>
         </table>
         Задач будет больше, если ошибаться. Остановиться можно в любой
         момент — кнопка «Закончить и получить код».</dd>
@@ -542,42 +542,94 @@ function needWords(nd, pol){
   return "Спрашивают, где высказывание " + what.toUpperCase() + ".";
 }
 
-function leafMeaning(nd){
+/* Отрицание вносим ВНУТРЬ условия. «НЕ (x < 50) — это x до 49
+   включительно» сбивает с толку сильнее, чем помогает: разбирать надо
+   то, что написано, вместе с отрицанием, а не голую скобку. Где
+   отрицание внутрь не заносится (кратность, разрядность), объясняем
+   словами. */
+function negLeaf(nd){
+  const flip = {">": "≤", "<": "≥", "≥": "<",
+                "≤": ">"};
+  if (nd.k === "cmp" && flip[nd.op]) return CMP(flip[nd.op], nd.n);
+  if (nd.k === "par") return {k: "par", even: !nd.even};
+  if (nd.k === "fd")  return {k: "fd", even: !nd.even};
+  if (nd.k === "ds")  return nd.op === ">"
+      ? {k: "ds", op: "<", n: nd.n + 1}
+      : {k: "ds", op: ">", n: nd.n - 1};
+  return null;
+}
+
+function plainMeaning(nd){
   switch (nd.k){
     case "cmp":
-      if (nd.op === ">") return "(x > " + nd.n + ") — это x от "
-                                + (nd.n + 1) + " и выше";
-      if (nd.op === "\u2265") return "(x \u2265 " + nd.n + ") — это x от "
-                                + nd.n + " и выше";
-      if (nd.op === "<") return "(x < " + nd.n + ") — это x до "
-                                + (nd.n - 1) + " включительно";
-      if (nd.op === "\u2264") return "(x \u2264 " + nd.n + ") — это x до "
-                                + nd.n + " включительно";
-      return "(x = " + nd.n + ") — верно ровно для одного числа " + nd.n;
-    case "par": return "(x " + (nd.even ? "чётное" : "нечётное")
-                       + ") — числа, оканчивающиеся на "
+      if (nd.op === ">") return "x от " + (nd.n + 1) + " и выше";
+      if (nd.op === "≥") return "x от " + nd.n + " и выше";
+      if (nd.op === "<") return "x до " + (nd.n - 1) + " включительно";
+      if (nd.op === "≤") return "x до " + nd.n + " включительно";
+      return "ровно одно число " + nd.n;
+    case "par": return "числа, оканчивающиеся на "
                        + (nd.even ? "0, 2, 4, 6, 8" : "1, 3, 5, 7, 9");
-    case "div": return "(x " + nd.word + " " + nd.n + ") — это "
-                       + nd.n + ", " + (2 * nd.n) + ", " + (3 * nd.n)
+    case "div": return nd.n + ", " + (2 * nd.n) + ", " + (3 * nd.n)
                        + " и так далее";
-    case "fd":  return "(Первая цифра " + (nd.even ? "чётная" : "нечётная")
-                       + ") — старшая цифра записи равна "
+    case "fd":  return "старшая цифра записи — "
                        + (nd.even ? "2, 4, 6 или 8" : "1, 3, 5, 7 или 9");
-    case "ds":  return "(Сумма цифр числа x "
-                       + (nd.op === ">" ? "больше " : "меньше ") + nd.n
-                       + ") — цифры складывают и сравнивают с " + nd.n;
-    case "len": return "(x — " + DIGIT_WORDS[nd.d] + ") — это числа от "
-                       + Math.pow(10, nd.d - 1) + " до "
+    case "ds":  return "цифры складывают и сравнивают с " + nd.n;
+    case "len": return "числа от " + Math.pow(10, nd.d - 1) + " до "
                        + (Math.pow(10, nd.d) - 1);
   }
   return "";
 }
 
-function leavesOf(nd){
-  if (nd.k === "not") return leavesOf(nd.a);
+function leafMeaning(nd, neg){
+  const shown = "(" + leafText(nd) + ")";
+  if (!neg) return shown + " — это " + plainMeaning(nd);
+  const inner = negLeaf(nd);
+  if (inner)
+    return "НЕ " + shown + " — то же, что (" + leafText(inner) + "): это "
+         + plainMeaning(inner);
+  if (nd.k === "div")
+    return "НЕ " + shown + " — числа, которые на " + nd.n
+         + " НЕ делятся";
+  if (nd.k === "len")
+    return "НЕ " + shown + " — любые числа, кроме "
+         + DIGIT_WORDS[nd.d] + "х (то есть кроме "
+         + Math.pow(10, nd.d - 1) + "…" + (Math.pow(10, nd.d) - 1) + ")";
+  if (nd.k === "cmp")
+    return "НЕ " + shown + " — все числа, кроме " + nd.n;
+  return "НЕ " + shown + " — наоборот: " + plainMeaning(nd)
+       + " как раз НЕ подходят";
+}
+
+/* Листья вместе с их СОБСТВЕННЫМ отрицанием — тем НЕ, что стоит прямо
+   перед скобкой. НЕ над связкой относится ко всей скобке целиком, и
+   тащить его вниз, к каждому листу, нельзя: получится разбор, который
+   спорит сам с собой — «внутренняя скобка должна быть истинной», а
+   строкой ниже «НЕ (x < 32) — то же, что (x ≥ 32)». Отрицание скобки
+   объясняется на своём уровне, отдельным шагом. */
+function leavesOf(nd, neg){
+  neg = !!neg;
+  if (nd.k === "not"){
+    const inner = nd.a;
+    if (inner.k === "and" || inner.k === "or")
+      return leavesOf(inner, false);       // НЕ относится к скобке
+    return leavesOf(inner, !neg);
+  }
   if (nd.k === "and" || nd.k === "or")
-    return leavesOf(nd.a).concat(leavesOf(nd.b));
-  return [nd];
+    return leavesOf(nd.a, false).concat(leavesOf(nd.b, false));
+  return [{nd: nd, neg: neg}];
+}
+
+// Есть ли НЕ перед вложенной скобкой (не считая самого верхнего) —
+// такое отрицание надо объяснить отдельно, иначе оно теряется.
+function innerNegated(nd, top){
+  if (nd.k === "not"){
+    const a = nd.a;
+    if ((a.k === "and" || a.k === "or") && !top) return true;
+    return innerNegated(a, top);
+  }
+  if (nd.k === "and" || nd.k === "or")
+    return innerNegated(nd.a, false) || innerNegated(nd.b, false);
+  return false;
 }
 
 // Как показать найденное. Пока чисел немного — выписываем их: ученик
@@ -611,7 +663,11 @@ function edgeCheck(t, sol){
 
 function buildSteps(t, sol){
   const steps = [needWords(t.tree, t.pol)];
-  leavesOf(t.tree).forEach(l => steps.push(leafMeaning(l)));
+  if (innerNegated(t.tree, true))
+    steps.push("Внутри есть НЕ перед скобкой: эта скобка переворачивается "
+               + "целиком — она верна ровно там, где то, что внутри неё, "
+               + "неверно.");
+  leavesOf(t.tree).forEach(l => steps.push(leafMeaning(l.nd, l.neg)));
   if (t.cap)
     steps.push("В условии есть добавка «" + capWords(t.cap)
                + "» — она сужает поиск ещё до разбора выражения.");
@@ -811,6 +867,29 @@ function cmpConsts(nd){
   return nd.k === "cmp" ? [nd.n] : [];
 }
 
+/* Два сравнения, смотрящие в одну сторону, внутри одной связки — это
+   поглощение: «(x ≥ 19) И (x ≥ 18)» означает просто (x ≥ 19), и вторая
+   скобка стоит зря. Проверяем каждую связку, а не только главную: в
+   типе со скобками вырождается как раз внутренняя.
+
+   Направление считаем с учётом НЕ над скобкой: «НЕ (x > 49)» смотрит
+   вниз. Равенство направления не имеет — оно ни с чем не сливается,
+   и в демо-2027 стоит рядом со сравнением. */
+function cmpDir(nd, neg){
+  if (nd.k === "not") return cmpDir(nd.a, !neg);
+  if (nd.k !== "cmp" || nd.op === "=") return null;
+  const up = nd.op === ">" || nd.op === "≥";
+  return (up !== !!neg) ? "up" : "down";
+}
+
+function noSameDirection(nd){
+  if (nd.k === "not") return noSameDirection(nd.a);
+  if (nd.k !== "and" && nd.k !== "or") return true;
+  const a = cmpDir(nd.a, false), b = cmpDir(nd.b, false);
+  if (a && b && a === b) return false;
+  return noSameDirection(nd.a) && noSameDirection(nd.b);
+}
+
 // Связка главного уровня с поправкой на «ложно»: ложное ИЛИ по
 // Де Моргану работает как И, и в вариантах задачи «найди край по
 // свойству» устроены именно так — через эффективное И.
@@ -841,6 +920,7 @@ function tryMake(type){
   // равенство: «НЕ ((x > 25) ИЛИ (x < 25))» — это просто x = 25.
   const cs = cmpConsts(tree);
   if (cs.length > 1 && cs.every(n => n === cs[0])) return null;
+  if (!noSameDirection(tree)) return null;
 
   const sol = solve(tree, rng, pol, cap);
   const ans = answerOf(sol, ask);
@@ -861,7 +941,7 @@ function tryMake(type){
   // у разрядности ответ обязан стоять рядом с границей разряда, иначе
   // тип вырождается в обычную кратность
   if (type.key === "len-edge"){
-    const d = leavesOf(tree).find(l => l.k === "len").d;
+    const d = leavesOf(tree).find(l => l.nd.k === "len").nd.d;
     const edge = ask === "min" ? Math.pow(10, d - 1)
                                : Math.pow(10, d) - 1;
     if (+ans === edge || Math.abs(+ans - edge) > 12) return null;
@@ -953,9 +1033,13 @@ function verdict(t, raw){
 }
 /* ==== /БАЗА ==== */
 
-// Два верных подряд, а не три: случайное попадание они всё равно
-// отсекают, но объём укладывается в норматив времени на домашнюю работу.
-const STREAK = 2;
+// Один верный ответ закрывает тип — не два, как в тренажёре. Решение
+// Светы от 07.09.2026 («в домашнем задании сделай 7 задач, а не 14»):
+// тренажёр идёт на уроке, где она рядом и время надо чем-то занять, а
+// домашнее делают добровольно, и длинное просто не сделают.
+// При ошибке следующая задача будет того же типа — разбор только что
+// показан, применить его надо по горячему.
+const STREAK = 1;
 
 // Ступени. Домашнее задание добровольное — ученик набирает столько,
 // сколько ему нужно, и останавливается. Шкала та же, что в тренажёре.
@@ -1013,6 +1097,7 @@ const st = {
   done:   TYPES.map(() => false),
   clean:  TYPES.map(() => true),   // закрыт без единой ошибки
   solved: 0, wrong: 0,
+  retry: null,                     // тип, на котором только что ошиблись
   cur: null, answered: false, given: ""
 };
 Object.defineProperty(st, "typesDone",
@@ -1023,6 +1108,10 @@ Object.defineProperty(st, "cleanTypes",
 function pickType(){
   const open = TYPES.filter(t => !st.done[t.id]);
   if (!open.length) return null;
+  // Сразу после ошибки повторяем тот же тип: разбор только что показан,
+  // и применить его надо по горячему, а не через пять задач.
+  const again = open.find(t => t.id === st.retry);
+  if (again) return again;
   // берём тот, где серия длиннее нуля — не бросаем начатое на полпути
   const started = open.filter(t => st.streak[t.id] > 0);
   const pool = started.length ? started : open;
@@ -1050,11 +1139,13 @@ function answer(){
   if (v.ok){
     st.solved++;
     st.streak[t.type]++;
+    st.retry = null;
     if (st.streak[t.type] >= STREAK) st.done[t.type] = true;
   } else {
     st.wrong++;
     st.streak[t.type] = 0;
     st.clean[t.type] = false;
+    st.retry = t.type;
   }
   render();
 }
@@ -1145,7 +1236,8 @@ function render(){
                           : `, подряд: ${st.streak[t.type]} из ${STREAK}`}</div>`
       : `<div class="verdict err">Ошибка. ${t.hint
            ? t.hint + " " : `Верный ответ: ${esc(t.answer)}. `}
-           Серия по этому типу начинается заново.</div>` + explain(t);
+           Тип остаётся незакрытым — дальше будет такая же
+           задача.</div>` + explain(t);
   }
 
   main.innerHTML = `
