@@ -65,6 +65,8 @@ input[type=text]:focus{outline:2px solid var(--accent);border-color:var(--accent
       font:14px/1.55 Consolas,"Cascadia Mono",monospace;color:var(--ink);
       background:#fff;tab-size:2}
 #code:focus{outline:2px solid var(--accent);outline-offset:-2px}
+#code.drop{outline:3px dashed var(--accent);outline-offset:-3px;
+           background:#f2f7fd}
 #view{flex:1 1 auto;width:100%;border:0;background:#fff}
 
 /* ---- чек-лист ---- */
@@ -98,6 +100,8 @@ ol.check code{font-family:Consolas,monospace;background:var(--card);
 
 .hint{padding:10px 14px;font-size:13px;color:var(--muted);
       border-bottom:1px solid var(--line);background:#fff}
+.hint code{font-family:Consolas,monospace;background:var(--card);
+           border:1px solid var(--line);border-radius:4px;padding:0 4px}
 
 .cheat details{border:1px solid var(--line);border-radius:9px;
                padding:9px 12px;background:#fff;margin-top:8px}
@@ -130,6 +134,8 @@ ol.check code{font-family:Consolas,monospace;background:var(--card);
   <div class="spacer"></div>
   <input type="text" id="fam" placeholder="Фамилия" autocomplete="off"
          spellcheck="false">
+  <input type="file" id="file" accept=".html,.htm,text/html" hidden>
+  <button id="open">Открыть мой файл</button>
   <button id="save" class="primary">Скачать мой сайт</button>
   <button id="reset">Начать заново</button>
 </div>
@@ -141,6 +147,9 @@ ol.check code{font-family:Consolas,monospace;background:var(--card);
       <div class="spacer"></div>
       <span id="saved" style="text-transform:none;letter-spacing:0"></span>
     </h2>
+    <div class="hint">Написанное сохраняется само. Продолжаете начатое
+      раньше — нажмите <b>«Открыть мой файл»</b> и выберите свой
+      <code>Фамилия.html</code>; его же можно просто перетащить сюда мышью.</div>
     <textarea id="code" spellcheck="false" autocomplete="off"
               autocapitalize="off"></textarea>
   </div>
@@ -482,15 +491,19 @@ function load(){
           localStorage.getItem(KEY + "-fam") || ""; } catch (e) {}
 }
 
+function say(text, color, ms){
+  const s = document.getElementById("saved");
+  s.textContent = text;
+  s.style.color = color || "#137a41";
+  clearTimeout(say.t);
+  say.t = setTimeout(() => { s.textContent = ""; }, ms || 1200);
+}
+
 function store(){
   try {
     localStorage.setItem(KEY, code.value);
     localStorage.setItem(KEY + "-fam", document.getElementById("fam").value);
-    const s = document.getElementById("saved");
-    s.textContent = "сохранено";
-    s.style.color = "#137a41";
-    clearTimeout(store.t);
-    store.t = setTimeout(() => { s.textContent = ""; }, 1200);
+    say("сохранено");
   } catch (e) {}
 }
 
@@ -567,6 +580,67 @@ document.getElementById("save").addEventListener("click", () => {
 
 document.getElementById("fam").addEventListener("input", store);
 
+/* ------------------------------------------------------------------
+   Возврат к работе: открыть свой Фамилия.html обратно в редактор.
+
+   Скачанный файл — это готовая страница, а не проект: открывается он
+   браузером как страница, и продолжать в нём нечего. Чтобы доделать
+   начатое (дома, на другой машине, через неделю), файл надо вернуть
+   в редактор — вот этой кнопкой или перетаскиванием мышью.
+
+   Полагаться на localStorage тут нельзя дважды: учётка в кабинете
+   общая, и за той же машиной в следующий раз сидит другой человек.
+------------------------------------------------------------------ */
+
+const started = () => code.value.trim() !== START.trim();
+
+function loadFromFile(file){
+  if (!file) return;
+  if (!/\.html?$/i.test(file.name)){
+    alert("Нужен файл .html — тот самый, который скачали кнопкой " +
+          "«Скачать мой сайт».");
+    return;
+  }
+  if (started() && !confirm("В редакторе уже есть работа. Заменить её " +
+                            "содержимым файла «" + file.name + "»?")) return;
+  const fr = new FileReader();
+  fr.onerror = () => alert("Не получилось прочитать файл.");
+  fr.onload = () => {
+    // Файл сохраняется с меткой кодировки в начале (BOM). Она невидима
+    // в браузере, но в редакторе стала бы лишним символом перед
+    // <!doctype> — и первая строка кода выглядела бы сломанной.
+    code.value = String(fr.result).replace(/^﻿/, "");
+    const fam = document.getElementById("fam");
+    if (!fam.value.trim()) fam.value = file.name.replace(/\.html?$/i, "");
+    showingSample = false;
+    document.getElementById("toggle").textContent = "Показать образец";
+    renderCheck();
+    refreshView();
+    store();
+    say("открыт файл: " + file.name, "#1f5fa8", 4000);
+  };
+  fr.readAsText(file, "utf-8");
+}
+
+document.getElementById("open").addEventListener("click", () =>
+  document.getElementById("file").click());
+
+document.getElementById("file").addEventListener("change", e => {
+  loadFromFile(e.target.files[0]);
+  e.target.value = "";      // иначе тот же файл второй раз не откроется
+});
+
+code.addEventListener("dragover", e => {
+  e.preventDefault();
+  code.classList.add("drop");
+});
+code.addEventListener("dragleave", () => code.classList.remove("drop"));
+code.addEventListener("drop", e => {
+  e.preventDefault();
+  code.classList.remove("drop");
+  loadFromFile(e.dataTransfer.files[0]);
+});
+
 document.getElementById("reset").addEventListener("click", () => {
   if (!confirm("Стереть всё написанное и начать с чистой заготовки?")) return;
   code.value = START;
@@ -590,6 +664,16 @@ code.addEventListener("keydown", e => {
 load();
 renderCheck();
 refreshView();
+
+/* Учётка в кабинете общая: открыв практикум, легко попасть на чужую
+   недоделанную работу и не понять, почему в редакторе не пусто. Поэтому
+   при старте прямо говорим, чьё это, — рядом кнопка «Начать заново». */
+(function greet(){
+  const fam = (document.getElementById("fam").value || "").trim();
+  if (started())
+    say(fam ? "открыта работа: " + fam : "открыта незаконченная работа",
+        "#8a4b00", 8000);
+})();
 </script>
 
 </body>
