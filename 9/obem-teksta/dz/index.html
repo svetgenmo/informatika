@@ -339,13 +339,18 @@ const TYPES = [
 ];
 
 const TYPES_TOTAL = TYPES.length;
-const randInt = (lo, hi) => lo + Math.floor(Math.random() * (hi - lo + 1));
+/* Источник случайности — один на все страницы темы. Тренажёр, ДЗ и
+   презентация оставляют Math.random: задачи новые при каждом открытии.
+   Проверочная подменяет RND генератором по фамилии — тогда вариант у
+   ученика один и тот же, сколько бы раз он ни перезагрузил страницу. */
+let RND = Math.random;
+const randInt = (lo, hi) => lo + Math.floor(RND() * (hi - lo + 1));
 const pick = arr => arr[randInt(0, arr.length - 1)];
 
 function sample(arr, k){
   const a = arr.slice();
   for (let i = a.length - 1; i > 0; i--){
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(RND() * (i + 1));
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a.slice(0, k);
@@ -447,7 +452,7 @@ function makeTask(typeId){
     // Два поворота из вариантов Статграда: слово вычеркнули из готового
     // текста — и слово пропустили, когда текст писали. Арифметика одна,
     // но узнавать надо оба.
-    const missed = Math.random() < 0.5;
+    const missed = RND() < 0.5;
     return Object.assign(base, {
       intro: enc + ". " + (missed ? who.wanted : who.wrote) +
              " текст (в нём нет лишних пробелов):",
@@ -496,8 +501,8 @@ function makeTask(typeId){
   // Глагол и вопрос тоже разные в разных вариантах Статграда: где-то
   // «вычеркнул», где-то «удалил», где-то просят «вычеркнутое слово»,
   // а где-то «удалённое название города».
-  const deleted = Math.random() < 0.5;
-  const ask = Math.random() < 0.35
+  const deleted = RND() < 0.5;
+  const ask = RND() < 0.35
     ? "Напишите в ответе вычеркнутое слово."
     : "Напишите в ответе " + (deleted ? "удалённое " : "вычеркнутое ") +
       topic.ans + ".";
@@ -575,6 +580,87 @@ function taskWords(t){
       .filter(Boolean);
   return [];
 }
+
+
+/* ============================================ условие картинкой
+   Текст задания рисуется на canvas, а не выводится тегами: с картинки
+   нельзя выделить и скопировать условие в поисковик или нейросеть —
+   только прочитать и решить самому.
+
+   Рисование живёт здесь, а не в html, потому что страниц с условиями
+   стало две: тренажёр и проверочная. Две копии одного канваса — верный
+   способ однажды показать на работе на оценку не то, что на тренажёре.
+============================================================ */
+/* ----------------------------------------------------- условие картинкой
+   Текст задания (условие + цитата) рисуется на canvas, а не выводится
+   тегами: с картинки нельзя выделить и скопировать фразу в поисковик
+   или нейросеть — только прочитать и набрать самому. */
+const COND_FONT = '17px "Segoe UI", system-ui, sans-serif';
+const COND_LINE = 26;
+const COND_W = 680;
+
+function wrapLines(ctx, text, maxWidth){
+  const words = text.split(" ");
+  const lines = [];
+  let cur = "";
+  words.forEach(w => {
+    const test = cur ? cur + " " + w : w;
+    if (cur && ctx.measureText(test).width > maxWidth){
+      lines.push(cur);
+      cur = w;
+    } else cur = test;
+  });
+  if (cur) lines.push(cur);
+  return lines;
+}
+
+function renderCondition(t){
+  const measure = document.createElement("canvas").getContext("2d");
+  measure.font = COND_FONT;
+
+  const introLines = wrapLines(measure, t.intro, COND_W);
+  const quoteLines = (t.quote || [])
+    .flatMap(line => wrapLines(measure, line, COND_W - 32));
+  const tailLines = wrapLines(measure, t.tail, COND_W);
+
+  const quoteBoxH = quoteLines.length ? quoteLines.length * (COND_LINE - 2) + 16 : 0;
+  const H = introLines.length * COND_LINE
+    + (quoteLines.length ? 8 + quoteBoxH + 10 : 0)
+    + tailLines.length * COND_LINE;
+
+  const dpr = Math.max(1, window.devicePixelRatio || 1);
+  const canvas = document.createElement("canvas");
+  canvas.width = COND_W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width = COND_W + "px";
+  canvas.setAttribute("role", "img");
+  canvas.setAttribute("aria-label", [t.intro, ...(t.quote || []), t.tail].join(" "));
+
+  const ctx = canvas.getContext("2d");
+  ctx.scale(dpr, dpr);
+  ctx.font = COND_FONT;
+  ctx.textBaseline = "top";
+  ctx.fillStyle = "#1b1b1f";
+
+  let y = 0;
+  introLines.forEach(l => { ctx.fillText(l, 0, y); y += COND_LINE; });
+
+  if (quoteLines.length){
+    y += 8;
+    ctx.fillStyle = "#f6f7fb";
+    ctx.fillRect(0, y, COND_W, quoteBoxH);
+    ctx.fillStyle = "#a9c6e8";
+    ctx.fillRect(0, y, 4, quoteBoxH);
+    ctx.fillStyle = "#1b1b1f";
+    let qy = y + 8;
+    quoteLines.forEach(l => { ctx.fillText(l, 16, qy); qy += COND_LINE - 2; });
+    y += quoteBoxH + 10;
+  }
+
+  tailLines.forEach(l => { ctx.fillText(l, 0, y); y += COND_LINE; });
+  return canvas;
+}
+
 /* ==== /БАЗА ==== */
 
 // Два верных подряд, а не три: случайное попадание они всё равно

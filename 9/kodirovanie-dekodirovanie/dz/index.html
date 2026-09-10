@@ -455,13 +455,18 @@ const TYPES = [
 ];
 
 const TYPES_TOTAL = TYPES.length;
-const randInt = (lo, hi) => lo + Math.floor(Math.random() * (hi - lo + 1));
+/* Источник случайности — один на все страницы темы. Тренажёр, ДЗ и
+   презентация оставляют Math.random: задачи новые при каждом открытии.
+   Проверочная подменяет RND генератором по фамилии — тогда вариант у
+   ученика один и тот же, сколько бы раз он ни перезагрузил страницу. */
+let RND = Math.random;
+const randInt = (lo, hi) => lo + Math.floor(RND() * (hi - lo + 1));
 const pick = arr => arr[randInt(0, arr.length - 1)];
 
 function shuffle(arr){
   const a = arr.slice();
   for (let i = a.length - 1; i > 0; i--){
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(RND() * (i + 1));
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
@@ -665,7 +670,7 @@ function makeDecode(t){
     const minLen = t.ask === "num" ? 4 : 3;
 
     let word, lets;
-    if (Math.random() < 0.55){
+    if (RND() < 0.55){
       const words = WORDS.filter(w => {
         const u = new Set(w.split(""));
         return u.size <= size && w.length >= minLen && w.length <= 7 &&
@@ -765,7 +770,7 @@ function makeDecode(t){
    больше. Работа другая: считать разборы, а не искать один. */
 function makePick(t){
   for (let attempt = 0; attempt < 600; attempt++){
-    const byAlphabet = Math.random() < 0.45;
+    const byAlphabet = RND() < 0.45;
     const who = pick(CODERS);
 
     let table, lets, cipher, word;
@@ -1030,6 +1035,190 @@ function verdict(t, raw){
           "не то. Пройди цепочку заново слева направо и на каждой " +
           "развилке проверяй, разбирается ли остаток до конца."};
 }
+
+
+/* ============================================ условие картинкой
+   Текст задания рисуется на canvas, а не выводится тегами: с картинки
+   нельзя выделить и скопировать условие в поисковик или нейросеть —
+   только прочитать и решить самому.
+
+   Рисование живёт здесь, а не в html, потому что страниц с условиями
+   стало две: тренажёр и проверочная. Две копии одного канваса — верный
+   способ однажды показать на работе на оценку не то, что на тренажёре.
+============================================================ */
+/* ----------------------------------------------------- условие картинкой
+   Текст задания вместе с кодовой таблицей рисуется на canvas, а не
+   выводится тегами: с картинки нельзя выделить и скопировать условие в
+   поисковик или нейросеть — только прочитать и разобрать самому.
+
+   Рисуется по раскладке `blocks`, которую отдаёт генератор: у разных
+   сюжетов порядок кусков разный (у разведчика цепочка идёт до таблицы,
+   у шпионов — после), и держать этот порядок здесь значило бы разводить
+   страницу с генератором.
+------------------------------------------------------------------ */
+const COND_FONT = '17px "Segoe UI", system-ui, sans-serif';
+const CHAIN_FONT = '700 19px Consolas, "Courier New", monospace';
+const CELL_FONT = '15px "Segoe UI", system-ui, sans-serif';
+const CODE_FONT = '600 15px Consolas, "Courier New", monospace';
+const COND_LINE = 26;
+const COND_W = 680;
+const CELL_H = 25;
+
+function wrapLines(ctx, text, maxWidth){
+  const words = String(text).split(" ");
+  const lines = [];
+  let cur = "";
+  words.forEach(w => {
+    const test = cur ? cur + " " + w : w;
+    if (cur && ctx.measureText(test).width > maxWidth){
+      lines.push(cur);
+      cur = w;
+    } else cur = test;
+  });
+  if (cur) lines.push(cur);
+  return lines;
+}
+
+/* Раскладка кодовой таблицы. Таблица на 5-6 букв рисуется в строку —
+   буквы сверху, коды снизу, как во всех вариантах. Таблица на все 33
+   буквы алфавита в строку не влезает, и в вариантах её тоже верстают
+   колонками пар «буква — номер»: четыре колонки по девять строк. */
+function tableLayout(m, tbl){
+  const pairs = tbl.length > 8;
+  if (!pairs){
+    m.font = CELL_FONT;
+    const wl = tbl.map(e => m.measureText(e.L).width);
+    m.font = CODE_FONT;
+    const wc = tbl.map(e => m.measureText(e.c).width);
+    const cols = tbl.map((e, i) => Math.max(34, Math.max(wl[i], wc[i]) + 20));
+    return {pairs: false, cols: cols, rows: 2,
+            w: cols.reduce((a, b) => a + b, 0), h: CELL_H * 2};
+  }
+  const groups = 4;
+  const rows = Math.ceil(tbl.length / groups);
+  m.font = CELL_FONT;
+  let wL = 0, wC = 0;
+  tbl.forEach(e => { wL = Math.max(wL, m.measureText(e.L).width); });
+  m.font = CODE_FONT;
+  tbl.forEach(e => { wC = Math.max(wC, m.measureText(e.c).width); });
+  const cw = [Math.max(26, wL + 14), Math.max(30, wC + 14)];
+  return {pairs: true, rows: rows, groups: groups, cw: cw,
+          w: (cw[0] + cw[1]) * groups, h: CELL_H * rows};
+}
+
+function drawTable(ctx, tbl, x0, y0, lay){
+  ctx.strokeStyle = "#8f97a8";
+  ctx.lineWidth = 1;
+  ctx.textBaseline = "middle";
+  ctx.textAlign = "center";
+  const cell = (x, y, w, h, text, font) => {
+    ctx.strokeRect(x + 0.5, y + 0.5, w, h);
+    if (text === "") return;
+    ctx.font = font;
+    ctx.fillStyle = "#1b1b1f";
+    ctx.fillText(text, x + w / 2, y + h / 2 + 1);
+  };
+
+  if (!lay.pairs){
+    let x = x0;
+    tbl.forEach((e, i) => {
+      cell(x, y0, lay.cols[i], CELL_H, e.L, CELL_FONT);
+      cell(x, y0 + CELL_H, lay.cols[i], CELL_H, e.c, CODE_FONT);
+      x += lay.cols[i];
+    });
+  } else {
+    for (let i = 0; i < tbl.length; i++){
+      const g = Math.floor(i / lay.rows), r = i % lay.rows;
+      const x = x0 + g * (lay.cw[0] + lay.cw[1]);
+      const y = y0 + r * CELL_H;
+      cell(x, y, lay.cw[0], CELL_H, tbl[i].L, CELL_FONT);
+      cell(x + lay.cw[0], y, lay.cw[1], CELL_H, tbl[i].c, CODE_FONT);
+    }
+  }
+  ctx.textAlign = "left";
+  ctx.textBaseline = "top";
+}
+
+function renderCondition(t){
+  const m = document.createElement("canvas").getContext("2d");
+  const lay = tableLayout(m, t.table);
+  const width = Math.max(COND_W, lay.w + 8);
+
+  // сначала считаем высоту, потом рисуем: canvas нельзя увеличить,
+  // не стерев нарисованное
+  const plan = [];
+  let H = 0;
+  t.blocks.forEach(b => {
+    if (b.k === "p"){
+      m.font = COND_FONT;
+      const lines = wrapLines(m, b.t, width);
+      plan.push({k: "p", lines: lines});
+      H += lines.length * COND_LINE + 8;
+    } else if (b.k === "table"){
+      plan.push({k: "table"});
+      H += lay.h + 16;
+    } else if (b.k === "chain"){
+      plan.push({k: "chain", text: b.t});
+      H += 34;
+    } else {
+      plan.push({k: "chains", items: t.chains});
+      H += t.chains.length * 28 + 8;
+    }
+  });
+
+  const dpr = Math.max(1, window.devicePixelRatio || 1);
+  const canvas = document.createElement("canvas");
+  canvas.width = width * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width = width + "px";
+  canvas.setAttribute("role", "img");
+  canvas.setAttribute("aria-label", conditionText(t));
+
+  const ctx = canvas.getContext("2d");
+  ctx.scale(dpr, dpr);
+  ctx.textBaseline = "top";
+
+  let y = 0;
+  plan.forEach(b => {
+    if (b.k === "p"){
+      ctx.font = COND_FONT;
+      ctx.fillStyle = "#1b1b1f";
+      b.lines.forEach(l => { ctx.fillText(l, 0, y); y += COND_LINE; });
+      y += 8;
+    } else if (b.k === "table"){
+      y += 6;
+      drawTable(ctx, t.table, Math.max(0, (width - lay.w) / 2), y, lay);
+      y += lay.h + 10;
+    } else if (b.k === "chain"){
+      ctx.font = CHAIN_FONT;
+      ctx.fillStyle = "#1b1b1f";
+      ctx.textAlign = "center";
+      ctx.fillText(b.text, width / 2, y + 6);
+      ctx.textAlign = "left";
+      y += 34;
+    } else {
+      ctx.font = CHAIN_FONT;
+      ctx.fillStyle = "#1b1b1f";
+      ctx.textAlign = "center";
+      b.items.forEach(s => { ctx.fillText(s, width / 2, y + 3); y += 28; });
+      ctx.textAlign = "left";
+      y += 8;
+    }
+  });
+  return canvas;
+}
+
+// Текст условия для программы чтения с экрана: картинка картинкой, но
+// незрячий ученик должен получить то же самое.
+function conditionText(t){
+  return t.blocks.map(b =>
+      b.k === "p" ? b.t
+    : b.k === "chain" ? "Цепочка: " + b.t
+    : b.k === "chains" ? "Цепочки: " + t.chains.join("; ")
+    : "Кодовая таблица: " + t.table.map(e => e.L + " — " + e.c).join(", ")
+  ).join(" ") + " " + t.tail;
+}
+
 /* ==== /БАЗА ==== */
 
 // Два верных подряд, а не три: случайное попадание они всё равно

@@ -244,14 +244,19 @@ const TYPES = [
 
 const TYPES_TOTAL = TYPES.length;
 
-const randInt = (lo, hi) => lo + Math.floor(Math.random() * (hi - lo + 1));
+/* Источник случайности — один на все страницы темы. Тренажёр, ДЗ и
+   презентация оставляют Math.random: задачи новые при каждом открытии.
+   Проверочная подменяет RND генератором по фамилии — тогда вариант у
+   ученика один и тот же, сколько бы раз он ни перезагрузил страницу. */
+let RND = Math.random;
+const randInt = (lo, hi) => lo + Math.floor(RND() * (hi - lo + 1));
 const pick = arr => arr[randInt(0, arr.length - 1)];
-const maybe = p => Math.random() < p;
+const maybe = p => RND() < p;
 
 function shuffle(arr){
   const a = arr.slice();
   for (let i = a.length - 1; i > 0; i--){
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(RND() * (i + 1));
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
@@ -995,6 +1000,131 @@ function verdict(t, raw){
   return {ok: false, hint: "Не сходится. Разбери выражение по частям: "
           + "что даёт каждая скобка отдельно, и только потом — связка."};
 }
+
+
+/* ============================================ условие картинкой
+   Текст задания рисуется на canvas, а не выводится тегами: с картинки
+   нельзя выделить и скопировать условие в поисковик или нейросеть —
+   только прочитать и решить самому.
+
+   Рисование живёт здесь, а не в html, потому что страниц с условиями
+   стало две: тренажёр и проверочная. Две копии одного канваса — верный
+   способ однажды показать на работе на оценку не то, что на тренажёре.
+============================================================ */
+/* ----------------------------------------------------- условие картинкой
+   Текст условия и само выражение рисуются на canvas, а не выводятся
+   тегами: с картинки нельзя выделить условие и отправить его в
+   нейросеть — только прочитать и решить.
+
+   Блоки приходят от генератора сегментами {t, b}: b=1 — полужирным.
+   Так набраны слова НЕ, И, ИЛИ и слово «ложно» — ровно как в вариантах
+   Статграда и в демо ФИПИ.
+------------------------------------------------------------------ */
+const COND_W = 680;
+const COND_FONT = ['17px "Segoe UI", system-ui, sans-serif',
+                   '700 17px "Segoe UI", system-ui, sans-serif'];
+const EXPR_FONT = ['20px "Segoe UI", system-ui, sans-serif',
+                   '700 20px "Segoe UI", system-ui, sans-serif'];
+const COND_LINE = 26;
+const EXPR_LINE = 30;
+
+// Сегменты — в слова: переносить строку можно только между словами, а
+// шрифт меняется внутри строки.
+function tokens(segs){
+  const out = [];
+  segs.forEach(s => {
+    String(s.t).split(/(\s+)/).forEach(w => {
+      if (w !== "") out.push({t: w, b: s.b});
+    });
+  });
+  return out;
+}
+
+function layout(ctx, segs, fonts, maxWidth){
+  const lines = [];
+  let cur = [], w = 0;
+  tokens(segs).forEach(tok => {
+    ctx.font = fonts[tok.b ? 1 : 0];
+    const tw = ctx.measureText(tok.t).width;
+    if (cur.length && w + tw > maxWidth && !/^\s+$/.test(tok.t)){
+      lines.push(cur);
+      cur = [];
+      w = 0;
+    }
+    if (!cur.length && /^\s+$/.test(tok.t)) return;   // пробел в начале
+    cur.push(tok);
+    w += tw;
+  });
+  if (cur.length) lines.push(cur);
+  return lines;
+}
+
+function lineWidth(ctx, line, fonts){
+  let w = 0;
+  line.forEach(tok => {
+    ctx.font = fonts[tok.b ? 1 : 0];
+    w += ctx.measureText(tok.t).width;
+  });
+  return w;
+}
+
+function drawLine(ctx, line, fonts, x, y){
+  line.forEach(tok => {
+    ctx.font = fonts[tok.b ? 1 : 0];
+    ctx.fillText(tok.t, x, y);
+    x += ctx.measureText(tok.t).width;
+  });
+}
+
+function renderCondition(t){
+  const m = document.createElement("canvas").getContext("2d");
+  const width = COND_W;
+
+  // сначала считаем высоту, потом рисуем: canvas нельзя увеличить,
+  // не стерев нарисованное
+  const plan = [];
+  let H = 0;
+  t.blocks.forEach(b => {
+    const expr = b.k === "expr";
+    const fonts = expr ? EXPR_FONT : COND_FONT;
+    const lines = layout(m, b.segs, fonts, width - (expr ? 20 : 0));
+    plan.push({expr: expr, fonts: fonts, lines: lines});
+    H += lines.length * (expr ? EXPR_LINE : COND_LINE) + (expr ? 16 : 8);
+  });
+
+  const dpr = Math.max(1, window.devicePixelRatio || 1);
+  const canvas = document.createElement("canvas");
+  canvas.width = width * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width = width + "px";
+  canvas.setAttribute("role", "img");
+  canvas.setAttribute("aria-label", conditionText(t));
+
+  const ctx = canvas.getContext("2d");
+  ctx.scale(dpr, dpr);
+  ctx.textBaseline = "top";
+  ctx.fillStyle = "#1b1b1f";
+
+  let y = 0;
+  plan.forEach(b => {
+    b.lines.forEach(line => {
+      // выражение ставим по центру — так его набирают в вариантах
+      const x = b.expr ? Math.max(0, (width - lineWidth(ctx, line, b.fonts)) / 2)
+                       : 0;
+      drawLine(ctx, line, b.fonts, x, y + (b.expr ? 8 : 0));
+      y += b.expr ? EXPR_LINE : COND_LINE;
+    });
+    y += b.expr ? 16 : 8;
+  });
+  return canvas;
+}
+
+// Текст условия для программы чтения с экрана: картинка картинкой, но
+// незрячий ученик должен получить то же самое.
+function conditionText(t){
+  return t.plain;
+}
+
 /* ==== /БАЗА ==== */
 
 /* ------------------------------------------------------------- оценка
@@ -1116,120 +1246,6 @@ function captureDrafts(){
 
 const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
                           .replace(/>/g, "&gt;");
-
-/* ----------------------------------------------------- условие картинкой
-   Текст условия и само выражение рисуются на canvas, а не выводятся
-   тегами: с картинки нельзя выделить условие и отправить его в
-   нейросеть — только прочитать и решить.
-
-   Блоки приходят от генератора сегментами {t, b}: b=1 — полужирным.
-   Так набраны слова НЕ, И, ИЛИ и слово «ложно» — ровно как в вариантах
-   Статграда и в демо ФИПИ.
------------------------------------------------------------------- */
-const COND_W = 680;
-const COND_FONT = ['17px "Segoe UI", system-ui, sans-serif',
-                   '700 17px "Segoe UI", system-ui, sans-serif'];
-const EXPR_FONT = ['20px "Segoe UI", system-ui, sans-serif',
-                   '700 20px "Segoe UI", system-ui, sans-serif'];
-const COND_LINE = 26;
-const EXPR_LINE = 30;
-
-// Сегменты — в слова: переносить строку можно только между словами, а
-// шрифт меняется внутри строки.
-function tokens(segs){
-  const out = [];
-  segs.forEach(s => {
-    String(s.t).split(/(\s+)/).forEach(w => {
-      if (w !== "") out.push({t: w, b: s.b});
-    });
-  });
-  return out;
-}
-
-function layout(ctx, segs, fonts, maxWidth){
-  const lines = [];
-  let cur = [], w = 0;
-  tokens(segs).forEach(tok => {
-    ctx.font = fonts[tok.b ? 1 : 0];
-    const tw = ctx.measureText(tok.t).width;
-    if (cur.length && w + tw > maxWidth && !/^\s+$/.test(tok.t)){
-      lines.push(cur);
-      cur = [];
-      w = 0;
-    }
-    if (!cur.length && /^\s+$/.test(tok.t)) return;   // пробел в начале
-    cur.push(tok);
-    w += tw;
-  });
-  if (cur.length) lines.push(cur);
-  return lines;
-}
-
-function lineWidth(ctx, line, fonts){
-  let w = 0;
-  line.forEach(tok => {
-    ctx.font = fonts[tok.b ? 1 : 0];
-    w += ctx.measureText(tok.t).width;
-  });
-  return w;
-}
-
-function drawLine(ctx, line, fonts, x, y){
-  line.forEach(tok => {
-    ctx.font = fonts[tok.b ? 1 : 0];
-    ctx.fillText(tok.t, x, y);
-    x += ctx.measureText(tok.t).width;
-  });
-}
-
-function renderCondition(t){
-  const m = document.createElement("canvas").getContext("2d");
-  const width = COND_W;
-
-  // сначала считаем высоту, потом рисуем: canvas нельзя увеличить,
-  // не стерев нарисованное
-  const plan = [];
-  let H = 0;
-  t.blocks.forEach(b => {
-    const expr = b.k === "expr";
-    const fonts = expr ? EXPR_FONT : COND_FONT;
-    const lines = layout(m, b.segs, fonts, width - (expr ? 20 : 0));
-    plan.push({expr: expr, fonts: fonts, lines: lines});
-    H += lines.length * (expr ? EXPR_LINE : COND_LINE) + (expr ? 16 : 8);
-  });
-
-  const dpr = Math.max(1, window.devicePixelRatio || 1);
-  const canvas = document.createElement("canvas");
-  canvas.width = width * dpr;
-  canvas.height = H * dpr;
-  canvas.style.width = width + "px";
-  canvas.setAttribute("role", "img");
-  canvas.setAttribute("aria-label", conditionText(t));
-
-  const ctx = canvas.getContext("2d");
-  ctx.scale(dpr, dpr);
-  ctx.textBaseline = "top";
-  ctx.fillStyle = "#1b1b1f";
-
-  let y = 0;
-  plan.forEach(b => {
-    b.lines.forEach(line => {
-      // выражение ставим по центру — так его набирают в вариантах
-      const x = b.expr ? Math.max(0, (width - lineWidth(ctx, line, b.fonts)) / 2)
-                       : 0;
-      drawLine(ctx, line, b.fonts, x, y + (b.expr ? 8 : 0));
-      y += b.expr ? EXPR_LINE : COND_LINE;
-    });
-    y += b.expr ? 16 : 8;
-  });
-  return canvas;
-}
-
-// Текст условия для программы чтения с экрана: картинка картинкой, но
-// незрячий ученик должен получить то же самое.
-function conditionText(t){
-  return t.plain;
-}
 
 // Разбор — это ход решения, а не объявление ответа.
 function steps(t, open){
