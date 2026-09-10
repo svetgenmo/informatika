@@ -572,14 +572,14 @@ function m5(rng) {
   let expr, vals, meta, how;
   if (kind === 'randint') {
     const a = tRand(rng, 1, 20), b = a + tRand(rng, 2, 12);
-    expr = 'random.randint(' + a + ', ' + b + ')';
+    expr = 'randint(' + a + ', ' + b + ')';
     vals = []; for (let i = a; i <= b; i++) vals.push(i);
     meta = { kind, a, b };
     how = 'randint(a, b) даёт целые от a до b <b>включая оба конца</b>: от ' + a + ' до '
         + b + ', всего ' + vals.length + ' значений.';
   } else if (kind === 'randrange') {
     const a = tRand(rng, 1, 20), b = a + tRand(rng, 2, 12);
-    expr = 'random.randrange(' + a + ', ' + b + ')';
+    expr = 'randrange(' + a + ', ' + b + ')';
     vals = []; for (let i = a; i < b; i++) vals.push(i);
     meta = { kind, a, b };
     how = 'randrange(a, b) устроен как range: правая граница <b>не входит</b>. Значения от '
@@ -587,7 +587,7 @@ function m5(rng) {
   } else if (kind === 'step') {
     const s = tRand(rng, 2, 5), a = tRand(rng, 0, 5);
     const b = a + s * tRand(rng, 3, 7) + tRand(rng, 0, s - 1);
-    expr = 'random.randrange(' + a + ', ' + b + ', ' + s + ')';
+    expr = 'randrange(' + a + ', ' + b + ', ' + s + ')';
     vals = []; for (let i = a; i < b; i += s) vals.push(i);
     meta = { kind, a, b, s };
     how = 'randrange с шагом ' + s + ' перебирает ' + a + ', ' + (a + s) + ', ' + (a + 2 * s)
@@ -595,14 +595,14 @@ function m5(rng) {
         + vals.length + ' значений.';
   } else if (kind === 'random') {
     const k = tRand(rng, 2, 10), m = tRand(rng, 0, 5);
-    expr = 'int(random.random() * ' + k + ') + ' + m;
+    expr = 'int(random() * ' + k + ') + ' + m;
     vals = []; for (let i = 0; i < k; i++) vals.push(m + i);
     meta = { kind, k, m };
     how = 'random() даёт вещественное от 0 включительно до 1 <b>не включая</b>. Умножили на '
         + k + ' — от 0 до ' + k + ' не включая, int() отбросил дробную часть — целые от 0 до '
         + (k - 1) + ', прибавили ' + m + ' — от ' + m + ' до ' + (m + k - 1) + ', всего ' + k + '.';
   } else if (kind === 'dice') {
-    expr = 'random.randint(1, 6) + random.randint(1, 6)';
+    expr = 'randint(1, 6) + randint(1, 6)';
     vals = []; for (let i = 2; i <= 12; i++) vals.push(i);
     meta = { kind };
     how = 'Два кубика: каждый от 1 до 6, сумма от 2 до 12 — 11 разных значений (хотя '
@@ -612,12 +612,12 @@ function m5(rng) {
     const set = new Set();
     while (set.size < n) set.add(tRand(rng, 1, 40));
     vals = [...set];
-    expr = 'random.choice([' + vals.join(', ') + '])';
+    expr = 'choice([' + vals.join(', ') + '])';
     meta = { kind, list: vals };
     how = 'choice выбирает один из элементов списка — любой из ' + n + '.';
   } else {
     const a = tRand(rng, 1, 5), b = a + tRand(rng, 2, 6), c = tPick(rng, [2, 3, 5, 10]);
-    expr = 'random.randint(' + a + ', ' + b + ') * ' + c;
+    expr = 'randint(' + a + ', ' + b + ') * ' + c;
     vals = []; for (let i = a; i <= b; i++) vals.push(i * c);
     meta = { kind, a, b, c };
     how = 'randint даёт от ' + a + ' до ' + b + ' включительно (' + (b - a + 1)
@@ -648,7 +648,7 @@ function m5(rng) {
     answer = can ? 'да' : 'нет';
   }
   return {
-    code: 'import random\nx = ' + expr + '\nprint(x)',
+    code: 'from random import *\nx = ' + expr + '\nprint(x)',
     answer, question,
     meta: Object.assign({ q, probe: probe === undefined ? null : probe }, meta),
     explain: how + (q === 'can' ? ' Значит ' + probe + (answer === 'да' ? ' выпасть может.' : ' выпасть не может.') : '')
@@ -883,7 +883,7 @@ const HW_THEORY = [
        + 'округляют до нужного числа знаков.'
   },
   {
-    q: 'Что делает <code>random.seed(42)</code>?',
+    q: 'Что делает <code>seed(42)</code> из модуля random?',
     opts: ['задаёт начало последовательности: при каждом запуске числа будут те же',
            'делает числа «более случайными»',
            'ограничивает случайные числа значением 42'],
@@ -903,7 +903,7 @@ const HW_THEORY = [
        + 'берут от часов — поэтому запуски различаются.'
   },
   {
-    q: 'Какие числа может вернуть <code>random.randrange(1, 6)</code>?',
+    q: 'Какие числа может вернуть <code>randrange(1, 6)</code>?',
     opts: ['от 1 до 5', 'от 1 до 6', 'от 0 до 6'],
     right: 0,
     why: 'randrange устроен как range: правая граница не входит. Кубик от 1 до 6 — '
