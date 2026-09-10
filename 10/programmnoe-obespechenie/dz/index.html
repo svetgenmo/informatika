@@ -1,0 +1,772 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Домашнее задание — программное обеспечение компьютера</title>
+<meta name="description" content="Домашнее задание к теме «Программное обеспечение компьютера», 10 класс: двенадцать заданий с кодом работы — виды ПО, операционная система, драйверы, установка и удаление программ, мобильное ПО, системное администрирование.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E10%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{margin:0;padding:20px 16px 60px;
+     font:17px/1.5 "Segoe UI",system-ui,sans-serif}
+.wrap{max-width:860px;margin:0 auto}
+
+h1{font-size:23px;margin:0 0 4px}
+.sub{color:var(--muted);font-size:15px;margin:0 0 20px}
+
+.howto{border:1px solid var(--line);border-left:5px solid var(--accent);
+       border-radius:10px;padding:14px 18px;margin-bottom:18px;
+       background:var(--card);font-size:16px;line-height:1.5}
+.howto dl{margin:0;display:grid;grid-template-columns:auto 1fr;
+          gap:8px 14px;align-items:baseline}
+.howto dt{font-weight:700;white-space:nowrap;color:var(--accent)}
+.howto dd{margin:0}
+table.steps{border-collapse:collapse;margin:8px 0;font-size:15px}
+table.steps th,table.steps td{border:1px solid var(--line);padding:4px 12px;
+     text-align:center;background:#fff}
+table.steps th{background:var(--card);color:var(--muted);font-size:13px;
+     font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+table.steps td.m{font-weight:700;color:var(--accent);font-size:17px}
+@media (max-width:560px){ .howto dl{grid-template-columns:1fr;gap:2px 0}
+                          .howto dd{margin-bottom:8px} }
+
+.panel{display:flex;align-items:center;gap:18px;flex-wrap:wrap;
+       border:2px solid var(--accent);border-radius:12px;
+       padding:12px 18px;background:var(--card);margin-bottom:20px;
+       position:sticky;top:0;z-index:5}
+.mark{display:flex;align-items:baseline;gap:10px}
+.mark span{color:var(--muted);font-size:15px}
+.mark b{font:700 40px/1 "Segoe UI",system-ui,sans-serif;min-width:44px;
+        text-align:center;border-radius:8px;padding:2px 10px;
+        background:#fff;border:2px solid var(--line)}
+.m5{color:var(--ok);border-color:var(--ok-line)!important}
+.m4{color:var(--accent);border-color:#a9c6e8!important}
+.m3{color:#8a5a00;border-color:var(--hi-line)!important}
+.m2,.m1{color:var(--err);border-color:var(--err-line)!important}
+.stats{color:var(--muted);font-size:14px;line-height:1.35}
+.spacer{flex:1 1 auto}
+button{font:600 15px/1 inherit;padding:11px 16px;border-radius:9px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);
+       cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);
+                color:var(--muted);background:#fff}
+button:focus-visible{outline:3px solid #a9c6e8;outline-offset:2px}
+
+.section-h{font-size:15px;letter-spacing:.06em;text-transform:uppercase;
+           color:var(--muted);font-weight:700;margin:26px 0 10px}
+.section-h:first-of-type{margin-top:8px}
+.section-h .cnt{font-weight:400;text-transform:none;letter-spacing:0}
+
+.task{border:1px solid var(--line);border-radius:12px;padding:14px 18px;
+      margin-bottom:14px;background:#fff}
+.task.ok{border-color:var(--ok-line);background:var(--ok-bg)}
+.task.err{border-color:var(--err-line);background:var(--err-bg)}
+.q{display:flex;gap:12px;align-items:flex-start;margin-bottom:12px}
+.num{flex:0 0 28px;height:28px;border-radius:50%;background:var(--accent);
+     color:#fff;font:700 15px/28px sans-serif;text-align:center}
+.task.ok .num{background:var(--ok)}
+.task.err .num{background:var(--err)}
+.text{flex:1 1 auto;padding-top:3px}
+.kicker{font-size:12px;letter-spacing:.06em;text-transform:uppercase;
+        color:var(--muted);font-weight:600;display:block;margin-bottom:3px}
+.extra{display:inline-block;margin-left:8px;font-size:12px;font-weight:600;
+       color:var(--accent);border:1px solid #a9c6e8;border-radius:20px;
+       padding:1px 8px;vertical-align:2px}
+
+.opts{display:grid;gap:10px;margin-left:40px}
+.opt{display:block;width:100%;text-align:left;border:2px solid var(--line);
+     border-radius:10px;padding:12px 14px;background:#fff;cursor:pointer;
+     font:inherit;color:var(--ink)}
+.opt:hover:not(:disabled){border-color:var(--accent);background:#f4f8fd}
+.opt:disabled{cursor:default}
+.opt .lt{display:inline-flex;align-items:center;justify-content:center;
+        width:24px;height:24px;border-radius:50%;background:var(--card);
+        color:var(--muted);font:700 13px/24px sans-serif;margin-right:10px;
+        flex:0 0 24px}
+.opt.picked{border-color:var(--accent)}
+.opt.right{border-color:var(--ok-line);background:var(--ok-bg)}
+.opt.right .lt{background:var(--ok);color:#fff}
+.opt.wrong{border-color:var(--err-line);background:var(--err-bg)}
+.opt.wrong .lt{background:var(--err);color:#fff}
+.opt .tag{float:right;font-size:12px;font-weight:700}
+.opt.right .tag{color:var(--ok)}
+.opt.wrong .tag{color:var(--err)}
+.task.calc .opt{font-weight:700;font-size:18px}
+
+
+.why{margin:12px 0 0 40px;border-left:4px solid var(--line);
+     padding:6px 0 6px 14px;color:var(--ink);font-size:15px}
+.why b{color:var(--ink)}
+.why .rule{margin-top:8px;color:var(--muted)}
+
+.finish{border:3px solid var(--ok-line);background:var(--ok-bg);
+        border-radius:14px;padding:22px 24px;margin:24px 0 16px}
+.finish h2{margin:0 0 6px;font-size:22px;color:var(--ok)}
+.code{font:700 34px/1.1 Consolas,monospace;letter-spacing:3px;
+      color:var(--ink);background:#fff;border:2px solid var(--ok-line);
+      border-radius:10px;padding:14px 18px;margin:14px 0;
+      display:inline-block;user-select:all}
+.send{margin:14px 0 0;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.send label{display:flex;flex-direction:column;gap:4px;
+            font:600 13px/1 inherit;color:var(--muted)}
+.send input{font:600 17px/1 inherit;padding:10px 12px;border-radius:9px;
+            border:2px solid var(--line);background:#fff;width:200px}
+.send input:focus{outline:none;border-color:var(--accent)}
+.send .note{flex-basis:100%;margin:2px 0 0}
+
+details{margin-top:24px;border:1px solid var(--line);border-radius:12px;
+        padding:12px 18px;background:var(--card)}
+summary{cursor:pointer;font-weight:600}
+details h3{font-size:16px;margin:16px 0 6px}
+details p{margin:6px 0}
+@media (max-width:700px){ .opts,.why{margin-left:0} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Домашнее задание — программное обеспечение компьютера</h1>
+<p class="sub">Двенадцать заданий: шесть о том, какие бывают программы —
+   виды ПО, операционная система, драйверы; шесть о том, как с ними
+   обращаются — установка и удаление, мобильные устройства, системное
+   администрирование. Нужно и тем, кто хочет поднять оценку за урок, и
+   тем, кто урок пропустил.</p>
+
+<div class="howto">
+  <dl>
+    <dt>Как устроено</dt>
+    <dd>Все двенадцать заданий на странице сразу, ответ выбирается
+        кликом — набирать с клавиатуры ничего не нужно. Ошибся — задание
+        можно пересдать кнопкой «Добавить задачи»: досдача считается в
+        общий счёт, и у каждого неверного варианта написано, чем именно
+        он неверен.</dd>
+
+    <dt>Сколько решать</dt>
+    <dd><b>Оценка пропорциональна числу верных ответов — сколько
+        наработаешь, такую и получишь.</b>
+        <table class="steps">
+          <tr><th>верно из 12</th><th>оценка</th></tr>
+          <tr><td>4</td><td class="m">1</td></tr>
+          <tr><td>6</td><td class="m">2</td></tr>
+          <tr><td>8</td><td class="m">3</td></tr>
+          <tr><td>10</td><td class="m">4</td></tr>
+          <tr><td>12</td><td class="m">5</td></tr>
+        </table>
+        Остановиться можно в любой момент — кнопка «Получить код».</dd>
+
+    <dt>Что получишь</dt>
+    <dd><b>Код работы</b> — в нём записано, сколько верных ответов ты
+        набрал, сколько решил задач и сколько было ошибок.</dd>
+
+    <dt>Как сдать</dt>
+    <dd>Внизу страницы кнопка <b>«Сдать работу»</b>: впишешь фамилию
+        и класс, кнопка сама откроет форму с уже вписанным кодом.
+        Останется нажать «Отправить». Переписывать код руками не надо —
+        именно на этом чаще всего и ошибаются.</dd>
+  </dl>
+</div>
+
+<div class="panel">
+  <div class="mark">
+    <span>Оценка</span><b id="mark">—</b>
+  </div>
+  <div class="stats" id="stats"></div>
+  <div class="spacer"></div>
+  <button id="add" class="primary" disabled>Добавить задачи</button>
+  <button id="finish" class="primary" disabled>Получить код</button>
+</div>
+
+<div id="tasks"></div>
+<div id="finishPanel"></div>
+
+<details>
+  <summary>Подсказка: программное обеспечение компьютера</summary>
+
+  <h3>Три класса программ</h3>
+  <p><b>Системное ПО</b> обслуживает сам компьютер: операционная система,
+     драйверы, архиваторы, антивирусы, служебные программы. <b>Прикладное
+     ПО</b> решает задачи человека: текстовый процессор, таблицы,
+     графические редакторы, браузер, программы для расчётов и
+     проектирования. <b>Системы программирования</b> — инструменты для
+     тех, кто создаёт программы: транслятор, редактор кода, отладчик,
+     библиотеки.</p>
+  <p>Граница условна: архиватор обслуживает файлы, но запускает его
+     человек ради своей задачи. Смысл деления практический — если плохо
+     работают все программы сразу, причина в системной части, если
+     одна — в ней самой.</p>
+
+  <h3>Операционная система</h3>
+  <p>Комплекс программ, который управляет устройствами и обеспечивает
+     работу остальных программ. Её задачи: управление процессами (кому
+     сейчас процессор), управление памятью (каждой программе своя
+     область), файловая система, обмен с устройствами через драйверы,
+     права доступа и интерфейс.</p>
+  <p>Многозадачность — иллюзия: система быстро переключает процессор
+     между программами. Благодаря разделению памяти сбой одной программы
+     не портит данные другой.</p>
+
+  <h3>Драйверы</h3>
+  <p>Программа-переводчик между общими командами системы и конкретной
+     моделью устройства. Стандартные устройства (мышь, флешка) работают
+     на драйвере из состава системы, остальным драйвер даёт
+     производитель. Драйвер выполняется с высокими правами — поэтому его
+     подпись проверяется.</p>
+
+  <h3>Установка и удаление</h3>
+  <p>Установка — это не копирование, а три действия: распаковка файлов,
+     запись сведений о программе в систему (какие типы файлов открывает,
+     где лежит) и установка сопутствующих компонентов — библиотек, служб,
+     автозагрузки.</p>
+  <p>Поэтому удалять программу нужно средствами системы, а не
+     перетаскиванием папки в корзину: иначе файлы исчезнут, а записи о
+     программе останутся, и компьютер будет считать её установленной.</p>
+
+  <h3>Мобильное ПО</h3>
+  <p>Отличается не возможностями, а условиями: батарея, ненадёжная связь,
+     маленький экран. Отсюда приостановка фоновых программ, установка из
+     магазина с проверкой и подписью, разрешения, которые выдаются по
+     одному и отзываются.</p>
+
+  <h3>Системное администрирование</h3>
+  <p>Учётные записи и права, централизованная установка и обновление
+     программ, сеть и общие ресурсы. Плюс работа на опережение:
+     резервные копии, наблюдение за состоянием техники, обновления
+     безопасности. Хорошо сделанной работы администратора не видно.</p>
+</details>
+
+</div>
+
+<script>
+"use strict";
+
+/* ==== БАЗА: вставлено gen.py, руками не править ==== */
+/* Задания по теории урока 3 — программное обеспечение компьютера.
+
+   Двенадцать заданий: шесть категорий по два (память
+   trainer-twelve-tasks). Механика одна на все — утверждение и четыре
+   варианта, один верный; у каждого неверного своё объяснение, чем
+   именно он неверен, а не «нет».
+
+   Формулировки верного ответа в каждой категории две-три, неверных
+   четыре-пять — поэтому лист при повторном открытии не тот же самый,
+   хотя проверяется то же самое.
+
+   Вставляется в homework.html командой gen.py --sync. Руками html не
+   править — затрёт.                                                  */
+
+/* ---------------------------------------- какие бывают программы */
+
+const SOFT = [
+{
+  "id": 0, "tag": "vidy", "name": "виды программного обеспечения",
+  "q": "Выберите верное утверждение о видах программного обеспечения.",
+  "rule": "Программы делят по назначению: системные обслуживают сам компьютер (операционная система, драйверы, архиваторы, антивирусы), прикладные решают задачи человека (текстовый процессор, браузер, редакторы), системы программирования нужны тем, кто создаёт программы.",
+  "correct": [
+    "Системное программное обеспечение обслуживает сам компьютер, прикладное решает задачи человека.",
+    "Текстовый процессор и браузер — прикладные программы, а операционная система и драйверы — системные.",
+    "Система программирования — это инструмент для создания программ: транслятор, редактор кода, отладчик и библиотеки."
+  ],
+  "wrong": [
+    ["Системными называют программы, которые занимают много места на диске, а прикладными — маленькие.",
+     "Размер тут ни при чём. Деление идёт по назначению: обслуживает программа компьютер или решает задачу человека."],
+    ["Драйвер принтера — прикладная программа, потому что печатает документы человека.",
+     "Печатает прикладная программа, а драйвер только переводит команды системы для конкретной модели принтера. Это системное ПО."],
+    ["Любая программа, за которую заплатили деньги, относится к прикладному программному обеспечению.",
+     "Цена не определяет класс программы. Платными бывают и операционные системы, и антивирусы — а это системное ПО."],
+    ["Антивирус относится к системам программирования, потому что он проверяет программы.",
+     "Системы программирования служат для создания программ. Антивирус ничего не создаёт, он обслуживает компьютер — это системное ПО."],
+    ["Граница между системными и прикладными программами задана строго, спорных случаев не бывает.",
+     "Спорные случаи как раз обычны: архиватор обслуживает файлы, но запускает его человек ради своей задачи. Деление условно."]
+  ]
+},
+{
+  "id": 1, "tag": "os", "name": "операционная система",
+  "q": "Выберите верное утверждение об операционной системе.",
+  "rule": "Операционная система управляет процессами, памятью, файлами и устройствами и даёт программам единый способ обращения к ним. Многозадачность — это быстрое переключение процессора между программами, а не одновременное выполнение всего сразу.",
+  "correct": [
+    "Операционная система распределяет между программами процессор, память и доступ к устройствам.",
+    "Многозадачность обеспечивается быстрым переключением процессора между программами, поэтому их одновременная работа выглядит непрерывной.",
+    "Каждой программе система выделяет свою область памяти, поэтому сбой одной программы не портит данные другой."
+  ],
+  "wrong": [
+    ["Операционная система — это рабочий стол с окнами и значками; без графического интерфейса системы не существует.",
+     "Интерфейс — только верхний слой. Серверы годами работают вообще без графической оболочки, а система при этом на месте."],
+    ["Если в компьютере восемь ядер, операционная система может выполнять ровно восемь программ, не больше.",
+     "Программ может быть в десятки раз больше числа ядер: система переключает процессор между ними, отдавая каждой короткие промежутки времени."],
+    ["Программа обращается к жёсткому диску напрямую, а операционная система только показывает результат на экране.",
+     "Напрямую к устройствам обращается система. Программа просит её прочитать или записать файл — потому её и не приходится переписывать под каждую модель диска."],
+    ["Права доступа нужны только в организациях, на домашнем компьютере они не работают.",
+     "Права действуют всегда. Именно поэтому установка программы требует подтверждения: система ограничивает не столько человека, сколько программы, запущенные от его имени."],
+    ["Операционная система хранится в оперативной памяти постоянно, поэтому после выключения её приходится ставить заново.",
+     "Система хранится на диске, а в оперативную память загружается при включении. Переустанавливать её после каждого выключения не нужно."]
+  ]
+},
+{
+  "id": 2, "tag": "driver", "name": "драйверы устройств",
+  "q": "Выберите верное утверждение о драйверах.",
+  "rule": "Драйвер — программа-переводчик между общими командами операционной системы и особенностями конкретной модели устройства. Для распространённых устройств драйвер входит в состав системы, для остальных его даёт производитель.",
+  "correct": [
+    "Драйвер переводит общие команды операционной системы в сигналы, понятные конкретной модели устройства.",
+    "Благодаря драйверу прикладной программе безразлично, какой именно принтер подключён к компьютеру.",
+    "Для распространённых устройств вроде мыши и флеш-накопителя подходит драйвер из состава операционной системы."
+  ],
+  "wrong": [
+    ["Драйвер — это часть устройства, микросхема внутри него.",
+     "Драйвер — программа, а не деталь. Он хранится на компьютере и выполняется его процессором."],
+    ["Драйвер нужен только принтерам и сканерам, остальные устройства работают без него.",
+     "Драйвер нужен любому устройству. Просто для многих он уже входит в состав системы, и человек его установки не замечает."],
+    ["Драйвер можно скачать откуда угодно: это обычная программа, и проверять её происхождение не нужно.",
+     "Драйвер выполняется с высокими правами, ближе к ядру системы, чем обычная программа. Поэтому система и проверяет его подпись."],
+    ["Если устройство определилось системой, значит драйвер подходит идеально и обновлять его не нужно.",
+     "Устройство может определиться на стандартном драйвере и работать не в полную силу. Фирменный драйвер производителя обычно даёт все возможности."],
+    ["Обновление драйвера всегда улучшает работу устройства, откатиться к прежней версии невозможно.",
+     "Новый драйвер иногда работает хуже прежнего, поэтому система позволяет вернуться к предыдущей версии."]
+  ]
+}
+];
+
+/* ------------------------------------- как с программами обращаются */
+
+const USAGE = [
+{
+  "id": 0, "tag": "install", "name": "установка и удаление программ",
+  "q": "Выберите верное утверждение об установке и удалении программ.",
+  "rule": "Установка — это не только копирование файлов, но и запись сведений о программе в систему плюс установка сопутствующих компонентов. Поэтому удалять программу нужно средствами системы, а не перетаскиванием папки в корзину.",
+  "correct": [
+    "Установка программы включает копирование файлов, запись сведений о программе в систему и установку сопутствующих компонентов.",
+    "Удалять программу нужно средствами системы: при удалении папки записи о программе останутся, и компьютер будет считать её установленной.",
+    "Часть установленных программ запускается вместе с операционной системой, и именно это чаще всего замедляет её загрузку."
+  ],
+  "wrong": [
+    ["Установка программы — это просто копирование её файлов в папку, ничего больше не происходит.",
+     "Кроме копирования, установщик записывает сведения о программе в систему и ставит библиотеки, службы и драйверы, которые ей нужны."],
+    ["Чтобы удалить программу начисто, достаточно перетащить её папку в корзину и очистить корзину.",
+     "Файлы исчезнут, а записи о программе останутся: значки будут вести в пустоту, а типы файлов — считаться привязанными к тому, чего уже нет."],
+    ["После правильного удаления программы от неё не остаётся вообще ничего.",
+     "Обычно намеренно остаются пользовательские настройки и созданные документы — чтобы при повторной установке ничего не потерялось."],
+    ["Программа, установленная на компьютер, не может влиять на скорость загрузки системы.",
+     "Может, если добавила себя в автозагрузку: такие программы стартуют вместе с системой и занимают память и процессор."],
+    ["Удалять программы имеет смысл только тогда, когда на диске закончилось место.",
+     "Не только: лишние программы могут стартовать вместе с системой, а необновляемые ещё и представляют угрозу безопасности."]
+  ]
+},
+{
+  "id": 1, "tag": "mobile", "name": "программное обеспечение мобильных устройств",
+  "q": "Выберите верное утверждение о программном обеспечении мобильных устройств.",
+  "rule": "Мобильное ПО отличается не возможностями, а условиями работы: батарея, ненадёжная связь, маленький экран. Отсюда приостановка фоновых программ, установка из магазина с проверкой и разрешения, которые выдаются по одному и отзываются.",
+  "correct": [
+    "Приложение, ушедшее с экрана, обычно приостанавливается — так система экономит заряд батареи.",
+    "Разрешения на камеру, микрофон и местоположение приложение запрашивает отдельно, и их можно отозвать.",
+    "Магазин приложений проверяет и подписывает программу перед публикацией, поэтому установка из него безопаснее установки из случайного файла."
+  ],
+  "wrong": [
+    ["Мобильные приложения устроены иначе, потому что процессоры телефонов слишком слабы для обычных программ.",
+     "Современный телефон считает быстрее старого ноутбука. Дело не в мощности, а в условиях: батарея, связь, размер экрана."],
+    ["Установив приложение, пользователь автоматически даёт ему доступ к камере, контактам и местоположению.",
+     "Каждое такое право запрашивается отдельно уже после установки, и его можно отозвать в настройках."],
+    ["Установить приложение не из магазина технически невозможно.",
+     "Возможно, из файла — но система предупредит: такую программу никто не проверял и не подписывал."],
+    ["Мобильное приложение продолжает работать в фоне ровно так же, как программа на настольном компьютере.",
+     "Наоборот: система приостанавливает фоновые приложения, иначе устройство разрядилось бы за несколько часов."],
+    ["Мобильные приложения не сохраняют данные на самом устройстве — всё хранится только на сервере.",
+     "Приложения как раз рассчитывают на потерю связи: сохраняют данные у себя и отправляют, когда сеть вернётся."]
+  ]
+},
+{
+  "id": 2, "tag": "admin", "name": "системное администрирование",
+  "q": "Выберите верное утверждение о работе системного администратора.",
+  "rule": "Администратор управляет учётными записями и правами, ставит и обновляет программы централизованно, отвечает за сеть и общие ресурсы. Отдельная и главная часть работы — на опережение: резервные копии, наблюдение за состоянием техники, обновления безопасности.",
+  "correct": [
+    "Резервные копии хранят отдельно от исходных данных, потому что диск с тем и другим ломается целиком.",
+    "В организации программы устанавливают централизованно: обойти руками десятки компьютеров невозможно, а разные версии мешают работе.",
+    "Значительная часть работы администратора направлена не на починку, а на её предотвращение: копии, наблюдение, обновления."
+  ],
+  "wrong": [
+    ["Работа администратора начинается тогда, когда что-то сломалось.",
+     "Заметной она становится тогда. Основная же часть — предотвращение поломок: резервные копии, наблюдение за дисками и журналами, обновления."],
+    ["Резервную копию достаточно держать на том же диске, где лежат исходные данные, — так быстрее восстанавливать.",
+     "При отказе диска пропадёт и копия. Смысл копии в том, что она переживает потерю оригинала, поэтому её хранят отдельно."],
+    ["Учётные записи и права нужны только для того, чтобы сотрудники не читали чужие письма.",
+     "Права ограничивают прежде всего программы, запущенные от имени пользователя: заражение, случившееся под ограниченной учётной записью, наносит меньше вреда."],
+    ["Если на компьютерах установлен антивирус, обновления безопасности можно не ставить.",
+     "Антивирус — только один слой защиты. Обновления закрывают уязвимости, через которые проникают внутрь, минуя запуск подозрительных файлов."],
+    ["Одинаковые версии программ на всех компьютерах организации — требование необязательное, каждый может ставить что хочет.",
+     "Разные версии приводят к тому, что файл, созданный на одной машине, не открывается на другой. Поэтому версии и держат одинаковыми."]
+  ]
+}
+];
+
+/* ------------------------------------------------------- механика */
+
+const SOFT_COUNT = SOFT.length;
+const USAGE_COUNT = USAGE.length;
+const SESSION_LEN = (SOFT_COUNT + USAGE_COUNT) * 2;   // двенадцать
+
+const rnd = Math.random;
+
+function pick(arr, n){
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(rnd() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a.slice(0, n);
+}
+const one = arr => arr[Math.floor(rnd() * arr.length)];
+
+function makeStatementTask(list, id, kind){
+  const c = list.find(x => x.id === id);
+  const correctText = one(c.correct);
+  const wrongs = pick(c.wrong, 3);
+  const opts = [{text: correctText, correct: true, why: c.rule}]
+    .concat(wrongs.map(w => ({text: w[0], correct: false, why: w[1]})));
+  const options = pick(opts, opts.length);
+  return {kind: kind, catId: id, name: c.name, q: c.q,
+          options: options,
+          answer: options.findIndex(o => o.correct)};
+}
+
+function makeSlotTask(kind, catId){
+  return makeStatementTask(kind === "soft" ? SOFT : USAGE, catId, kind);
+}
+
+/* Два круга по каждой семье: категория повторяется дважды, но с
+   другой формулировкой верного ответа и другими отвлекающими. На
+   стыке кругов одна и та же категория подряд не встаёт.             */
+function twoRounds(count){
+  const r1 = pick(Array.from({length: count}, (_, i) => i), count);
+  const r2 = pick(Array.from({length: count}, (_, i) => i), count);
+  if (r2[0] === r1[r1.length - 1] && r2.length > 1){
+    const j = 1 + Math.floor(rnd() * (r2.length - 1));
+    [r2[0], r2[j]] = [r2[j], r2[0]];
+  }
+  return r1.concat(r2);
+}
+
+function buildSession(){
+  return twoRounds(SOFT_COUNT).map(i => ({kind: "soft", catId: i}))
+    .concat(twoRounds(USAGE_COUNT).map(i => ({kind: "use", catId: i})));
+}
+/* ==== /БАЗА ==== */
+
+const SECTIONS = [
+  {kind: "soft", title: "Какие бывают программы"},
+  {kind: "use", title: "Как с программами обращаются"},
+];
+
+/* ------------------------------------------------------------------
+   Оценка пропорциональна числу верных ответов из двенадцати. Лист
+   короче, чем в прошлых темах: на уроке 3 время съедает практикум с
+   документом, а теория идёт домашним заданием (10.09.2026).
+------------------------------------------------------------------ */
+const SCALE = [[12, 5], [10, 4], [8, 3], [6, 2], [4, 1]];
+const MIN_TO_FINISH = 4;
+function markFor(correct){
+  for (const s of SCALE) if (correct >= s[0]) return s[1];
+  return 0;
+}
+
+/* ------------------------------------------------------------- сессия */
+
+let tasks = [];
+let firstRoundRight = 0;
+
+function newRun(){
+  const session = buildSession();
+  tasks = session.map((d, i) => Object.assign(
+    makeSlotTask(d.kind, d.catId),
+    {slot: i, status: "open", extra: false, picked: null}));
+  firstRoundRight = 0;
+  render();
+}
+
+function masteredSlots(){
+  const set = new Set();
+  tasks.forEach(t => { if (t.status === "ok") set.add(t.slot); });
+  return set;
+}
+function latestBySlot(){
+  const m = new Map();
+  tasks.forEach(t => { if (t.status !== "open") m.set(t.slot, t); });
+  return m;
+}
+function failedSlots(){
+  const ok = masteredSlots();
+  const out = [];
+  latestBySlot().forEach((t, slot) => { if (!ok.has(slot)) out.push(t); });
+  return out;
+}
+const allAnswered = () => tasks.every(t => t.status !== "open");
+
+function choose(taskIdx, optIdx){
+  const t = tasks[taskIdx];
+  if (t.status !== "open") return;
+  t.picked = optIdx;
+  t.status = (optIdx === t.answer) ? "ok" : "err";
+  if (t.status === "ok" && !t.extra) firstRoundRight++;
+  render();
+}
+
+function addTasks(){
+  const need = failedSlots();
+  if (!need.length) return;
+  need.forEach(t => tasks.push(Object.assign(
+    makeSlotTask(t.kind, t.catId),
+    {slot: t.slot, status: "open", extra: true, picked: null})));
+  render();
+  const el = document.querySelector(".task:not(.ok):not(.err)");
+  if (el) el.scrollIntoView({block: "center", behavior: "smooth"});
+}
+
+/* ------------------------------------------------------------ квитанция
+   Формат кода — общий движок check_homework.py -> homework.py: поле
+   «типов» шириной 4 бита, то есть 0..15. Лист здесь из двенадцати, в
+   четыре бита он влезает целиком, поэтому пересчёта нет: toCode ничего
+   не меняет и стоит только ради единой формы вызова с другими темами.
+   Ловушка: check_homework.py --selftest вырезает этот блок целиком
+   (с алфавита кодирования) и прогоняет в node отдельной функцией —
+   всё, что код внутри читает, обязано быть определено в этом же
+   куске. Поэтому здесь не ссылаемся на SESSION_LEN из базы гена (она
+   снаружи куска), а держим те же 20 отдельной строкой, буквально.
+   И да, не писать здесь буквально начало объявления алфавита кодов
+   текстом в комментарии — вырезка ищет его простым поиском по строке,
+   а не разбором JS, и утащит кусок не оттуда, откуда нужно (наступила
+   на это 05.09.2026: комментарий с примером сломал сам себя).
+------------------------------------------------------------------ */
+const FORM = "https://docs.google.com/forms/d/e/1FAIpQLSfQyhaxcnzn4ZaKSe_ZMsluw7qRQnrw_80H6SfrnYB5EThUIA/viewform?usp=pp_url&entry.853601231=ФАМИЛИЯ&entry.1091635917=КЛАСС&entry.487188307=КОД";
+
+const ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+const EPOCH = Date.UTC(2026, 0, 1);
+
+const CODE_MAX = 12;
+const CODE_SESSION_LEN = 12;   // = SESSION_LEN; продублировано нарочно, см. выше
+const toCode = n => Math.max(0, Math.min(CODE_MAX,
+  Math.round(n * CODE_MAX / CODE_SESSION_LEN)));
+
+const bin = (v, w) => v.toString(2).padStart(w, "0");
+
+function checksum(bits){
+  let cs = 0x5B;
+  for (let i = 0; i < bits.length; i += 7)
+    cs ^= parseInt(bits.substr(i, 7).padEnd(7, "0"), 2);
+  return cs & 0x7F;
+}
+
+// Поля названы и обработаны буквально как в общем движке (homework.py:
+// typesDone/cleanTypes — оба уже 0..15, никакого пересчёта здесь), это
+// проверяет check_homework.py --selftest, подсовывая готовые состояния
+// напрямую. toCode на этой теме тождественный — лист из 12 и поле
+// шириной 4 бита совпадают, — но вызов оставлен на месте.
+function makeCode(st){
+  const day = Math.max(0, Math.min(2047, Math.floor(
+      (Date.now() - EPOCH) / 86400000)));
+  const payload = bin(day, 11) + bin(Math.min(15, st.typesDone), 4) +
+                  bin(Math.min(15, st.cleanTypes), 4) +
+                  bin(Math.min(127, st.solved), 7) +
+                  bin(Math.min(127, st.wrong), 7);
+  const bits = payload + bin(checksum(payload), 7);
+  let out = "";
+  for (let i = 0; i < 40; i += 5) out += ALPHABET[parseInt(bits.substr(i, 5), 2)];
+  return "PO-" + out.slice(0, 4) + "-" + out.slice(4);
+}
+
+/* ---------------------------------------------------------- состояние
+   Граница для check_homework.py --selftest: он вырезает браузерный
+   makeCode от начала алфавита кодов до этого комментария и прогоняет
+   в node (см. homework.py, JS_HARNESS). Дальше в файле — код, трогающий DOM,
+   в node он не выполнится и не должен попасть в вырезку. */
+
+/* -------------------------------------------------------------- вывод */
+
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
+                          .replace(/>/g, "&gt;");
+
+
+function taskCard(t){
+  const card = document.createElement("div");
+  card.className = "task" + (t.status === "open" ? "" : " " + t.status);
+
+  const opts = t.options.map((o, i) => {
+    let cls = "opt";
+    if (t.status !== "open"){
+      if (i === t.picked) cls += " picked";
+      if (o.correct) cls += " right";
+      else if (i === t.picked) cls += " wrong";
+    }
+    const tag = t.status !== "open"
+      ? (o.correct ? '<span class="tag">верно</span>'
+         : (i === t.picked ? '<span class="tag">твой выбор</span>' : ""))
+      : "";
+    return `<button class="${cls}" data-i="${t._i}" data-o="${i}"
+              ${t.status !== "open" ? "disabled" : ""}>${tag}
+              <span class="lt">${String.fromCharCode(65 + i)}</span>${esc(o.text)}</button>`;
+  }).join("");
+
+  let why = "";
+  if (t.status !== "open"){
+    const shown = t.options[t.picked];
+    const correctOpt = t.options.find(o => o.correct);
+    why = `<div class="why">${esc(shown.why)}` +
+      (t.status === "err"
+        ? `<div class="rule">${esc(correctOpt.why)}</div>` : "") +
+      `</div>`;
+  }
+
+  card.innerHTML = `
+    <div class="q">
+      <div class="num">${t.slot + 1}</div>
+      <div class="text"><span class="kicker">${esc(t.name)}</span>${esc(t.q)}${
+        t.extra ? '<span class="extra">добор</span>' : ""}</div>
+    </div>
+    <div class="opts">${opts}</div>
+    ${why}`;
+  return card;
+}
+
+function render(){
+  tasks.forEach((t, i) => { t._i = i; });
+
+  const box = document.getElementById("tasks");
+  box.innerHTML = "";
+
+  SECTIONS.forEach(sec => {
+    const items = tasks.filter(t => !t.extra && t.kind === sec.kind);
+    if (!items.length) return;
+    const h = document.createElement("div");
+    h.className = "section-h";
+    h.innerHTML = `${esc(sec.title)} <span class="cnt">(${items.length})</span>`;
+    box.appendChild(h);
+    items.forEach(t => box.appendChild(taskCard(t)));
+  });
+
+  const extras = tasks.filter(t => t.extra);
+  if (extras.length){
+    const h = document.createElement("div");
+    h.className = "section-h";
+    h.textContent = "Добор";
+    box.appendChild(h);
+    extras.forEach(t => box.appendChild(taskCard(t)));
+  }
+
+  box.querySelectorAll("button[data-i]").forEach(b => {
+    b.addEventListener("click", () => choose(+b.dataset.i, +b.dataset.o));
+  });
+
+  updatePanel();
+}
+
+function updatePanel(){
+  const correct = masteredSlots().size;
+  const mark = markFor(correct);
+  const started = tasks.some(t => t.status !== "open");
+  const el = document.getElementById("mark");
+  el.textContent = started ? mark : "—";
+  el.className = started ? "m" + mark : "";
+
+  const extras = tasks.filter(t => t.extra).length;
+  const nextUp = SCALE.filter(s => s[0] > correct).slice(-1)[0];
+  document.getElementById("stats").innerHTML =
+    `верно: <b>${correct}</b> из 12<br>` +
+    `верно с первой попытки: <b>${firstRoundRight}</b> из 12` +
+    (extras ? ` &middot; добрано задач: <b>${extras}</b>` : "") +
+    (nextUp ? `<br>до оценки ${nextUp[1]} осталось верных ответов: ` +
+              `<b>${nextUp[0] - correct}</b>` : "");
+
+  const need = failedSlots().length;
+  const addBtn = document.getElementById("add");
+  addBtn.disabled = !(allAnswered() && need > 0);
+  addBtn.textContent = need && allAnswered()
+      ? `Добавить задачи (${need})` : "Добавить задачи";
+
+  const finishBtn = document.getElementById("finish");
+  finishBtn.disabled = correct < MIN_TO_FINISH;
+  finishBtn.textContent = correct >= MIN_TO_FINISH
+      ? `Получить код (на ${mark})` : "Получить код";
+}
+
+/* ------------------------------------------------------------- сдача */
+
+function wireSend(code){
+  const fam = document.getElementById("fam");
+  if (!fam) return;
+  const kls = document.getElementById("kls");
+  const note = document.getElementById("sendnote");
+  try {
+    fam.value = localStorage.getItem("hw-fam") || "";
+    kls.value = localStorage.getItem("hw-kls") || "";
+  } catch (e) {}
+  document.getElementById("send").addEventListener("click", () => {
+    const f = fam.value.trim(), k = kls.value.trim();
+    if (!f || !k){
+      note.textContent = "Впиши фамилию и класс — иначе непонятно, чья это работа.";
+      (f ? kls : fam).focus();
+      return;
+    }
+    try {
+      localStorage.setItem("hw-fam", f);
+      localStorage.setItem("hw-kls", k);
+    } catch (e) {}
+    const url = FORM.replace("ФАМИЛИЯ", encodeURIComponent(f))
+                    .replace("КЛАСС", encodeURIComponent(k))
+                    .replace("КОД", encodeURIComponent(code));
+    window.open(url, "_blank", "noopener");
+    note.textContent = "Форма открылась в новой вкладке. Не забудь нажать в ней «Отправить».";
+  });
+}
+
+function showFinish(){
+  const correct = masteredSlots().size;
+  if (correct < MIN_TO_FINISH) return;
+  const mark = markFor(correct);
+  const solved = tasks.filter(t => t.status !== "open").length;
+  const wrong = tasks.filter(t => t.status === "err").length;
+  const code = makeCode({typesDone: toCode(correct),
+                         cleanTypes: toCode(firstRoundRight),
+                         solved, wrong});
+
+  document.getElementById("finishPanel").innerHTML = `
+    <div class="finish">
+      <h2>Наработано на ${mark}</h2>
+      <p class="stats">Верно: <b>${correct}</b> из 12 &middot;
+         решено задач: <b>${solved}</b> &middot;
+         ошибок: <b>${wrong}</b> &middot;
+         верно с первой попытки: <b>${firstRoundRight}</b></p>
+      <div class="code">${code}</div>
+      <p class="stats">Это код твоей работы. Если решишь ещё задачи —
+         нажми «Получить код» снова, код обновится.</p>
+      <div class="send">
+        <label>Фамилия
+          <input id="fam" autocomplete="off" placeholder="как в журнале"></label>
+        <label>Класс
+          <input id="kls" autocomplete="off" placeholder="10-2" style="width:110px"></label>
+        <button id="send" class="primary">Сдать работу</button>
+        <p class="stats note" id="sendnote">Кнопка откроет форму: фамилия,
+           класс и код уже будут вписаны — останется нажать «Отправить».</p>
+      </div>
+    </div>`;
+  wireSend(code);
+  document.getElementById("finishPanel").scrollIntoView({block: "center", behavior: "smooth"});
+}
+
+document.getElementById("add").addEventListener("click", addTasks);
+document.getElementById("finish").addEventListener("click", showFinish);
+if (CODE_SESSION_LEN !== SESSION_LEN)
+  console.error("CODE_SESSION_LEN разошёлся с SESSION_LEN — поправь константу");
+newRun();
+</script>
+<p class="ai-mark" style="margin:34px auto 0;max-width:860px;padding-top:12px;border-top:1px solid #d9dce6;color:#5c6070;font:13px/1.5 "Segoe UI",system-ui,sans-serif">Материалы подготовлены с использованием технологий искусственного интеллекта.</p>
+</body>
+</html>
