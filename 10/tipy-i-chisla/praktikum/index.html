@@ -86,7 +86,7 @@ ul.tight li{margin:3px 0}
 <div class="note">
   <b>План на пару.</b> Сначала тренажёр: двенадцать коротких программ, ответ —
   что напечатает Python. Потом три своих программы: делители числа, зарплата
-  курьера и розыгрыш среди клиентов. Проверяет их оболочка
+  курьера и серия бросков кубика. Проверяет их оболочка
   <code>Проверка.bat</code> из общей папки: она запускает программу на семи
   наборах данных. Интернет не нужен.
 </div>
@@ -161,7 +161,7 @@ print(f"{2.5:.2f}")         <span class="c"># 2.50  — вид, а не знач
   <tr><td><code>randint(a, b)</code></td><td>целое от a до b, <b>оба конца включаются</b></td></tr>
   <tr><td><code>randrange(a, b)</code></td><td>целое от a до b−1, как <code>range</code></td></tr>
   <tr><td><code>random()</code></td><td>вещественное от 0 включительно до 1 <b>не включая</b></td></tr>
-  <tr><td><code>choice(список)</code></td><td>один элемент списка</td></tr>
+  <tr><td><code>randrange(a, b, s)</code></td><td>от a до b−1 с шагом s: 0, 5, 10, …</td></tr>
   <tr><td><code>seed(число)</code></td><td>задаёт начало: дальше числа при каждом запуске одни и те же</td></tr>
 </table>
 <p>Случайности внутри компьютера нет: следующее число вычисляется из предыдущего
@@ -239,49 +239,55 @@ print(f"{2.5:.2f}")         <span class="c"># 2.50  — вид, а не знач
 </div>
 
 <div class="card step">
-  <h3><span class="badge">Задание 3</span> Розыгрыш</h3>
-  <p>Среди клиентов разыгрывают бесплатную доставку. Клиенты пронумерованы от 1
-  до <code>n</code>, призов <code>k</code>. Программа читает три целых числа:
-  начальное число <code>start</code>, <code>n</code> и <code>k</code> — и
-  печатает <code>k</code> <b>разных</b> случайных номеров от 1 до <code>n</code>
-  через пробел. Чтобы розыгрыш можно было проверить, перед выбором вызывается
-  <code>seed(start)</code>: при одном и том же начальном числе победители
-  должны быть одни и те же.</p>
+  <h3><span class="badge">Задание 3</span> Кубик</h3>
+  <p>Программа читает два целых числа: начальное число <code>start</code> и
+  количество бросков <code>n</code>. Перед бросками вызывается
+  <code>seed(start)</code> — чтобы серию можно было повторить и проверить.
+  Дальше кубик бросается <code>n</code> раз. Печатай три строки: сами броски
+  через пробел, их сумму и сколько раз выпала шестёрка.</p>
   <div class="io">
     <div><h4>Вход</h4><pre>7
-100
-3</pre></div>
-    <div><h4>Вывод</h4><pre>42 17 88   <span class="c"># номера у всех свои — важно, что их 3, все разные и от 1 до 100</span></pre></div>
+5</pre></div>
+    <div><h4>Вывод</h4><pre>Броски: 3 6 1 6 2   <span class="c"># числа у всех свои</span>
+Сумма: 18
+Шестёрок: 2</pre></div>
   </div>
-  <p class="tag">Проверяется: <code>seed</code>, <code>randint</code>
-  или <code>sample</code>, границы диапазона, отсутствие повторов.
-  Правильного ответа у задания нет — оболочка проверяет, что номеров
-  <code>k</code>, все в границах и разные, что при одном начальном числе
-  розыгрыш повторяется, а при другом — нет.</p>
+  <p class="tag">Проверяется: <code>seed</code>, <code>randint</code>, границы
+  диапазона, накопление суммы и счётчик. Правильного ответа у задания нет —
+  оболочка проверяет, что бросков ровно <code>n</code> и все от 1 до 6, что
+  сумма и число шестёрок сходятся с напечатанными бросками, что при одном
+  начальном числе серия повторяется, а при другом — нет.</p>
   <details><summary>Если застрял</summary>
-    <p>Самый честный способ — тянуть номера по одному, пока не наберётся
-    <code>k</code> разных:</p>
+    <p>Бросок — это <code>randint(1, 6)</code>. Печатать в одну строку помогает
+    <code>print(x, end=" ")</code>, а после цикла пустой <code>print()</code> —
+    ровно как в первом задании с делителями. Сумму и счётчик шестёрок копи в
+    переменных прямо в цикле:</p>
     <pre><code>from random import *
 
 start = int(input())
 n = int(input())
-k = int(input())
 seed(start)
-winners = []
-while len(winners) &lt; k:
-    x = randint(1, n)
-    if x not in winners:
-        winners.append(x)
-print(*winners)</code></pre>
+total = 0
+sixes = 0
+print("Броски:", end=" ")
+for i in range(n):
+    x = randint(1, 6)
+    print(x, end=" ")
+    total = total + x
+    if x == 6:
+        sixes = sixes + 1
+print()
+print("Сумма:", total)
+print("Шестёрок:", sixes)</code></pre>
     <p>Переменную с начальным числом <b>не называй <code>seed</code></b>: после
     <code>from random import *</code> это имя функции, и
     <code>seed = int(input())</code> её затрёт — <code>seed(seed)</code> упадёт
     с ошибкой.</p>
-    <p>Короче — <code>sample(range(1, n + 1), k)</code>: выбирает
-    <code>k</code> разных элементов сразу. В обоих случаях следи за границей:
-    <code>randint(1, n)</code> включает <code>n</code>, а
-    <code>range(1, n)</code> — нет. Оболочка подаст и такой набор, где
-    <code>k = n</code>: выиграть должны все.</p>
+    <p><b>Ловушка, ради которой это задание.</b> Следи за границей:
+    <code>randint(1, 6)</code> шестёрку включает, а <code>randrange(1, 6)</code>
+    — нет, она даёт только от 1 до 5. Оболочка подаст серию из сотни с лишним
+    бросков: в ней обязаны встретиться все шесть граней, и кубик без шестёрки
+    сразу виден.</p>
   </details>
 </div>
 
@@ -349,8 +355,7 @@ print(*winners)</code></pre>
     <tr><td>randint(a, b)</td><td>целое от a до b, оба конца включаются</td></tr>
     <tr><td>randrange(a, b)</td><td>от a до b−1, как range</td></tr>
     <tr><td>random()</td><td>вещественное от 0 включительно до 1 не включая</td></tr>
-    <tr><td>choice(список)</td><td>один элемент списка</td></tr>
-    <tr><td>sample(список, k)</td><td>k разных элементов</td></tr>
+    <tr><td>randrange(a, b, s)</td><td>от a до b−1 с шагом s</td></tr>
     <tr><td>seed(число)</td><td>начало последовательности: запуски совпадают</td></tr>
   </table>
   <p>Числа <b>псевдо</b>случайные: следующее считается из предыдущего по формуле.
@@ -372,6 +377,7 @@ print(*winners)</code></pre>
      3 «строка или число»       — input() даёт строку; «+» и «*» у строк; ошибки
      4 «логический тип»         — True/False, True == 1, bool(), цепочки сравнений
      5 «случайные числа»        — границы randint/randrange/random(), число значений
+         (choice со списком убран: списков класс не проходил)
 
    Ответ у задач 0–4 — ровно то, что напечатает Python. Считает его JavaScript
    по правилам Python (округление вниз у //, полуцелые к чётному у round, «.0»
@@ -800,7 +806,7 @@ function m4(rng) {
 
 /* ------------------------------------------------------- тип 5: случайные числа */
 function m5(rng) {
-  const kind = tPick(rng, ['randint', 'randrange', 'step', 'random', 'dice', 'choice', 'mult']);
+  const kind = tPick(rng, ['randint', 'randrange', 'step', 'random', 'dice', 'mult']);
   let expr, vals, meta, how;
   if (kind === 'randint') {
     const a = tRand(rng, 1, 20), b = a + tRand(rng, 2, 12);
@@ -839,14 +845,6 @@ function m5(rng) {
     meta = { kind };
     how = 'Два кубика: каждый от 1 до 6, сумма от 2 до 12 — 11 разных значений (хотя '
         + 'исходов 36 и выпадают они не одинаково часто).';
-  } else if (kind === 'choice') {
-    const n = tRand(rng, 3, 6);
-    const set = new Set();
-    while (set.size < n) set.add(tRand(rng, 1, 40));
-    vals = [...set];
-    expr = 'choice([' + vals.join(', ') + '])';
-    meta = { kind, list: vals };
-    how = 'choice выбирает один из элементов списка — любой из ' + n + '.';
   } else {
     const a = tRand(rng, 1, 5), b = a + tRand(rng, 2, 6), c = tPick(rng, [2, 3, 5, 10]);
     expr = 'randint(' + a + ', ' + b + ') * ' + c;

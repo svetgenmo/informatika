@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Ветвления и циклы — карточка в тетрадь</title>
+<meta name="robots" content="noindex">
+<style>
+@page{size:A4 landscape;margin:0}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:#f2f3f7}
+body{font:9.5pt/1.3 "Segoe UI",system-ui,sans-serif;color:#1b1b1f}
+
+/* лист: 297x210 мм, две карточки A5 книжной ориентации рядом */
+.sheet{width:297mm;height:210mm;margin:0 auto;background:#fff;
+       display:flex;position:relative}
+.card{width:148.5mm;height:210mm;padding:7mm 7mm 5mm;
+      display:flex;flex-direction:column;overflow:hidden}
+
+/* линия разреза — ровно посередине листа */
+.sheet::after{content:"";position:absolute;left:148.5mm;top:0;bottom:0;
+              border-left:1px dashed #b9bece}
+
+header{border-bottom:2px solid #1f5fa8;padding-bottom:2.5mm;margin-bottom:3mm}
+.klass{display:block;font-size:.78em;letter-spacing:.09em;
+       text-transform:uppercase;color:#5c6070;margin-bottom:1mm}
+h1{font-size:1.5em;line-height:1.15;margin:0;color:#1f5fa8}
+.sub{margin:1.5mm 0 0;font-size:.85em;color:#5c6070}
+
+.body{flex:1 1 auto;min-height:0}
+.body h3{font-size:1em;margin:2.2mm 0 .8mm;color:#1f5fa8}
+.body h3:first-child{margin-top:0}
+.body p{margin:1mm 0}
+.body ol,.body ul{margin:1mm 0;padding-left:5mm}
+.body li{margin:.6mm 0}
+.body pre{margin:1.2mm 0;padding:1.2mm 1.8mm;background:#f6f7fb;
+          border:1px solid #d9dce6;border-radius:1.5mm;
+          font:.88em/1.25 Consolas,"Courier New",monospace;
+          white-space:pre-wrap}
+.body code{font:.9em/1.3 Consolas,"Courier New",monospace;
+           background:#f6f7fb;border:1px solid #d9dce6;
+           border-radius:1mm;padding:0 .8mm}
+/* Шаблон программы приходит картинкой (см. `template-as-image`). Ширину
+   ей задавать нельзя: карточка узкая, и по ширине картинка вылезет за
+   низ листа. Держим по высоте, ширина подстроится сама.
+
+   Потолок в 68 мм подобран не на глаз: картинка съедает высоту, которой
+   потом не хватает тексту, и автоподбор кегля уводит конспект в нечитаемые
+   6–7 пунктов. При 68 мм и текст, и код держатся около 8 — как на
+   карточках без картинки. */
+.body img{display:block;max-width:100%;max-height:68mm;width:auto;
+          margin:1.5mm auto;border-radius:1.5mm}
+.body table{border-collapse:collapse;margin:1.5mm 0;font-size:.9em}
+.body th,.body td{border:1px solid #d9dce6;padding:.5mm 1.6mm;
+                  text-align:center}
+.body th{background:#f6f7fb;color:#5c6070;font-weight:600}
+.body b{color:#1b1b1f}
+
+footer{margin-top:3mm;padding-top:2mm;border-top:1px solid #d9dce6;
+       font-size:.72em;line-height:1.3;color:#5c6070}
+footer a,footer .url{color:#1f5fa8;text-decoration:none}
+
+/* подсказка про печать — только на экране, на бумагу не идёт */
+.howto{max-width:297mm;margin:6mm auto;padding:4mm 6mm;background:#fff;
+       border:1px solid #d9dce6;border-radius:3mm;font-size:11pt;
+       line-height:1.5}
+.howto b{color:#1f5fa8}
+.tight{margin:3mm 0 0;color:#b3261e;font-weight:600}
+@media print{
+  html,body{background:#fff}
+  .howto{display:none}
+  .sheet{margin:0}
+}
+</style>
+</head>
+<body>
+
+<div class="howto">
+  <b>Печать:</b> Ctrl+P &rarr; ориентация <b>альбомная</b>, масштаб
+  <b>100 %</b> (не «вписать в лист»), поля <b>нет</b>, «печать фона»
+  включить — иначе пропадут рамки таблиц. На листе <b>две одинаковые
+  карточки</b>: разрезать по пунктиру посередине, получится две штуки
+  формата A5. Эта серая рамка на бумагу не печатается.
+</div>
+
+<div class="sheet">
+  <div class="card">
+    <header>
+      <span class="klass">10 класс</span>
+      <h1>Ветвления и циклы</h1>
+      <p class="sub">Четвёртая пара углублённого курса: лестница elif и порядок веток, сложные условия и приоритет операций, цикл с условием, break и continue, исполнитель из задания 13 ЕГЭ — уроки 9–10 плана</p>
+    </header>
+    <div class="body">
+<h3>Ветвление</h3>
+  <p>В лестнице if / elif / else выполняется <b>первая</b> подошедшая ветка,
+     остальные не проверяются. Узкое условие ставят раньше широкого: если
+     сначала написать x &gt; 10, то ветка x &gt; 100 недостижима. Несколько
+     отдельных if — другая конструкция: там сработает каждый подошедший.
+     Ветка может не печатать, а менять переменную. Вложенный else относится к
+     ближайшему if — по отступу.</p>
+
+  <h3>Сложные условия</h3>
+  <table>
+    <tr><th>операция</th><th>истинна, когда</th><th>приоритет</th></tr>
+    <tr><td>not A</td><td>A ложно</td><td>1 — раньше всех</td></tr>
+    <tr><td>A and B</td><td>истинны обе</td><td>2</td></tr>
+    <tr><td>A or B</td><td>истинна хотя бы одна</td><td>3 — позже всех</td></tr>
+  </table>
+  <p>x &gt; 0 or x &lt; −5 and x % 2 == 0 читается как x &gt; 0 or (x &lt; −5 and
+     x % 2 == 0). Двойное неравенство пишется как в математике: 1 &lt; x &lt; 10.
+     Короткое замыкание: and не смотрит правую часть при ложной левой, or — при
+     истинной; поэтому защитную проверку (x != 0) ставят первой.
+     Де Морган: not (A and B) = not A or not B; not (A or B) = not A and not B.</p>
+  <p>Две ошибки: if x = 5 — присваивание вместо сравнения (SyntaxError);
+     if x == 1 or 2 — синтаксис верный, а смысл нет: or вернёт 2, условие
+     истинно всегда. Правильно: x == 1 or x == 2.</p>
+
+  <h3>Цикл с условием</h3>
+  <p>while проверяет условие ПЕРЕД каждым проходом, поэтому тело может не
+     выполниться ни разу. Переменную двигает сам программист — иначе вечный
+     цикл (в IDLE прерывается Ctrl+C). for берут, когда число шагов известно
+     заранее, while — когда его определяет сама задача.</p>
+  <table>
+    <tr><th>приём</th><th>как выглядит</th></tr>
+    <tr><td>счётчик</td><td>k = k + 1 в теле цикла</td></tr>
+    <tr><td>накопитель</td><td>s = s + n % 10</td></tr>
+    <tr><td>перебор цифр</td><td>while n &gt; 0: … n = n // 10</td></tr>
+    <tr><td>максимум</td><td>if d &gt; m: m = d внутри цикла</td></tr>
+  </table>
+  <p>break прекращает весь цикл, continue — только текущий проход. После выхода
+     переменная хранит уже НЕподошедшее значение: while i * i &lt; 50 закончится
+     при i = 8.</p>
+
+  <h3>Високосный год</h3>
+  <p>leap = (y % 4 == 0 and y % 100 != 0) or y % 400 == 0. Одной делимости на 4
+     мало: 1900 и 2100 — обычные годы, 1600 и 2000 — високосные. В феврале 29
+     дней, если год високосный, иначе 28; по 30 дней в апреле, июне, сентябре и
+     ноябре, в остальных месяцах 31.</p>
+
+  <h3>Исполнитель (задание 13 ЕГЭ)</h3>
+  <p>Команда A прибавляет 1. Команда B меняет местами цифры десятков и единиц и
+     применима, только если <b>десятки строго меньше единиц</b>; меняются лишь
+     два младших разряда: 104 → 140. Цифры: n % 10 — единицы, n // 10 % 10 —
+     десятки. Для команд A, B, A и числа 13 траектория 14, 41, 42.
+     Неприменимая команда пропускается, а не останавливает программу.</p>
+    </div>
+    <footer>Тренажёр и разбор темы: <span class="url">https://svetgenmo.github.io/informatika/10/vetvleniya-i-cikly/</span><br>Материалы подготовлены с использованием технологий искусственного интеллекта.</footer>
+  </div>
+  <div class="card">
+    <header>
+      <span class="klass">10 класс</span>
+      <h1>Ветвления и циклы</h1>
+      <p class="sub">Четвёртая пара углублённого курса: лестница elif и порядок веток, сложные условия и приоритет операций, цикл с условием, break и continue, исполнитель из задания 13 ЕГЭ — уроки 9–10 плана</p>
+    </header>
+    <div class="body">
+<h3>Ветвление</h3>
+  <p>В лестнице if / elif / else выполняется <b>первая</b> подошедшая ветка,
+     остальные не проверяются. Узкое условие ставят раньше широкого: если
+     сначала написать x &gt; 10, то ветка x &gt; 100 недостижима. Несколько
+     отдельных if — другая конструкция: там сработает каждый подошедший.
+     Ветка может не печатать, а менять переменную. Вложенный else относится к
+     ближайшему if — по отступу.</p>
+
+  <h3>Сложные условия</h3>
+  <table>
+    <tr><th>операция</th><th>истинна, когда</th><th>приоритет</th></tr>
+    <tr><td>not A</td><td>A ложно</td><td>1 — раньше всех</td></tr>
+    <tr><td>A and B</td><td>истинны обе</td><td>2</td></tr>
+    <tr><td>A or B</td><td>истинна хотя бы одна</td><td>3 — позже всех</td></tr>
+  </table>
+  <p>x &gt; 0 or x &lt; −5 and x % 2 == 0 читается как x &gt; 0 or (x &lt; −5 and
+     x % 2 == 0). Двойное неравенство пишется как в математике: 1 &lt; x &lt; 10.
+     Короткое замыкание: and не смотрит правую часть при ложной левой, or — при
+     истинной; поэтому защитную проверку (x != 0) ставят первой.
+     Де Морган: not (A and B) = not A or not B; not (A or B) = not A and not B.</p>
+  <p>Две ошибки: if x = 5 — присваивание вместо сравнения (SyntaxError);
+     if x == 1 or 2 — синтаксис верный, а смысл нет: or вернёт 2, условие
+     истинно всегда. Правильно: x == 1 or x == 2.</p>
+
+  <h3>Цикл с условием</h3>
+  <p>while проверяет условие ПЕРЕД каждым проходом, поэтому тело может не
+     выполниться ни разу. Переменную двигает сам программист — иначе вечный
+     цикл (в IDLE прерывается Ctrl+C). for берут, когда число шагов известно
+     заранее, while — когда его определяет сама задача.</p>
+  <table>
+    <tr><th>приём</th><th>как выглядит</th></tr>
+    <tr><td>счётчик</td><td>k = k + 1 в теле цикла</td></tr>
+    <tr><td>накопитель</td><td>s = s + n % 10</td></tr>
+    <tr><td>перебор цифр</td><td>while n &gt; 0: … n = n // 10</td></tr>
+    <tr><td>максимум</td><td>if d &gt; m: m = d внутри цикла</td></tr>
+  </table>
+  <p>break прекращает весь цикл, continue — только текущий проход. После выхода
+     переменная хранит уже НЕподошедшее значение: while i * i &lt; 50 закончится
+     при i = 8.</p>
+
+  <h3>Високосный год</h3>
+  <p>leap = (y % 4 == 0 and y % 100 != 0) or y % 400 == 0. Одной делимости на 4
+     мало: 1900 и 2100 — обычные годы, 1600 и 2000 — високосные. В феврале 29
+     дней, если год високосный, иначе 28; по 30 дней в апреле, июне, сентябре и
+     ноябре, в остальных месяцах 31.</p>
+
+  <h3>Исполнитель (задание 13 ЕГЭ)</h3>
+  <p>Команда A прибавляет 1. Команда B меняет местами цифры десятков и единиц и
+     применима, только если <b>десятки строго меньше единиц</b>; меняются лишь
+     два младших разряда: 104 → 140. Цифры: n % 10 — единицы, n // 10 % 10 —
+     десятки. Для команд A, B, A и числа 13 траектория 14, 41, 42.
+     Неприменимая команда пропускается, а не останавливает программу.</p>
+    </div>
+    <footer>Тренажёр и разбор темы: <span class="url">https://svetgenmo.github.io/informatika/10/vetvleniya-i-cikly/</span><br>Материалы подготовлены с использованием технологий искусственного интеллекта.</footer>
+  </div>
+</div>
+
+<script>
+/* Кегль подбирается здесь, а не задаётся в манифесте.
+   Причина простая: конспект живёт на странице темы и правится там же,
+   а карточка от каждой новой строки становится длиннее. Число,
+   подогнанное руками, устареет молча — последние строки уедут под обрез
+   карточки и никто этого не заметит до раздачи. Поэтому страница
+   уменьшает шрифт сама, пока текст не уложится в высоту A5.
+   Запас в 2% — на то, что принтер разложит строки чуть иначе. */
+(function (){
+  var START = 9.5, FLOOR = 6, STEP = 0.1;
+  var tight = false;
+
+  /* Меряем не scrollHeight: блок конспекта растянут на всю свободную
+     высоту карточки, и его scrollHeight упирается в clientHeight даже
+     когда текста мало, — с таким сравнением шрифт уезжает в минимум.
+     Берём низ последнего элемента: он говорит, сколько занято на самом
+     деле. */
+  function used(box){
+    var last = box.lastElementChild;
+    if (!last) return 0;
+    return last.getBoundingClientRect().bottom -
+           box.getBoundingClientRect().top;
+  }
+
+  document.querySelectorAll(".card").forEach(function (card){
+    var body = card.querySelector(".body"), size = START;
+    card.style.fontSize = size + "pt";
+    while (size > FLOOR && used(body) > body.clientHeight * 0.98){
+      size = Math.round((size - STEP) * 10) / 10;
+      card.style.fontSize = size + "pt";
+    }
+    if (used(body) > body.clientHeight) tight = true;
+  });
+  if (tight){
+    var note = document.createElement("p");
+    note.className = "tight";
+    note.textContent = "Конспект не влезает даже мелким шрифтом: "
+      + "часть текста обрежется. Убери из подсказки лишний раздел — "
+      + "в publish.json темы, ключ card.drop.";
+    document.querySelector(".howto").appendChild(note);
+  }
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Сетевой этикет и подлинность информации — разбор темы</title>
+<meta name="description" content="Разбор темы для 11 класса: социальные сети как обмен данными, сетевой этикет и правила поведения в киберпространстве, проблема подлинности полученной информации, проверка источника, перепечатки и обратный поиск по изображению.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E11%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ink)}
+body{font:20px/1.5 "Segoe UI",system-ui,sans-serif}
+.deck{height:100vh;display:flex;flex-direction:column}
+.stage{flex:1 1 auto;overflow-y:auto;padding:34px 56px 12px}
+.slide{display:none;max-width:1100px;margin:0 auto}
+.slide.on{display:block}
+
+h1{font-size:50px;line-height:1.1;margin:0 0 18px;text-wrap:balance}
+h2{font-size:36px;line-height:1.15;margin:0 0 20px;text-wrap:balance}
+.lead{font-size:24px;color:var(--muted);margin:0 0 26px}
+p{margin:0 0 14px}
+ul{margin:0 0 14px;padding-left:28px}
+ol{margin:0 0 14px;padding-left:30px}
+li{margin:8px 0}
+code{font-family:Consolas,"Cascadia Mono",monospace;background:var(--card);
+     border:1px solid var(--line);border-radius:6px;padding:1px 7px;font-size:.92em;
+     overflow-wrap:anywhere}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;align-items:start}
+.box{border:1px solid var(--line);border-radius:14px;padding:16px 20px;background:#fff}
+.box h3{margin:0 0 8px;font-size:22px}
+.good{border-color:var(--ok-line);background:var(--ok-bg)}
+.bad{border-color:var(--err-line);background:var(--err-bg)}
+.warn{border-color:var(--hi-line);background:var(--hi-bg)}
+.big{font-size:26px}
+table{border-collapse:collapse;width:100%;font-size:21px;margin:10px 0}
+th,td{border:1px solid var(--line);padding:9px 14px;text-align:left}
+th{background:var(--card)}
+.step[hidden]{display:none}
+.tag{display:inline-block;background:var(--accent);color:#fff;border-radius:20px;
+     padding:3px 14px;font-size:16px;font-weight:700;margin-bottom:12px}
+.tag.gray{background:var(--muted)}
+.chain{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+       font-size:21px;margin:14px 0}
+.chain .n{border:1px solid var(--line);border-radius:12px;background:#fff;
+          padding:10px 16px}
+.chain .ar{color:var(--muted);font-size:26px}
+.live{border:2px dashed var(--accent);border-radius:14px;padding:14px 20px;
+      background:#eaf1fa;margin:14px 0}
+.live h3{margin:0 0 8px;font-size:22px;color:var(--accent)}
+.host{font:700 34px/1.25 Consolas,monospace;margin:12px 0;overflow-wrap:anywhere}
+.host .left{color:var(--muted)}
+.host .own{color:var(--err);border-bottom:3px solid var(--err)}
+.bar{flex:0 0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+     border-top:1px solid var(--line);background:var(--card);padding:12px 24px}
+.bar .spacer{flex:1 1 auto}
+.count{color:var(--muted);font-size:17px;font-variant-numeric:tabular-nums}
+.keys{color:var(--muted);font-size:15px}
+.keys kbd{font:600 13px/1 Consolas,monospace;border:1px solid var(--line);
+          border-bottom-width:2px;border-radius:5px;padding:2px 6px;background:#fff}
+button{font:600 17px/1 inherit;padding:11px 18px;border-radius:10px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="deck">
+<div class="stage" id="stage">
+
+<section class="slide on">
+  <h1>Проверить дешевле,<br>чем поверить</h1>
+  <p class="lead">Сетевой этикет. Проблема подлинности полученной
+  информации.<br>11 класс — занятие четвёртое.</p>
+  <p>В прошлый раз мы говорили про сервисы и закончили на том, что отзывы и
+  рейтинги тоже пишут люди — в том числе заинтересованные. Сегодня об этом
+  целиком: как вести себя там, где вас слышат посторонние, и как понять,
+  чему из услышанного можно верить.</p>
+</section>
+
+<section class="slide">
+  <span class="tag">Социальные сети</span>
+  <h2>Вы отдаёте больше, чем публикуете</h2>
+  <p>Социальная сеть — это организация коллективного взаимодействия и
+  <b>обмена данными</b>. Слово «обмен» здесь буквальное, и обмен не совсем
+  равный.</p>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="two">
+        <div class="box good">
+          <h3>Что вы публикуете сами</h3>
+          <ul>
+            <li>тексты, фотографии, видео;</li>
+            <li>мнения и оценки;</li>
+            <li>события своей жизни.</li>
+          </ul>
+        </div>
+        <div class="box warn">
+          <h3>Что собирается без вас</h3>
+          <ul>
+            <li>время входа и сколько вы читали;</li>
+            <li>устройство, браузер, адрес IP;</li>
+            <li>что дочитали, а что пролистали;</li>
+            <li>геометка внутри файла фотографии;</li>
+            <li>контакты из телефона, если разрешили доступ.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="step" hidden>
+      <div class="box big">Из этого складывается <b>профиль</b> — модель
+      человека, по которой ему подбирают ленту, рекламу и иногда цену. Вы
+      этот профиль не видите и не подтверждали, но он существует.</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">Этикет</span>
+  <h2>Сетевой этикет: одна мысль и шесть следствий</h2>
+  <p class="big">По ту сторону экрана — человек. Его время и его личные
+  границы стоят ровно столько же, сколько ваши.</p>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="two">
+        <div class="box bad">
+          <h3>Так не надо</h3>
+          <ul>
+            <li>ПИСАТЬ ЦЕЛИКОМ ЗАГЛАВНЫМИ — это крик;</li>
+            <li>дробить одну мысль на десяток сообщений;</li>
+            <li>выносить личную переписку в общий чат;</li>
+            <li>обсуждать при всех дела одного участника;</li>
+            <li>отвечать «сам погугли»;</li>
+            <li>звонить без предупреждения поздно вечером.</li>
+          </ul>
+        </div>
+        <div class="box good">
+          <h3>Так надо</h3>
+          <ul>
+            <li>тема у письма и подпись в конце;</li>
+            <li>спросить, прежде чем переслать чужое;</li>
+            <li>отвечать по существу вопроса;</li>
+            <li>в незнакомом чате сначала прочитать правила;</li>
+            <li>предупредить, если ответите не сразу.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="step" hidden>
+      <div class="box warn big">И отдельно, потому что про это забывают:
+      <b>переписка — это документ.</b> Сообщение сохраняют, пересылают и
+      показывают через год. Написанное в сети живёт дольше сказанного
+      вслух.</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">Подлинность</span>
+  <h2>Подделка подешевела, проверка — нет</h2>
+  <p>Раньше подделать фотографию было работой, видео — работой большой
+  студии, а чужой голос по телефону — почти невозможным. Сегодня всё это
+  делается за минуты, и дальше будет только дешевле.</p>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="box">Но самая частая подделка — не хитрая. Это
+      <b>настоящая фотография под чужой подписью</b>: старый снимок из
+      другой страны выдают за сегодняшнее событие. Её и проверять проще
+      всего.</div>
+    </div>
+    <div class="step" hidden>
+      <div class="box big">Паниковать не нужно, нужен <b>порядок
+      действий</b>. Он короткий и работает для текста, фотографии и видео
+      одинаково — три вопроса на следующем слайде.</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Три вопроса к любой публикации</h2>
+  <div class="three">
+    <div class="box">
+      <h3>Кто?</h3>
+      <p>Есть ли автор и редакция. Есть ли адрес и телефон. Кому на самом
+      деле принадлежит сайт.</p>
+    </div>
+    <div class="box">
+      <h3>Когда?</h3>
+      <p>Есть ли дата. Не старше ли она события, о котором речь. Не
+      всплыла ли новость повторно через год.</p>
+    </div>
+    <div class="box">
+      <h3>Откуда?</h3>
+      <p>Есть ли первоисточник и открывается ли ссылка на него. Или это
+      пересказ пересказа.</p>
+    </div>
+  </div>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="box warn big">Ни один из трёх вопросов не требует знать
+      тему. Поэтому они и работают: проверить публикацию про медицину
+      можно, не будучи врачом.</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">Кто</span>
+  <h2>Адрес читают справа налево</h2>
+  <p>Это то же правило, что на первом уроке: <b>владельцу принадлежат
+  последние две части доменного имени</b>. Всё, что левее, дописал он сам —
+  и дописать может что угодно.</p>
+  <div class="host"><span class="left">ria.ru.</span><span class="own">info-portal.com</span></div>
+  <div class="steps">
+    <div class="step" hidden>
+      <p>Здесь публикует <b>info-portal.com</b>. Буквы <code>ria.ru</code>
+      слева стоят для того, чтобы ссылку пролистали не глядя. Настоящий
+      адрес выглядел бы наоборот: имя бренда в самом конце, а слева —
+      раздел сайта.</p>
+    </div>
+    <div class="step" hidden>
+      <div class="two">
+        <div class="box bad">
+          <h3>Подделки</h3>
+          <ul>
+            <li><code>ria.ru.info-portal.com</code></li>
+            <li><code>ria-ru.news-today.net</code></li>
+            <li><code>news.tass-ru.daily-feed.org</code></li>
+          </ul>
+        </div>
+        <div class="box good">
+          <h3>Настоящие</h3>
+          <ul>
+            <li><code>ria.ru/2026/09/...</code></li>
+            <li><code>news.tass.ru/...</code></li>
+            <li><code>www.kommersant.ru/...</code></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">Откуда</span>
+  <h2>Пять публикаций — это не пять подтверждений</h2>
+  <table>
+    <tr><th>время</th><th>кто</th><th>со ссылкой на</th></tr>
+    <tr><td>10:00</td><td>канал «А»</td><td>своего корреспондента на месте</td></tr>
+    <tr><td>10:20</td><td>сайт «Б»</td><td>«А»</td></tr>
+    <tr><td>10:35</td><td>канал «В»</td><td>«Б»</td></tr>
+    <tr><td>11:00</td><td>газета «Г»</td><td>пресс-службу администрации</td></tr>
+    <tr><td>11:10</td><td>канал «Д»</td><td>«А»</td></tr>
+  </table>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="chain">
+        <span class="n">публикаций: 5</span><span class="ar">→</span>
+        <span class="n" style="border-color:#137a41;border-width:2px">независимых источников: 2</span>
+      </div>
+      <p><b>Независим тот, кто не ссылается на другую публикацию из этого
+      же списка.</b> Здесь это «А» и «Г». Остальные пересказывают — их
+      проверка ровно та же, что у «А».</p>
+    </div>
+    <div class="step" hidden>
+      <div class="box warn big">Отсюда правило, которое стоит запомнить
+      дословно: <b>«об этом пишут все» — не довод. «Первоисточник один» —
+      довод.</b></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">Фото и видео</span>
+  <h2>Обратный поиск по изображению</h2>
+  <p>Поисковику отдают не слова, а саму картинку — он находит, где ещё она
+  встречалась и с какими подписями. Занимает десять секунд.</p>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="live">
+        <h3>Показать вживую</h3>
+        <p>Правой кнопкой по картинке → «Найти это изображение», или
+        перетащить файл в строку поиска по картинкам. Взять снимок из любой
+        свежей рассылки и посмотреть, с какого года он в сети.</p>
+      </div>
+    </div>
+    <div class="step" hidden>
+      <table>
+        <tr><th>что показал поиск</th><th>что из этого следует</th></tr>
+        <tr><td>картинка есть в сети с 2019 года</td>
+            <td>снимок настоящий, но старый и не отсюда</td></tr>
+        <tr><td>год назад иллюстрировала другое событие</td>
+            <td>переиспользована, подпись к ней не относится</td></tr>
+        <tr><td>нигде больше не встречается</td>
+            <td><b>ничего не следует</b> — проверять другим способом</td></tr>
+      </table>
+    </div>
+    <div class="step" hidden>
+      <div class="box warn">Поиск <b>не доказывает</b> ни подлинности, ни
+      подделки. Он показывает историю изображения — выводы делает человек.
+      Это важно: инструмент, которому приписывают лишнее, опаснее
+      отсутствия инструмента.</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Не верить сразу, если…</h2>
+  <ul>
+    <li>нет автора и нет даты;</li>
+    <li>заголовок кричит и требует <b>срочно переслать всем</b>;</li>
+    <li>вместо первоисточника — «учёные доказали»;</li>
+    <li>много восклицательных знаков и слов заглавными;</li>
+    <li>все ссылки внутри ведут на такие же перепечатки;</li>
+    <li>сайт появился месяц назад и не говорит, кто его делает.</li>
+  </ul>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="box big">Требование <b>срочности</b> — самый надёжный
+      признак. Правде некуда торопиться; торопят тогда, когда не хотят,
+      чтобы вы проверяли.</div>
+    </div>
+    <div class="step" hidden>
+      <div class="box warn">И последнее. <b>Переслав непроверенное, вы сами
+      становитесь источником</b> — для тех, кто доверяет вам. Если уже
+      переслали и выяснилось, что неправда, напишите об этом там же, где
+      переслали. Это не стыдно: так поступают и нормальные редакции.</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Теперь практикум</h2>
+  <p>Шесть вопросов темы: сетевой этикет, что соцсеть знает о человеке без
+  его публикаций, признаки недостоверной публикации, настоящий владелец
+  сайта, число независимых источников, вывод из проверки фотографии.</p>
+  <div class="steps">
+    <div class="step" hidden>
+      <ul>
+        <li>Ответ везде — <b>целое число</b>: сколько примеров подходит или
+        номер варианта.</li>
+        <li>Ошибся — вопрос вернётся с другим примером, попыток сколько
+        угодно.</li>
+        <li>Закрыто 6 из 6 — «5», 5 — «4», 3 или 4 — «3».</li>
+        <li>В конце — код работы и кнопка «Сдать работу».</li>
+      </ul>
+    </div>
+    <div class="step" hidden>
+      <div class="box">В следующий раз — <b>государственные электронные
+      сервисы и услуги, открытые образовательные ресурсы</b>: то, где
+      подлинность источника уже не вопрос вкуса, а вопрос документа.</div>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<div class="bar">
+  <button id="prev">← Назад</button>
+  <button id="step" class="primary">Раскрыть</button>
+  <button id="next">Вперёд →</button>
+  <span class="count" id="count"></span>
+  <div class="spacer"></div>
+  <span class="ai-mark" style="color:#5c6070;font-size:13px">Материалы подготовлены с использованием технологий искусственного интеллекта.</span>
+  <span class="keys"><kbd>Пробел</kbd> раскрыть и дальше ·
+    <kbd>←</kbd> <kbd>→</kbd> слайды</span>
+</div>
+</div>
+
+<script>
+const slides = [...document.querySelectorAll(".slide")];
+let cur = 0, shown = 0;
+
+const stepsOf = i => [...slides[i].querySelectorAll(".steps > .step")];
+
+function show(i){
+  slides[cur].classList.remove("on");
+  cur = Math.max(0, Math.min(slides.length - 1, i));
+  slides[cur].classList.add("on");
+  shown = stepsOf(cur).filter(el => !el.hidden).length;
+  document.getElementById("stage").scrollTop = 0;
+  sync();
+}
+
+function sync(){
+  const total = stepsOf(cur).length;
+  document.getElementById("count").textContent = `${cur + 1} / ${slides.length}`;
+  document.getElementById("prev").disabled = cur === 0;
+  document.getElementById("next").disabled = cur === slides.length - 1;
+  const b = document.getElementById("step");
+  b.hidden = total === 0;
+  if (total){
+    b.disabled = shown >= total;
+    b.textContent = shown >= total ? "Всё открыто"
+                  : shown === 0 ? "Раскрыть" : `Дальше (${shown}/${total})`;
+  }
+}
+
+function nextStep(){
+  const steps = stepsOf(cur);
+  if (shown >= steps.length) return false;
+  steps[shown].hidden = false;
+  steps[shown].scrollIntoView({block: "nearest", behavior: "smooth"});
+  shown++;
+  sync();
+  return true;
+}
+
+document.getElementById("prev").addEventListener("click", () => show(cur - 1));
+document.getElementById("next").addEventListener("click", () => show(cur + 1));
+document.getElementById("step").addEventListener("click", nextStep);
+
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowRight" || e.key === "PageDown"){ show(cur + 1); }
+  else if (e.key === "ArrowLeft" || e.key === "PageUp"){ show(cur - 1); }
+  else if (e.key === " " || e.key === "Enter"){
+    if (!nextStep()) show(cur + 1);
+  } else return;
+  e.preventDefault();
+});
+
+show(0);
+</script>
+</body>
+</html>

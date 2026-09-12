@@ -140,6 +140,7 @@ summary{cursor:pointer;color:var(--accent);font-weight:600}
      3 «строка или число»       — input() даёт строку; «+» и «*» у строк; ошибки
      4 «логический тип»         — True/False, True == 1, bool(), цепочки сравнений
      5 «случайные числа»        — границы randint/randrange/random(), число значений
+         (choice со списком убран: списков класс не проходил)
 
    Ответ у задач 0–4 — ровно то, что напечатает Python. Считает его JavaScript
    по правилам Python (округление вниз у //, полуцелые к чётному у round, «.0»
@@ -568,7 +569,7 @@ function m4(rng) {
 
 /* ------------------------------------------------------- тип 5: случайные числа */
 function m5(rng) {
-  const kind = tPick(rng, ['randint', 'randrange', 'step', 'random', 'dice', 'choice', 'mult']);
+  const kind = tPick(rng, ['randint', 'randrange', 'step', 'random', 'dice', 'mult']);
   let expr, vals, meta, how;
   if (kind === 'randint') {
     const a = tRand(rng, 1, 20), b = a + tRand(rng, 2, 12);
@@ -607,14 +608,6 @@ function m5(rng) {
     meta = { kind };
     how = 'Два кубика: каждый от 1 до 6, сумма от 2 до 12 — 11 разных значений (хотя '
         + 'исходов 36 и выпадают они не одинаково часто).';
-  } else if (kind === 'choice') {
-    const n = tRand(rng, 3, 6);
-    const set = new Set();
-    while (set.size < n) set.add(tRand(rng, 1, 40));
-    vals = [...set];
-    expr = 'choice([' + vals.join(', ') + '])';
-    meta = { kind, list: vals };
-    how = 'choice выбирает один из элементов списка — любой из ' + n + '.';
   } else {
     const a = tRand(rng, 1, 5), b = a + tRand(rng, 2, 6), c = tPick(rng, [2, 3, 5, 10]);
     expr = 'randint(' + a + ', ' + b + ') * ' + c;

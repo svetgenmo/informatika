@@ -1,0 +1,1885 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Задание 3 ЕГЭ: базы данных — практикум</title>
+<meta name="description" content="Практикум 11 класса (углублённый) по заданию 3 ЕГЭ: поиск и сортировка в базе данных из трёх таблиц. Шесть задач, по одной на тип; к каждой страница выдаёт свой файл .xlsx, решают в электронных таблицах.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E11%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{margin:0;padding:20px 16px 60px;font:17px/1.55 "Segoe UI",system-ui,sans-serif}
+.wrap{max-width:860px;margin:0 auto}
+h1{font-size:23px;margin:0 0 4px}
+h2{font-size:18px;margin:0 0 10px}
+h3{font-size:16px;margin:18px 0 6px}
+.sub{color:var(--muted);font-size:15px;margin:0 0 18px}
+code{font-family:Consolas,"Cascadia Mono",monospace;background:var(--card);
+     border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:15px}
+pre{font-family:Consolas,"Cascadia Mono",monospace;background:#1e2430;color:#e7ecf5;
+    padding:14px 16px;border-radius:10px;font-size:14.5px;line-height:1.5;
+    overflow-x:auto;margin:12px 0;white-space:pre}
+pre code{background:none;border:0;padding:0;color:inherit;font-size:inherit}
+.intro{border:1px solid var(--line);border-radius:12px;background:var(--card);
+       padding:14px 18px;margin-bottom:18px}
+.intro dl{margin:0}
+.intro dt{font-weight:700;margin-top:10px}
+.intro dt:first-child{margin-top:0}
+.intro dd{margin:2px 0 0}
+details{margin-top:12px}
+summary{cursor:pointer;font-weight:600;color:var(--accent)}
+.progress{border:2px solid var(--accent);border-radius:12px;padding:12px 16px;
+          background:#fff;margin-bottom:18px}
+.ptop{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.ptop h2{margin:0}
+.sp{flex:1 1 auto}
+.score{display:flex;align-items:baseline;gap:10px;color:var(--muted);font-size:15px}
+.score b{font:700 34px/1 "Segoe UI",system-ui,sans-serif;color:var(--ink);
+         min-width:40px;text-align:center;border:2px solid var(--line);
+         border-radius:8px;padding:2px 8px}
+.m5 b{color:var(--ok);border-color:var(--ok-line)}
+.m4 b{color:var(--accent);border-color:#a9c6e8}
+.m3 b{color:#8a5a00;border-color:var(--hi-line)}
+.m2 b{color:var(--err);border-color:var(--err-line)}
+.types{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);border-radius:20px;padding:4px 12px;
+      font-size:14px;color:var(--muted);background:var(--card)}
+.chip .n{font-weight:700;margin-right:6px}
+.chip.done{border-color:var(--ok-line);background:var(--ok-bg);color:var(--ok);
+           font-weight:600}
+.chip.miss{border-color:var(--err-line);background:var(--err-bg);color:var(--err)}
+.chip.cur{border-color:var(--accent);color:var(--accent);font-weight:600}
+.card{border:1px solid var(--line);border-radius:12px;padding:16px 18px;
+      background:#fff;margin-bottom:14px}
+.card.ok{border-color:var(--ok-line);background:var(--ok-bg)}
+.card.err{border-color:var(--err-line);background:var(--err-bg)}
+.tag{font-size:13px;color:var(--muted);margin:0 0 6px}
+.q p{margin:0 0 8px}
+.q .ask{margin-top:12px;padding:10px 14px;border-left:4px solid var(--accent);
+        background:var(--card);border-radius:0 8px 8px 0}
+.heads{margin:12px 0;font-size:14px;color:var(--muted)}
+.heads .head{padding:4px 0;border-top:1px solid var(--line)}
+.heads .head b{color:var(--ink)}
+.file{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:14px 0 4px;
+      padding:12px 14px;border:1px dashed var(--accent);border-radius:10px;
+      background:#f4f8fd}
+.file .hint{font-size:14px;color:var(--muted)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+input[type=text]{font:16px/1 Consolas,monospace;padding:10px 12px;border-radius:8px;
+                 border:1px solid var(--line);width:100%;max-width:300px}
+button{font:600 15px/1 inherit;padding:11px 16px;border-radius:9px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);color:var(--muted)}
+.verdict{margin-top:10px;font-size:15.5px;font-weight:600}
+.verdict.ok{color:var(--ok)}
+.verdict.err{color:var(--err)}
+.why{margin-top:8px;font-size:15.5px;font-weight:400}
+.why-list{margin:6px 0 0;padding-left:22px}
+.why-list li{margin:4px 0}
+.note{border:1px solid var(--hi-line);background:var(--hi-bg);border-radius:10px;
+      padding:11px 15px;margin:12px 0;font-size:15.5px}
+.stats{color:var(--muted);font-size:14px}
+table.steps{border-collapse:collapse;margin:10px 0;font-size:15px;width:100%}
+table.steps th,table.steps td{border:1px solid var(--line);padding:7px 10px;
+                              text-align:left;vertical-align:top}
+table.steps th{background:var(--card)}
+.ai-mark{margin:34px auto 0;max-width:860px;padding-top:12px;
+         border-top:1px solid var(--line);color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Задание 3 ЕГЭ: поиск в базе данных</h1>
+<p class="sub">11 класс, углублённый уровень. Практикум: три связанные таблицы,
+вопрос про сумму по нескольким условиям. Решаем в электронных таблицах.</p>
+
+<div class="intro">
+  <dl>
+    <dt>Что нужно сделать</dt>
+    <dd>Шесть задач, по одной на тип. К каждой страница выдаёт <b>свой файл
+        базы</b> — скачай его, открой в электронных таблицах, посчитай и введи
+        число. У соседа файл другой: списать нечего.</dd>
+    <dt>Баллы</dt>
+    <dd>По баллу за задачу, всего <b>6</b>: шесть — «5», пять — «4»,
+        четыре — «3».</dd>
+    <dt>Ошибся — не страшно</dt>
+    <dd>Разбор появится сразу, а задача вернётся в конец очереди с новой базой:
+        балл можно доработать. Отдельно видно, сколько сделано
+        <b>с первой попытки</b>.</dd>
+    <dt>Ответ</dt>
+    <dd>Целое число, без пробелов, без «кг» и «руб.»: <code>1630</code>, а не
+        <code>1 630 кг</code>. Сверка знак в знак, как на КЕГЭ.</dd>
+  </dl>
+  <details open>
+    <summary>Как решать в электронных таблицах — четыре шага</summary>
+    <table class="steps">
+      <tr><th>шаг</th><th>что делаем</th></tr>
+      <tr><td>1</td><td>Читаем вопрос и выписываем <b>условия</b>: что суммируем,
+        какой тип операции, какие даты, какое место, какой товар.</td></tr>
+      <tr><td>2</td><td>На листах-справочниках находим <b>коды</b>: артикулы
+        нужных товаров («Товар») и ID нужных магазинов («Магазин»). Улица
+        видна только в столбце «Адрес» — поля «Улица» в базе нет.</td></tr>
+      <tr><td>3</td><td>В таблице движения делаем <b>вспомогательный столбец</b>
+        со значением строки: масса, выручка или просто количество.</td></tr>
+      <tr><td>4</td><td>Складываем нужные строки — <code>СУММЕСЛИМН</code> или
+        автофильтр плюс <code>ПРОМЕЖУТОЧНЫЕ.ИТОГИ</code>.</td></tr>
+    </table>
+    <p class="stats">Подробные формулы — в подсказке внизу страницы.</p>
+  </details>
+</div>
+
+<div class="progress">
+  <div class="ptop">
+    <h2>Задачи</h2>
+    <span class="sp"></span>
+    <div class="score" id="scorebox">
+      <span>баллов <b id="pts">0</b> из <span id="max">6</span>, это</span><b id="mark">2</b>
+    </div>
+  </div>
+  <div class="types" id="types"></div>
+  <p class="stats" id="stats"></p>
+</div>
+
+<div id="area"></div>
+
+<details class="help">
+  <summary>Подсказка: формулы для задания 3</summary>
+
+  <h3>Вспомогательный столбец — главное действие</h3>
+  <p>Связать три таблицы значит подтянуть к каждой строке движения то, чего в
+     ней нет: характеристику товара и место магазина. Делает это
+     <code>ВПР</code> (в англоязычной версии <code>VLOOKUP</code>). Пусть в
+     строке 2 таблицы движения артикул стоит в столбце <code>D</code>, а
+     количество упаковок — в <code>E</code>:</p>
+<pre>= E2 * ВПР(D2; Товар.$A:$F; 5; 0)     масса строки в граммах
+= E2 * ВПР(D2; Товар.$A:$F; 6; 0)     выручка строки в рублях
+= ВПР(C2; Магазин.$A:$C; 2; 0)        район магазина
+= ВПР(C2; Магазин.$A:$C; 3; 0)        адрес магазина</pre>
+  <p>Третий довод <code>ВПР</code> — <b>номер столбца</b> в справочнике, считая
+     от первого столбца диапазона. Четвёртый — <code>0</code>: точное
+     совпадение, иначе формула тихо возьмёт соседнюю строку.</p>
+  <p class="stats">В Excel лист отделяется восклицательным знаком:
+     <code>Товар!$A:$F</code>. В LibreOffice — точкой: <code>Товар.$A:$F</code>.
+     Всё остальное одинаково.</p>
+
+  <h3>Сложить по условиям</h3>
+<pre>= СУММЕСЛИМН(G:G;
+      F:F; "Поступление";
+      B:B; "&gt;=" &amp; ДАТА(2025;9;5);
+      B:B; "&lt;=" &amp; ДАТА(2025;9;19);
+      H:H; "Прибрежная*")</pre>
+  <p>Первый диапазон — <b>что складываем</b>, дальше парами «где искать» и
+     «что искать». Условие по дате пишется через <code>ДАТА</code>, а не
+     строкой: в файле лежат настоящие даты. Звёздочка в
+     <code>"Прибрежная*"</code> заменяет любой хвост — так ловится адрес с
+     номером дома.</p>
+
+  <h3>Если проще фильтром</h3>
+  <p>Выделить шапку, включить автофильтр, оставить нужные строки — и внизу
+     столбца поставить <code>=ПРОМЕЖУТОЧНЫЕ.ИТОГИ(109; G:G)</code>: она
+     считает только видимое. Способ нагляднее, но руками легко забыть одно из
+     условий — на экзамене чаще ошибаются именно так.</p>
+
+  <h3>Три ловушки, на которых теряют балл</h3>
+  <ul>
+    <li><b>Тип операции.</b> «Поступило» — это только <code>Поступление</code>,
+      «продано» — только <code>Продажа</code>. А «на сколько увеличилось» —
+      <b>разность</b>: поступило минус продано, и складывать их нельзя.</li>
+    <li><b>Единицы.</b> Если в справочнике граммы или миллилитры, а спрашивают
+      килограммы или литры — делим на 1000. Если там уже «Вес упаковки, кг» —
+      не делим ни на что.</li>
+    <li><b>Где цена.</b> Обычно она в справочнике товара, но иногда лежит
+      прямо в строке движения: цена менялась по дням. Сначала посмотри, есть
+      ли столбец с ценой в таблице движения.</li>
+  </ul>
+
+  <details>
+    <summary>Второй способ: то же самое на Python</summary>
+    <p>Пользоваться им на уроке не обязательно — это запасной ход и мостик к
+       заданиям 9, 26 и 27, где данных больше и таблицы уже не тянут.
+       Сначала сохранить нужные листы: <b>Файл → Сохранить как → Текст CSV</b>,
+       разделитель <code>;</code>, кодировка UTF-8 — по файлу на лист.</p>
+<pre>import csv
+
+def read(name):
+    return list(csv.DictReader(open(name, encoding='utf-8'), delimiter=';'))
+
+tovar = {r['Артикул']: r for r in read('Товар.csv')}
+magaz = {r['ID магазина']: r for r in read('Магазин.csv')}
+
+def dat(s):                       # '05.09.2025' -&gt; (2025, 9, 5)
+    d, m, y = s.split('.')
+    return (int(y), int(m), int(d))
+
+итог = 0
+for r in read('Движение.csv'):
+    t = tovar[r['Артикул']]
+    m = magaz[r['ID магазина']]
+    if (r['Тип операции'] == 'Поступление'
+            and t['Наименование товара'].startswith('Зефир')
+            and 'Прибрежная' in m['Адрес']
+            and (2025, 9, 5) &lt;= dat(r['Дата']) &lt;= (2025, 9, 19)):
+        итог += int(r['Количество упаковок, шт']) * int(t['Количество в упаковке'])
+
+print(итог / 1000)</pre>
+    <p>Даты сравниваются <b>кортежами</b> <code>(год, месяц, день)</code>:
+       строки <code>'05.09.2025'</code> сравнивать нельзя — по ним сентябрь
+       окажется раньше мая.</p>
+  </details>
+</details>
+
+</div>
+
+<script>
+/* ==== ЗАДАЧИ: вставлено gen.py, руками не править ==== */
+/* Задание 3 ЕГЭ: поиск и сортировка в базах данных.
+
+   ЕДИНСТВЕННЫЙ ИСТОЧНИК ЗАДАЧ для практикума, домашней работы и
+   проверочной. В html вписывается скриптом gen.py --sync между маркерами —
+   руками страницы не править (см. generator-single-source).
+
+   Особенность темы: задача — это не текст, а ФАЙЛ. Страница сама собирает
+   базу данных из трёх листов, отдаёт её ученику книгой .xlsx и знает
+   правильный ответ, потому что сама эту базу и построила. Решают в
+   электронных таблицах (решение Светы, 12.09.2026): фильтр или
+   СУММЕСЛИМН плюс ВПР. Python показывается вторым способом, без
+   обязательства им пользоваться.
+
+   ЗАМЕР (12.09.2026). Разобраны одиннадцать задач с kompege.ru — демо 2027,
+   основная волна, резерв и пересдача 2026, ЕГКР и апробации: № 31500, 31349,
+   31211, 31141, 28924, 27758, 27615, 27269, 27268, 28689, 25342. Файлы 3.ods
+   скачаны и пересчитаны: все одиннадцать ключей сошлись знак в знак, так что
+   формы ниже сняты с данных, а не с пересказа условия.
+
+     таблиц            всегда три: операции + справочник товара + справочник места
+     строк в главной   2 273 – 9 721 (медиана около 6 500)
+     дат в периоде     8–12 штук на месяц: поставки идут не каждый день
+     мест              16–19 магазинов (складов), 3 района, улицы повторяются
+     позиций           60–67 наименований, 3 отдела (категории)
+     количество        поступления круглые (кратны 20: 180, 200, 300, 400),
+                       продажи произвольные (19, 258, 357)
+     где цена          обычно в справочнике товара, но в № 31349 — В СТРОКЕ
+                       ДВИЖЕНИЯ: цена менялась по дням
+     единицы           грамм и мл (перевод в кг и литры) либо сразу кг и литр
+                       дробной упаковкой (0,2 кг), либо готовый «вес упаковки»
+     что спрашивают    масса/объём полученного, выручка от продажи, прирост
+                       остатка (поступило минус продано), сумма за билеты
+     как фильтруют     район ИЛИ улица, интервал дат включительно, «все виды X»,
+                       перечень наименований, у театра — автор плюс жанр плюс
+                       маска тарифа, иногда с исключением («кроме новогодних»)
+
+   Шесть типов — по одному на каждую форму вопроса из замера:
+     0 «масса поступившего»   кг или литры: количество × объём упаковки,
+                              магазины отбираются ПО УЛИЦЕ (31500, 31211)
+     1 «выручка от продажи»   рубли, цена из справочника товара, отбор по
+                              району и перечню наименований (31141)
+     2 «цена в движении»      рубли, но цена лежит в строке движения и
+                              меняется по дням (31349)
+     3 «прирост упаковок»     поступило минус продано по одному товару (27758,
+                              27615)
+     4 «склад: отгружено»     килограммы готовым весом упаковки, операция
+                              «Отгрузка», даты в формате дд.мм.гг (28689)
+     5 «театр: выручка»       три категории билетов и таблица тарифов,
+                              отбор по автору и жанру (28924, 27269, 27268, 25342)
+
+   Единственность ответа здесь не в том, что он один (он всегда один), а в
+   том, что его нельзя получить, пропустив условие: генератор сам считает
+   ответ при каждом отброшенном фильтре и требует, чтобы все эти числа были
+   ДРУГИМИ. Иначе задача не проверяет ни период, ни тип операции, ни перевод
+   единиц (см. single-answer-guarantee, checking-without-a-key).
+
+   Поля task.meta описывают задачу машинно — по ним gen.py --selftest
+   пересчитывает ответ независимо: собирает ту же книгу, открывает её
+   настоящим LibreOffice и считает по листам заново. */
+
+/* ----------------------------------------------------------- случайность */
+
+function tRng(seed) {
+  let s = (seed >>> 0) || 1;
+  return function () {
+    s ^= s << 13; s >>>= 0;
+    s ^= s >> 17;
+    s ^= s << 5;  s >>>= 0;
+    return s / 4294967296;
+  };
+}
+
+function tRand(rng, a, b) { return a + Math.floor(rng() * (b - a + 1)); }
+function tPick(rng, arr) { return arr[tRand(rng, 0, arr.length - 1)]; }
+
+function tShuffle(rng, arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = tRand(rng, 0, i);
+    const t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+function tSample(rng, arr, n) { return tShuffle(rng, arr).slice(0, n); }
+
+function tPl(n, one, few, many) {
+  const h = n % 100, t = n % 10;
+  if (h >= 11 && h <= 14) return many;
+  if (t === 1) return one;
+  if (t >= 2 && t <= 4) return few;
+  return many;
+}
+
+function esc2(s) {
+  return String(s).replace(/[&<>"]/g, c =>
+    ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+}
+
+/* Число в том виде, в каком его ждут от ученика: целое без разделителей.
+   Дробные ответы в этой теме — брак генератора, а не вариант нормы. */
+function bNum(x) {
+  const r = Math.round(x * 1000) / 1000;
+  return Number.isInteger(r) ? String(r) : String(r);
+}
+
+/* ------------------------------------------------------------------ даты */
+
+const B_MONTHS = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
+                  'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+const B_MONTHS_N = ['январь', 'февраль', 'март', 'апрель', 'май', 'июнь',
+                    'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь'];
+
+/* Дата в книге — настоящая дата, а не текст: на ЕГЭ в файле лежит date-value,
+   и сравнение «с 5 по 19» в таблицах работает само. Здесь дата — это число
+   дней от 1899-12-30, как принято в электронных таблицах. */
+function bSerial(y, m, d) {
+  return Math.round(Date.UTC(y, m - 1, d) / 86400000) + 25569;
+}
+function bDayOf(serial, y, m) { return serial - bSerial(y, m, 1) + 1; }
+
+/* ------------------------------------------------- книга .xlsx без библиотек
+
+   Книга Excel — это zip с несколькими XML внутри, и собрать её можно голыми
+   руками: TextEncoder есть и в браузере, и в node, а складывать файлы в
+   архив можно без сжатия (метод 0) — тогда из всего zip нужен только CRC32.
+   Одна реализация на обе среды, как с разбором docx: второй копии на питоне
+   не заводим, gen.py --selftest гоняет ЭТУ же функцию в node.
+
+   Даты кладутся числом с форматом ДД.ММ.ГГГГ — ровно как в файлах ФИПИ:
+   тогда в таблицах работает сравнение «с 5 по 19», а не сравнение строк. */
+
+const B_CRC = (function () {
+  const t = new Int32Array(256);
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+    t[n] = c;
+  }
+  return t;
+})();
+
+function bCrc32(buf) {
+  let c = -1;
+  for (let i = 0; i < buf.length; i++) c = B_CRC[(c ^ buf[i]) & 0xFF] ^ (c >>> 8);
+  return (c ^ -1) >>> 0;
+}
+
+function bXmlEsc(s) {
+  return String(s).replace(/[&<>"']/g, c =>
+    ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;'}[c]));
+}
+
+function bColName(i) {
+  let s = '';
+  i++;
+  while (i > 0) { const r = (i - 1) % 26; s = String.fromCharCode(65 + r) + s; i = (i - r - 1) / 26; }
+  return s;
+}
+
+/* Лист: {name, widths:[...], rows:[[ячейка, ...], ...]}
+   Ячейка: число, строка или {d: серийная_дата}. */
+function bSheetXml(sheet) {
+  const out = ['<?xml version="1.0" encoding="UTF-8" standalone="yes"?>',
+    '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'];
+  if (sheet.widths && sheet.widths.length) {
+    out.push('<cols>');
+    sheet.widths.forEach(function (w, i) {
+      out.push('<col min="' + (i + 1) + '" max="' + (i + 1) + '" width="' + w + '" customWidth="1"/>');
+    });
+    out.push('</cols>');
+  }
+  out.push('<sheetData>');
+  for (let r = 0; r < sheet.rows.length; r++) {
+    const row = sheet.rows[r];
+    const parts = ['<row r="' + (r + 1) + '">'];
+    for (let c = 0; c < row.length; c++) {
+      const v = row[c];
+      if (v === null || v === undefined || v === '') continue;
+      const ref = bColName(c) + (r + 1);
+      if (typeof v === 'object' && v.d !== undefined) {
+        parts.push('<c r="' + ref + '" s="1"><v>' + v.d + '</v></c>');
+      } else if (typeof v === 'object' && v.d2 !== undefined) {
+        parts.push('<c r="' + ref + '" s="3"><v>' + v.d2 + '</v></c>');
+      } else if (typeof v === 'number') {
+        parts.push('<c r="' + ref + '"><v>' + v + '</v></c>');
+      } else {
+        const style = r === 0 ? ' s="2"' : '';
+        parts.push('<c r="' + ref + '"' + style + ' t="inlineStr"><is><t xml:space="preserve">' +
+                   bXmlEsc(v) + '</t></is></c>');
+      }
+    }
+    parts.push('</row>');
+    out.push(parts.join(''));
+  }
+  out.push('</sheetData></worksheet>');
+  return out.join('');
+}
+
+const B_STYLES =
+  '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+  '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
+  '<numFmts count="2"><numFmt numFmtId="164" formatCode="DD.MM.YYYY"/>' +
+  '<numFmt numFmtId="165" formatCode="DD.MM.YY"/></numFmts>' +
+  '<fonts count="2"><font><sz val="11"/><name val="Calibri"/></font>' +
+  '<font><b/><sz val="11"/><name val="Calibri"/></font></fonts>' +
+  '<fills count="2"><fill><patternFill patternType="none"/></fill>' +
+  '<fill><patternFill patternType="gray125"/></fill></fills>' +
+  '<borders count="1"><border/></borders>' +
+  '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
+  '<cellXfs count="4">' +
+  '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>' +
+  '<xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>' +
+  '<xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/>' +
+  '<xf numFmtId="165" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>' +
+  '</cellXfs><cellStyles count="1">' +
+  '<cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';
+
+function bXlsx(sheets) {
+  const enc = new TextEncoder();
+  const files = [];
+  const add = (name, text) => files.push({name: name, data: enc.encode(text)});
+
+  const sheetRefs = sheets.map((s, i) =>
+    '<sheet name="' + bXmlEsc(s.name) + '" sheetId="' + (i + 1) + '" r:id="rId' + (i + 1) + '"/>').join('');
+  const relRefs = sheets.map((s, i) =>
+    '<Relationship Id="rId' + (i + 1) + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet' + (i + 1) + '.xml"/>').join('');
+  const overrides = sheets.map((s, i) =>
+    '<Override PartName="/xl/worksheets/sheet' + (i + 1) + '.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>').join('');
+
+  add('[Content_Types].xml',
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
+    '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +
+    '<Default Extension="xml" ContentType="application/xml"/>' +
+    '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>' +
+    overrides +
+    '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>' +
+    '</Types>');
+  add('_rels/.rels',
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+    '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>' +
+    '</Relationships>');
+  add('xl/workbook.xml',
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" ' +
+    'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">' +
+    '<sheets>' + sheetRefs + '</sheets></workbook>');
+  add('xl/_rels/workbook.xml.rels',
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+    relRefs +
+    '<Relationship Id="rId' + (sheets.length + 1) + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>' +
+    '</Relationships>');
+  add('xl/styles.xml', B_STYLES);
+  sheets.forEach((s, i) => add('xl/worksheets/sheet' + (i + 1) + '.xml', bSheetXml(s)));
+
+  /* Складываем zip без сжатия: код короче любого подключения библиотеки,
+     а лишний вес книге не мешает — она живёт минуту. */
+  let total = 0;
+  const central = [];
+  const chunks = [];
+  let offset = 0;
+  for (const f of files) {
+    const name = enc.encode(f.name);
+    const crc = bCrc32(f.data);
+    const local = new Uint8Array(30 + name.length);
+    const dv = new DataView(local.buffer);
+    dv.setUint32(0, 0x04034b50, true);
+    dv.setUint16(4, 20, true);
+    dv.setUint16(6, 0x0800, true);          /* имена в UTF-8 */
+    dv.setUint16(8, 0, true);               /* без сжатия */
+    dv.setUint32(14, crc, true);
+    dv.setUint32(18, f.data.length, true);
+    dv.setUint32(22, f.data.length, true);
+    dv.setUint16(26, name.length, true);
+    local.set(name, 30);
+    chunks.push(local, f.data);
+    total += local.length + f.data.length;
+
+    const cd = new Uint8Array(46 + name.length);
+    const cv = new DataView(cd.buffer);
+    cv.setUint32(0, 0x02014b50, true);
+    cv.setUint16(4, 20, true);
+    cv.setUint16(6, 20, true);
+    cv.setUint16(8, 0x0800, true);
+    cv.setUint16(10, 0, true);
+    cv.setUint32(16, crc, true);
+    cv.setUint32(20, f.data.length, true);
+    cv.setUint32(24, f.data.length, true);
+    cv.setUint16(28, name.length, true);
+    cv.setUint32(42, offset, true);
+    cd.set(name, 46);
+    central.push(cd);
+    offset += local.length + f.data.length;
+  }
+  let cdSize = 0;
+  for (const c of central) cdSize += c.length;
+  const end = new Uint8Array(22);
+  const ev = new DataView(end.buffer);
+  ev.setUint32(0, 0x06054b50, true);
+  ev.setUint16(8, files.length, true);
+  ev.setUint16(10, files.length, true);
+  ev.setUint32(12, cdSize, true);
+  ev.setUint32(16, total, true);
+
+  const out = new Uint8Array(total + cdSize + 22);
+  let p = 0;
+  for (const c of chunks) { out.set(c, p); p += c.length; }
+  for (const c of central) { out.set(c, p); p += c.length; }
+  out.set(end, p);
+  return out;
+}
+
+/* --------------------------------------------------------- справочники
+
+   Три товарных набора — по числу способов, которыми на ЕГЭ устроены
+   единицы измерения:
+
+     sweets   граммы и штуки          масса переводится в килограммы
+     house    миллилитры и штуки      объём переводится в литры
+     dairy    килограммы и литры      упаковка дробная (0,2 кг), перевода нет
+
+   Вид товара — ПЕРВОЕ слово наименования: «Зефир в шоколаде», «Зефир
+   ванильный» — это «все виды зефира». Поэтому первое слово внутри набора
+   обязано быть уникальным: иначе «все виды геля» перестанут быть одним
+   ответом. Проверяет это gen.py --selftest.
+
+   Запись вида: 'Зефир|зефира: в шоколаде, ванильный' — именительный для
+   таблицы, родительный для вопроса. */
+
+const B_GOODS = {
+  sweets: {
+    base: 'Кондитерские изделия',
+    about: 'о поставках конфет и печенья в магазины районов города',
+    units: [['грамм', [100, 200, 250, 300, 400, 500, 800, 1000]], ['шт', [1, 2, 4, 6, 10]]],
+    depts: [
+      {name: 'Конфеты', gen: 'конфет', kinds: [
+        'Зефир|зефира: в шоколаде, ванильный, воздушный, лимонный',
+        'Мармелад|мармелада: лимонный, апельсиновый, ягодный',
+        'Пастила|пастилы: яблочная, клюквенная, сливочная',
+        'Карамель|карамели: молочная, фруктовая, леденцовая',
+        'Ирис|ириса: сливочный, шоколадный',
+        'Драже|драже: арахисовое, изюм в шоколаде, морские камешки',
+        'Батончик|батончиков: соевый, вафельный, ореховый',
+        'Шоколад|шоколада: молочный, горький, пористый, с фундуком'
+      ]},
+      {name: 'Печенье', gen: 'печенья', kinds: [
+        'Печенье|печенья: овсяное, сахарное, песочное, курабье',
+        'Вафли|вафель: сливочные, шоколадные, лимонные',
+        'Пряники|пряников: мятные, медовые, шоколадные',
+        'Крекер|крекера: солёный, с кунжутом',
+        'Галеты|галет: для завтрака, походные',
+        'Сушки|сушек: ванильные, маковые',
+        'Рулет|рулетов: бисквитный, творожный',
+        'Кекс|кексов: столичный, творожный'
+      ]},
+      {name: 'Чай и кофе', gen: 'чая и кофе', kinds: [
+        'Чай|чая: чёрный листовой, зелёный листовой, фруктовый, с бергамотом',
+        'Кофе|кофе: молотый, растворимый, в зёрнах',
+        'Какао|какао: классическое, с молоком',
+        'Цикорий|цикория: растворимый, с шиповником',
+        'Сахар|сахара: песок, рафинад',
+        'Мёд|мёда: липовый, гречишный'
+      ]}
+    ]
+  },
+  house: {
+    base: 'Бытовая химия',
+    about: 'о поставках бытовой химии и хозяйственных товаров в магазины районов города',
+    units: [['мл', [100, 250, 500, 750, 1000, 2000]], ['шт', [1, 2, 4, 6, 10]]],
+    depts: [
+      {name: 'Бытовая химия', gen: 'бытовой химии', kinds: [
+        'Гель|геля: для стирки, для посуды, для чистки плит',
+        'Ополаскиватель|ополаскивателя для белья: лавандовый, хвойный, цитрусовый',
+        'Отбеливатель|отбеливателя: кислородный, для белого белья',
+        'Порошок|порошка стирального: для белого, для цветного, детский',
+        'Пятновыводитель|пятновыводителя: для ковров, для стирки',
+        'Средство|средства: для мытья полов, для мытья окон, для сантехники',
+        'Спрей|спрея: для дезинфекции, для мебели',
+        'Кондиционер|кондиционера: для белья, для утюга'
+      ]},
+      {name: 'Гигиена', gen: 'товаров для гигиены', kinds: [
+        'Шампунь|шампуня: для сухих волос, для жирных волос, детский',
+        'Мыло|мыла: жидкое, туалетное, детское',
+        'Салфетки|салфеток: бумажные сервировочные, влажные, косметические',
+        'Полотенца|полотенец бумажных: в рулоне, листовые',
+        'Бумага|бумаги туалетной: двухслойная, однослойная',
+        'Паста|пасты зубной: мятная, отбеливающая',
+        'Щётка|щёток зубных: мягкая, средней жёсткости',
+        'Диски|дисков ватных: классические, детские'
+      ]},
+      {name: 'Хозяйственные товары', gen: 'хозяйственных товаров', kinds: [
+        'Губка|губок: для посуды, банная',
+        'Мешки|мешков для мусора: 30 литров, 60 литров',
+        'Перчатки|перчаток: резиновые, хозяйственные',
+        'Тряпка|тряпок: для пола, из микрофибры',
+        'Фольга|фольги: пищевая, для запекания',
+        'Пакеты|пакетов: фасовочные, с ручками',
+        'Плёнка|плёнки пищевой: в рулоне, в коробке',
+        'Ёршик|ёршиков: для посуды, для бутылок',
+        'Швабра|швабр: с отжимом, плоская',
+        'Ведро|вёдер: хозяйственное, с крышкой'
+      ]}
+    ]
+  },
+  dairy: {
+    base: 'Продукты',
+    about: 'о поставках продуктов в магазины районов города',
+    units: [['литр', [0.2, 0.25, 0.5, 1, 2]], ['кг', [0.2, 0.25, 0.4, 0.5, 1]]],
+    depts: [
+      {name: 'Молочное', gen: 'молочных продуктов', kinds: [
+        'Молоко|молока: ультрапастеризованное, безлактозное, топлёное, детское',
+        'Кефир|кефира: классический, обезжиренный, детский',
+        'Сливки|сливок: питьевые, для взбивания',
+        'Йогурт|йогурта: питьевой, густой, детский',
+        'Ряженка|ряженки: классическая, детская',
+        'Простокваша|простокваши: классическая, с мёдом',
+        'Айран|айрана: классический, с зеленью'
+      ]},
+      {name: 'Творог и сыры', gen: 'творога и сыров', kinds: [
+        'Сметана|сметаны: деревенская, классическая, лёгкая',
+        'Творог|творога: рассыпчатый, мягкий, обезжиренный',
+        'Сыр|сыра: полутвёрдый, мягкий, плавленый, копчёный',
+        'Масло|масла: сливочное, топлёное',
+        'Масса|массы творожной: ванильная, с изюмом',
+        'Брынза|брынзы: классическая, малосольная',
+        'Моцарелла|моцареллы: в рассоле, для салата'
+      ]},
+      {name: 'Гастрономия', gen: 'гастрономии', kinds: [
+        'Колбаса|колбасы: варёная, полукопчёная, сыровяленая',
+        'Сосиски|сосисок: молочные, сливочные, детские',
+        'Ветчина|ветчины: классическая, из индейки',
+        'Паштет|паштета: печёночный, куриный',
+        'Грудинка|грудинки: копчёная, варёно-копчёная',
+        'Бекон|бекона: нарезка, кусок',
+        'Пельмени|пельменей: домашние, сибирские',
+        'Котлеты|котлет: куриные, говяжьи',
+        'Фарш|фарша: говяжий, куриный'
+      ]}
+    ]
+  }
+};
+
+/* Районы и улицы. Формы «Центрального района» и «на улице Лермонтова»
+   лежат готовыми: механическое склонение на улицах ломается («Прибрежная»
+   и «Лермонтова» склоняются по-разному), а ошибка в падеже в условии
+   выглядит как ошибка генератора. */
+const B_DISTRICTS = [
+  {name: 'Центральный', gen: 'Центрального'},
+  {name: 'Промышленный', gen: 'Промышленного'},
+  {name: 'Заречный', gen: 'Заречного'},
+  {name: 'Северный', gen: 'Северного'},
+  {name: 'Западный', gen: 'Западного'},
+  {name: 'Октябрьский', gen: 'Октябрьского'},
+  {name: 'Первомайский', gen: 'Первомайского'},
+  {name: 'Приморский', gen: 'Приморского'}
+];
+
+const B_STREETS = [
+  {addr: 'Прибрежная', where: 'на Прибрежной улице'},
+  {addr: 'Заводская', where: 'на Заводской улице'},
+  {addr: 'Колхозная', where: 'на Колхозной улице'},
+  {addr: 'Тургеневская', where: 'на Тургеневской улице'},
+  {addr: 'Луговая', where: 'на Луговой улице'},
+  {addr: 'ул. Лермонтова', where: 'на улице Лермонтова'},
+  {addr: 'ул. Гагарина', where: 'на улице Гагарина'},
+  {addr: 'ул. Металлургов', where: 'на улице Металлургов'},
+  {addr: 'ул. Достоевского', where: 'на улице Достоевского'},
+  {addr: 'просп. Мира', where: 'на проспекте Мира'},
+  {addr: 'просп. Строителей', where: 'на проспекте Строителей'}
+];
+
+/* ---------------------------------------------------- сборка базы магазинов */
+
+function bKinds(set) {
+  const out = [];
+  B_GOODS[set].depts.forEach(function (d) {
+    d.kinds.forEach(function (line) {
+      const head = line.slice(0, line.indexOf(':'));
+      const tail = line.slice(line.indexOf(':') + 1);
+      const bar = head.indexOf('|');
+      const word = head.slice(0, bar);            /* «Зефир» — первое слово */
+      const full = head.slice(bar + 1);           /* «зефира» и хвост вида */
+      out.push({
+        dept: d.name, deptGen: d.gen, word: word, gen: full,
+        names: tail.split(',').map(s => word + ' ' + s.trim())
+      });
+    });
+  });
+  return out;
+}
+
+/* Товары: артикул, отдел, наименование, единица, сколько в упаковке, цена.
+   Упаковки в граммах и миллилитрах кратны 50, а поступления — двадцати
+   (так и на ЕГЭ: 180, 200, 300, 400). Произведение тогда кратно 1000, и
+   килограммы с литрами выходят целыми — как в ключах всех разобранных
+   задач. */
+function bGoods(rng, set) {
+  const kinds = bKinds(set);
+  const units = B_GOODS[set].units;
+  const goods = [];
+  kinds.forEach(function (k) {
+    const u = tPick(rng, units);
+    k.names.forEach(function (name) {
+      goods.push({
+        art: goods.length + 1, dept: k.dept, deptGen: k.deptGen, name: name,
+        kind: k.word, kindGen: k.gen, unit: u[0], pack: tPick(rng, u[1]),
+        price: tRand(rng, 4, 40) * 5 + tPick(rng, [-1, 0, 4, 9])
+      });
+    });
+  });
+  return goods;
+}
+
+/* Магазины: 16–19 штук, три района, у каждого свои улицы. Улица нужна
+   отдельной осью: на ЕГЭ по ней отбирают так же часто, как по району, и
+   магазины одной улицы могут оказаться в разных районах. */
+function bShops(rng, n) {
+  const dis = tSample(rng, B_DISTRICTS, 3);
+  const streets = tSample(rng, B_STREETS, 6);
+  const shops = [];
+  for (let i = 0; i < n; i++) {
+    const st = streets[i % streets.length];
+    shops.push({
+      id: 'M' + (i + 1), district: dis[i % 3], street: st,
+      addr: st.addr + ', ' + tRand(rng, 1, 60)
+    });
+  }
+  return tShuffle(rng, shops).map(function (s, i) {
+    return {id: 'M' + (i + 1), district: s.district, street: s.street, addr: s.addr};
+  });
+}
+
+/* Движение товаров. День выбирается не каждый — в замере дат 8–12 на месяц;
+   поступления круглые, продажи произвольные и никогда не больше того, что
+   уже завезли: иначе «прирост остатка» уходит в минус, а такого на ЕГЭ нет.
+
+   Товары, вокруг которых построен вопрос (arts), попадают в каждый день и
+   каждый магазин обязательно: тогда подходящих записей заведомо десятки,
+   а не две случайные. */
+function bMoves(rng, goods, shops, opt) {
+  const dates = tShuffle(rng, opt.dates).slice(0, opt.dayCount).sort((a, b) => a - b);
+  const must = opt.must || [];
+  const out = opt.opOut || 'Продажа';
+  const moves = [];
+  dates.forEach(function (date) {
+    shops.forEach(function (shop) {
+      /* Товары вопроса завозят не в каждый магазин и не каждый день — иначе
+         подходящих строк выходит под две сотни, а в разобранных задачах их
+         17 (№ 31500) и 60 (№ 31141). Доля 0,4 даёт ту же полосу. */
+      const hit = must.filter(() => rng() < 0.4);
+      const extra = tSample(rng, goods, tRand(rng, 10, 16)).map(g => g.art);
+      const arts = Array.from(new Set(hit.concat(extra)));
+      arts.forEach(function (art) {
+        const got = tRand(rng, 1, opt.lots || 18) * 20;
+        moves.push({date: date, shop: shop.id, art: art, qty: got, op: 'Поступление'});
+        if (rng() < 0.85) {
+          const sold = Math.max(1, got - tRand(rng, 0, Math.floor(got * 0.4)));
+          moves.push({date: date, shop: shop.id, art: art, qty: sold, op: out});
+        }
+      });
+    });
+  });
+  moves.sort(function (a, b) {
+    return a.date - b.date || a.shop.localeCompare(b.shop) || a.art - b.art ||
+           (a.op === b.op ? 0 : a.op === 'Поступление' ? -1 : 1);
+  });
+  moves.forEach((mv, i) => { mv.id = i + 1; });
+  return moves;
+}
+
+/* Книга из трёх листов — ровно в том порядке и с теми заголовками, что в
+   файлах ФИПИ: сначала движение, потом справочник товара, потом справочник
+   места. Цена в движении появляется только там, где она по условию меняется
+   (тип 2): лишний столбец подсказал бы, где искать. */
+function bShopBook(db) {
+  const movHead = ['ID операции', 'Дата', 'ID магазина', 'Артикул',
+                   'Количество упаковок, шт', 'Тип операции'];
+  if (db.priceInMove) movHead.push('Цена за упаковку, руб.');
+  const mov = [movHead];
+  db.moves.forEach(function (m) {
+    const row = [m.id, {d: m.date}, m.shop, m.art, m.qty, m.op];
+    if (db.priceInMove) row.push(m.price);
+    mov.push(row);
+  });
+  const goodsHead = ['Артикул', 'Отдел', 'Наименование товара', 'Ед_изм',
+                     'Количество в упаковке'];
+  if (!db.priceInMove) goodsHead.push('Цена за упаковку');
+  const goods = [goodsHead];
+  db.goods.forEach(function (g) {
+    const row = [g.art, g.dept, g.name, g.unit, g.pack];
+    if (!db.priceInMove) row.push(g.price);
+    goods.push(row);
+  });
+  const shops = [['ID магазина', 'Район', 'Адрес']];
+  db.shops.forEach(s => shops.push([s.id, s.district.name, s.addr]));
+  return [
+    {name: 'Движение_товаров', widths: [12, 12, 13, 10, 24, 14, 20], rows: mov},
+    {name: 'Товар', widths: [10, 18, 34, 10, 22, 18], rows: goods},
+    {name: 'Магазин', widths: [13, 16, 28], rows: shops}
+  ];
+}
+
+/* Одна база на задачу. Набор товаров, месяц и состав магазинов выбираются
+   случайно; must — артикулы, вокруг которых будет вопрос. */
+function bShopDb(rng, set, opt) {
+  opt = opt || {};
+  const goods = bGoods(rng, set);
+  const shops = bShops(rng, tRand(rng, 16, 19));
+  const month = opt.month || tRand(rng, 2, 11);
+  const year = opt.year || 2025;
+  const last = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  const first = bSerial(year, month, 1);
+  const span = opt.span || last;               /* сколько дней охватывает файл */
+  const dates = [];
+  for (let d = 0; d < span; d++) dates.push(first + d);
+  const db = {
+    set: set, base: B_GOODS[set].base, about: B_GOODS[set].about,
+    goods: goods, shops: shops, year: year, month: month,
+    first: first, last: first + span - 1,
+    priceInMove: !!opt.priceInMove
+  };
+  /* Что спрашивают, выбирается ДО сборки движения: артикулы вопроса должны
+     попасть в каждый день и каждый магазин, иначе подходящих записей
+     окажется две штуки и задача выродится. */
+  db.pick = opt.choose ? opt.choose(db) : {};
+  db.moves = bMoves(rng, goods, shops, {
+    dates: dates, opOut: opt.opOut,
+    dayCount: opt.dayCount || tRand(rng, 8, 12),
+    must: db.pick.must || opt.must || []
+  });
+  /* Цена в строке движения меняется по дням: у каждого дня свой прайс,
+     плюс-минус десятая часть от базовой цены товара (№ 31349). */
+  if (db.priceInMove) {
+    const price = {};
+    db.moves.forEach(function (m) {
+      const key = m.date + ':' + m.art;
+      if (price[key] === undefined) {
+        const base = goods[m.art - 1].price;
+        price[key] = Math.max(5, base + tRand(rng, -1, 1) * tRand(rng, 1, Math.max(1, Math.round(base / 10))));
+      }
+      m.price = price[key];
+    });
+  }
+  return db;
+}
+
+/* ----------------------------------------------------------- склады
+
+   Второй сюжет магазинного типа (№ 28689): вместо магазинов — склады,
+   вместо продажи — отгрузка, а вес упаковки лежит в справочнике уже в
+   килограммах, так что переводить единицы не нужно. Отбирают там по
+   КАТЕГОРИИ целиком («все специи»), а не по виду товара, и период
+   переходит через границу месяца — обе детали из замера. */
+
+const B_WARE = {
+  base: 'Агрохолдинг',
+  about: 'о работе складов продовольственных товаров',
+  cats: [
+    {name: 'овощи', gen: 'овощей', items: ['огурцы короткоплодные', 'томаты розовые',
+      'картофель мытый', 'морковь мытая', 'свёкла столовая', 'капуста белокочанная',
+      'лук репчатый', 'перец сладкий']},
+    {name: 'фрукты', gen: 'фруктов', items: ['яблоки сезонные', 'груши конференц',
+      'бананы', 'апельсины', 'мандарины', 'лимоны', 'виноград кишмиш']},
+    {name: 'крупы', gen: 'круп', items: ['гречка ядрица', 'рис круглозёрный',
+      'пшено шлифованное', 'хлопья овсяные', 'перловка', 'булгур', 'кускус']},
+    {name: 'специи', gen: 'специй', items: ['перец чёрный горошек', 'паприка молотая',
+      'куркума', 'кориандр молотый', 'лист лавровый', 'смесь прованских трав',
+      'тмин', 'имбирь молотый']},
+    {name: 'консервы', gen: 'консервов', items: ['горошек зелёный', 'кукуруза сладкая',
+      'фасоль в томате', 'огурцы маринованные', 'томаты в собственном соку',
+      'шпроты', 'сайра']},
+    {name: 'заморозка', gen: 'замороженных продуктов', items: ['смесь овощная',
+      'брокколи', 'шпинат резаный', 'вишня без косточки', 'клубника', 'картофель фри']}
+  ],
+  districts: ['Подпорожский', 'Всеволожский', 'Приозерский', 'Лужский',
+              'Кингисеппский', 'Тосненский', 'Выборгский', 'Гатчинский'],
+  towns: ['пос. Токари', 'пос. Янино', 'пос. Сосново', 'пос. Мшинская',
+          'дер. Вистино', 'пос. Ульяновка', 'пос. Рощино', 'пос. Сиверский',
+          'дер. Юкки', 'пос. Мга', 'пос. Дружная Горка', 'дер. Малое Карлино',
+          'пос. Аннино', 'дер. Кипень', 'пос. Вырица', 'пос. Тайцы']
+};
+
+function bWareGoods(rng) {
+  const goods = [];
+  B_WARE.cats.forEach(function (c) {
+    c.items.forEach(function (name) {
+      goods.push({
+        art: goods.length + 1, dept: c.name, deptGen: c.gen, name: name,
+        kind: name.split(' ')[0], kindGen: name.split(' ')[0].toLowerCase(),
+        unit: 'кг', pack: tPick(rng, [5, 10, 15, 20, 25, 30, 40, 50]),
+        price: tRand(rng, 10, 90) * 10
+      });
+    });
+  });
+  return goods;
+}
+
+function bWareShops(rng, n) {
+  const dis = tSample(rng, B_WARE.districts, 4);
+  const towns = tSample(rng, B_WARE.towns, n);
+  const out = [];
+  for (let i = 0; i < n; i++) {
+    out.push({
+      id: 'П' + (i + 1),
+      district: {name: dis[i % 4], gen: dis[i % 4].slice(0, -2) + 'ого'},
+      addr: towns[i], street: null
+    });
+  }
+  return out;
+}
+
+function bWareBook(db) {
+  const mov = [['ID операции', 'Дата', 'Артикул', 'ID склада',
+                'Количество, упаковок', 'Тип операции']];
+  db.moves.forEach(m => mov.push([m.id, {d2: m.date}, m.art, m.shop, m.qty, m.op]));
+  const goods = [['Артикул', 'Категория', 'Название', 'Вес упаковки, кг']];
+  db.goods.forEach(g => goods.push([g.art, g.dept, g.name, g.pack]));
+  const shops = [['ID склада', 'Район', 'Населенный пункт']];
+  db.shops.forEach(s => shops.push([s.id, s.district.name, s.addr]));
+  return [
+    {name: 'Движение', widths: [12, 12, 10, 12, 21, 14], rows: mov},
+    {name: 'Продукты', widths: [10, 14, 30, 18], rows: goods},
+    {name: 'Склады', widths: [11, 16, 22], rows: shops}
+  ];
+}
+
+function bWareDb(rng, opt) {
+  opt = opt || {};
+  const goods = bWareGoods(rng);
+  const shops = bWareShops(rng, tRand(rng, 14, 17));
+  const year = 2024;
+  const month = tRand(rng, 3, 10);
+  const first = bSerial(year, month, tRand(rng, 8, 20));
+  const dates = [];
+  for (let d = 0; d < 50; d++) dates.push(first + d);
+  const db = {
+    set: 'ware', base: B_WARE.base, about: B_WARE.about,
+    goods: goods, shops: shops, year: year, month: month,
+    first: first, last: first + 49, ware: true
+  };
+  db.pick = opt.choose ? opt.choose(db) : {};
+  db.moves = bMoves(rng, goods, shops, {
+    dates: dates, dayCount: tRand(rng, 12, 16), opOut: 'Отгрузка', lots: 6,
+    must: db.pick.must || opt.must || []
+  });
+  return db;
+}
+
+/* ------------------------------------------------------------------ театр
+
+   Четыре из одиннадцати разобранных задач — театральные, и устроены они
+   иначе: считается не товар, а БИЛЕТЫ трёх категорий, у каждой своя цена в
+   таблице тарифов. Тариф — это «время суток плюс сезон», и вопрос вырезает
+   из пятнадцати тарифов подмножество: два конкретных, весь сезон, всё время
+   суток или «сезон кроме новогодних праздников». */
+
+/* Автор записан в двух падежах: в таблице стоит именительный, а в вопросе
+   он всегда родительный — «на все комедии А.П. Чехова». Механически из
+   фамилии его не получить (Шоу и Гольдони не склоняются вовсе), поэтому
+   форма лежит готовой. */
+const B_PLAYS = [
+  ['У. Шекспир|У. Шекспира', 'трагедия', ['Ромео и Джульетта', 'Гамлет', 'Отелло',
+    'Король Лир', 'Макбет']],
+  ['У. Шекспир|У. Шекспира', 'комедия', ['Много шума из ничего', 'Двенадцатая ночь',
+    'Укрощение строптивой', 'Сон в летнюю ночь', 'Комедия ошибок']],
+  ['А.П. Чехов|А.П. Чехова', 'комедия', ['Вишнёвый сад', 'Чайка', 'Медведь',
+    'Предложение', 'Юбилей']],
+  ['А.П. Чехов|А.П. Чехова', 'драма', ['Дядя Ваня', 'Три сестры', 'Иванов']],
+  ['Н.В. Гоголь|Н.В. Гоголя', 'комедия', ['Ревизор', 'Женитьба', 'Игроки']],
+  ['А.Н. Островский|А.Н. Островского', 'комедия', ['Свои люди — сочтёмся',
+    'Волки и овцы', 'На всякого мудреца довольно простоты']],
+  ['А.Н. Островский|А.Н. Островского', 'драма', ['Гроза', 'Бесприданница', 'Лес']],
+  ['Ж.-Б. Мольер|Ж.-Б. Мольера', 'комедия', ['Тартюф', 'Мещанин во дворянстве',
+    'Скупой', 'Мнимый больной', 'Дон Жуан']],
+  ['Ф. Шиллер|Ф. Шиллера', 'трагедия', ['Разбойники', 'Коварство и любовь',
+    'Мария Стюарт', 'Дон Карлос']],
+  ['А.С. Пушкин|А.С. Пушкина', 'трагедия', ['Борис Годунов', 'Моцарт и Сальери',
+    'Каменный гость', 'Скупой рыцарь']],
+  ['Р. Роллан|Р. Роллана', 'трагедия', ['Дантон', 'Робеспьер', 'Волки',
+    'Четырнадцатое июля']],
+  ['К. Гольдони|К. Гольдони', 'комедия', ['Слуга двух господ', 'Трактирщица',
+    'Хитрая вдова']],
+  ['Б. Шоу|Б. Шоу', 'комедия', ['Пигмалион', 'Профессия миссис Уоррен',
+    'Дом, где разбиваются сердца']],
+  ['Э. Ростан|Э. Ростана', 'комедия', ['Сирано де Бержерак', 'Романтики',
+    'Принцесса Грёза']],
+  ['М. Метерлинк|М. Метерлинка', 'драма', ['Синяя птица', 'Слепые', 'Монна Ванна']]
+];
+
+const B_REGISSEURS = ['Иванов А.В.', 'Сливкина К.В.', 'Хвостов К.Ф.', 'Мезенцев П.П.',
+  'Ларина О.Д.', 'Гущин В.Н.', 'Кравцов И.С.', 'Белых Н.Н.', 'Тимофеева Е.А.',
+  'Ромашов Д.К.'];
+
+const B_TIMES = [
+  {word: 'утренний', gen: 'утреннего', all: 'всем тарифам утренних спектаклей'},
+  {word: 'дневной', gen: 'дневного', all: 'всем тарифам дневных спектаклей'},
+  {word: 'вечерний', gen: 'вечернего', all: 'всем тарифам вечерних спектаклей'}
+];
+const B_SEASONS = [
+  {name: 'летний сезон', gen: 'летнего сезона'},
+  {name: 'осенний сезон', gen: 'осеннего сезона'},
+  {name: 'зимний сезон', gen: 'зимнего сезона'},
+  {name: 'весенний сезон', gen: 'весеннего сезона'},
+  {name: 'сезон новогодних праздников', gen: 'сезона новогодних праздников'}
+];
+
+/* Категории билетов: как их называют в вопросе и какие столбцы складывают. */
+const B_TICKETS = [
+  {ask: 'за взрослые билеты (без льгот)', cols: [0]},
+  {ask: 'за льготные билеты для взрослых', cols: [1]},
+  {ask: 'за взрослые билеты (включая льготные)', cols: [0, 1]},
+  {ask: 'за детские билеты', cols: [2]}
+];
+
+function bTheatreDb(rng, opt) {
+  opt = opt || {};
+  const plays = [];
+  B_PLAYS.forEach(function (p) {
+    const author = p[0].split('|')[0], authorGen = p[0].split('|')[1];
+    p[2].forEach(function (name) {
+      plays.push({code: 'П' + (plays.length + 1), name: name, author: author,
+                  authorGen: authorGen, genre: p[1],
+                  director: tPick(rng, B_REGISSEURS)});
+    });
+  });
+  const tariffs = [];
+  B_TIMES.forEach(function (t) {
+    B_SEASONS.forEach(function (s) {
+      const adult = tRand(rng, 4, 12) * 50;
+      tariffs.push({
+        id: tariffs.length + 1, time: t, season: s.name, seasonGen: s.gen,
+        name: t.word + ' спектакль ' + s.name,
+        cost: [adult, Math.round(adult * 0.6 / 50) * 50, Math.round(adult * 0.4 / 50) * 50]
+      });
+    });
+  });
+  const year = 2025;
+  const sales = [];
+  const n = tRand(rng, 4200, 6400);
+  for (let i = 0; i < n; i++) {
+    const play = tPick(rng, plays);
+    const tar = tPick(rng, tariffs);
+    const buy = bSerial(year, tRand(rng, 1, 12), tRand(rng, 1, 28));
+    sales.push({
+      id: i + 1, buy: buy,
+      time: ('0' + tRand(rng, 9, 21)).slice(-2) + ':' + ('0' + tRand(rng, 0, 59)).slice(-2),
+      play: play.code, tariff: tar.id, show: buy + tRand(rng, 3, 90),
+      cnt: [tRand(rng, 0, 6), tRand(rng, 0, 3), tRand(rng, 0, 3)]
+    });
+  }
+  sales.sort((a, b) => a.buy - b.buy || a.id - b.id);
+  sales.forEach((s, i) => { s.id = i + 1; });
+  return {set: 'theatre', base: 'Театр', plays: plays, tariffs: tariffs,
+          sales: sales, year: year, theatre: true};
+}
+
+function bTheatreBook(db) {
+  const sales = [['ID операции', 'Дата покупки', 'Время покупки', 'Код спектакля',
+                  'ID тарифа', 'Дата спектакля',
+                  'Количество купленных билетов для взрослых (без льгот)',
+                  'Количество купленных льготных билетов для взрослых',
+                  'Количество купленных детских билетов']];
+  db.sales.forEach(s => sales.push([s.id, {d: s.buy}, s.time, s.play, s.tariff,
+                                    {d: s.show}, s.cnt[0], s.cnt[1], s.cnt[2]]));
+  const prices = [['ID тарифа', 'Название тарифа',
+                   'Стоимость билета для взрослого (без льгот), руб.',
+                   'Стоимость льготного билета для взрослого, руб.',
+                   'Стоимость детского билета, руб.']];
+  db.tariffs.forEach(t => prices.push([t.id, t.name, t.cost[0], t.cost[1], t.cost[2]]));
+  const plays = [['Код спектакля', 'Название', 'Автор', 'Режиссёр', 'Жанр']];
+  db.plays.forEach(p => plays.push([p.code, p.name, p.author, p.director, p.genre]));
+  return [
+    {name: 'Продажа_билетов', widths: [12, 14, 14, 15, 11, 15, 26, 26, 24], rows: sales},
+    {name: 'Цены', widths: [10, 34, 26, 26, 24], rows: prices},
+    {name: 'Спектакли', widths: [15, 30, 18, 16, 14], rows: plays}
+  ];
+}
+
+/* Книга по любой базе — одной дверью, чтобы страницам не различать сюжеты. */
+function bBook(db) {
+  if (db.theatre) return bTheatreBook(db);
+  if (db.ware) return bWareBook(db);
+  return bShopBook(db);
+}
+
+/* ------------------------------------------------------- счёт по базе
+
+   Один проход по таблице движения с набором фильтров — этим считается и
+   правильный ответ, и все «наивные» ответы, которые получаются, если
+   какое-то условие проглядеть. Задача идёт в работу, только когда наивные
+   ответы отличаются от верного: иначе она не проверяет то, ради чего
+   написана. */
+
+function bMoveSum(db, sel) {
+  let sum = 0, rows = 0;
+  for (const m of db.moves) {
+    if (sel.ops && sel.ops.indexOf(m.op) < 0) continue;
+    if (sel.arts && !sel.arts.has(m.art)) continue;
+    if (sel.shops && !sel.shops.has(m.shop)) continue;
+    if (sel.from !== undefined && sel.from !== null && (m.date < sel.from || m.date > sel.to)) continue;
+    rows++;
+    sum += sel.value(m, db.goods[m.art - 1]);
+  }
+  return {sum: sum, rows: rows};
+}
+
+function bDrop(sel, what) {
+  const s = Object.assign({}, sel);
+  if (what === 'date') { s.from = null; s.to = null; }
+  if (what === 'op') s.ops = null;
+  if (what === 'place') s.shops = null;
+  if (what === 'kind') s.arts = null;
+  return s;
+}
+
+/* Годится ли задача: ответ целый, положительный, набран не на двух записях —
+   и ни один пропущенный фильтр не даёт того же числа. */
+function bGuard(db, sel, full, extra) {
+  if (!Number.isInteger(full.sum) || full.sum <= 0) return false;
+  /* Полоса подходящих строк снята с экзамена: 17 в № 31500, 60 в № 31141.
+     Меньше десятка — задача решается пересчётом глазами, за сотню — она уже
+     не похожа на экзаменационную. */
+  if (full.rows < 12 || full.rows > 80) return false;
+  /* Отбрасываем только те фильтры, которые в задаче есть: у «прироста» тип
+     операции не фильтр, а знак слагаемого, и выбрасывать там нечего. */
+  const what = ['date', 'place', 'kind'];
+  if (sel.ops) what.push('op');
+  const naive = what.map(w => bMoveSum(db, bDrop(sel, w)).sum);
+  if (extra) extra.forEach(v => naive.push(v));
+  return naive.every(v => v !== full.sum);
+}
+
+/* ------------------------------------------------------------ даты словами */
+
+function bYmd(serial) {
+  const t = new Date((serial - 25569) * 86400000);
+  return [t.getUTCFullYear(), t.getUTCMonth() + 1, t.getUTCDate()];
+}
+function bDate(serial) {
+  const [y, m, d] = bYmd(serial);
+  return ('0' + d).slice(-2) + '.' + ('0' + m).slice(-2) + '.' + y;
+}
+function bDate2(serial) {
+  const [y, m, d] = bYmd(serial);
+  return ('0' + d).slice(-2) + '.' + ('0' + m).slice(-2) + '.' + String(y).slice(-2);
+}
+function bDayMonth(serial) {
+  const [, m, d] = bYmd(serial);
+  return d + ' ' + B_MONTHS[m - 1];
+}
+
+/* Период вопроса. Границы нарочно не совпадают с днями поставок: на ЕГЭ
+   спрашивают «с 5 по 19», а записи в файле лежат за 6, 9, 12 число. Часть
+   дат обязана остаться снаружи — иначе фильтр по дате ничего не отсекает. */
+function bPeriod(rng, db) {
+  const dates = Array.from(new Set(db.moves.map(m => m.date))).sort((a, b) => a - b);
+  const k = dates.length;
+  const i = tRand(rng, 0, Math.max(0, k - 6));
+  const j = Math.min(k - 2, i + tRand(rng, 2, 5));
+  const from = dates[i] - tRand(rng, 0, 2);
+  const to = dates[j] + tRand(rng, 0, 2);
+  return {from: Math.max(db.first, from), to: Math.min(db.last, to)};
+}
+
+/* ------------------------------------------------------- текст условия */
+
+function bHeads(db) {
+  return bBook(db).map(function (s) {
+    return '<div class="head"><b>' + esc2(s.name) + '</b>: ' +
+           s.rows[0].map(esc2).join(' · ') + '</div>';
+  }).join('');
+}
+
+function bShopIntro(db) {
+  const [, m] = bYmd(db.first);
+  const when = 'в течение ' + B_MONTHS[m - 1] + ' ' + db.year + ' г.';
+  const qty = 'Количество упаковок, шт';
+  return '<p>В файле приведён фрагмент базы данных «' + esc2(db.base) + '» ' +
+    esc2(db.about) + '. База данных состоит из трёх таблиц.</p>' +
+    '<p>Таблица «Движение товаров» содержит записи о поставках товаров в магазины ' +
+    when + ', а также информацию о проданных товарах. Поле <b>Тип операции</b> ' +
+    'содержит значение <b>Поступление</b> или <b>Продажа</b>, а в соответствующее ' +
+    'поле <b>' + qty + '</b> внесена информация о том, сколько упаковок товара ' +
+    'поступило в магазин или было продано в течение дня.</p>' +
+    '<p>Таблица «Товар» содержит информацию об основных характеристиках каждого ' +
+    'товара, таблица «Магазин» — о местонахождении магазинов.</p>';
+}
+
+function bWareIntro(db) {
+  return '<p>В файле приведён фрагмент базы данных «' + esc2(db.base) + '» ' +
+    esc2(db.about) + '. База данных состоит из трёх таблиц.</p>' +
+    '<p>Таблица «Движение» содержит данные о движении товаров: дату и тип операции ' +
+    '(<b>Поступление</b> или <b>Отгрузка</b>), артикул товара, идентификатор склада ' +
+    'и количество полученных или отгруженных упаковок. Таблица «Продукты» содержит ' +
+    'информацию о товарах: категория, название и вес одной упаковки в килограммах. ' +
+    'Таблица «Склады» содержит информацию о складах: район и населённый пункт.</p>';
+}
+
+function bTheatreIntro() {
+  return '<p>В файле приведён фрагмент базы данных «Театр» о продаже билетов в театр ' +
+    'города. База данных состоит из трёх таблиц.</p>' +
+    '<p>Таблица «Продажа_билетов» содержит записи о покупках: дату и время покупки, ' +
+    'код спектакля, идентификатор тарифа, дату спектакля и количество купленных ' +
+    'билетов трёх видов — для взрослых без льгот, льготных для взрослых и детских. ' +
+    'Таблица «Цены» содержит стоимость билета каждого вида по каждому тарифу, ' +
+    'таблица «Спектакли» — название, автора, режиссёра и жанр каждого спектакля.</p>';
+}
+
+function bAsk(text) {
+  return '<p class="ask">Используя информацию из приведённой базы данных, определите' +
+         (text.charAt(0) === ',' ? '' : ' ') + text +
+         '<br>В ответе запишите только число.</p>';
+}
+
+/* Перечисление «зефира, мармелада и пастилы». */
+function bList(items) {
+  if (items.length === 1) return items[0];
+  return items.slice(0, -1).join(', ') + ' и ' + items[items.length - 1];
+}
+
+/* ------------------------------------------------------------------ типы */
+
+const B_TYPES = [
+  'масса поступившего',
+  'выручка от продажи',
+  'цена в движении',
+  'прирост упаковок',
+  'склад: отгружено',
+  'театр: выручка'
+];
+
+/* 0. Масса или объём поступившего. Магазины отбираются ПО УЛИЦЕ, а не по
+   району: на ЕГЭ так спрашивают в половине задач, и адрес приходится читать
+   глазами, а не фильтровать по готовому полю (№ 31500, 31211). */
+function bType0(rng) {
+  for (let tries = 0; tries < 30; tries++) {
+    const set = tPick(rng, ['sweets', 'house']);
+    const unit = set === 'sweets' ? 'грамм' : 'мл';
+    let kind = null, street = null, shopIds = null;
+    const db = bShopDb(rng, set, {choose: function (db) {
+      const byKind = {};
+      db.goods.forEach(function (g) {
+        if (g.unit !== unit) return;
+        (byKind[g.kind] = byKind[g.kind] || []).push(g);
+      });
+      const good = Object.keys(byKind).filter(k => byKind[k].length >= 3);
+      if (!good.length) return {};
+      kind = byKind[tPick(rng, good)];
+      const streets = {};
+      db.shops.forEach(s => (streets[s.street.addr] = streets[s.street.addr] || []).push(s));
+      const two = Object.keys(streets).filter(a => streets[a].length >= 2 && streets[a].length <= 3);
+      if (!two.length) return {};
+      const pickStreet = tPick(rng, two);
+      street = streets[pickStreet][0].street;
+      shopIds = streets[pickStreet].map(s => s.id);
+      return {must: kind.map(g => g.art)};
+    }});
+    if (!kind || !street) continue;
+    const per = bPeriod(rng, db);
+    const arts = new Set(kind.map(g => g.art));
+    const shops = new Set(shopIds);
+    const sel = {ops: ['Поступление'], arts: arts, shops: shops, from: per.from, to: per.to,
+                 value: (m, g) => m.qty * g.pack / 1000};
+    const full = bMoveSum(db, sel);
+    const grams = bMoveSum(db, Object.assign({}, sel, {value: (m, g) => m.qty * g.pack})).sum;
+    const packs = bMoveSum(db, Object.assign({}, sel, {value: m => m.qty})).sum;
+    if (!bGuard(db, sel, full, [grams, packs])) continue;
+    const what = unit === 'грамм' ? 'общую массу (в кг)' : 'общий объём (в литрах)';
+    const kindGen = kind[0].kindGen;
+    return {
+      db: db, form: 'int', answer: bNum(full.sum),
+      question: bShopIntro(db) + bAsk(what + ' всех видов ' + esc2(kindGen) +
+        ', поступивших в магазины, расположенные ' + esc2(street.where) +
+        ', за период с ' + bDayMonth(per.from) + ' по ' + bDayMonth(per.to) +
+        ' включительно.'),
+      explain: bWhy([
+        'Виды ' + kindGen + ' — это <b>' + kind.length + '</b> ' +
+          tPl(kind.length, 'артикул', 'артикула', 'артикулов') + ': ' +
+          kind.map(g => g.name + ' (арт. ' + g.art + ')').join(', ') + '.',
+        'На улице стоят магазины <b>' + shopIds.join(', ') + '</b> — их видно только ' +
+          'по столбцу «Адрес» в таблице «Магазин», отдельного поля «Улица» там нет.',
+        'Берутся строки с типом операции <b>Поступление</b> за период ' +
+          bDate(per.from) + ' — ' + bDate(per.to) + ' включительно: их <b>' +
+          full.rows + '</b>.',
+        'Масса каждой строки — количество упаковок × «Количество в упаковке» из ' +
+          'таблицы «Товар». Сумма выходит в ' + (unit === 'грамм' ? 'граммах' : 'миллилитрах') +
+          ' (<b>' + grams + '</b>), и её делят на 1000: <b>' + full.sum + '</b>.'
+      ]),
+      meta: {kind: kind[0].kind, arts: [...arts], shops: shopIds, op: 'Поступление',
+             from: per.from, to: per.to, mode: 'mass', unit: unit}
+    };
+  }
+  return null;
+}
+
+/* 1. Выручка от продажи. Цена лежит в справочнике товара, спрашивают сразу о
+   нескольких видах одного отдела, магазины отбираются по району (№ 31141). */
+function bType1(rng) {
+  for (let tries = 0; tries < 30; tries++) {
+    const set = tPick(rng, ['sweets', 'house', 'dairy']);
+    let kinds = null, dist = null, shopIds = null;
+    const db = bShopDb(rng, set, {choose: function (db) {
+      const dept = tPick(rng, Array.from(new Set(db.goods.map(g => g.dept))));
+      const byKind = {};
+      db.goods.forEach(function (g) {
+        if (g.dept !== dept) return;
+        (byKind[g.kind] = byKind[g.kind] || []).push(g);
+      });
+      /* Видов два-три, но артикулов вместе не больше шести: в № 31141 их
+         четыре, и «все виды» не должны превращаться в половину отдела. */
+      const names = tSample(rng, Object.keys(byKind), tRand(rng, 2, 3));
+      kinds = [];
+      let count = 0;
+      names.forEach(function (n) {
+        if (kinds.length && count + byKind[n].length > 6) return;
+        kinds.push(byKind[n]);
+        count += byKind[n].length;
+      });
+      const byDist = {};
+      db.shops.forEach(s => (byDist[s.district.name] = byDist[s.district.name] || []).push(s));
+      const pickDist = tPick(rng, Object.keys(byDist));
+      dist = byDist[pickDist][0].district;
+      shopIds = byDist[pickDist].map(s => s.id);
+      return {must: [].concat.apply([], kinds).map(g => g.art)};
+    }});
+    if (!kinds || !dist) continue;
+    const flat = [].concat.apply([], kinds);
+    const per = bPeriod(rng, db);
+    const arts = new Set(flat.map(g => g.art));
+    const sel = {ops: ['Продажа'], arts: arts, shops: new Set(shopIds),
+                 from: per.from, to: per.to, value: (m, g) => m.qty * g.price};
+    const full = bMoveSum(db, sel);
+    const packs = bMoveSum(db, Object.assign({}, sel, {value: m => m.qty})).sum;
+    if (!bGuard(db, sel, full, [packs])) continue;
+    return {
+      db: db, form: 'int', answer: bNum(full.sum),
+      question: bShopIntro(db) + bAsk('общую выручку (в руб.) от продажи всех видов ' +
+        esc2(bList(kinds.map(k => k[0].kindGen))) + ' в магазинах ' + esc2(dist.gen) +
+        ' района за период с ' + bDayMonth(per.from) + ' по ' + bDayMonth(per.to) +
+        ' включительно.'),
+      explain: bWhy([
+        'Под условие попадают <b>' + flat.length + '</b> ' +
+          tPl(flat.length, 'артикул', 'артикула', 'артикулов') + ' из отдела «' +
+          flat[0].dept + '»: ' + flat.map(g => g.name).join(', ') + '.',
+        'Магазины ' + dist.gen + ' района — <b>' + shopIds.join(', ') + '</b>.',
+        'Строк с операцией <b>Продажа</b> за период ' + bDate(per.from) + ' — ' +
+          bDate(per.to) + ' набирается <b>' + full.rows + '</b>.',
+        'Выручка строки — количество упаковок × «Цена за упаковку» из таблицы ' +
+          '«Товар». Сумма: <b>' + full.sum + '</b> руб.'
+      ]),
+      meta: {arts: [...arts], shops: shopIds, op: 'Продажа', from: per.from, to: per.to,
+             mode: 'money'}
+    };
+  }
+  return null;
+}
+
+/* 2. Цена не в справочнике, а В СТРОКЕ ДВИЖЕНИЯ: она менялась по дням
+   (№ 31349). Кто привычно тянет цену ВПР-ом из «Товара», получает другое
+   число — там её попросту нет. */
+function bType2(rng) {
+  for (let tries = 0; tries < 30; tries++) {
+    let kind = null, dist = null, shopIds = null;
+    const db = bShopDb(rng, 'dairy', {priceInMove: true, choose: function (db) {
+      const byKind = {};
+      db.goods.forEach(g => (byKind[g.kind] = byKind[g.kind] || []).push(g));
+      const good = Object.keys(byKind).filter(k => byKind[k].length >= 3);
+      if (!good.length) return {};
+      kind = byKind[tPick(rng, good)];
+      const byDist = {};
+      db.shops.forEach(s => (byDist[s.district.name] = byDist[s.district.name] || []).push(s));
+      const pickDist = tPick(rng, Object.keys(byDist));
+      dist = byDist[pickDist][0].district;
+      shopIds = byDist[pickDist].map(s => s.id);
+      return {must: kind.map(g => g.art)};
+    }});
+    if (!kind || !dist) continue;
+    const per = bPeriod(rng, db);
+    const arts = new Set(kind.map(g => g.art));
+    const sel = {ops: ['Продажа'], arts: arts, shops: new Set(shopIds),
+                 from: per.from, to: per.to, value: m => m.qty * m.price};
+    const full = bMoveSum(db, sel);
+    const byBase = bMoveSum(db, Object.assign({}, sel, {value: (m, g) => m.qty * g.price})).sum;
+    if (!bGuard(db, sel, full, [byBase])) continue;
+    return {
+      db: db, form: 'int', answer: bNum(full.sum),
+      question: bShopIntro(db) + bAsk(', на какую сумму (в руб.) было продано ' +
+        esc2(kind[0].kindGen) + ' всех видов в магазинах ' + esc2(dist.gen) +
+        ' района за период с ' + bDayMonth(per.from) + ' по ' + bDayMonth(per.to) +
+        ' включительно.'),
+      explain: bWhy([
+        'Цена здесь <b>в таблице движения</b>, а не в «Товаре»: она менялась по дням, ' +
+          'и столбца «Цена за упаковку» в справочнике просто нет. Это и проверяется.',
+        'Виды: ' + kind.map(g => g.name).join(', ') + '. Магазины ' + dist.gen +
+          ' района: <b>' + shopIds.join(', ') + '</b>.',
+        'Подходящих строк с операцией <b>Продажа</b> за ' + bDate(per.from) + ' — ' +
+          bDate(per.to) + ': <b>' + full.rows + '</b>.',
+        'Сумма строки — количество упаковок × цена из той же строки. Итого <b>' +
+          full.sum + '</b> руб.'
+      ]),
+      meta: {arts: [...arts], shops: shopIds, op: 'Продажа', from: per.from, to: per.to,
+             mode: 'money-move'}
+    };
+  }
+  return null;
+}
+
+/* 3. Прирост остатка: поступило минус продано по ОДНОМУ наименованию
+   (№ 27758, 27615). Два фильтра по типу операции с разными знаками — здесь
+   чаще всего и ошибаются, складывая всё подряд. */
+function bType3(rng) {
+  for (let tries = 0; tries < 30; tries++) {
+    const set = tPick(rng, ['sweets', 'house', 'dairy']);
+    let good = null, dist = null, shopIds = null;
+    const db = bShopDb(rng, set, {choose: function (db) {
+      good = tPick(rng, db.goods);
+      const byDist = {};
+      db.shops.forEach(s => (byDist[s.district.name] = byDist[s.district.name] || []).push(s));
+      const pickDist = tPick(rng, Object.keys(byDist));
+      dist = byDist[pickDist][0].district;
+      shopIds = byDist[pickDist].map(s => s.id);
+      return {must: [good.art]};
+    }});
+    if (!good || !dist) continue;
+    const per = bPeriod(rng, db);
+    const arts = new Set([good.art]);
+    const shops = new Set(shopIds);
+    const sel = {ops: null, arts: arts, shops: shops, from: per.from, to: per.to,
+                 value: m => (m.op === 'Поступление' ? m.qty : -m.qty)};
+    const full = bMoveSum(db, sel);
+    const onlyIn = bMoveSum(db, {ops: ['Поступление'], arts: arts, shops: shops,
+                                 from: per.from, to: per.to, value: m => m.qty}).sum;
+    const onlyOut = bMoveSum(db, {ops: ['Продажа'], arts: arts, shops: shops,
+                                  from: per.from, to: per.to, value: m => m.qty}).sum;
+    const both = onlyIn + onlyOut;
+    if (!bGuard(db, sel, full, [onlyIn, onlyOut, both])) continue;
+    return {
+      db: db, form: 'int', answer: bNum(full.sum),
+      question: bShopIntro(db) + bAsk(', на сколько увеличилось количество упаковок ' +
+        esc2(good.deptGen) + ' «' + esc2(good.name) + '» в магазинах ' + esc2(dist.gen) +
+        ' района за период с ' + bDayMonth(per.from) + ' по ' + bDayMonth(per.to) +
+        ' включительно.'),
+      explain: bWhy([
+        'Товар один — артикул <b>' + good.art + '</b> («' + good.name + '»). ' +
+          'Магазины ' + dist.gen + ' района: <b>' + shopIds.join(', ') + '</b>.',
+        'Поступило за период <b>' + onlyIn + '</b> упаковок, продано <b>' + onlyOut +
+          '</b>. Подходящих строк всего <b>' + full.rows + '</b>.',
+        'Прирост — разность: ' + onlyIn + ' − ' + onlyOut + ' = <b>' + full.sum +
+          '</b>. Сложить их (получилось бы ' + both + ') — самая частая ошибка ' +
+          'в этом типе.',
+        'Ни цена, ни «Количество в упаковке» здесь не нужны: спрашивают про упаковки.'
+      ]),
+      meta: {arts: [...arts], shops: shopIds, op: 'разность', from: per.from, to: per.to,
+             mode: 'delta'}
+    };
+  }
+  return null;
+}
+
+/* 4. Склады: масса отгруженного, вес упаковки уже в килограммах, отбор по
+   КАТЕГОРИИ целиком и период через границу месяца (№ 28689). */
+function bType4(rng) {
+  for (let tries = 0; tries < 30; tries++) {
+    let cat = null, dist = null, shopIds = null;
+    const db = bWareDb(rng, {choose: function (db) {
+      const cats = Array.from(new Set(db.goods.map(g => g.dept)));
+      const name = tPick(rng, cats);
+      cat = db.goods.filter(g => g.dept === name);
+      const byDist = {};
+      db.shops.forEach(s => (byDist[s.district.name] = byDist[s.district.name] || []).push(s));
+      const pickDist = tPick(rng, Object.keys(byDist));
+      dist = byDist[pickDist][0].district;
+      shopIds = byDist[pickDist].map(s => s.id);
+      return {must: cat.map(g => g.art)};
+    }});
+    if (!cat || !dist) continue;
+    const per = bPeriod(rng, db);
+    const arts = new Set(cat.map(g => g.art));
+    const sel = {ops: ['Отгрузка'], arts: arts, shops: new Set(shopIds),
+                 from: per.from, to: per.to, value: (m, g) => m.qty * g.pack};
+    const full = bMoveSum(db, sel);
+    const packs = bMoveSum(db, Object.assign({}, sel, {value: m => m.qty})).sum;
+    if (!bGuard(db, sel, full, [packs])) continue;
+    return {
+      db: db, form: 'int', answer: bNum(full.sum),
+      question: bWareIntro(db) + bAsk('общее количество (в кг) ' + esc2(cat[0].deptGen) +
+        ', отгруженных покупателям со складов ' + esc2(dist.gen) + ' района с ' +
+        bDate2(per.from) + ' по ' + bDate2(per.to) + ' включительно.'),
+      explain: bWhy([
+        'Отбирается вся категория «' + cat[0].dept + '» — это <b>' + cat.length +
+          '</b> ' + tPl(cat.length, 'артикул', 'артикула', 'артикулов') +
+          ', а не одно название.',
+        'Склады ' + dist.gen + ' района: <b>' + shopIds.join(', ') + '</b>. Тип операции — ' +
+          '<b>Отгрузка</b>; поступления в ответ не идут.',
+        'Период ' + bDate2(per.from) + ' — ' + bDate2(per.to) +
+          (bYmd(per.from)[1] !== bYmd(per.to)[1]
+            ? ' переходит через границу месяца: сравнивать надо даты, а не номера дней.'
+            : ' задан датами, а в файле они лежат в формате дд.мм.гг.') +
+          ' Подходящих строк <b>' + full.rows + '</b>.',
+        'Вес строки — количество упаковок × «Вес упаковки, кг». Делить ни на что не ' +
+          'нужно, вес уже в килограммах: <b>' + full.sum + '</b> кг.'
+      ]),
+      meta: {arts: [...arts], shops: shopIds, op: 'Отгрузка', from: per.from, to: per.to,
+             mode: 'mass-kg'}
+    };
+  }
+  return null;
+}
+
+/* 5. Театр: выручка по категории билетов и маске тарифов (№ 28924, 27269,
+   27268, 25342). Две связи вместо одной: спектакль даёт автора и жанр,
+   тариф — цену нужной категории. */
+function bType5(rng) {
+  for (let tries = 0; tries < 30; tries++) {
+    const db = bTheatreDb(rng, {});
+    const groups = {};
+    db.plays.forEach(function (p) {
+      const key = p.author + '|' + p.genre;
+      (groups[key] = groups[key] || []).push(p);
+    });
+    const keys = Object.keys(groups).filter(k => groups[k].length >= 3);
+    const key = tPick(rng, keys);
+    const plays = groups[key];
+    const author = plays[0].authorGen, genre = plays[0].genre;
+    const tick = tPick(rng, B_TICKETS);
+    const mode = tRand(rng, 0, 2);
+    let tariffs, howAsk;
+    if (mode === 0) {
+      const season = tPick(rng, B_SEASONS.slice(0, 4));
+      const two = tSample(rng, B_TIMES, 2);
+      tariffs = db.tariffs.filter(t => t.season === season.name &&
+        two.some(x => x.word === t.time.word));
+      howAsk = 'по тарифу ' + two[0].gen + ' или ' + two[1].gen + ' спектакля ' +
+               season.gen;
+    } else if (mode === 1) {
+      const season = tPick(rng, B_SEASONS.slice(0, 4));
+      tariffs = db.tariffs.filter(t => t.season === season.name);
+      howAsk = 'по всем тарифам спектаклей ' + season.gen +
+               ' (кроме новогодних праздников)';
+    } else {
+      const time = tPick(rng, B_TIMES);
+      tariffs = db.tariffs.filter(t => t.time.word === time.word);
+      howAsk = 'по ' + time.all;
+    }
+    const codes = new Set(plays.map(p => p.code));
+    const tset = new Set(tariffs.map(t => t.id));
+    const cost = {};
+    db.tariffs.forEach(t => { cost[t.id] = t.cost; });
+    const sum = function (useCodes, useTariffs, cols) {
+      let s = 0, rows = 0;
+      db.sales.forEach(function (x) {
+        if (useCodes && !useCodes.has(x.play)) return;
+        if (useTariffs && !useTariffs.has(x.tariff)) return;
+        rows++;
+        cols.forEach(c => { s += x.cnt[c] * cost[x.tariff][c]; });
+      });
+      return {sum: s, rows: rows};
+    };
+    const full = sum(codes, tset, tick.cols);
+    if (full.sum <= 0 || full.rows < 12) continue;
+    const naive = [
+      sum(codes, null, tick.cols).sum,                     /* забыли тариф */
+      sum(null, tset, tick.cols).sum,                      /* забыли спектакли */
+      sum(codes, tset, [0, 1, 2]).sum,                     /* сложили все билеты */
+      sum(new Set(db.plays.filter(p => p.author === author).map(p => p.code)), tset, tick.cols).sum
+    ];
+    if (naive.some(v => v === full.sum)) continue;
+    return {
+      db: db, form: 'int', answer: bNum(full.sum),
+      question: bTheatreIntro() + bAsk('общую сумму (в рублях), вырученную ' + tick.ask +
+        ' на все ' + esc2(genre === 'комедия' ? 'комедии' : genre === 'трагедия' ? 'трагедии' : 'драмы') +
+        ' ' + esc2(author) + ', проданные посетителям театра, ' + esc2(howAsk) + '.'),
+      explain: bWhy([
+        'Спектаклей под условие «' + (genre === 'комедия' ? 'комедии' : genre === 'трагедия' ? 'трагедии' : 'драмы') +
+          ' ' + author + '» — <b>' + plays.length + '</b>: ' +
+          plays.map(p => p.name + ' (' + p.code + ')').join(', ') + '. ' +
+          'У этого автора есть и другие жанры — их брать нельзя.',
+        'Тарифов под условие <b>' + tariffs.length + '</b> из 15: ' +
+          tariffs.map(t => t.id).join(', ') + '.',
+        'Складывается только то, что спрошено — ' + tick.ask.replace(/^за /, '') +
+          '. Подходящих строк <b>' + full.rows + '</b>.',
+        'Каждая строка даёт количество билетов × стоимость билета этой категории ' +
+          'по её тарифу. Итого <b>' + full.sum + '</b> руб.'
+      ]),
+      meta: {codes: [...codes], tariffs: [...tset], cols: tick.cols, mode: 'theatre'}
+    };
+  }
+  return null;
+}
+
+function bWhy(items) {
+  return '<ul class="why-list"><li>' + items.join('</li><li>') + '</li></ul>';
+}
+
+const B_MAKERS = [bType0, bType1, bType2, bType3, bType4, bType5];
+
+function bMake(type, rng) {
+  let t = null;
+  for (let i = 0; i < 5 && !t; i++) t = B_MAKERS[type](rng);
+  if (!t) throw new Error('тип ' + type + ': не удалось собрать задачу');
+  t.type = type;
+  t.book = null;                    /* книга собирается по требованию страницы */
+  return t;
+}
+
+/* Книга задачи: собирается при первом обращении — на шести задачах сразу это
+   лишние мегабайты и лишняя секунда на открытии страницы. */
+function bTaskBook(task) {
+  if (!task.book) task.book = bXlsx(bBook(task.db));
+  return task.book;
+}
+
+/* --------------------------------------------------------- состав работ
+
+   Практикум (решение Светы, 12.09.2026): шесть задач, по одной на тип, балл
+   за каждую. Норма тренажёров «по две задачи на тип» сюда не переносится —
+   каждая задача здесь требует открыть свой файл базы и посчитать, это
+   четыре-шесть минут, а не минута (см. trainer-twelve-tasks).
+
+   Домашняя работа: те же шесть типов по одной задаче — тип закрывает один
+   верный ответ, после ошибки приходит задача того же типа с новыми данными.
+
+   Проверочная: четыре задачи из шести типов, перемешанные. Двадцать минут в
+   начале следующей пары. */
+const B_WORKS = {
+  practice: {plan: [0, 1, 2, 3, 4, 5], max: 6, scale: [[6, 5], [5, 4], [4, 3]]},
+  homework: {plan: [0, 1, 2, 3, 4, 5], max: 6, scale: [[6, 5], [5, 4], [4, 3]]},
+  test:     {pick: 4, max: 4, scale: [[4, 5], [3, 4], [2, 3]]}
+};
+
+function bWork(rng, w) {
+  w = w || B_WORKS.practice;
+  const plan = w.plan || tShuffle(rng, [0, 1, 2, 3, 4, 5]).slice(0, w.pick);
+  return plan.map(type => bMake(type, rng));
+}
+
+function bPoints(ok) { return ok.filter(Boolean).length; }
+
+function bMark(points, w) {
+  w = w || B_WORKS.practice;
+  for (const [need, m] of w.scale) if (points >= need) return m;
+  return 2;
+}
+
+/* Набор по одной задаче каждого типа — для самопроверки и образцов. */
+function bSet(seed) {
+  const rng = tRng(seed || 1);
+  return [0, 1, 2, 3, 4, 5].map(type => bMake(type, rng));
+}
+
+/* Ответ сверяется знак в знак: на КЕГЭ его читает машина, и «1 630» или
+   «1630 кг» там просто не засчитают (см. answer-format-strict). */
+function bVerdict(task, raw) {
+  const s = String(raw === undefined || raw === null ? '' : raw).trim();
+  if (!s) return {ok: false, why: 'ответ пустой'};
+  if (/[а-яёa-z]/i.test(s))
+    return {ok: false, why: 'в ответе только число — без «кг», «руб.» и прочих слов'};
+  if (/[  ]/.test(s))
+    return {ok: false, why: 'пробелов в ответе быть не должно: 1630, а не 1 630'};
+  if (/[,.]/.test(s))
+    return {ok: false, why: 'ответ — целое число, без запятой и точки'};
+  if (!/^\d+$/.test(s))
+    return {ok: false, why: 'ответ — целое число'};
+  return {ok: String(Number(s)) === task.answer, why: ''};
+}
+/* ==== /ЗАДАЧИ ==== */
+
+/* Состав, баллы и шкала практикума живут в tasks.js (B_WORKS.practice):
+   шесть задач по одной на тип, балл за каждую. */
+const W = B_WORKS.practice;
+let rng, st;
+
+function reset(){
+  rng = tRng((Date.now() ^ (Math.random() * 1e9)) >>> 0);
+  const work = bWork(rng, W);
+  st = {
+    tasks: work,                       /* текущая задача на каждой позиции */
+    ok: work.map(() => false),         /* закрыта ли позиция */
+    clean: work.map(() => true),       /* закрыта ли с первой попытки */
+    tries: work.map(() => 1),          /* какая по счёту база на этой позиции */
+    queue: work.map((t, i) => i),      /* что осталось пройти */
+    solved: 0, wrong: 0, cur: null, answered: false
+  };
+  nextTask();
+}
+
+function esc(s){ return String(s).replace(/[&<>]/g, c =>
+  ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+
+function cleanCount(){ return st.ok.filter((v, i) => v && st.clean[i]).length; }
+
+/* Файл базы отдаётся ссылкой на Blob: страница живёт в общей папке класса,
+   и никакого сервера рядом нет. Имя несёт номер задачи и номер попытки —
+   иначе в «Загрузках» окажутся три разных файла с одинаковым именем. */
+function saveBook(i){
+  const task = st.tasks[i];
+  const name = "zadanie-3-zadacha-" + (i + 1) +
+               (st.tries[i] > 1 ? "-" + st.tries[i] : "") + ".xlsx";
+  const blob = new Blob([bTaskBook(task)],
+    {type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+  return name;
+}
+
+function paint(){
+  const box = document.getElementById("types");
+  box.innerHTML = "";
+  st.tasks.forEach(function(t, i){
+    const el = document.createElement("span");
+    el.className = "chip" + (st.ok[i] ? " done"
+                   : i === st.cur ? " cur"
+                   : st.clean[i] ? "" : " miss");
+    el.innerHTML = '<span class="n">' + (i + 1) + '</span>' + B_TYPES[t.type] +
+                   (st.ok[i] ? " ✓" : "");
+    box.appendChild(el);
+  });
+  const pts = bPoints(st.ok);
+  const m = bMark(pts, W);
+  /* Пока не решено ничего, двойку не показываем: это не отметка, а старт. */
+  const started = st.solved + st.wrong > 0;
+  const sb = document.getElementById("scorebox");
+  sb.className = "score" + (started ? " m" + m : "");
+  document.getElementById("pts").textContent = pts;
+  document.getElementById("max").textContent = W.max;
+  document.getElementById("mark").textContent = started ? m : "—";
+  document.getElementById("stats").textContent =
+    "решено: " + st.ok.filter(Boolean).length + " из " + st.tasks.length +
+    " · с первой попытки: " + cleanCount() +
+    " · ошибок: " + st.wrong;
+}
+
+function nextTask(){
+  if (!st.queue.length) return finish();
+  st.cur = st.queue[0];
+  st.answered = false;
+  const i = st.cur, t = st.tasks[i];
+  document.getElementById("area").innerHTML =
+    '<div class="card" id="task">' +
+      '<p class="tag">Задача ' + (i + 1) + ' — ' + B_TYPES[t.type] + '</p>' +
+      '<div class="q">' + t.question + '</div>' +
+      '<div class="heads">' + bHeads(t.db) + '</div>' +
+      '<div class="file">' +
+        '<button id="dl">Скачать файл базы</button>' +
+        '<span class="hint" id="dlhint">Книга .xlsx на три листа — открой её в ' +
+          'электронных таблицах.</span>' +
+      '</div>' +
+      '<div class="row">' +
+        '<input type="text" id="ans" autocomplete="off" spellcheck="false" ' +
+               'placeholder="число">' +
+        '<button class="primary" id="go">Ответить</button>' +
+        '<button id="stop">Показать итог</button>' +
+      '</div>' +
+      '<div class="verdict" id="v"></div>' +
+    '</div>';
+  const input = document.getElementById("ans");
+  input.focus();
+  input.addEventListener("keydown", function(e){ if (e.key === "Enter") judge(); });
+  document.getElementById("go").addEventListener("click", judge);
+  document.getElementById("stop").addEventListener("click", finish);
+  document.getElementById("dl").addEventListener("click", function(){
+    const name = saveBook(i);
+    document.getElementById("dlhint").innerHTML =
+      'Файл <b>' + esc(name) + '</b> — в папке «Загрузки».';
+  });
+  paint();
+}
+
+function judge(){
+  if (st.answered) return nextTask();
+  const i = st.cur, t = st.tasks[i];
+  const raw = document.getElementById("ans").value;
+  if (!raw.trim()) return;
+  const v = bVerdict(t, raw);
+  st.answered = true;
+  st.queue.shift();
+  if (v.ok){
+    st.solved++;
+    st.ok[i] = true;
+  } else {
+    st.wrong++;
+    st.clean[i] = false;
+    /* Задача того же типа с новой базой — и в конец очереди. */
+    st.tasks[i] = bMake(t.type, rng);
+    st.tries[i]++;
+    st.queue.push(i);
+  }
+  const card = document.getElementById("task");
+  card.className = "card " + (v.ok ? "ok" : "err");
+  document.getElementById("ans").disabled = true;
+  document.getElementById("go").textContent = "Дальше";
+  const vb = document.getElementById("v");
+  vb.className = "verdict " + (v.ok ? "ok" : "err");
+  vb.innerHTML = (v.ok
+    ? "Верно."
+    : "Пока нет" + (v.why ? " — " + v.why : "") +
+      ". Твой ответ: <code>" + esc(raw.trim()) + "</code>, верный: <code>" +
+      t.answer + "</code>. Задача этого типа вернётся с новой базой — " +
+      "файл надо будет скачать заново.") +
+    '<div class="why">' + t.explain + '</div>';
+  paint();
+}
+
+function finish(){
+  const pts = bPoints(st.ok);
+  const m = bMark(pts, W);
+  const left = st.queue.map(i => (i + 1) + " (" + B_TYPES[st.tasks[i].type] + ")");
+  document.getElementById("area").innerHTML =
+    '<div class="card">' +
+      '<h2>Итог</h2>' +
+      '<p>Баллов: <b>' + pts + '</b> из ' + W.max + ', отметка <b>' + m + '</b>.</p>' +
+      '<p>Решено с первой попытки: <b>' + cleanCount() + '</b> из ' +
+        st.tasks.length + ', ошибок всего: ' + st.wrong + '.</p>' +
+      (left.length ? '<p>Не сделано: ' + left.join(", ") + '.</p>' : '') +
+      '<div class="note">Покажи этот экран учителю.</div>' +
+      '<div class="row">' +
+        (left.length ? '<button class="primary" id="more">Продолжить</button>' : '') +
+        '<button id="again">Начать заново</button>' +
+      '</div>' +
+    '</div>';
+  const more = document.getElementById("more");
+  if (more) more.addEventListener("click", nextTask);
+  document.getElementById("again").addEventListener("click", reset);
+  paint();
+}
+
+reset();
+</script>
+<p class="ai-mark">Материалы подготовлены с использованием технологий искусственного интеллекта.</p>
+</body>
+</html>
