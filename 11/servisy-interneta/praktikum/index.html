@@ -1,0 +1,904 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Сервисы Интернета — практикум</title>
+<meta name="description" content="Практикум 11 класса по программе: какой сервис нужен под задачу, виды деятельности в сети, масштаб карты и расстояние, загруженность дорог и время в пути, итог заказа с доставкой и скидкой, запас на стыковке рейсов.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E11%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{margin:0;padding:20px 16px 60px;font:17px/1.55 "Segoe UI",system-ui,sans-serif}
+.wrap{max-width:820px;margin:0 auto}
+h1{font-size:23px;margin:0 0 4px}
+h2{font-size:18px;margin:0 0 10px}
+.sub{color:var(--muted);font-size:15px;margin:0 0 18px}
+code{font-family:Consolas,"Cascadia Mono",monospace;background:var(--card);
+     border:1px solid var(--line);border-radius:5px;padding:1px 6px;
+     font-size:15px;letter-spacing:.04em}
+.intro{border:1px solid var(--line);border-radius:12px;background:var(--card);
+       padding:14px 18px;margin-bottom:18px}
+.intro dl{margin:0}
+.intro dt{font-weight:700;margin-top:10px}
+.intro dt:first-child{margin-top:0}
+.intro dd{margin:2px 0 0}
+.progress{border:2px solid var(--accent);border-radius:12px;padding:12px 16px;
+          background:#fff;margin-bottom:18px}
+.ptop{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.ptop h2{margin:0}
+.sp{flex:1 1 auto}
+.score{display:flex;align-items:baseline;gap:10px;color:var(--muted);font-size:15px}
+.score b{font:700 34px/1 "Segoe UI",system-ui,sans-serif;color:var(--ink);
+         min-width:40px;text-align:center;border:2px solid var(--line);
+         border-radius:8px;padding:2px 8px}
+.m5 b{color:var(--ok);border-color:var(--ok-line)}
+.m4 b{color:var(--accent);border-color:#a9c6e8}
+.m3 b{color:#8a5a00;border-color:var(--hi-line)}
+.types{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);border-radius:20px;padding:4px 12px;
+      font-size:14px;color:var(--muted);background:var(--card)}
+.chip.done{border-color:var(--ok-line);background:var(--ok-bg);color:var(--ok);
+           font-weight:600}
+.chip.cur{border-color:var(--accent);color:var(--accent);font-weight:600}
+.card{border:1px solid var(--line);border-radius:12px;padding:16px 18px;
+      background:#fff;margin-bottom:14px}
+.card.ok{border-color:var(--ok-line);background:var(--ok-bg)}
+.card.err{border-color:var(--err-line);background:var(--err-bg)}
+.tag{font-size:13px;color:var(--muted);margin:0 0 6px}
+.q{font-size:17px}
+.q ol{margin:10px 0 0;padding-left:26px}
+.q li{margin:5px 0}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+input[type=text]{font:16px/1 Consolas,monospace;padding:10px 12px;border-radius:8px;
+                 border:1px solid var(--line);width:100%;max-width:340px}
+button{font:600 15px/1 inherit;padding:11px 16px;border-radius:9px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);color:var(--muted)}
+.verdict{margin-top:10px;font-size:15.5px;font-weight:600}
+.verdict.ok{color:var(--ok)}
+.verdict.err{color:var(--err)}
+.why{margin-top:8px;font-size:15.5px;color:var(--ink)}
+.note{border:1px solid var(--hi-line);background:var(--hi-bg);border-radius:10px;
+      padding:11px 15px;margin:12px 0;font-size:15.5px}
+.code{font:700 26px/1.2 Consolas,monospace;letter-spacing:.06em;
+      background:var(--card);border:2px dashed var(--accent);border-radius:12px;
+      padding:16px;text-align:center;margin:12px 0;user-select:all}
+.stats{color:var(--muted);font-size:14px}
+label{display:block;font-size:14px;color:var(--muted);margin-bottom:3px}
+.fields{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0}
+.fields div{flex:1 1 180px}
+.fields input{max-width:none}
+sup,sub{font-size:12px}
+h3{font-size:16.5px;margin:16px 0 6px;color:var(--accent)}
+details.help{margin-top:26px;border:1px solid var(--line);border-radius:12px;
+        padding:12px 18px;background:var(--card)}
+details.help summary{cursor:pointer;font-weight:600;font-size:17px;
+        color:var(--accent)}
+details.help p{margin:6px 0}
+details.help ol,details.help ul{margin:6px 0;padding-left:22px}
+details.help li{margin:4px 0}
+details.help table{border-collapse:collapse;margin:8px 0;font-size:15px}
+details.help th,details.help td{border:1px solid var(--line);
+        padding:4px 10px;text-align:center;background:#fff}
+details.help th{background:#fff;color:var(--muted);font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Сервисы Интернета</h1>
+<p class="sub">11 класс, базовый уровень. Практикум по программе: шесть
+вопросов темы «Виды деятельности в сети Интернет. Сервисы Интернета» —
+выбор сервиса, виды деятельности, карты и масштаб, загруженность дорог,
+интернет-торговля, бронирование.</p>
+
+<div class="intro">
+  <dl>
+    <dt>Что нужно сделать</dt>
+    <dd>Шесть вопросов темы. По каждому — задача; ответил верно — вопрос
+        закрыт. Ошибся — вопрос остаётся открытым, и его можно сдать ещё
+        раз с новыми числами: сколько закрыл, столько и наработал.
+        Четыре вопроса из шести считаются на калькуляторе или в столбик,
+        два — на знание сервисов.</dd>
+    <dt>Отметка и добор</dt>
+    <dd>Закрыто 6 из 6 — «5», 5 — «4», 3 или 4 — «3». Дойдя до нужной
+        отметки, можно остановиться и забрать код сразу, а можно
+        <b>досдать оставшиеся вопросы</b> и получить код получше — решать
+        самому, до какой отметки добирать.</dd>
+    <dt>Ответ</dt>
+    <dd>Везде — целое число без единиц измерения и без пробелов:
+        <code>4800</code>, а не <code>4800 руб.</code> и не
+        <code>4 800</code>. Там, где просят номер варианта, ответ — одна
+        цифра.</dd>
+    <dt>Как сдать</dt>
+    <dd>В конце появится код работы и кнопка <b>«Сдать работу»</b>: впишешь
+        фамилию и класс, кнопка сама откроет форму с уже вписанным кодом.
+        Переписывать код руками не надо — на этом чаще всего и ошибаются.</dd>
+    <dt>Не успел на уроке</dt>
+    <dd>Открой эту же страницу дома и пройди целиком: числа будут другие,
+        а сдаётся всё так же — одним кодом.</dd>
+  </dl>
+</div>
+
+<div class="progress">
+  <div class="ptop">
+    <h2>Вопросы темы</h2>
+    <span class="sp"></span>
+    <div class="score" id="scorebox">
+      <span>наработано на</span><b id="mark">—</b>
+    </div>
+  </div>
+  <div class="types" id="types"></div>
+  <p class="stats" id="stats"></p>
+</div>
+
+<div id="area"></div>
+
+<details class="help">
+  <summary>Подсказка: сервисы Интернета</summary>
+
+  <h3>Что такое сервис</h3>
+  <p>Сервис — не сайт, а <b>услуга</b>: у него есть свои <b>данные</b>, он
+     умеет по ним что-то <b>считать</b> и отдаёт <b>ответ</b> на ваш вопрос.
+     Поэтому страница сервиса всегда динамическая: её собирают в момент
+     запроса, готовым файлом такое не полежит.</p>
+  <p>Основные виды деятельности в сети: <b>общение и совместная работа</b>
+     (почта, чаты, видеосвязь, онлайн-офис, облако), <b>поиск и справка</b>,
+     <b>торговля</b>, <b>бронирование</b>, <b>карты и геолокация</b>.
+     Государственные услуги и образовательные ресурсы — тоже виды
+     деятельности, о них отдельный урок.</p>
+
+  <h3>ГИС: карта плюс данные</h3>
+  <p><b>Геоинформационная система</b> — это карта, к точкам которой
+     привязаны данные: организации, дороги, высоты, население. Данные лежат
+     <b>слоями</b>, слои включают и выключают.</p>
+  <p><b>Масштаб</b> пишут двумя способами, и это одно и то же:</p>
+  <ul>
+    <li><b>именованный</b>: «в 1 см — 250 м»;</li>
+    <li><b>численный</b>: «1:25000» — 1 см карты равен 25000 см на
+        местности, то есть 250 м. Чтобы перевести, делят на 100 — получаются
+        метры.</li>
+  </ul>
+  <p>Линейка сервиса складывает отрезки маршрута. Длина = (сумма отрезков в
+     см) × (сколько метров в одном сантиметре).</p>
+
+  <h3>Геолокация в реальном времени</h3>
+  <p>Где находится телефон, определяют тремя способами: по <b>спутникам</b>
+     (GPS/ГЛОНАСС, точнее всего, но нужно небо), по <b>вышкам сотовой
+     связи</b> (грубо, зато в помещении) и по <b>видимым сетям Wi-Fi</b>
+     (точно в городе).</p>
+  <p><b>Пробки сервис не видит с дороги.</b> Он видит обезличенные
+     скорости множества телефонов и сравнивает их со свободной дорогой.
+     Отсюда важный вывод: пробки существуют потому, что люди отдают
+     сервису свою скорость — платой служат данные, а не деньги.</p>
+  <p>Загруженность показывают <b>баллами</b>. Баллы — это не скорость и не
+     минуты: их сначала переводят в среднюю скорость, и только потом
+     считают время как <b>t = s / v</b>.</p>
+  <table>
+    <tr><th>баллы</th><td>0–3</td><td>4–6</td><td>7–8</td><td>9–10</td></tr>
+    <tr><th>км/ч</th><td>60</td><td>40</td><td>30</td><td>20</td></tr>
+  </table>
+  <p>Минуты из часов: минуты = расстояние ÷ скорость × 60.</p>
+
+  <h3>Интернет-торговля: считать итог, а не ценник</h3>
+  <p><b>Итог = товар − скидка + доставка.</b> Самая низкая цена на витрине
+     часто проигрывает: доставка и порог бесплатной доставки переворачивают
+     сравнение.</p>
+  <ul>
+    <li><b>Порог бесплатной доставки</b>: «бесплатно от 3000 ₽» — если сумма
+        товара меньше, доставку платите;</li>
+    <li><b>промокод</b> снимает процент с товара, но на порог доставки это
+        обычно не влияет — считают по стоимости товара;</li>
+    <li>сравнивать надо <b>итоговые суммы</b>, а не любые два числа из
+        условия.</li>
+  </ul>
+
+  <h3>Бронирование: две ловушки</h3>
+  <p><b>Ночей на одну меньше, чем дней.</b> Заезд 12 июля, выезд 17 июля —
+     это <b>5 ночей</b>, а не 6: гостиница берёт плату за ночи.</p>
+  <p><b>Стыковку считают в минутах.</b> Прилёт 14:35, вылет 17:10 — между
+     ними 155 минут, а не «2,35 часа». Аэропорт требует минимум времени на
+     пересадку; запас = (время между рейсами) − (требование). Если запас
+     отрицательный, сервис такую стыковку в один билет не соберёт, а
+     купленные врозь рейсы друг друга не ждут.</p>
+  <p>Время в билете всегда <b>местное</b>: при разнице часовых поясов «в
+     воздухе» и «по расписанию» — разные числа.</p>
+
+  <h3>Что вы отдаёте сервису</h3>
+  <p>Аккаунт, историю запросов и покупок, местоположение, платёжные данные.
+     Это цена удобства, и её стоит знать: бесплатный сервис живёт не
+     воздухом.</p>
+</details>
+
+</div>
+
+<script>
+/* ==== ЗАДАЧИ: вставлено gen.py, руками не править ==== */
+/* Обзорный практикум к теме 11 класса, базовый уровень (официальный
+   поурочный план, урок 3): «Виды деятельности в сети Интернет. Сервисы
+   Интернета». Содержание раздела программы: геоинформационные системы,
+   геолокационные сервисы реального времени (локация мобильных телефонов,
+   определение загруженности автомагистралей), интернет-торговля,
+   бронирование билетов и гостиниц.
+
+   Единственный источник задач. В practice.html вписывается скриптом
+   gen.py между маркерами — руками страницу не править.
+
+   Ответ везде целое число без единиц измерения. Проверка знак в знак.
+
+   Четыре типа из шести — расчётные: у них есть точный ключ, который
+   считается арифметикой, а не суждением. Каждая задача несёт поле meta
+   с машинными числами: gen.py --selftest пересчитывает по ним ответ
+   своей арифметикой и отдельно проверяет, что все числа meta реально
+   стоят в тексте задачи. */
+
+const T_TYPES = [
+  "какой сервис нужен",
+  "виды деятельности в сети",
+  "карта: масштаб и расстояние",
+  "загруженность дорог: время в пути",
+  "интернет-торговля: где дешевле",
+  "бронирование: стыковка рейсов"
+];
+
+function tRng(seed) {
+  let s = seed >>> 0;
+  return function () {
+    s ^= s << 13; s >>>= 0;
+    s ^= s >> 17;
+    s ^= s << 5;  s >>>= 0;
+    return s / 4294967296;
+  };
+}
+
+function tRand(rng, a, b) { return a + Math.floor(rng() * (b - a + 1)); }
+function tPick(rng, arr) { return arr[tRand(rng, 0, arr.length - 1)]; }
+function tShuffle(rng, arr) {
+  const a = arr.slice();
+  for (let j = a.length - 1; j > 0; j--) {
+    const k = tRand(rng, 0, j);
+    const tmp = a[j]; a[j] = a[k]; a[k] = tmp;
+  }
+  return a;
+}
+
+/* ------------------------------------------------- 0. какой сервис нужен
+
+   Описание сервиса в варианте ответа обязано само отвечать на вопрос
+   «что он умеет»: два пункта списка не должны подходить под одну задачу.
+   Там, где описания всё-таки спорят между собой (карта и поисковая
+   система оба «расскажут про место»; облако и онлайн-офис оба «про
+   файлы»), пара занесена в T_CONFLICT и вместе в один список не
+   попадает. Это и есть гарантия единственности ответа — не текст
+   формулировки, а отбор вариантов. */
+
+const T_SERVICES = {
+  karta:   "электронная карта: маршрут, расстояние, что находится рядом",
+  probki:  "сервис, который показывает загруженность дорог и движение транспорта прямо сейчас",
+  torg:    "маркетплейс: заказ товара с доставкой",
+  bron:    "сервис бронирования билетов и гостиниц",
+  svyaz:   "сервис видеосвязи",
+  oblako:  "облачное хранилище файлов",
+  poisk:   "поисковая система",
+  perevod: "сервис машинного перевода",
+  ofis:    "онлайн-офис: один документ правят несколько человек сразу"
+};
+
+const T_CONFLICT = {
+  karta:  ["poisk"],
+  poisk:  ["karta"],
+  oblako: ["ofis"],
+  ofis:   ["oblako"]
+};
+
+const T_NEEDS = [
+  ["узнать, сколько километров от школы до музея и каким маршрутом туда идти", "karta"],
+  ["посмотреть, какая из двух аптек ближе к дому", "karta"],
+  ["измерить длину прогулочного маршрута вдоль реки", "karta"],
+  ["понять, выезжать прямо сейчас или через полчаса дороги освободятся", "probki"],
+  ["узнать, где сейчас едет нужный автобус и через сколько минут он подойдёт", "probki"],
+  ["купить наушники подешевле и забрать их в пункте выдачи у дома", "torg"],
+  ["сравнить цену одного и того же принтера у разных продавцов и заказать его", "torg"],
+  ["занять место в вагоне на 5 августа и получить билет на телефон", "bron"],
+  ["закрепить за собой номер в гостинице на три ночи", "bron"],
+  ["провести с классом занятие голосом и с картинкой, не выходя из дома", "svyaz"],
+  ["отдать однокласснику файл на 400 Мбайт, который не влезает в письмо", "oblako"],
+  ["выяснить, в каком году построили мост через реку в вашем городе", "poisk"],
+  ["прочитать инструкцию к прибору, написанную по-китайски", "perevod"],
+  ["втроём писать один отчёт одновременно, каждый со своего компьютера", "ofis"]
+];
+
+function tService(rng) {
+  const pair = tPick(rng, T_NEEDS);
+  const need = pair[0], cat = pair[1];
+  const banned = (T_CONFLICT[cat] || []).concat([cat]);
+  const others = Object.keys(T_SERVICES).filter(k => banned.indexOf(k) < 0);
+  const distract = tShuffle(rng, others).slice(0, 3);
+  const opts = tShuffle(rng, [cat].concat(distract));
+  const at = opts.indexOf(cat) + 1;
+  return {
+    type: 0, answer: String(at),
+    meta: {cat: cat, opts: opts},
+    question: "Нужно <b>" + need + "</b>. Какой сервис для этого " +
+      "предназначен? В ответе — номер варианта." +
+      "<ol>" + opts.map(k => "<li>" + T_SERVICES[k] + "</li>").join("") + "</ol>",
+    explain: "Подходит вариант " + at + ": " + T_SERVICES[cat] + ". " +
+      "Остальные сервисы решают другие задачи — сервис выбирают по тому, " +
+      "какие данные у него есть и что он с ними считает."
+  };
+}
+
+/* ------------------------------------------ 1. виды деятельности в сети
+
+   Строки во всех четырёх списках разные — значит про каждый пример
+   однозначно известно, к какому виду деятельности он относится. Ответ —
+   сколько примеров из четырёх относится к спрошенному виду. */
+
+const T_ACT = {
+  "интернет-торговле": [
+    "сравнить цену одного товара у трёх продавцов",
+    "оформить заказ с доставкой в пункт выдачи",
+    "оплатить покупку картой на сайте магазина",
+    "оставить отзыв о товаре после получения",
+    "оформить возврат товара в личном кабинете магазина"
+  ],
+  "бронированию": [
+    "выбрать место в вагоне и выкупить билет",
+    "закрепить за собой номер в гостинице на три ночи",
+    "перенести дату вылета в личном кабинете",
+    "купить билет в музей на определённое время",
+    "занять столик в кафе на вечер"
+  ],
+  "геоинформационным и геолокационным сервисам": [
+    "измерить линейкой длину маршрута на карте",
+    "посмотреть загруженность дорог перед выездом",
+    "построить маршрут на общественном транспорте",
+    "включить на телефоне определение своего местоположения",
+    "посмотреть, какие организации есть в соседнем доме"
+  ],
+  "общению и совместной работе": [
+    "созвониться с классом по видеосвязи",
+    "править один документ вместе с соседом по парте",
+    "отправить письмо с вложением",
+    "обсудить проект в общем чате",
+    "выложить файл в облако и дать на него ссылку"
+  ]
+};
+
+const T_ACT_KEYS = Object.keys(T_ACT);
+
+function tPickN(rng, pool, n) {
+  return tShuffle(rng, pool).slice(0, n);
+}
+
+function tActivity(rng) {
+  const kind = tPick(rng, T_ACT_KEYS);
+  const k = tRand(rng, 1, 3);
+  const yes = tPickN(rng, T_ACT[kind], k);
+  const rest = [];
+  T_ACT_KEYS.forEach(function (other) {
+    if (other !== kind) T_ACT[other].forEach(s => rest.push(s));
+  });
+  const no = tPickN(rng, rest, 4 - k);
+  const items = tShuffle(rng, yes.concat(no));
+  return {
+    type: 1, answer: String(k),
+    meta: {kind: kind, items: items},
+    question: "Перечислены действия: <b>" + items.join("; ") + "</b>. " +
+      "Сколько из них относится к <i>" + kind + "</i>?",
+    explain: "К " + kind + " относится: " + yes.join("; ") + " — всего " +
+      k + ". Остальное из списка — другие виды деятельности в сети."
+  };
+}
+
+/* ------------------------------------- 2. карта: масштаб и расстояние
+
+   Один и тот же масштаб пишут двумя способами: «в 1 см — 250 м» и
+   «1:25000». Это одно умение, поэтому один тип, но обе записи должны
+   встречаться: именованный масштаб читают все, численный — не все. */
+
+const T_SCALE = [50, 100, 125, 150, 200, 250, 500];
+const T_ROUTES = [
+  ["школы", "парка"], ["дома", "вокзала"], ["школы", "стадиона"],
+  ["музея", "набережной"], ["дома", "поликлиники"], ["школы", "библиотеки"]
+];
+
+function tMap(rng) {
+  const m = tPick(rng, T_SCALE);
+  const seg = [tRand(rng, 1, 9), tRand(rng, 1, 9), tRand(rng, 1, 9)];
+  const named = rng() < 0.5;
+  const scaleText = named ? "в 1 см — " + m + " м" : "1:" + (m * 100);
+  const sum = seg[0] + seg[1] + seg[2];
+  const route = tPick(rng, T_ROUTES);
+  return {
+    type: 2, answer: String(sum * m),
+    meta: {m: m, seg: seg, named: named},
+    question: "На электронной карте включена линейка. Масштаб карты — <b>" +
+      scaleText + "</b>. Маршрут от " + route[0] + " до " + route[1] +
+      " измерен по трём отрезкам: <b>" + seg[0] + " см</b>, <b>" + seg[1] +
+      " см</b> и <b>" + seg[2] + " см</b>. Сколько метров составляет весь " +
+      "маршрут?",
+    explain: (named
+        ? "Масштаб дан именованным: 1 см карты = " + m + " м на местности. "
+        : "Масштаб 1:" + (m * 100) + " значит, что 1 см карты = " + (m * 100) +
+          " см на местности, то есть " + m + " м. ") +
+      "Линейка дала " + seg[0] + " + " + seg[1] + " + " + seg[2] + " = " +
+      sum + " см, значит " + sum + " × " + m + " = " + (sum * m) + " м."
+  };
+}
+
+/* ------------------------- 3. загруженность дорог: время в пути
+
+   Баллы сервис считает сам, сравнивая скорость машин со свободной
+   дорогой. Для ученика баллы — это данные: по таблице переводятся в
+   среднюю скорость, дальше обычное t = s / v. Числа подобраны так,
+   чтобы минуты выходили целыми: в городе путь чётный, на трассе
+   кратен трём. */
+
+const T_BALLS = [[3, 60], [6, 40], [8, 30], [10, 20]];
+const T_DEST = ["аэропорта", "вокзала", "дачи", "соседнего города", "спортшколы"];
+
+function tTraffic(rng) {
+  const b = tRand(rng, 0, 10);
+  let v = 20;
+  for (let i = 0; i < T_BALLS.length; i++)
+    if (b <= T_BALLS[i][0]) { v = T_BALLS[i][1]; break; }
+  const s1 = 2 * tRand(rng, 2, 20);
+  const s2 = 3 * tRand(rng, 3, 20);
+  const mins = s1 * 60 / v + s2 * 2 / 3;
+  return {
+    type: 3, answer: String(mins),
+    meta: {b: b, s1: s1, s2: s2, v: v},
+    question: "Сервис карт оценивает загруженность дорог баллами, а средняя " +
+      "скорость по городу при этом такая: 0–3 балла — 60 км/ч, 4–6 баллов — " +
+      "40 км/ч, 7–8 баллов — 30 км/ч, 9–10 баллов — 20 км/ч. Дорога до " +
+      tPick(rng, T_DEST) + " состоит из двух частей: <b>" + s1 +
+      " км по городу</b> и <b>" + s2 + " км по трассе</b>, средняя скорость " +
+      "на трассе — <b>90 км/ч</b>. Сейчас сервис показывает в городе <b>" +
+      b + " баллов</b>. Сколько минут займёт дорога?",
+    explain: b + " баллов — это средняя скорость " + v + " км/ч. По городу: " +
+      s1 + " / " + v + " ч = " + (s1 * 60 / v) + " мин. По трассе: " + s2 +
+      " / 90 ч = " + (s2 * 2 / 3) + " мин. Всего " + (s1 * 60 / v) + " + " +
+      (s2 * 2 / 3) + " = " + mins + " мин. Баллы — это не скорость и не " +
+      "минуты: их сначала переводят в скорость по таблице."
+  };
+}
+
+/* ------------------------------- 4. интернет-торговля: где дешевле
+
+   Итог = товар − скидка + доставка. Отбор устроен так, чтобы магазин с
+   самой низкой ценой на витрине НЕ оказывался самым дешёвым по итогу:
+   иначе задача проверяет только умение найти меньшее число. Порог
+   бесплатной доставки считается по стоимости товара до скидки — это
+   сказано в условии, иначе у задачи было бы два защитимых ответа. */
+
+const T_GOODS = ["наушники", "клавиатуру", "мышь", "внешний диск",
+                 "веб-камеру", "флешку", "настольную лампу", "кабель HDMI"];
+const T_SHOPS = ["Вольта", "Мегабит", "Электрон", "Пиксель", "Гигант",
+                 "Контур", "Ритм", "Орбита"];
+
+function tShopSet(rng) {
+  const k = tRand(rng, 2, 4);
+  const base = 100 * tRand(rng, 6, 22);
+  const prices = tShuffle(rng, [base, base + 100 * tRand(rng, 1, 3),
+                                base + 100 * tRand(rng, 4, 7)]);
+  const cheapest = prices.indexOf(Math.min.apply(null, prices));
+  // Промокод даём не самому дешёвому по витрине — иначе он победит дважды.
+  let promoAt = tRand(rng, 0, 2);
+  while (promoAt === cheapest) promoAt = tRand(rng, 0, 2);
+  const percent = tPick(rng, [10, 20, 25]);
+  const shops = prices.map(function (p, i) {
+    const goods = k * p;
+    // Самому дешёвому по витрине доставку делаем платной: порог выше его
+    // же суммы товара. Остальным порог случайный.
+    const free = i === cheapest ? goods + 100 * tRand(rng, 1, 12)
+                                : 100 * tRand(rng, 5, 40);
+    return {
+      name: T_SHOPS[i], p: p, goods: goods,
+      d: 50 * tRand(rng, 3, 8),
+      t: free,
+      promo: i === promoAt ? percent : 0
+    };
+  });
+  shops.forEach(function (s) {
+    s.disc = s.goods * s.promo / 100;
+    s.del = s.goods >= s.t ? 0 : s.d;
+    s.total = s.goods - s.disc + s.del;
+  });
+  return {k: k, shops: shops, cheapest: cheapest};
+}
+
+function tShopping(rng) {
+  let set = tShopSet(rng);
+  for (let guard = 0; guard < 400; guard++) {
+    const totals = set.shops.map(s => s.total);
+    const best = totals.indexOf(Math.min.apply(null, totals));
+    const unique = totals.filter(x => x === totals[best]).length === 1;
+    if (unique && best !== set.cheapest) break;
+    set = tShopSet(rng);
+  }
+  const k = set.k, shops = set.shops;
+  const good = tPick(rng, T_GOODS);
+  const names = tShuffle(rng, T_SHOPS).slice(0, 3);
+  shops.forEach(function (s, i) { s.name = names[i]; });
+  const totals = shops.map(s => s.total);
+  const answer = Math.min.apply(null, totals);
+  const best = totals.indexOf(answer);
+  const li = shops.map(function (s) {
+    let line = "«" + s.name + "» — " + s.p + " ₽ за штуку; доставка " + s.d +
+      " ₽, бесплатно при заказе от " + s.t + " ₽";
+    if (s.promo) line += "; промокод даёт −" + s.promo + "% на товар";
+    return "<li>" + line + "</li>";
+  }).join("");
+  return {
+    type: 4, answer: String(answer),
+    meta: {k: k, shops: shops.map(s => ({p: s.p, d: s.d, t: s.t, promo: s.promo}))},
+    question: "Нужно купить " + good + ", <b>" + k + " шт.</b> " +
+      "Три магазина:<ol>" + li + "</ol>Порог бесплатной доставки считается " +
+      "по стоимости товара: скидка по промокоду на него не влияет. Сколько " +
+      "рублей составит итог в самом дешёвом варианте?",
+    explain: shops.map(function (s) {
+      return "«" + s.name + "»: товар " + k + " × " + s.p + " = " + s.goods +
+        (s.promo ? ", скидка " + s.promo + "% = " + s.disc : "") +
+        ", доставка " + (s.del ? s.del + " (до порога " + s.t + " не дотянули)"
+                               : "0 (порог " + s.t + " пройден)") +
+        " → итог " + s.total;
+    }).join(". ") + ". Дешевле всего «" + shops[best].name + "» — " + answer +
+      " ₽. Самая низкая цена на витрине у магазина «" + shops[set.cheapest].name +
+      "», но по итогу выигрывает не он: «дешевле» — это про итог, а не про " +
+      "цену на ценнике."
+  };
+}
+
+/* ------------------------- 5. бронирование: стыковка рейсов
+
+   Считать надо в минутах, а не в «часах с копейками»: 14:35 → 17:10 это
+   155 минут, и именно тут чаще всего ошибаются. Запас всегда
+   неотрицательный — про отрицательный случай (стыковка не гарантирована)
+   сказано в разборе и в подсказке. */
+
+/* Три падежа на город: «из …», «в …», «пересадка в …». Без этого
+   выходит «билет из Москву», и на такой фразе ученик спотыкается
+   раньше, чем на арифметике. Пересадка — только в крупном узле,
+   чтобы маршрут не выглядел выдумкой. */
+const T_CITY = [
+  {from: "Казани",            to: "Казань",            at: "Казани",            hub: false},
+  {from: "Сочи",              to: "Сочи",              at: "Сочи",              hub: false},
+  {from: "Калининграда",      to: "Калининград",       at: "Калининграде",      hub: false},
+  {from: "Иркутска",          to: "Иркутск",           at: "Иркутске",          hub: false},
+  {from: "Красноярска",       to: "Красноярск",        at: "Красноярске",       hub: false},
+  {from: "Минеральных Вод",   to: "Минеральные Воды",  at: "Минеральных Водах", hub: false},
+  {from: "Мурманска",         to: "Мурманск",          at: "Мурманске",         hub: false},
+  {from: "Владивостока",      to: "Владивосток",       at: "Владивостоке",      hub: false},
+  {from: "Москвы",            to: "Москву",            at: "Москве",            hub: true},
+  {from: "Санкт-Петербурга",  to: "Санкт-Петербург",   at: "Санкт-Петербурге",  hub: true},
+  {from: "Екатеринбурга",     to: "Екатеринбург",      at: "Екатеринбурге",     hub: true},
+  {from: "Новосибирска",      to: "Новосибирск",       at: "Новосибирске",      hub: true}
+];
+
+function tClock(total) {
+  const h = Math.floor(total / 60), m = total % 60;
+  return (h < 10 ? "0" : "") + h + ":" + (m < 10 ? "0" : "") + m;
+}
+
+function tTransfer(rng) {
+  const t1 = 60 * tRand(rng, 6, 17) + 5 * tRand(rng, 0, 11);
+  const need = tPick(rng, [40, 45, 50, 60, 75, 90, 120]);
+  const spare = 5 * tRand(rng, 1, 30);
+  const t2 = t1 + need + spare;
+  const hub = tPick(rng, T_CITY.filter(c => c.hub));
+  const ends = tShuffle(rng, T_CITY.filter(c => c !== hub)).slice(0, 2);
+  return {
+    type: 5, answer: String(spare),
+    meta: {t1: t1, t2: t2, need: need},
+    question: "Билет из " + ends[0].from + " в " + ends[1].to + " собран из двух " +
+      "рейсов с пересадкой в " + hub.at + ". Первый рейс " +
+      "прилетает в <b>" + tClock(t1) + "</b>, второй вылетает в <b>" +
+      tClock(t2) + "</b> — время местное, аэропорта пересадки. На пересадку " +
+      "аэропорт требует не меньше <b>" + need + " минут</b>. Сколько минут " +
+      "запаса остаётся сверх этого требования?",
+    explain: "Между рейсами " + tClock(t1) + " → " + tClock(t2) + " проходит " +
+      (t2 - t1) + " минут (считать надо в минутах, а не «часами с " +
+      "копейками»). Требуется " + need + ", значит запас " + (t2 - t1) +
+      " − " + need + " = " + spare + " минут. Если бы запас вышел " +
+      "отрицательным, такую стыковку сервис бронирования просто не собрал " +
+      "бы в один билет — а купленные врозь рейсы никто не ждёт."
+  };
+}
+
+/* ---------------------------------------------------------------- сборка */
+
+function tTask(type, rng) {
+  if (type === 0) return tService(rng);
+  if (type === 1) return tActivity(rng);
+  if (type === 2) return tMap(rng);
+  if (type === 3) return tTraffic(rng);
+  if (type === 4) return tShopping(rng);
+  return tTransfer(rng);
+}
+
+function tMake(seed) {
+  const rng = tRng(seed || 1);
+  return tShuffle(rng, [0, 1, 2, 3, 4, 5]).map(function (type) {
+    return tTask(type, rng);
+  });
+}
+
+/* Ответ сверяется знак в знак: целое число без пробелов и единиц. */
+function tCheck(task, raw) {
+  const s = String(raw === undefined || raw === null ? "" : raw).replace(/\s+/g, "");
+  if (!/^\d+$/.test(s)) return false;
+  return String(Number(s)) === task.answer;
+}
+/* ==== /ЗАДАЧИ ==== */
+
+/* Форма сдачи ДЗ — одна на все темы. Ссылку разносит set_form_link.py. */
+const FORM = "https://docs.google.com/forms/d/e/1FAIpQLSfQyhaxcnzn4ZaKSe_ZMsluw7qRQnrw_80H6SfrnYB5EThUIA/viewform?usp=pp_url&entry.853601231=ФАМИЛИЯ&entry.1091635917=КЛАСС&entry.487188307=КОД";
+
+const ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+const EPOCH = Date.UTC(2026, 0, 1);
+const PREFIX = "SI";
+const SCALE = [[6, 5], [5, 4], [3, 3]];
+
+const bin = (v, w) => v.toString(2).padStart(w, "0");
+
+/* Семибитными кусками строки: в нагрузке 33 бита, а побитовые операции в JS
+   32-битные — старший бит молча потерялся бы. */
+function checksum(bitstr){
+  let cs = 0x5B;
+  for (let i = 0; i < bitstr.length; i += 7)
+    cs ^= parseInt(bitstr.substr(i, 7).padEnd(7, "0"), 2);
+  return cs & 0x7F;
+}
+
+function makeCode(st){
+  const day = Math.max(0, Math.min(2047, Math.floor(
+      (Date.now() - EPOCH) / 86400000)));
+  const payload = bin(day, 11) + bin(Math.min(15, st.typesDone), 4) +
+                  bin(Math.min(15, st.cleanTypes), 4) +
+                  bin(Math.min(127, st.solved), 7) +
+                  bin(Math.min(127, st.wrong), 7);
+  const bitstr = payload + bin(checksum(payload), 7);
+  let out = "";
+  for (let i = 0; i < 40; i += 5)
+    out += ALPHABET[parseInt(bitstr.substr(i, 5), 2)];
+  return PREFIX + "-" + out.slice(0, 4) + "-" + out.slice(4);
+}
+
+/* ---------------------------------------------------------- состояние
+   Добор до желаемой отметки: вопрос закрывается одним верным ответом и
+   больше не спрашивается; ошибся — вопрос остаётся открытым и вернётся
+   в следующем раунде с новыми числами. Раунд — это проход по всем пока
+   не закрытым вопросам по одному разу. После раунда можно забрать код
+   (если закрыто хотя бы MIN_TO_FINISH) или досдать оставшиеся. */
+const T_COUNT = T_TYPES.length;
+const MIN_TO_FINISH = 3;
+
+let st;
+
+function esc(s){ return String(s).replace(/[&<>]/g, c =>
+  ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+
+function markFor(n){
+  for (const [need, m] of SCALE) if (n >= need) return m;
+  return null;
+}
+
+function wordQ(n){
+  const a = n % 100, b = a % 10;
+  if (a > 4 && a < 21) return "вопросов";
+  if (b === 1) return "вопрос";
+  if (b > 1 && b < 5) return "вопроса";
+  return "вопросов";
+}
+
+function newRng(){ return tRng((Date.now() ^ (Math.random() * 1e9)) >>> 0); }
+
+function shuffle(arr, rng){
+  const a = arr.slice();
+  for (let j = a.length - 1; j > 0; j--) {
+    const k = tRand(rng, 0, j);
+    const tmp = a[j]; a[j] = a[k]; a[k] = tmp;
+  }
+  return a;
+}
+
+function freshState(){
+  const s = {
+    closed: Array(T_COUNT).fill(false),
+    clean:  Array(T_COUNT).fill(true),
+    solved: 0, wrong: 0,
+    queue: [], qi: 0, cur: null
+  };
+  Object.defineProperty(s, "typesDone",
+    {get(){ return s.closed.filter(Boolean).length; }});
+  Object.defineProperty(s, "cleanTypes",
+    {get(){ return s.closed.filter((d, i) => d && s.clean[i]).length; }});
+  return s;
+}
+
+function paint(){
+  const box = document.getElementById("types");
+  box.innerHTML = "";
+  for (let i = 0; i < T_COUNT; i++) {
+    const el = document.createElement("span");
+    const isCur = st.cur && st.cur.type === i;
+    el.className = "chip" + (st.closed[i] ? " done" : isCur ? " cur" : "");
+    el.textContent = T_TYPES[i];
+    box.appendChild(el);
+  }
+  const done = st.typesDone;
+  const m = markFor(done);
+  const sb = document.getElementById("scorebox");
+  sb.className = "score" + (m ? " m" + m : "");
+  document.getElementById("mark").textContent = m ? m : "—";
+  document.getElementById("stats").textContent =
+    "Закрыто: " + done + " из " + T_COUNT + ". Решено задач: " + st.solved +
+    ", ошибок: " + st.wrong + ".";
+}
+
+function startRound(){
+  const open = [];
+  for (let i = 0; i < T_COUNT; i++) if (!st.closed[i]) open.push(i);
+  st.queue = shuffle(open, newRng());
+  st.qi = 0;
+  askNext();
+}
+
+function askNext(){
+  if (st.qi >= st.queue.length) { roundEnd(); return; }
+  st.cur = tTask(st.queue[st.qi], newRng());
+  renderTask();
+}
+
+function renderTask(){
+  const t = st.cur;
+  document.getElementById("area").innerHTML =
+    '<div class="card" id="task">' +
+      '<p class="tag">' + T_TYPES[t.type] + ' &middot; решено задач: ' +
+        st.solved + '</p>' +
+      '<div class="q">' + t.question + '</div>' +
+      '<div class="row">' +
+        '<input type="text" id="ans" autocomplete="off" spellcheck="false" ' +
+               'inputmode="numeric" placeholder="целое число">' +
+        '<button class="primary" id="go">Ответить</button>' +
+      '</div>' +
+      '<div class="verdict" id="v"></div>' +
+    '</div>';
+  const input = document.getElementById("ans");
+  input.focus();
+  input.addEventListener("keydown", function(e){
+    if (e.key === "Enter") judge();
+  });
+  document.getElementById("go").addEventListener("click", judge);
+  paint();
+}
+
+function judge(){
+  const t = st.cur;
+  const raw = document.getElementById("ans").value;
+  const ok = tCheck(t, raw);
+  if (ok) { st.closed[t.type] = true; st.solved++; }
+  else { st.wrong++; st.clean[t.type] = false; }
+
+  const card = document.getElementById("task");
+  card.className = "card " + (ok ? "ok" : "err");
+  document.getElementById("ans").disabled = true;
+  document.getElementById("go").disabled = true;
+  document.getElementById("v").className = "verdict " + (ok ? "ok" : "err");
+  document.getElementById("v").innerHTML = ok
+    ? "Правильно — вопрос закрыт."
+    : "Ошибка. Твой ответ: <code>" + esc(raw) + "</code>, верный: <code>" +
+      t.answer + "</code>. Вопрос остался открытым — вернётся при доборе.";
+  card.insertAdjacentHTML("beforeend",
+    '<div class="why">' + t.explain + '</div>' +
+    '<div class="row"><button class="primary" id="nx">Дальше</button></div>');
+  document.getElementById("nx").addEventListener("click", function(){
+    st.qi++;
+    askNext();
+  });
+  paint();
+}
+
+function roundEnd(){
+  st.cur = null;
+  paint();
+  const done = st.typesDone, open = T_COUNT - done;
+  if (done >= T_COUNT) { finish(); return; }
+
+  const m = markFor(done);
+  const up = SCALE.filter(s => s[0] > done).pop();
+  let msg;
+  if (!m) {
+    msg = "Пока закрыто <b>" + done + "</b> из " + T_COUNT + " — этого мало " +
+      "даже на «3» (нужно " + MIN_TO_FINISH + "). Досдай оставшиеся вопросы: " +
+      "числа будут новые.";
+  } else if (up) {
+    msg = "Наработано на <b>" + m + "</b> (закрыто " + done + " из " + T_COUNT +
+      "). Можно забрать код сейчас, а можно досдать ещё " + open + " " +
+      wordQ(open) + " и дойти до <b>" + up[1] + "</b>.";
+  } else {
+    msg = "Наработано на <b>" + m + "</b> (закрыто " + done + " из " + T_COUNT + ").";
+  }
+  const canFinish = done >= MIN_TO_FINISH;
+  document.getElementById("area").innerHTML =
+    '<div class="card">' +
+      '<h2>Раунд пройден</h2>' +
+      '<p>' + msg + '</p>' +
+      '<div class="row">' +
+        (open > 0 ? '<button class="primary" id="more">Досдать оставшиеся (' +
+          open + ')</button>' : '') +
+        (canFinish ? '<button id="stop"' + (open > 0 ? '' : ' class="primary"') +
+          '>Получить код' + (open > 0 ? ' сейчас' : '') + '</button>' : '') +
+      '</div>' +
+    '</div>';
+  const moreBtn = document.getElementById("more");
+  if (moreBtn) moreBtn.addEventListener("click", startRound);
+  const stopBtn = document.getElementById("stop");
+  if (stopBtn) stopBtn.addEventListener("click", finish);
+}
+
+function finish(){
+  const code = makeCode(st);
+  const m = markFor(st.typesDone);
+  const open = [];
+  for (let i = 0; i < T_COUNT; i++) if (!st.closed[i]) open.push(T_TYPES[i]);
+  document.getElementById("area").innerHTML =
+    '<div class="card">' +
+      '<h2>Работа завершена</h2>' +
+      '<p>Закрыто <b>' + st.typesDone + '</b> из ' + T_COUNT +
+        (m ? ', это отметка <b>' + m + '</b>' : '') + '.' +
+        (open.length ? ' Не закрыто: ' + open.join(", ") + '.' : '') +
+      '</p>' +
+      '<p>Код работы — его и надо сдать:</p>' +
+      '<div class="code">' + code + '</div>' +
+      '<div class="note">Код хранит дату, число закрытых вопросов, число ' +
+        'решённых и неверных задач. Переписывать его руками не нужно: впиши ' +
+        'фамилию и класс, и кнопка откроет форму с уже подставленным кодом.</div>' +
+      '<div class="fields">' +
+        '<div><label for="fam">Фамилия и имя</label>' +
+          '<input type="text" id="fam" autocomplete="off"></div>' +
+        '<div><label for="kls">Класс</label>' +
+          '<input type="text" id="kls" autocomplete="off" value="11"></div>' +
+      '</div>' +
+      '<div class="row">' +
+        '<button id="send" class="primary">Сдать работу</button>' +
+        '<button id="again">Начать заново</button>' +
+      '</div>' +
+      '<p class="stats">«Начать заново» откроет все ' + T_COUNT + ' вопросов с ' +
+        'нуля — для дополнительной тренировки. Сдавать нужно тот код, который ' +
+        'получен сейчас.</p>' +
+    '</div>';
+  document.getElementById("send").addEventListener("click", function(){
+    const fam = document.getElementById("fam").value.trim();
+    if (!fam) { document.getElementById("fam").focus(); return; }
+    const kls = document.getElementById("kls").value.trim() || "11";
+    window.open(FORM.replace("ФАМИЛИЯ", encodeURIComponent(fam))
+                    .replace("КЛАСС", encodeURIComponent(kls))
+                    .replace("КОД", encodeURIComponent(code)), "_blank");
+  });
+  document.getElementById("again").addEventListener("click", resetAll);
+  paint();
+}
+
+function resetAll(){
+  st = freshState();
+  startRound();
+}
+
+resetAll();
+</script>
+<p class="ai-mark" style="margin:34px auto 0;max-width:860px;padding-top:12px;border-top:1px solid #d9dce6;color:#5c6070;font:13px/1.5 'Segoe UI',system-ui,sans-serif">Материалы подготовлены с использованием технологий искусственного интеллекта.</p>
+</body>
+</html>

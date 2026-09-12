@@ -280,13 +280,20 @@ const TYPES = [
 const TYPES_TOTAL = TYPES.length;
 const LETTERS = ["А","Б","В","Г","Д","Е","Ж","З","И"];
 
-const randInt = (lo, hi) => lo + Math.floor(Math.random() * (hi - lo + 1));
+/* Источник случайности. Обычно это Math.random, но работа на оценку его
+   подменяет: вариант там привязан к фамилии, и перезагрузка страницы
+   обязана дать тот же самый (память `variant-by-surname`). Подменяется
+   только на время сборки задач и возвращается обратно — иначе страница
+   останется предсказуемой и после. */
+let RND = Math.random;
+
+const randInt = (lo, hi) => lo + Math.floor(RND() * (hi - lo + 1));
 const pick = a => a[randInt(0, a.length - 1)];
 
 function shuffle(arr){
   const a = arr.slice();
   for (let i = a.length - 1; i > 0; i--){
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(RND() * (i + 1));
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
@@ -392,13 +399,13 @@ function ringLayout(n, m){
   const step = 2 * Math.PI / k;
   const pos = [];
   for (let i = 0; i < k; i++){
-    const a = -Math.PI / 2 + step * i + (Math.random() - 0.5) * step * 0.55;
-    const f = 0.84 + Math.random() * 0.16;
+    const a = -Math.PI / 2 + step * i + (RND() - 0.5) * step * 0.55;
+    const f = 0.84 + RND() * 0.16;
     pos.push({x: CX + RX * f * Math.cos(a), y: CY + RY * f * Math.sin(a)});
   }
   for (let guard = 0; pos.length < n && guard < 400; guard++){
-    const a = Math.random() * 2 * Math.PI;
-    const r = Math.sqrt(Math.random()) * 0.5;
+    const a = RND() * 2 * Math.PI;
+    const r = Math.sqrt(RND()) * 0.5;
     const p = {x: CX + RX * r * Math.cos(a), y: CY + RY * r * Math.sin(a)};
     if (pos.some(q => dist2(p, q) < NODE_GAP * NODE_GAP)) continue;
     pos.push(p);

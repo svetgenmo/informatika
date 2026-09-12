@@ -1,0 +1,1322 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Домашнее задание — ветвления и циклы</title>
+<meta name="description" content="Домашнее задание 10 класса (углублённый) к четвёртой паре: какая ветка сработает, значение сложного условия, что напечатает цикл while, исполнитель из задания 13 ЕГЭ, поиск данных, на которых чужая программа врёт, и вопросы про приоритет операций, короткое замыкание, break и continue.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E10%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{margin:0;padding:20px 16px 60px;font:17px/1.55 "Segoe UI",system-ui,sans-serif}
+.wrap{max-width:820px;margin:0 auto}
+h1{font-size:23px;margin:0 0 4px}
+h2{font-size:18px;margin:0 0 10px}
+.sub{color:var(--muted);font-size:15px;margin:0 0 18px}
+code,pre{font-family:Consolas,"Cascadia Mono",monospace}
+pre{background:#1e2430;color:#e7ecf5;padding:13px 16px;border-radius:10px;
+    overflow-x:auto;font-size:15px;line-height:1.5;margin:10px 0}
+code{background:var(--card);border:1px solid var(--line);border-radius:5px;
+     padding:1px 5px;font-size:15px}
+pre code{background:none;border:0;padding:0;color:inherit;font-size:inherit}
+.intro{border:1px solid var(--line);border-radius:12px;background:var(--card);
+       padding:14px 18px;margin-bottom:18px}
+.intro dl{margin:0}
+.intro dt{font-weight:700;margin-top:10px}
+.intro dt:first-child{margin-top:0}
+.intro dd{margin:2px 0 0}
+.progress{border:2px solid var(--accent);border-radius:12px;padding:12px 16px;
+          background:#fff;margin-bottom:18px}
+.ptop{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.ptop h2{margin:0}
+.sp{flex:1 1 auto}
+.score{display:flex;align-items:baseline;gap:10px;color:var(--muted);font-size:15px}
+.score b{font:700 34px/1 "Segoe UI",system-ui,sans-serif;color:var(--ink);
+         min-width:40px;text-align:center;border:2px solid var(--line);
+         border-radius:8px;padding:2px 8px}
+.m5 b{color:var(--ok);border-color:var(--ok-line)}
+.m4 b{color:var(--accent);border-color:#a9c6e8}
+.m3 b{color:#8a5a00;border-color:var(--hi-line)}
+.types{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);border-radius:20px;padding:4px 12px;
+      font-size:14px;color:var(--muted);background:var(--card)}
+.chip.done{border-color:var(--ok-line);background:var(--ok-bg);color:var(--ok);
+           font-weight:600}
+.chip.cur{border-color:var(--accent);color:var(--accent);font-weight:600}
+.card{border:1px solid var(--line);border-radius:12px;padding:16px 18px;
+      background:#fff;margin-bottom:14px}
+.card.ok{border-color:var(--ok-line);background:var(--ok-bg)}
+.card.err{border-color:var(--err-line);background:var(--err-bg)}
+.tag{font-size:13px;color:var(--muted);margin:0 0 6px}
+.inp{font-size:15px;color:var(--muted);margin:4px 0}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px}
+input[type=text]{font:16px/1 Consolas,monospace;padding:10px 12px;border-radius:8px;
+                 border:1px solid var(--line);width:100%;max-width:340px}
+button{font:600 15px/1 inherit;padding:11px 16px;border-radius:9px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);color:var(--muted)}
+.verdict{margin-top:10px;font-size:15.5px}
+.verdict.ok{color:var(--ok)}
+.verdict.err{color:var(--err)}
+.note{border:1px solid var(--hi-line);background:var(--hi-bg);border-radius:10px;
+      padding:11px 15px;margin:12px 0;font-size:15.5px}
+.code{font:700 26px/1.2 Consolas,monospace;letter-spacing:.06em;
+      background:var(--card);border:2px dashed var(--accent);border-radius:12px;
+      padding:16px;text-align:center;margin:12px 0;user-select:all}
+.stats{color:var(--muted);font-size:14px}
+label{display:block;font-size:14px;color:var(--muted);margin-bottom:3px}
+.fields{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0}
+.fields div{flex:1 1 180px}
+.fields input{max-width:none}
+details{margin-top:10px;border:1px dashed var(--line);border-radius:9px;padding:8px 12px}
+summary{cursor:pointer;color:var(--accent);font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Домашнее задание — ветвления и циклы</h1>
+<p class="sub">10 класс, углублённый уровень. Читаем программы и предсказываем,
+что напечатает Python; ведём исполнителя из задания 13 ЕГЭ; ищем данные, на
+которых чужая программа врёт; отвечаем на вопросы про условия и циклы.
+Python не нужен.</p>
+
+<div class="intro">
+  <dl>
+    <dt>Что нужно сделать</dt>
+    <dd>Закрыть шесть типов задач — по одной верно решённой на каждый. Ошибся —
+        тип не закрыт, и следующей придёт задача того же типа: разбор только что
+        показан, примени его.</dd>
+    <dt>Сколько закроешь — на то и наработал</dt>
+    <dd>Шесть типов — «5», пять — «4», четыре — «3». Меньше четырёх кода не
+        будет: сдавать нечего.</dd>
+    <dt>Ответ — ровно то, что на экране</dt>
+    <dd>Если программа печатает несколько строк, перечисли их через пробел.
+        Считать в уме и на бумаге: на проверочной Python тоже не будет, а
+        запустив программу, ответ узнаешь, но не научишься.</dd>
+    <dt>Как сдать</dt>
+    <dd>В конце появится кнопка <b>«Сдать работу»</b>: впишешь фамилию и
+        класс, кнопка сама откроет форму с уже вписанным кодом. Переписывать
+        код руками не надо — именно на этом чаще всего и ошибаются.</dd>
+  </dl>
+</div>
+
+<div class="progress">
+  <div class="ptop">
+    <h2>Что осталось закрыть</h2>
+    <span class="sp"></span>
+    <div class="score" id="scorebox">
+      <span>наработано на</span><b id="mark">—</b>
+    </div>
+  </div>
+  <div class="types" id="types"></div>
+  <p class="stats" id="stats"></p>
+</div>
+
+<div id="area"></div>
+
+</div>
+
+<script>
+/* ==== ТИПЫ: вставлено gen.py, руками не править ==== */
+/* Ветвления и циклы — источник правды для тренажёра практикума, ДЗ и проверочной.
+   Вставляется скриптом gen.py --sync между маркерами. Руками в html не править.
+
+   Шесть типов задач — два урока пары и их стык:
+     0 «какая ветка сработает» — if / elif / else, порядок и недостижимость
+     1 «сложное условие»        — and, or, not, приоритет, цепочки, замыкание
+     2 «сколько раз выполнится» — счётчик итераций while
+     3 «что напечатает while»   — накопитель: сумма цифр, переворот, максимум
+     4 «break и continue»       — досрочный выход и пропуск шага
+     5 «исполнитель»            — задание 13 ЕГЭ 2027 в уме, без кода
+
+   Ответ у задач 0–4 — ровно то, что напечатает Python, и gen.py --selftest
+   берёт этот код КАК ЕСТЬ, исполняет настоящим Python и сверяет. Задачи типа 5
+   кода не содержат: Python пересчитывает их по параметрам (meta) своей
+   моделью исполнителя.                                                        */
+
+const T_TYPES = [
+  'какая ветка сработает',
+  'сложное условие',
+  'сколько раз выполнится',
+  'что напечатает while',
+  'break и continue',
+  'исполнитель (ЕГЭ 13)'
+];
+const T_PER_TYPE = 2;      /* задач каждого типа в наборе тренажёра */
+
+/* Что сказать, когда ответ не сошёлся: приём, а не ответ ([[answer-fingerprints]]). */
+const T_HINTS = [
+  'Пройди ветки сверху вниз и останови на ПЕРВОЙ подошедшей — дальше Python не смотрит. '
+    + 'И проверь, лестница это (elif) или несколько отдельных if.',
+  'Расставь скобки по приоритету: сначала not, потом and, потом or. '
+    + 'И помни, что or возвращает не только True и False.',
+  'Выпиши значения переменной по шагам столбиком. Цикл останавливается, как только '
+    + 'условие стало ложным, — а проверяется оно ПЕРЕД каждым проходом.',
+  'Веди таблицу: что лежит в каждой переменной после очередного прохода. '
+    + 'После выхода переменная хранит уже НЕподошедшее значение.',
+  'break прекращает весь цикл, continue — только текущий проход. '
+    + 'Посмотри, что успело измениться до этой команды.',
+  'Иди по командам слева направо. На каждом шаге сначала реши, применима ли команда: '
+    + 'цифра десятков должна быть СТРОГО меньше цифры единиц.'
+];
+
+function tRng(seed) {
+  let s = seed >>> 0;
+  return function () {
+    s = (s * 1664525 + 1013904223) >>> 0;
+    return s / 4294967296;
+  };
+}
+function tRand(rng, a, b) { return a + Math.floor(rng() * (b - a + 1)); }
+function tPick(rng, arr) { return arr[tRand(rng, 0, arr.length - 1)]; }
+function tShuffle(rng, arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = tRand(rng, 0, i);
+    const tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+  }
+  return a;
+}
+
+/* --------------------------------------------- арифметика по правилам Python */
+function pyDiv(a, b) { return Math.floor(a / b); }                 /* a // b */
+function pyMod(a, b) { return a - b * Math.floor(a / b); }         /* a % b  */
+function pyBool(v) { return v ? 'True' : 'False'; }
+
+/* ------------------------------------------- тип 0: какая ветка сработает */
+function m0(rng) {
+  const v = tRand(rng, 0, 5);
+
+  if (v === 0) {                                   /* лестница elif по порогам */
+    const x = tRand(rng, 20, 99);
+    const code = 'x = ' + x + '\n'
+               + 'if x >= 90:\n    print("отлично")\n'
+               + 'elif x >= 75:\n    print("хорошо")\n'
+               + 'elif x >= 60:\n    print("удовлетворительно")\n'
+               + 'else:\n    print("неудовлетворительно")';
+    const ans = x >= 90 ? 'отлично' : x >= 75 ? 'хорошо'
+              : x >= 60 ? 'удовлетворительно' : 'неудовлетворительно';
+    return {
+      code: code, answer: ans,
+      explain: 'Ветки проверяются сверху вниз, и работает ПЕРВАЯ подходящая: '
+             + x + ' ' + (x >= 90 ? 'не меньше 90' : 'меньше 90')
+             + (x >= 90 ? '' : ', ' + (x >= 75 ? 'но не меньше 75'
+                : x >= 60 ? 'меньше 75, но не меньше 60' : 'и меньше 60'))
+             + ' — печатается «' + ans + '», остальные ветки даже не проверяются.'
+    };
+  }
+
+  if (v === 1) {                       /* цепочка отдельных if: печатает всё */
+    const n = tPick(rng, [12, 24, 36, 18, 30, 20, 60, 48]);
+    const out = [];
+    if (n % 2 === 0) out.push('чётное');
+    if (n % 3 === 0) out.push('кратно трём');
+    if (n % 4 === 0) out.push('кратно четырём');
+    return {
+      code: 'n = ' + n + '\n'
+          + 'if n % 2 == 0:\n    print("чётное")\n'
+          + 'if n % 3 == 0:\n    print("кратно трём")\n'
+          + 'if n % 4 == 0:\n    print("кратно четырём")',
+      answer: out.join(' '),
+      question: 'Что напечатает программа? Строки перечисли через пробел.',
+      explain: 'Здесь три ОТДЕЛЬНЫХ if, а не лестница: каждый проверяется сам по '
+             + 'себе, и печатается всё, что подошло — ' + out.length
+             + (out.length === 1 ? ' строка' : ' строки') + '. Замени второй и '
+             + 'третий if на elif — и останется только первая.'
+    };
+  }
+
+  if (v === 2) {                                  /* недостижимая ветка elif */
+    const x = tRand(rng, 101, 400);
+    return {
+      code: 'x = ' + x + '\n'
+          + 'if x > 10:\n    print("больше десяти")\n'
+          + 'elif x > 100:\n    print("больше ста")\n'
+          + 'else:\n    print("маленькое")',
+      answer: 'больше десяти',
+      explain: 'Хотя ' + x + ' больше ста, вторая ветка недостижима вообще ни при '
+             + 'каком x: всё, что больше 100, больше и 10, а значит перехватывается '
+             + 'первой веткой. В лестнице elif порядок условий важнее их текста — '
+             + 'узкое условие ставят раньше широкого.'
+    };
+  }
+
+  if (v === 3) {                                        /* вложенное ветвление */
+    const b = tPick(rng, [3, 4, 5, 6, 7]);
+    const a = tRand(rng, 2, 9) * b + (rng() < 0.5 ? 0 : tRand(rng, 1, b - 1));
+    const ans = a > b ? (a % b === 0 ? 'делится' : 'не делится') : 'меньше';
+    return {
+      code: 'a = ' + a + '\nb = ' + b + '\n'
+          + 'if a > b:\n'
+          + '    if a % b == 0:\n        print("делится")\n'
+          + '    else:\n        print("не делится")\n'
+          + 'else:\n    print("меньше")',
+      answer: ans,
+      explain: a + ' > ' + b + ' — заходим внутрь, а там ' + a + ' % ' + b + ' = '
+             + pyMod(a, b) + '. Отступ решает, к какому if относится else: '
+             + 'внутренний else — к внутреннему if.'
+    };
+  }
+
+  if (v === 4) {                            /* ветки присваивают, печать позже */
+    const a = tRand(rng, 3, 20), b = tRand(rng, 3, 20);
+    const m = a > b ? a : b;
+    const ans = m % 2 === 0 ? pyDiv(m, 2) : m * 3 + 1;
+    return {
+      code: 'a = ' + a + '\nb = ' + b + '\n'
+          + 'if a > b:\n    m = a\nelse:\n    m = b\n'
+          + 'if m % 2 == 0:\n    m = m // 2\nelse:\n    m = m * 3 + 1\n'
+          + 'print(m)',
+      answer: '' + ans,
+      explain: 'Первое ветвление выбирает большее: m = ' + m + '. Второе смотрит на '
+             + 'чётность: ' + m + ' ' + (m % 2 === 0 ? 'чётное, делим пополам — '
+             : 'нечётное, умножаем на 3 и прибавляем 1 — ') + ans
+             + '. Ветка может не печатать, а менять переменную.'
+    };
+  }
+
+  const year = tPick(rng, [1900, 2000, 2100, 1600, 2024, 2023, 1800, 2400]);
+  const isLeap = (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+  return {                                     /* прямая связь с заданием 1 */
+    code: 'year = ' + year + '\n'
+        + 'if year % 4 == 0 and year % 100 != 0:\n    print("високосный")\n'
+        + 'elif year % 400 == 0:\n    print("високосный")\n'
+        + 'else:\n    print("обычный")',
+    answer: isLeap ? 'високосный' : 'обычный',
+    explain: year + ': делится на 4 — ' + (year % 4 === 0 ? 'да' : 'нет')
+           + ', делится на 100 — ' + (year % 100 === 0 ? 'да' : 'нет')
+           + ', делится на 400 — ' + (year % 400 === 0 ? 'да' : 'нет') + '. '
+           + (isLeap ? 'Год високосный.' : 'Год обычный.')
+           + ' Век високосный только тогда, когда делится на 400: 1900 — обычный, '
+           + '2000 — високосный.'
+  };
+}
+
+/* -------------------------------------------------- тип 1: сложное условие */
+function m1(rng) {
+  const v = tRand(rng, 0, 6);
+
+  if (v === 0) {                                        /* and двух сравнений */
+    const a = tRand(rng, 2, 15), b = tRand(rng, 2, 15), c = tRand(rng, 2, 20);
+    const ans = (a > b) && (c > a);
+    return {
+      code: 'a = ' + a + '\nb = ' + b + '\nc = ' + c + '\nprint(a > b and c > a)',
+      answer: pyBool(ans),
+      explain: 'a > b — ' + pyBool(a > b) + ', c > a — ' + pyBool(c > a)
+             + '. and истинно, только когда истинны обе части: ' + pyBool(ans) + '.'
+    };
+  }
+
+  if (v === 1) {                                          /* приоритет and/or */
+    const x = tPick(rng, [-8, -6, -4, -3, 3, 7, -12, 5]);
+    const left = x > 0, right = (x < -5) && (pyMod(x, 2) === 0);
+    return {
+      code: 'x = ' + x + '\nprint(x > 0 or x < -5 and x % 2 == 0)',
+      answer: pyBool(left || right),
+      explain: 'and связывает сильнее, чем or, — выражение читается как '
+             + 'x > 0 or (x < -5 and x % 2 == 0). Для x = ' + x + ': слева '
+             + pyBool(left) + ', в скобках ' + pyBool(x < -5) + ' and '
+             + pyBool(pyMod(x, 2) === 0) + ' = ' + pyBool(right) + ', итог '
+             + pyBool(left || right) + '.'
+    };
+  }
+
+  if (v === 2) {                                            /* not и скобка */
+    const a = tRand(rng, 1, 9), b = tRand(rng, 1, 9);
+    const inner = (a > b) || (a === b);
+    return {
+      code: 'a = ' + a + '\nb = ' + b + '\nprint(not (a > b or a == b))',
+      answer: pyBool(!inner),
+      explain: 'Сначала скобка: a > b — ' + pyBool(a > b) + ', a == b — '
+             + pyBool(a === b) + ', вместе ' + pyBool(inner) + '. not переворачивает: '
+             + pyBool(!inner) + '. Это то же самое, что a < b.'
+    };
+  }
+
+  if (v === 3) {                                       /* цепочка сравнений */
+    const lo = tRand(rng, 0, 5), hi = lo + tRand(rng, 3, 8);
+    const x = tRand(rng, lo - 3, hi + 3);
+    return {
+      code: 'x = ' + x + '\nprint(' + lo + ' < x < ' + hi + ')',
+      answer: pyBool(lo < x && x < hi),
+      explain: 'Python понимает двойное неравенство буквально: ' + lo + ' < x и '
+             + 'x < ' + hi + ' одновременно. При x = ' + x + ' это '
+             + pyBool(lo < x && x < hi) + '. В C++ такая запись означала бы совсем '
+             + 'другое, а здесь работает как в математике.'
+    };
+  }
+
+  if (v === 4) {                                  /* ловушка «x == 1 or 2» */
+    const want = tRand(rng, 1, 5), other = tRand(rng, 2, 9);
+    const x = rng() < 0.35 ? want : tRand(rng, 6, 20);
+    const hit = x === want;
+    return {
+      code: 'x = ' + x + '\nprint(x == ' + want + ' or ' + other + ')',
+      answer: hit ? 'True' : '' + other,
+      question: 'Что напечатает программа? (ответ — не обязательно True или False)',
+      explain: hit
+        ? 'x действительно равен ' + want + ', первая часть истинна — or возвращает '
+          + 'её, то есть True. А вот если бы не совпало, ответ был бы ' + other + '.'
+        : 'Так «или» не пишут: x == ' + want + ' — это False, и or возвращает ВТОРОЙ '
+          + 'операнд как есть, то есть число ' + other + '. Любое ненулевое число '
+          + 'считается истинным, поэтому в if такое условие сработает всегда. Правильно '
+          + 'писать x == ' + want + ' or x == ' + other + '.'
+    };
+  }
+
+  if (v === 5) {                                              /* де Морган */
+    const a = tRand(rng, 1, 10), b = tRand(rng, 1, 10);
+    const p = a > 5, q = b > 5;
+    return {
+      code: 'a = ' + a + '\nb = ' + b + '\nprint(not (a > 5 and b > 5), not a > 5 or not b > 5)',
+      answer: pyBool(!(p && q)) + ' ' + pyBool(!p || !q),
+      explain: 'Закон де Моргана: not (P and Q) — то же самое, что (not P) or (not Q). '
+             + 'Здесь P = ' + pyBool(p) + ', Q = ' + pyBool(q) + ', и оба выражения дают '
+             + pyBool(!(p && q)) + '. not применяется к сравнению раньше, чем or, '
+             + 'поэтому скобки во второй части не нужны.'
+    };
+  }
+
+  const k = tPick(rng, [0, 0, tRand(rng, 1, 9)]);   /* короткое замыкание */
+  return {
+    code: 'x = ' + k + '\nprint(x != 0 and 10 // x > 1)',
+    answer: pyBool(k !== 0 && pyDiv(10, k) > 1),
+    explain: k === 0
+      ? 'Деления на ноль не случилось: and вычисляет левую часть (x != 0 — False) и '
+        + 'дальше не смотрит вовсе — правая часть просто не выполняется. Это и '
+        + 'называется коротким замыканием; поэтому проверку «не ноль» ставят ПЕРВОЙ.'
+      : 'x не ноль, левая часть истинна, значит правую тоже считаем: 10 // ' + k
+        + ' = ' + pyDiv(10, k) + ', это ' + (pyDiv(10, k) > 1 ? 'больше' : 'не больше')
+        + ' 1. Итог ' + pyBool(k !== 0 && pyDiv(10, k) > 1) + '.'
+  };
+}
+
+/* --------------------------------------------- тип 2: сколько раз выполнится */
+function m2(rng) {
+  const v = tRand(rng, 0, 4);
+
+  if (v === 0) {                                          /* шаг вперёд до предела */
+    const start = tRand(rng, 1, 5), step = tPick(rng, [2, 3, 4, 5, 7]);
+    const lim = tRand(rng, 20, 60);
+    let i = start, k = 0;
+    while (i < lim) { i += step; k++; }
+    return {
+      code: 'i = ' + start + '\nk = 0\nwhile i < ' + lim + ':\n'
+          + '    i = i + ' + step + '\n    k = k + 1\nprint(k)',
+      answer: '' + k,
+      explain: 'i идёт ' + start + ', ' + (start + step) + ', ' + (start + 2 * step)
+             + ', … шагом ' + step + ' и выходит, как только дойдёт до ' + lim
+             + ' или больше. Проходов ' + k + ', после цикла i = ' + i + '.'
+    };
+  }
+
+  if (v === 1) {                                            /* деление пополам */
+    const n0 = tPick(rng, [50, 64, 100, 200, 128, 75, 300, 1000]);
+    let n = n0, k = 0;
+    while (n > 1) { n = pyDiv(n, 2); k++; }
+    return {
+      code: 'n = ' + n0 + '\nk = 0\nwhile n > 1:\n    n = n // 2\n    k = k + 1\nprint(k)',
+      answer: '' + k,
+      explain: n0 + ' → ' + Math.floor(n0 / 2) + ' → ' + Math.floor(n0 / 4)
+             + ' → … → 1: каждый шаг уменьшает число вдвое с отбрасыванием остатка, '
+             + 'и до единицы их ' + k + '. Так же считают, сколько раз число '
+             + 'помещается в двоичную запись.'
+    };
+  }
+
+  if (v === 2) {                                    /* условие ложно с самого начала */
+    const x = tRand(rng, 5, 19), lim = tRand(rng, 20, 40);
+    return {
+      code: 'x = ' + x + '\nk = 0\nwhile x > ' + lim + ':\n'
+          + '    x = x + 1\n    k = k + 1\nprint(k)',
+      answer: '0',
+      explain: 'while проверяет условие ДО первого прохода: ' + x + ' > ' + lim
+             + ' — False, и тело не выполняется ни разу. Цикл с условием может '
+             + 'не сработать вовсе — этим он и отличается от «повторить n раз».'
+    };
+  }
+
+  if (v === 3) {                                       /* вычитание: деление нацело */
+    const d = tPick(rng, [6, 7, 8, 9, 11]);
+    const s0 = d * tRand(rng, 3, 9) + tRand(rng, 0, d - 1);
+    let s = s0, k = 0;
+    while (s >= d) { s -= d; k++; }
+    return {
+      code: 's = ' + s0 + '\nk = 0\nwhile s >= ' + d + ':\n'
+          + '    s = s - ' + d + '\n    k = k + 1\nprint(k, s)',
+      answer: k + ' ' + s,
+      explain: 'Вычитание по ' + d + ' — это деление с остатком в развёрнутом виде: '
+             + 'проходов ' + k + ' (это ' + s0 + ' // ' + d + '), в конце осталось '
+             + s + ' (это ' + s0 + ' % ' + d + ').'
+    };
+  }
+
+  const n0 = tRand(rng, 1000, 999999);
+  let n = n0, k = 0;
+  while (n > 0) { n = pyDiv(n, 10); k++; }
+  return {
+    code: 'n = ' + n0 + '\nk = 0\nwhile n > 0:\n    n = n // 10\n    k = k + 1\nprint(k)',
+    answer: '' + k,
+    explain: 'Каждый проход отрезает последнюю цифру, и цикл заканчивается, когда от '
+           + 'числа ничего не осталось. Значит k — это количество цифр: у ' + n0
+           + ' их ' + k + '.'
+  };
+}
+
+/* ------------------------------------------- тип 3: что напечатает while */
+function m3(rng) {
+  const v = tRand(rng, 0, 4);
+
+  if (v === 0) {                                              /* сумма цифр */
+    const n0 = tRand(rng, 1000, 99999);
+    let n = n0, s = 0;
+    while (n > 0) { s += pyMod(n, 10); n = pyDiv(n, 10); }
+    return {
+      code: 'n = ' + n0 + '\ns = 0\nwhile n > 0:\n'
+          + '    s = s + n % 10\n    n = n // 10\nprint(s)',
+      answer: '' + s,
+      explain: '% 10 достаёт последнюю цифру, // 10 её отрезает — так цикл '
+             + 'перебирает все цифры числа ' + n0 + ' справа налево. Их сумма ' + s + '.'
+    };
+  }
+
+  if (v === 1) {                                          /* переворот числа */
+    let n0 = tRand(rng, 1000, 99999);
+    if (n0 % 10 === 0) n0 += 1;                 /* иначе ведущий ноль теряется */
+    let n = n0, r = 0;
+    while (n > 0) { r = r * 10 + pyMod(n, 10); n = pyDiv(n, 10); }
+    return {
+      code: 'n = ' + n0 + '\nr = 0\nwhile n > 0:\n'
+          + '    r = r * 10 + n % 10\n    n = n // 10\nprint(r)',
+      answer: '' + r,
+      explain: 'Цифры снимаются с конца, а r каждый раз сдвигается влево (r * 10) и '
+             + 'принимает новую цифру — получается число задом наперёд: ' + n0 + ' → '
+             + r + '.'
+    };
+  }
+
+  if (v === 2) {                                  /* значение счётчика после цикла */
+    const lim = tPick(rng, [30, 50, 70, 100, 200, 150]);
+    let i = 1;
+    while (i * i < lim) i += 1;
+    return {
+      code: 'i = 1\nwhile i * i < ' + lim + ':\n    i = i + 1\nprint(i)',
+      answer: '' + i,
+      explain: 'Цикл крутится, пока квадрат меньше ' + lim + ', и останавливается на '
+             + 'первом i, у которого это уже не так: ' + i + ' · ' + i + ' = '
+             + (i * i) + '. Частая ошибка — назвать предыдущее, ' + (i - 1)
+             + ': после выхода переменная хранит уже НЕподошедшее значение.'
+    };
+  }
+
+  if (v === 3) {                                          /* рост произведением */
+    const mul = tPick(rng, [2, 3, 5]);
+    const lim = tPick(rng, [100, 500, 1000, 2000]);
+    let n = 1, k = 0;
+    while (n < lim) { n *= mul; k++; }
+    return {
+      code: 'n = 1\nk = 0\nwhile n < ' + lim + ':\n'
+          + '    n = n * ' + mul + '\n    k = k + 1\nprint(n, k)',
+      answer: n + ' ' + k,
+      explain: 'n растёт как степени ' + mul + ': 1, ' + mul + ', ' + (mul * mul)
+             + ', … Цикл прекращается, когда n впервые дошло до ' + lim + ' — это '
+             + n + ' на ' + k + '-м шаге. print через запятую печатает оба числа '
+             + 'через пробел.'
+    };
+  }
+
+  const n0 = tRand(rng, 1000, 99999);            /* максимальная цифра: цикл + if */
+  let n = n0, m = 0;
+  while (n > 0) { const d = pyMod(n, 10); if (d > m) m = d; n = pyDiv(n, 10); }
+  return {
+    code: 'n = ' + n0 + '\nm = 0\nwhile n > 0:\n    d = n % 10\n'
+        + '    if d > m:\n        m = d\n    n = n // 10\nprint(m)',
+    answer: '' + m,
+    explain: 'Внутри цикла стоит ветвление: m запоминает наибольшую увиденную цифру. '
+           + 'У числа ' + n0 + ' это ' + m + '. Приём «максимум накоплением» '
+           + 'работает одинаково для цифр, чисел из файла и элементов массива.'
+  };
+}
+
+/* --------------------------------------------- тип 4: break и continue */
+function m4(rng) {
+  const v = tRand(rng, 0, 4);
+
+  if (v === 0) {                                       /* while True с break */
+    const lim = tPick(rng, [100, 300, 500, 1000, 2000]);
+    let n = 1;
+    while (!(n * n > lim)) n += 1;
+    return {
+      code: 'n = 1\nwhile True:\n    if n * n > ' + lim + ':\n        break\n'
+          + '    n = n + 1\nprint(n)',
+      answer: '' + n,
+      explain: 'while True сам по себе не кончается — выход только через break. '
+             + 'Он срабатывает на первом n, у которого квадрат больше ' + lim + ': '
+             + n + ' · ' + n + ' = ' + (n * n) + '. Так пишут цикл, условие выхода '
+             + 'которого удобнее проверять в середине тела.'
+    };
+  }
+
+  if (v === 1) {                                     /* continue пропускает шаг */
+    const lim = tPick(rng, [10, 12, 15, 20]);
+    const d = tPick(rng, [3, 4, 5]);
+    let s = 0, i = 0, skipped = 0;
+    while (i < lim) { i += 1; if (pyMod(i, d) === 0) { skipped++; continue; } s += i; }
+    return {
+      code: 's = 0\ni = 0\nwhile i < ' + lim + ':\n    i = i + 1\n'
+          + '    if i % ' + d + ' == 0:\n        continue\n    s = s + i\nprint(s)',
+      answer: '' + s,
+      explain: 'continue бросает текущий проход и возвращается к проверке условия — '
+             + 'кратные ' + d + ' в сумму не попадают (их ' + skipped + '). Сумма '
+             + 'чисел от 1 до ' + lim + ' равна ' + (lim * (lim + 1) / 2)
+             + ', без кратных ' + d + ' остаётся ' + s + '. Важно, что i растёт ДО '
+             + 'continue: иначе цикл завис бы навсегда.'
+    };
+  }
+
+  if (v === 2) {                                      /* break: первый делитель */
+    const p = tPick(rng, [7, 11, 13, 17, 19]);
+    const q = tPick(rng, [13, 17, 19, 23, 29]);
+    const n = p * q;
+    let first = 0;
+    for (let i = 2; i < 30; i++) if (pyMod(n, i) === 0) { first = i; break; }
+    return {
+      code: 'n = ' + n + '\nfor i in range(2, 30):\n    if n % i == 0:\n'
+          + '        print(i)\n        break',
+      answer: '' + first,
+      explain: 'Цикл ищет первый делитель ' + n + ' начиная с двойки и, найдя его ('
+             + first + '), прекращается по break — остальные значения i не '
+             + 'проверяются. Без break программа напечатала бы все делители подряд.'
+    };
+  }
+
+  if (v === 3) {                             /* break не сработал: число простое */
+    const n = tPick(rng, [97, 101, 103, 107, 109, 113, 127]);
+    let d = 2;
+    while (d * d <= n) { if (pyMod(n, d) === 0) break; d += 1; }
+    return {
+      code: 'n = ' + n + '\nd = 2\nwhile d * d <= n:\n    if n % d == 0:\n'
+          + '        break\n    d = d + 1\nprint(d)',
+      answer: '' + d,
+      explain: n + ' — простое, делителя не нашлось, и break ни разу не сработал: '
+             + 'цикл закончился сам, когда d · d стало больше ' + n + ', то есть при d = '
+             + d + '. По тому, каким вышло d, и узнают, простое число или нет: '
+             + 'если d · d > n — простое.'
+    };
+  }
+
+  const need = tRand(rng, 3, 6);                   /* continue и break вместе */
+  let k = 0, i = 0;
+  while (i < 40) {
+    i += 1;
+    if (pyMod(i, 2) === 1) continue;
+    k += 1;
+    if (k === need) break;
+  }
+  return {
+    code: 'k = 0\ni = 0\nwhile i < 40:\n    i = i + 1\n'
+        + '    if i % 2 == 1:\n        continue\n    k = k + 1\n'
+        + '    if k == ' + need + ':\n        break\nprint(i, k)',
+    answer: i + ' ' + k,
+    explain: 'Нечётные i пропускаются через continue, чётные считаются в k. Как только '
+           + 'k дошло до ' + need + ', срабатывает break — это случилось на i = ' + i
+           + '. До границы 40 цикл не добрался.'
+  };
+}
+
+/* ------------------------------------- тип 5: исполнитель, задание 13 ЕГЭ */
+/* Кода здесь нет: это задача «в уме», ровно в постановке экзамена. Python
+   пересчитывает её по meta своей моделью исполнителя, а не по готовому ответу. */
+
+const T_EGE_RULES =
+  'Исполнитель преобразует число на экране. У него две команды:<br>'
+  + '<b>A</b>. Прибавь 1 — увеличивает число на экране на 1.<br>'
+  + '<b>B</b>. Поменяй местами — применяется <u>только</u> к числу, у которого цифра '
+  + 'в разряде десятков меньше цифры в разряде единиц, и меняет местами цифры двух '
+  + 'младших разрядов.<br>Неприменимая команда пропускается: она ничего не делает, '
+  + 'а исполнитель переходит к следующей.';
+
+function egeSwap(n) { return n - pyMod(n, 100) + pyMod(n, 10) * 10 + pyMod(pyDiv(n, 10), 10); }
+
+function egeRun(n, prog) {
+  const path = [];
+  let skipped = 0;
+  for (let i = 0; i < prog.length; i++) {
+    if (prog.charAt(i) === 'A') { n = n + 1; path.push(n); }
+    else if (pyMod(pyDiv(n, 10), 10) < pyMod(n, 10)) { n = egeSwap(n); path.push(n); }
+    else skipped += 1;
+  }
+  return { result: n, path: path, skipped: skipped };
+}
+
+function m5(rng) {
+  const kind = tPick(rng, ['result', 'skipped', 'toB']);
+  const n0 = tRand(rng, 10, 250);
+
+  if (kind === 'toB') {
+    let n = n0, steps = 0;
+    while (!(pyMod(pyDiv(n, 10), 10) < pyMod(n, 10))) { n += 1; steps += 1; }
+    return {
+      code: '',
+      question: T_EGE_RULES + '<br><br>На экране число <b>' + n0 + '</b>. Сколько раз '
+             + 'подряд нужно выполнить команду <b>A</b>, чтобы команда <b>B</b> стала '
+             + 'применима? (если она применима сразу — ответ 0)',
+      answer: '' + steps,
+      meta: { ege: 'toB', n: n0 },
+      explain: steps === 0
+        ? 'У числа ' + n0 + ' цифра десятков (' + pyMod(pyDiv(n0, 10), 10)
+          + ') уже меньше цифры единиц (' + pyMod(n0, 10) + '), так что B применима '
+          + 'сразу — ноль шагов.'
+        : 'Прибавляем по единице: ' + n0 + ' → … → ' + n + '. Только у ' + n
+          + ' цифра десятков (' + pyMod(pyDiv(n, 10), 10) + ') меньше цифры единиц ('
+          + pyMod(n, 10) + '). Шагов ' + steps + '.'
+    };
+  }
+
+  const len = tRand(rng, 3, 7);
+  let cmds = '';
+  for (let i = 0; i < len; i++) cmds += (rng() < 0.55 ? 'A' : 'B');
+  if (cmds.indexOf('A') < 0) cmds = 'A' + cmds.slice(1);
+  const run = egeRun(n0, cmds);
+
+  if (kind === 'skipped') {
+    return {
+      code: '',
+      question: T_EGE_RULES + '<br><br>Исходное число — <b>' + n0 + '</b>, программа — '
+             + '<b>' + cmds + '</b>. Сколько команд будет пропущено?',
+      answer: '' + run.skipped,
+      meta: { ege: 'skipped', n: n0, prog: cmds },
+      explain: 'Траектория выполненных команд: ' + (run.path.length ? run.path.join(' → ')
+             : '(пусто)') + '. Пропущено команд B, для которых десятки не меньше '
+             + 'единиц: ' + run.skipped + '. В конце на экране ' + run.result + '.'
+    };
+  }
+
+  return {
+    code: '',
+    question: T_EGE_RULES + '<br><br>Исходное число — <b>' + n0 + '</b>, программа — '
+           + '<b>' + cmds + '</b>. Какое число окажется на экране в конце?',
+    answer: '' + run.result,
+    meta: { ege: 'result', n: n0, prog: cmds },
+    explain: 'Шаг за шагом: ' + (run.path.length ? run.path.join(' → ') : '(пусто)')
+           + (run.skipped ? '. Пропущено команд: ' + run.skipped : '. Пропусков не было')
+           + '. На экране ' + run.result + '.'
+  };
+}
+
+const T_MAKERS = [m0, m1, m2, m3, m4, m5];
+
+/* --------------------------------------------------------------- задачи */
+function tTask(type, rng) {
+  const m = T_MAKERS[type](rng);
+  const t = { type, code: m.code, answer: m.answer, explain: m.explain,
+              question: m.question || 'Что напечатает программа?' };
+  if (m.input !== undefined) {
+    t.input = m.input;
+    if (!m.question) t.question = 'Что напечатает программа, если на вход подать <b>'
+                                + m.input.replace(/\n/g, '</b> и <b>') + '</b>?';
+  }
+  if (m.meta !== undefined) t.meta = m.meta;
+  return t;
+}
+
+/* Сверка ответа. Пробелы схлопываем, запятую в числах прощаем, регистр у слов
+   (True/False, названия веток) не важен. Кавычки вокруг напечатанной строки
+   прощаем тоже: print("да") печатает да, но написать «да» в кавычках не ошибка. */
+function tNorm(s) {
+  return String(s).replace(/\s+/g, ' ').trim().replace(/(\d),(\d)/g, '$1.$2')
+      .replace(/["«»']/g, '');
+}
+function tCheck(task, raw) {
+  const got = tNorm(raw), want = tNorm(task.answer);
+  if (/^[a-zа-яё]/i.test(want)) return got.toLowerCase() === want.toLowerCase();
+  return got.replace(/\b(true|false)\b/gi, function (w) { return w.toLowerCase(); })
+      === want.replace(/\b(true|false)\b/gi, function (w) { return w.toLowerCase(); });
+}
+
+/* Набор для практикума: два круга по всем типам, внутри круга типы перемешаны —
+   одинаковые не идут подряд, и работа читается как два прохода. */
+function tMake(seed) {
+  const rng = tRng(seed);
+  const out = [];
+  for (let round = 0; round < T_PER_TYPE; round++) {
+    const order = tShuffle(rng, [0, 1, 2, 3, 4, 5]);
+    for (let i = 0; i < order.length; i++) out.push(tTask(order[i], rng));
+  }
+  return out;
+}
+/* ==== /ТИПЫ ==== */
+
+/* ==== ЗАДАЧИ ДЗ: вставлено gen.py, руками не править ==== */
+/* Домашнее задание: что сдают после пары «Ветвления и циклы».
+   Источник правды. Вставляется gen.py --sync в homework.html и test.html.
+
+   Четыре типа берутся из types.js (чтение кода: какая ветка, сложное условие,
+   что напечатает while, исполнитель ЕГЭ), дальше два своих:
+     4 «найди контрпример» — программа с ТОНКОЙ ошибкой из сегодняшней темы:
+                             високосный год без правила веков, «или» вместо «и»
+                             между группами условий, порядок веток в лестнице,
+                             цикл, который всегда делает хотя бы один проход.
+                             Ключа нет: считаем верным и кривым способом и
+                             смотрим, разошлись ли.
+     5 «как это работает»  — вопрос с тремя вариантами: приоритет and/or/not,
+                             короткое замыкание, чем while отличается от for,
+                             что делают break и continue.
+*/
+
+const HW_TYPES = [
+  'какая ветка сработает',
+  'сложное условие',
+  'что напечатает while',
+  'исполнитель (ЕГЭ 13)',
+  'найди контрпример',
+  'как это работает'
+];
+/* тип ДЗ -> тип задачи из types.js */
+const HW_FROM_TRAINER = { 0: 0, 1: 1, 2: 3, 3: 5 };
+
+/* --------------------------------------------- тип 4: найди контрпример */
+
+const HW_BUGS = {
+  leap: {
+    title: 'високосный год',
+    spec: 'Программа читает год и печатает «високосный», если в нём 366 дней, '
+        + 'иначе «обычный». Напомним правило: год високосный, если он делится '
+        + 'на 4 и не делится на 100, а также если он делится на 400.',
+    code: 'y = int(input())\n'
+        + 'if y % 4 == 0:\n    print("високосный")\n'
+        + 'else:\n    print("обычный")',
+    fields: 'один год — целое число от 1 до 9999',
+    hint: 'На обычных годах программа права. Подумай, где правило про 4 расходится '
+        + 'с полным правилом, и вспомни, что 2000 год был високосным, а 1900 — нет.',
+    why: 'Проверка «делится на 4» — только первая треть правила. Годы, кратные 100, '
+       + 'високосными НЕ считаются, если они не кратны 400: 1700, 1800, 1900, 2100 — '
+       + 'обычные, а 1600, 2000, 2400 — високосные. Полное условие: '
+       + '(y % 4 == 0 and y % 100 != 0) or y % 400 == 0.'
+  },
+  andor: {
+    title: 'годен или нет',
+    spec: 'Программа читает рост и вес и печатает «годен», если рост от 150 до 200 '
+        + 'И одновременно вес от 40 до 120. В любом другом случае — «не годен».',
+    code: 'h = int(input())\nw = int(input())\n'
+        + 'if h >= 150 and h <= 200 or w >= 40 and w <= 120:\n    print("годен")\n'
+        + 'else:\n    print("не годен")',
+    fields: 'два целых числа через пробел: рост и вес',
+    hint: 'Когда оба условия выполнены или оба нарушены, программа отвечает верно. '
+        + 'Попробуй нарушить ровно одно из двух.',
+    why: 'Между группами стоит or вместо and, а and связывает сильнее, поэтому '
+       + 'условие читается как (рост в норме) ИЛИ (вес в норме) — достаточно одного. '
+       + 'Верный вариант: (h >= 150 and h <= 200) and (w >= 40 and w <= 120), '
+       + 'или короче 150 <= h <= 200 and 40 <= w <= 120.'
+  },
+  order: {
+    title: 'порядок веток',
+    spec: 'Программа читает число и печатает «больше ста» для чисел больше 100, '
+        + '«больше десяти» для чисел от 11 до 100 и «маленькое» для остальных.',
+    code: 'x = int(input())\n'
+        + 'if x > 10:\n    print("больше десяти")\n'
+        + 'elif x > 100:\n    print("больше ста")\n'
+        + 'else:\n    print("маленькое")',
+    fields: 'одно целое число от −1000 до 1000',
+    hint: 'Для маленьких чисел программа отвечает правильно. Проверь, что она '
+        + 'скажет про число, которое больше ста.',
+    why: 'В лестнице elif работает первая подошедшая ветка, а всё, что больше 100, '
+       + 'больше и 10 — значит вторая ветка недостижима вообще ни при каком x. '
+       + 'Узкое условие должно стоять раньше широкого: сначала x > 100, потом x > 10.'
+  },
+  loop0: {
+    title: 'сколько лет копить',
+    spec: 'Вклад растёт на 10 % в год, копейки отбрасываются. Программа читает '
+        + 'сумму вклада и цель и печатает, через сколько лет сумма станет не '
+        + 'меньше цели. Если она не меньше цели уже сейчас, ответ — 0.',
+    code: 'total = int(input())\ngoal = int(input())\nyears = 0\n'
+        + 'while True:\n'
+        + '    total = total + total * 10 // 100\n'
+        + '    years = years + 1\n'
+        + '    if total >= goal:\n        break\n'
+        + 'print(years)',
+    fields: 'два целых числа через пробел: вклад и цель, оба от 1 до 1000000',
+    hint: 'Когда копить действительно надо, программа считает верно. А что она '
+        + 'ответит тому, у кого нужная сумма уже есть?',
+    why: 'Тело этого цикла всегда выполняется хотя бы раз: проверка стоит в конце, '
+       + 'после начисления. Поэтому при уже достигнутой цели программа печатает 1 '
+       + 'вместо 0. Обычный while проверяет условие ДО первого прохода — '
+       + 'while total < goal: … даёт правильный ноль сам собой.'
+  }
+};
+
+function hwCounter(rng) {
+  const bug = tPick(rng, ['leap', 'andor', 'order', 'loop0']);
+  const b = HW_BUGS[bug];
+  return {
+    kind: 'counter', bug,
+    code: b.code,
+    question: '<b>Что программа должна делать.</b> ' + b.spec
+            + '<br><b>Задание.</b> Здесь спрятана ошибка, из-за которой программа '
+            + 'врёт не всегда, а на особых данных. Назови такие данные (' + b.fields
+            + ').',
+    hint: b.hint,
+    explain: b.why
+  };
+}
+
+function hwLeap(y) { return (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0; }
+
+function hwYears(total, goal, wrong) {
+  /* верный счёт: пока не достигли цели. wrong — счёт «сначала начисли» */
+  let years = 0;
+  if (wrong) {
+    do { total = total + Math.floor(total * 10 / 100); years += 1; }
+    while (total < goal);
+    return years;
+  }
+  while (total < goal) { total = total + Math.floor(total * 10 / 100); years += 1; }
+  return years;
+}
+
+function hwCheckCounter(task, raw) {
+  const parts = String(raw).trim().split(/[\s,;]+/).filter(function (s) { return s; });
+
+  if (task.bug === 'leap') {
+    if (parts.length !== 1 || !/^\d+$/.test(parts[0]))
+      return { ok: false, why: 'нужен один год — целое число' };
+    const y = Number(parts[0]);
+    if (y < 1 || y > 9999) return { ok: false, why: 'год — от 1 до 9999' };
+    const good = hwLeap(y), bad = y % 4 === 0;
+    if (good === bad)
+      return { ok: false, why: 'для ' + y + ' программа отвечает верно («'
+                             + (good ? 'високосный' : 'обычный')
+                             + '») — ошибка прячется в других годах' };
+    return { ok: true, why: 'верно: ' + y + ' делится на 4, но это век, не кратный 400, '
+                          + 'значит год обычный — а программа говорит «високосный»' };
+  }
+
+  if (task.bug === 'andor') {
+    if (parts.length !== 2 || !parts.every(function (s) { return /^-?\d+$/.test(s); }))
+      return { ok: false, why: 'нужно два целых числа через пробел: рост и вес' };
+    const h = Number(parts[0]), w = Number(parts[1]);
+    if (h < 0 || h > 300 || w < 0 || w > 400)
+      return { ok: false, why: 'рост — до 300, вес — до 400: числа должны быть похожи на правду' };
+    const okH = h >= 150 && h <= 200, okW = w >= 40 && w <= 120;
+    const good = okH && okW, bad = okH || okW;
+    if (good === bad)
+      return { ok: false, why: 'при росте ' + h + ' и весе ' + w + ' обе проверки дают '
+                             + 'одно и то же («' + (good ? 'годен' : 'не годен')
+                             + '») — нарушь ровно одно из двух условий' };
+    return { ok: true, why: 'верно: ' + (okH ? 'рост в норме, а вес нет' : 'вес в норме, а рост нет')
+                          + ' — по заданию «не годен», а программа печатает «годен»' };
+  }
+
+  if (task.bug === 'order') {
+    if (parts.length !== 1 || !/^-?\d+$/.test(parts[0]))
+      return { ok: false, why: 'нужно одно целое число' };
+    const x = Number(parts[0]);
+    if (x < -1000 || x > 1000) return { ok: false, why: 'число — от −1000 до 1000' };
+    const good = x > 100 ? 'больше ста' : x > 10 ? 'больше десяти' : 'маленькое';
+    const bad = x > 10 ? 'больше десяти' : 'маленькое';
+    if (good === bad)
+      return { ok: false, why: 'для ' + x + ' программа печатает верное «' + good
+                             + '» — ошибка прячется в других числах' };
+    return { ok: true, why: 'верно: для ' + x + ' нужно «больше ста», а программа '
+                          + 'печатает «больше десяти» — вторая ветка недостижима' };
+  }
+
+  if (parts.length !== 2 || !parts.every(function (s) { return /^\d+$/.test(s); }))
+    return { ok: false, why: 'нужно два целых числа через пробел: вклад и цель' };
+  const total = Number(parts[0]), goal = Number(parts[1]);
+  if (total < 1 || goal < 1 || total > 1000000 || goal > 1000000)
+    return { ok: false, why: 'оба числа — от 1 до 1000000' };
+  if (total < 10)
+    return { ok: false, why: 'при вкладе меньше 10 рублей прибавка равна нулю и цикл '
+                           + 'не кончается вовсе — возьми сумму побольше' };
+  const good = hwYears(total, goal, false), bad = hwYears(total, goal, true);
+  if (good === bad)
+    return { ok: false, why: 'для вклада ' + total + ' и цели ' + goal
+                           + ' программа считает верно (' + good
+                           + ') — ошибка прячется в других данных' };
+  return { ok: true, why: 'верно: цель уже достигнута, ответ должен быть ' + good
+                        + ', а программа печатает ' + bad };
+}
+
+/* --------------------------------------------- тип 5: как это работает */
+const HW_THEORY = [
+  {
+    q: 'В условии написано <code>a or b and c</code>, скобок нет. В каком порядке '
+     + 'Python вычислит это выражение?',
+    opts: ['<code>a or (b and c)</code> — <code>and</code> связывает сильнее',
+           '<code>(a or b) and c</code> — слева направо, как читаем',
+           'Порядок не определён, Python выберет сам'],
+    right: 0,
+    why: 'Приоритет такой: сначала not, потом and, потом or. Слева направо идут '
+       + 'только операции одного уровня. Если нужен другой порядок — ставь скобки; '
+       + 'их ставят и просто для ясности.'
+  },
+  {
+    q: 'Что напечатает <code>print(5 == 5 or 1 // 0)</code>?',
+    opts: ['<code>True</code> — правая часть вовсе не вычисляется',
+           'Программа упадёт с ошибкой деления на ноль',
+           '<code>1</code> — or возвращает второй операнд'],
+    right: 0,
+    why: 'Это короткое замыкание: у or достаточно первого истинного операнда, и '
+       + 'дальше он не смотрит. Поэтому проверку, которая защищает от ошибки '
+       + '(x != 0, длина не нулевая), ставят первой: x != 0 and 10 // x > 1.'
+  },
+  {
+    q: 'Когда цикл <code>while</code> лучше цикла <code>for i in range(...)</code>?',
+    opts: ['Когда заранее неизвестно, сколько будет повторений',
+           'Когда повторений много — while работает быстрее',
+           'Когда внутри цикла есть ветвление'],
+    right: 0,
+    why: 'for хорош, когда число шагов известно заранее («перебрать все делители от 1 '
+       + 'до n»). while — когда шаги считает сама задача: «пока число больше 1», '
+       + '«пока не накопили нужную сумму». Скорость у них одинаковая, а ветвление '
+       + 'бывает внутри любого.'
+  },
+  {
+    q: 'Сколько раз выполнится тело цикла <code>while x &gt; 100:</code>, если перед '
+     + 'циклом <code>x = 5</code> и внутри x только увеличивается?',
+    opts: ['Ни разу', 'Один раз', 'Бесконечно'],
+    right: 0,
+    why: 'while проверяет условие ДО первого прохода: раз 5 > 100 ложно, тело не '
+       + 'выполнится вовсе. Отсюда же берётся частая ошибка в задачах «через сколько '
+       + 'шагов»: если цель достигнута сразу, верный ответ — ноль шагов.'
+  },
+  {
+    q: 'Чем <code>break</code> отличается от <code>continue</code>?',
+    opts: ['break прекращает весь цикл, continue — только текущий проход',
+           'break выходит из программы, continue — из цикла',
+           'Ничем, это два названия одного и того же'],
+    right: 0,
+    why: 'break выбрасывает исполнение за цикл целиком — так выходят, найдя нужное. '
+       + 'continue бросает текущий проход и возвращается к проверке условия — так '
+       + 'пропускают ненужные значения. Из программы выходит не break, а exit().'
+  },
+  {
+    q: 'Почему <code>while i &lt; 10:</code> с телом, в котором <code>i</code> не '
+     + 'меняется, — это ошибка?',
+    opts: ['Условие никогда не станет ложным, цикл не закончится',
+           'Python не разрешает while без изменения переменной',
+           'Цикл выполнится ровно один раз'],
+    right: 0,
+    why: 'Получится вечный цикл. В цикле с условием за изменение переменной отвечает '
+       + 'программист — это и есть главное отличие от for, где счётчик двигается сам. '
+       + 'Остановить зависшую программу в IDLE можно сочетанием Ctrl+C.'
+  },
+  {
+    q: 'Что не так с записью <code>if x = 5:</code>?',
+    opts: ['Сравнение пишется как <code>==</code>, одно <code>=</code> — присваивание',
+           'Ничего, это правильная проверка равенства',
+           'Нужны скобки: <code>if (x = 5):</code>'],
+    right: 0,
+    why: 'Один знак равенства — присваивание, два — сравнение. Python на такой записи '
+       + 'сразу сообщает SyntaxError, и это удача: в C++ подобная строка '
+       + 'компилируется и молча портит переменную.'
+  },
+  {
+    q: 'В лестнице <code>if … elif … else</code> подошли сразу два условия. Что '
+     + 'сделает Python?',
+    opts: ['Выполнит только первую подошедшую ветку',
+           'Выполнит обе ветки по очереди',
+           'Сообщит об ошибке — условия должны исключать друг друга'],
+    right: 0,
+    why: 'В лестнице работает ровно одна ветка — первая подошедшая, остальные даже не '
+       + 'проверяются. Если написать несколько отдельных if, выполнится каждый '
+       + 'подошедший: это разные конструкции, и путать их — обычная ошибка.'
+  },
+  {
+    q: 'Выражение <code>not (a &gt; 0 and b &gt; 0)</code> — чему оно равносильно?',
+    opts: ['<code>a &lt;= 0 or b &lt;= 0</code>',
+           '<code>a &lt;= 0 and b &lt;= 0</code>',
+           '<code>not a &gt; 0 and not b &gt; 0</code>'],
+    right: 0,
+    why: 'Закон де Моргана: отрицание «и» превращается в «или» отрицаний. '
+       + 'not (P and Q) = (not P) or (not Q), а not (P or Q) = (not P) and (not Q). '
+       + 'Проще всего помнить так: «неверно, что оба» значит «хотя бы один не».'
+  },
+  {
+    q: 'У исполнителя из задания 13 команда «Поменяй местами» применяется только к '
+     + 'числу, у которого цифра десятков меньше цифры единиц. Применима ли она к '
+     + 'числу 100?',
+    opts: ['Нет: десятки 0 и единицы 0, а нужно строго меньше',
+           'Да: ноль меньше ста',
+           'Да: у трёхзначного числа она применима всегда'],
+    right: 0,
+    why: 'Смотрят только на две последние цифры: у 100 это 0 и 0, и «строго меньше» '
+       + 'не выполняется. После одной команды «Прибавь 1» получится 101 — там 0 < 1, '
+       + 'и команда становится применимой.'
+  }
+];
+
+function hwTheory(rng) {
+  const item = tPick(rng, HW_THEORY);
+  const idx = tShuffle(rng, [0, 1, 2]);
+  const letters = ['A', 'Б', 'В'];
+  const opts = idx.map(function (k, pos) {
+    return letters[pos] + ') ' + item.opts[k];
+  });
+  const right = letters[idx.indexOf(item.right)];
+  return {
+    kind: 'theory',
+    code: '',
+    question: item.q + '<br><br>' + opts.join('<br>')
+            + '<br><br>Ответ — одна буква.',
+    answer: right,
+    explain: 'Верно: ' + right + ') ' + item.opts[item.right] + '. ' + item.why
+  };
+}
+
+/* ------------------------------------------------------------ сборка */
+function hwMake(type, rng) {
+  let t;
+  if (type in HW_FROM_TRAINER) {
+    t = tTask(HW_FROM_TRAINER[type], rng);
+    t.kind = 'trainer';
+  } else if (type === 4) {
+    t = hwCounter(rng);
+  } else {
+    t = hwTheory(rng);
+  }
+  t.hwType = type;
+  return t;
+}
+
+function hwVerdict(task, raw) {
+  if (!String(raw).trim()) return { ok: false, why: '' };
+  if (task.kind === 'counter') return hwCheckCounter(task, raw);
+  if (task.kind === 'theory') {
+    const map = { 'A': 'A', 'А': 'A', 'a': 'A', 'а': 'A',
+                  'Б': 'Б', 'б': 'Б', 'B': 'Б',
+                  'В': 'В', 'в': 'В', 'C': 'В', 'c': 'В' };
+    const got = map[String(raw).trim().charAt(0)] || '';
+    return { ok: got === task.answer, why: '' };
+  }
+  return { ok: tCheck(task, raw), why: '' };
+}
+/* ==== /ЗАДАЧИ ДЗ ==== */
+
+/* Форма сдачи ДЗ — одна на все темы. Ссылку разносит set_form_link.py. */
+const FORM = "https://docs.google.com/forms/d/e/1FAIpQLSfQyhaxcnzn4ZaKSe_ZMsluw7qRQnrw_80H6SfrnYB5EThUIA/viewform?usp=pp_url&entry.853601231=ФАМИЛИЯ&entry.1091635917=КЛАСС&entry.487188307=КОД";
+const ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+const EPOCH = Date.UTC(2026, 0, 1);
+const PREFIX = "VC";
+const NEED_STREAK = 1;     // тип закрывает один верный ответ
+const MIN_TYPES = 4;       // ниже этого код не выдаётся
+const SCALE = [[6, 5], [5, 4], [4, 3]];
+
+const bin = (v, w) => v.toString(2).padStart(w, "0");
+// Семибитными кусками строки: в нагрузке 33 бита, а побитовые операции в JS
+// 32-битные — старший бит молча потерялся бы.
+function checksum(bitstr){
+  let cs = 0x5B;
+  for (let i = 0; i < bitstr.length; i += 7)
+    cs ^= parseInt(bitstr.substr(i, 7).padEnd(7, "0"), 2);
+  return cs & 0x7F;
+}
+function makeCode(st){
+  const day = Math.max(0, Math.min(2047, Math.floor(
+      (Date.now() - EPOCH) / 86400000)));
+  const payload = bin(day, 11) + bin(Math.min(15, st.typesDone), 4) +
+                  bin(Math.min(15, st.cleanTypes), 4) +
+                  bin(Math.min(127, st.solved), 7) +
+                  bin(Math.min(127, st.wrong), 7);
+  const bitstr = payload + bin(checksum(payload), 7);
+  let out = "";
+  for (let i = 0; i < 40; i += 5)
+    out += ALPHABET[parseInt(bitstr.substr(i, 5), 2)];
+  return PREFIX + "-" + out.slice(0, 4) + "-" + out.slice(4);
+}
+
+/* ---------------------------------------------------------- состояние */
+const N = HW_TYPES.length;
+const rng = tRng((Date.now() ^ (Math.random() * 1e9)) >>> 0);
+const st = {
+  streak: Array(N).fill(0),
+  done: Array(N).fill(false),
+  clean: Array(N).fill(true),
+  solved: 0, wrong: 0,
+  cur: null, answered: false, retry: null
+};
+Object.defineProperty(st, "typesDone",
+  {get(){ return st.done.filter(Boolean).length; }});
+Object.defineProperty(st, "cleanTypes",
+  {get(){ return st.done.filter((d, i) => d && st.clean[i]).length; }});
+
+function markFor(n){
+  for (const [need, m] of SCALE) if (n >= need) return m;
+  return null;
+}
+/* После ошибки — тот же тип: разбор только что показан, применить его надо по
+   горячему. Иначе — любой незакрытый. */
+function pickType(){
+  if (st.retry !== null && !st.done[st.retry]) return st.retry;
+  const open = [];
+  for (let i = 0; i < N; i++) if (!st.done[i]) open.push(i);
+  if (!open.length) return null;
+  return open[tRand(rng, 0, open.length - 1)];
+}
+function esc(s){ return String(s).replace(/[&<>]/g, c =>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+/* ------------------------------------------------------------- экран */
+function paintProgress(){
+  const box = document.getElementById("types");
+  box.innerHTML = "";
+  HW_TYPES.forEach((name, i) => {
+    const c = document.createElement("span");
+    c.className = "chip" + (st.done[i] ? " done"
+                          : (st.cur && st.cur.hwType === i ? " cur" : ""));
+    c.textContent = name + (st.done[i] ? " ✓" : "");
+    box.appendChild(c);
+  });
+  const m = markFor(st.typesDone);
+  const sb = document.getElementById("scorebox");
+  sb.className = "score" + (m ? " m" + m : "");
+  document.getElementById("mark").textContent = m || "—";
+  document.getElementById("stats").textContent =
+    "закрыто типов: " + st.typesDone + " из " + N +
+    " · решено задач: " + st.solved + " · ошибок: " + st.wrong +
+    (st.typesDone < MIN_TYPES
+      ? " · до кода работы осталось закрыть " + (MIN_TYPES - st.typesDone) : "");
+}
+
+function nextTask(){
+  const type = pickType();
+  if (type === null) { finish(); return; }
+  st.cur = hwMake(type, rng);
+  st.answered = false;
+  const t = st.cur;
+  const hint = t.hint
+    ? '<details><summary>Подсказка</summary><p>' + t.hint + '</p></details>' : "";
+  document.getElementById("area").innerHTML =
+    '<div class="card" id="task">' +
+      '<p class="tag">' + HW_TYPES[type] +
+        (st.retry === type ? ' · ещё раз, тот же тип' : '') + '</p>' +
+      (t.code ? '<pre><code>' + esc(t.code) + '</code></pre>' : '') +
+      (t.input !== undefined
+        ? '<p class="inp">Вход: <code>' + esc(t.input).replace(/\n/g, '</code>, затем <code>') + '</code></p>'
+        : '') +
+      '<p>' + (t.question || "Что напечатает программа?") + '</p>' +
+      '<div class="row">' +
+        '<input type="text" id="ans" autocomplete="off" spellcheck="false">' +
+        '<button class="primary" id="go">Проверить</button>' +
+      '</div>' +
+      hint +
+      '<div class="verdict" id="v"></div>' +
+    '</div>';
+  document.getElementById("go").addEventListener("click", judge);
+  document.getElementById("ans").addEventListener("keydown", e => {
+    if (e.key === "Enter") judge();
+  });
+  document.getElementById("ans").focus();
+  paintProgress();
+}
+
+function judge(){
+  if (st.answered) { nextTask(); return; }
+  const raw = document.getElementById("ans").value;
+  if (!raw.trim()) return;
+  const t = st.cur, type = t.hwType;
+  const res = hwVerdict(t, raw);
+  const card = document.getElementById("task");
+  const v = document.getElementById("v");
+  st.answered = true;
+  document.getElementById("go").textContent = "Дальше";
+  document.getElementById("ans").disabled = true;
+  if (res.ok){
+    st.solved++;
+    st.streak[type]++;
+    st.retry = null;
+    card.className = "card ok";
+    v.className = "verdict ok";
+    let text = "Верно. " + (res.why ? res.why + " " : "") + (t.explain || "");
+    if (st.streak[type] >= NEED_STREAK){
+      st.done[type] = true;
+      text += " Тип закрыт.";
+    }
+    v.innerHTML = text;
+  } else {
+    st.wrong++;
+    st.streak[type] = 0;
+    st.clean[type] = false;
+    st.retry = type;
+    card.className = "card err";
+    v.className = "verdict err";
+    v.innerHTML = "Пока нет" + (res.why ? " — " + res.why : "") +
+      ". " + (t.explain || "") +
+      " Следующая задача — того же типа.";
+  }
+  paintProgress();
+}
+
+function finish(){
+  const m = markFor(st.typesDone);
+  const code = st.typesDone >= MIN_TYPES ? makeCode(st) : null;
+  const more = st.typesDone < N
+    ? '<button id="more">Закрыть ещё типы</button>' : "";
+  document.getElementById("area").innerHTML =
+    '<div class="card">' +
+      '<h2>Работа окончена</h2>' +
+      '<p>Закрыто типов: <b>' + st.typesDone + '</b> из ' + N +
+        '. Решено задач: ' + st.solved + ', ошибок: ' + st.wrong + '.' +
+        (m ? ' Наработано на <b>' + m + '</b>.' : '') + '</p>' +
+      (code
+        ? '<p>Твой код работы:</p><div class="code">' + code + '</div>' +
+          '<div class="fields">' +
+            '<div><label for="fam">Фамилия</label>' +
+              '<input type="text" id="fam" autocomplete="off"></div>' +
+            '<div><label for="kls">Класс</label>' +
+              '<input type="text" id="kls" autocomplete="off"></div>' +
+          '</div>' +
+          '<div class="row"><button id="send" class="primary">Сдать работу</button></div>' +
+          '<p class="stats">Кнопка откроет форму: фамилия, класс и код уже ' +
+            'будут вписаны — останется нажать «Отправить».</p>'
+        : '<div class="note">Закрыто меньше ' + MIN_TYPES +
+          ' типов — кода работы нет. Закрой ещё хотя бы ' +
+          (MIN_TYPES - st.typesDone) + ', и он появится.</div>') +
+      '<div class="row">' + more + '</div>' +
+    '</div>';
+  const b = document.getElementById("more");
+  if (b) b.addEventListener("click", nextTask);
+  wireSend(code);
+}
+
+function wireSend(code){
+  const btn = document.getElementById("send");
+  if (!btn) return;
+  const fam = document.getElementById("fam"), kls = document.getElementById("kls");
+  try {
+    fam.value = localStorage.getItem("fam") || "";
+    kls.value = localStorage.getItem("kls") || "";
+  } catch (e) {}
+  btn.addEventListener("click", () => {
+    if (!fam.value.trim()){ fam.focus(); return; }
+    try {
+      localStorage.setItem("fam", fam.value.trim());
+      localStorage.setItem("kls", kls.value.trim());
+    } catch (e) {}
+    const url = FORM.replace("ФАМИЛИЯ", encodeURIComponent(fam.value.trim()))
+                    .replace("КЛАСС", encodeURIComponent(kls.value.trim()))
+                    .replace("КОД", encodeURIComponent(code));
+    window.open(url, "_blank", "noopener");
+  });
+}
+
+paintProgress();
+nextTask();
+</script>
+<p class="ai-mark" style="margin:34px auto 0;max-width:860px;padding-top:12px;border-top:1px solid #d9dce6;color:#5c6070;font:13px/1.5 "Segoe UI",system-ui,sans-serif">Материалы подготовлены с использованием технологий искусственного интеллекта.</p>
+</body>
+</html>
