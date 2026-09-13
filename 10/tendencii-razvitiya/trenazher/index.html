@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Тенденции развития компьютерных технологий — тренажёр</title>
-<meta name="description" content="Тренажёр к теме «Тенденции развития компьютерных технологий», 10 класс: двадцать заданий — тенденции, параллельные вычисления, суперкомпьютеры, микроконтроллеры, роботизированные производства и расчёт ускорения.">
+<meta name="description" content="Тренажёр к теме «Тенденции развития компьютерных технологий», 10 класс: пятнадцать заданий — тенденции, параллельные вычисления, суперкомпьютеры, микроконтроллеры, роботизированные производства и расчёт ускорения.">
 <meta name="robots" content="noindex">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E10%3C/text%3E%3C/svg%3E">
 <style>
@@ -112,7 +112,7 @@ details p{margin:6px 0}
 <div class="wrap">
 
 <h1>Тенденции развития компьютерных технологий — тренажёр</h1>
-<p class="sub">Двадцать заданий: пять о тенденциях развития, десять о
+<p class="sub">Пятнадцать заданий: пять о тенденциях развития, пять о
    параллельных вычислениях, суперкомпьютерах, микроконтроллерах и
    роботах, пять — расчёт ускорения и производительности. Оценка
    пропорциональна числу верных ответов. Формулировки и числа при
@@ -208,7 +208,7 @@ const CALC_TYPES = [
 const TREND_COUNT = TRENDS.length;
 const CONCEPTS_COUNT = CONCEPTS.length;
 const CALC_COUNT = CALC_TYPES.length;
-const SESSION_LEN = TREND_COUNT + CONCEPTS_COUNT * 2 + CALC_COUNT;
+const SESSION_LEN = TREND_COUNT + CONCEPTS_COUNT + CALC_COUNT;
 
 const rnd = Math.random;
 
@@ -443,23 +443,17 @@ function makeSlotTask(kind, catId){
   return CALC_MAKERS[catId]();
 }
 
-// Лист из двадцати: 5 тенденций + 10 устройства (два круга по пять, без
-// повтора категории на стыке кругов) + 5 расчётных.
+// Лист из пятнадцати: 5 тенденций + 5 устройства + 5 расчётных, каждая
+// категория по разу.
 function buildSession(){
   const trendIds = pick(Array.from({length: TREND_COUNT}, (_, i) => i),
                         TREND_COUNT);
-  const round1 = pick(Array.from({length: CONCEPTS_COUNT}, (_, i) => i),
-                      CONCEPTS_COUNT);
-  const round2 = pick(Array.from({length: CONCEPTS_COUNT}, (_, i) => i),
-                      CONCEPTS_COUNT);
-  if (round2[0] === round1[round1.length - 1] && round2.length > 1){
-    const j = 1 + Math.floor(rnd() * (round2.length - 1));
-    [round2[0], round2[j]] = [round2[j], round2[0]];
-  }
+  const conceptIds = pick(Array.from({length: CONCEPTS_COUNT}, (_, i) => i),
+                          CONCEPTS_COUNT);
   const calcIds = pick(Array.from({length: CALC_COUNT}, (_, i) => i),
                        CALC_COUNT);
   return trendIds.map(i => ({kind: "trend", catId: i}))
-    .concat(round1.concat(round2).map(i => ({kind: "concept", catId: i})))
+    .concat(conceptIds.map(i => ({kind: "concept", catId: i})))
     .concat(calcIds.map(i => ({kind: "calc", catId: i})));
 }
 /* ==== /БАЗА ==== */
@@ -472,10 +466,10 @@ const SECTIONS = [
 
 /* ------------------------------------------------------------------
    Оценка пропорциональна числу верных ответов — шкала Светы:
-   «4 -> 1, 8 -> 2, 12 -> 3, 16 -> 4, 20 -> 5». Донабор считается в
+   «3 -> 1, 6 -> 2, 9 -> 3, 12 -> 4, 15 -> 5» (лист из 15 с 13.09.2026). Донабор считается в
    общий счёт: неверный ответ можно пересдать кнопкой «Добавить задачи».
 ------------------------------------------------------------------ */
-const SCALE = [[20, 5], [16, 4], [12, 3], [8, 2], [4, 1]];
+const SCALE = [[15, 5], [12, 4], [9, 3], [6, 2], [3, 1]];
 function markFor(correct){
   for (const s of SCALE) if (correct >= s[0]) return s[1];
   return 0;
@@ -629,8 +623,8 @@ function updatePanel(){
   const extras = tasks.filter(t => t.extra).length;
   const nextUp = SCALE.filter(s => s[0] > correct).slice(-1)[0];
   document.getElementById("stats").innerHTML =
-    `верно: <b>${correct}</b> из 20<br>` +
-    `верно с первой попытки: <b>${firstRoundRight}</b> из 20` +
+    `верно: <b>${correct}</b> из 15<br>` +
+    `верно с первой попытки: <b>${firstRoundRight}</b> из 15` +
     (extras ? ` &middot; добрано задач: <b>${extras}</b>` : "") +
     (nextUp ? `<br>до оценки ${nextUp[1]} осталось верных ответов: ` +
               `<b>${nextUp[0] - correct}</b>` : "");
@@ -643,7 +637,7 @@ function updatePanel(){
 
   const done = document.getElementById("done");
   done.innerHTML = (allAnswered() && need === 0)
-    ? `<div class="done">Лист пройден: все 20 верны. Оценка ${mark}.</div>`
+    ? `<div class="done">Лист пройден: все 15 верны. Оценка ${mark}.</div>`
     : "";
 }
 
