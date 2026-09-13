@@ -471,7 +471,10 @@ const val = (node) => node ? node.attrs["w:val"] : null;
 const TWIP_CM = 566.929;                 // 1 см = 567 твипов
 
 function readStyles(xml){
-  const st = {byId: {}, def: {font: null, size: null}};
+  // defaultPara — стиль абзаца по умолчанию. В русском Word у «Обычного»
+  // идентификатор не Normal, а «a», «a1» и т. п.: искать его надо по флагу
+  // w:default, а не по имени (урок 2, файл Морозовой, 13.09.2026).
+  const st = {byId: {}, def: {font: null, size: null}, defaultPara: null};
   if (!xml) return st;
   const root = xmlParse(xml);
   const doc = kid(root, "w:styles");
@@ -485,6 +488,11 @@ function readStyles(xml){
     const id = s.attrs["w:styleId"];
     if (!id) continue;
     const rPr = kid(s, "w:rPr"), pPr = kid(s, "w:pPr");
+    if ((s.attrs["w:type"] || "paragraph") === "paragraph" && isOn(kid(s, "w:default")) === false
+        && /^(1|true|on)$/i.test(s.attrs["w:default"] || ""))
+      st.defaultPara = id;
+    const sSpacing = pPr ? kid(pPr, "w:spacing") : null;
+    const sInd = pPr ? kid(pPr, "w:ind") : null;
     st.byId[id] = {
       id: id,
       type: s.attrs["w:type"] || "paragraph",
@@ -494,6 +502,9 @@ function readStyles(xml){
       size: rPr ? sizeOf(rPr) : null,
       jc: pPr ? val(kid(pPr, "w:jc")) : null,
       pageBreakBefore: pPr ? isOn(kid(pPr, "w:pageBreakBefore")) : false,
+      line: sSpacing && sSpacing.attrs["w:line"] ? Number(sSpacing.attrs["w:line"]) / 240 : null,
+      firstLine: sInd && sInd.attrs["w:firstLine"] !== undefined
+                 ? Number(sInd.attrs["w:firstLine"]) / TWIP_CM : null,
     };
   }
   return st;
@@ -559,10 +570,9 @@ function readDocument(xml, styles){
 function readPara(p, styles, inTable){
   const pPr = kid(p, "w:pPr");
   const styleId = pPr ? val(kid(pPr, "w:pStyle")) : null;
-  const chain = styleChain(styles, styleId || "Normal");
+  const chain = styleChain(styles, styleId || styles.defaultPara || "Normal");
   const ind = pPr ? kid(pPr, "w:ind") : null;
   const spacing = pPr ? kid(pPr, "w:spacing") : null;
-  const paraRPr = pPr ? kid(pPr, "w:rPr") : null;
 
   let jc = pPr ? val(kid(pPr, "w:jc")) : null;
   if (!jc) for (const s of chain) if (s.jc){ jc = s.jc; break; }
@@ -589,6 +599,7 @@ function readPara(p, styles, inTable){
           }
         }
         runs.push({text: rt, rPr: rPr,
+                   rStyle: rPr ? val(kid(rPr, "w:rStyle")) : null,
                    font: rPr ? fontOf(rPr) : null,
                    size: rPr ? sizeOf(rPr) : null});
         text += rt;
@@ -602,16 +613,21 @@ function readPara(p, styles, inTable){
   };
   walkRuns(p);
 
-  // действующий шрифт и кегль: прогон → абзац → цепочка стилей → умолчание
-  const eff = (what) => {
-    const fromChain = () => {
-      for (const s of chain) if (s[what]) return s[what];
-      return styles.def[what];
-    };
-    const pv = paraRPr ? (what === "font" ? fontOf(paraRPr) : sizeOf(paraRPr)) : null;
-    return {chain: fromChain(), para: pv};
+  // Действующий шрифт и кегль прогона: сам прогон → его стиль знака →
+  // стиль абзаца с цепочкой → умолчания документа. Свойства знака абзаца
+  // (w:pPr/w:rPr) сюда НЕ входят: они описывают символ ¶, а не текст —
+  // на них проверка ложно ругалась у строк оглавления.
+  const fromChain = (ch, what) => {
+    for (const s of ch) if (s[what]) return s[what];
+    return null;
   };
-  const effFont = eff("font"), effSize = eff("size");
+  const effOf = (r, what) =>
+    r[what] ||
+    (r.rStyle ? fromChain(styleChain(styles, r.rStyle), what) : null) ||
+    fromChain(chain, what) ||
+    styles.def[what];
+  const direct = (node, attr, scale) =>
+    node && node.attrs[attr] !== undefined ? Number(node.attrs[attr]) / scale : null;
 
   return {
     styleId: styleId, styleName: chain.length ? chain[0].name : "Обычный",
@@ -632,18 +648,14 @@ function readPara(p, styles, inTable){
     })(),
     isToc: chain.some(s => /^toc [1-9]$/i.test(s.name || "")),
     hasTab: hasTab, fields: fields,
-    firstLine: ind && ind.attrs["w:firstLine"]
-               ? Number(ind.attrs["w:firstLine"]) / TWIP_CM : null,
+    // отступ и интервал: заданные в абзаце, иначе — из стиля
+    firstLine: direct(ind, "w:firstLine", TWIP_CM) ?? fromChain(chain, "firstLine"),
     indLeft: ind && ind.attrs["w:left"]
              ? Number(ind.attrs["w:left"]) / TWIP_CM : null,
     lineRule: spacing ? val(kid(spacing, "w:line")) : null,
-    lineSpacing: spacing && spacing.attrs["w:line"]
-                 ? Number(spacing.attrs["w:line"]) / 240 : null,
-    font: function(){ return this.runs.find(r => r.font) ?
-                      this.runs.find(r => r.font).font
-                      : (effFont.para || effFont.chain); },
-    fontOfRun: (r) => r.font || effFont.para || effFont.chain,
-    sizeOfRun: (r) => r.size || effSize.para || effSize.chain,
+    lineSpacing: direct(spacing, "w:line", 240) ?? fromChain(chain, "line"),
+    fontOfRun: (r) => effOf(r, "font"),
+    sizeOfRun: (r) => effOf(r, "size"),
   };
 }
 
@@ -682,6 +694,12 @@ function checkDocx(files, opts){
   const filled = paras.filter(p => !p.empty);
 
   const checks = [];
+  // Стили проходят на уроке 3. На уроке 2 советовать «поправь стиль»
+  // нельзя — это приём, которого ещё не было (Света, 13.09.2026).
+  const styleTip = (opts.stage || 2) >= 3
+    ? " Если чужой шрифт в заголовках или в содержании — поправь сам " +
+      "стиль: правой кнопкой по стилю → Изменить."
+    : "";
   // short — короткая метка для отчёта учителю: в списке на класс
   // полные формулировки не читаются
   const add = (id, stage, short, name, ok, hint) =>
@@ -719,9 +737,8 @@ function checkDocx(files, opts){
       wrongFont.size === 0,
       wrongFont.size === 0 ? "" :
       "Остался другой шрифт (" + [...wrongFont.keys()].join(", ") +
-      "). Ctrl+A выделяет весь документ целиком — вместе с титульным листом. " +
-      "Если чужой шрифт в заголовках или в содержании — поправь сам стиль: " +
-      "правой кнопкой по стилю → Изменить.");
+      "). Ctrl+A выделяет весь документ целиком — вместе с титульным листом." +
+      styleTip);
 
   /* --- 3. кегль --- */
   const wrongSize = new Set();
@@ -734,8 +751,7 @@ function checkDocx(files, opts){
       wrongSize.size === 0,
       wrongSize.size === 0 ? "" :
       "Встречается размер " + [...wrongSize].join(", ") +
-      " пт. Выдели весь текст (Ctrl+A) и поставь 14; в заголовках и " +
-      "содержании — через стиль: правой кнопкой по стилю → Изменить.");
+      " пт. Выдели весь текст (Ctrl+A) и поставь 14." + styleTip);
 
   /* --- 4. выравнивание титульного средствами Word --- */
   const spaced = title.filter(p => /^ {2,}/.test(p.text));
