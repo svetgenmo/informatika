@@ -1000,6 +1000,54 @@ const seenTypes = new Set();
 let tasks = [], state = [], firstTry = 0;
 const solvedCount = () => state.filter(s => s.ok).length;
 
+/* ==== FRZ: вставлено freeze.py, руками не править ==== */
+/* Код задачи — картинкой, прямо в браузере.
+   Вставляется freeze.py --sync между маркерами FRZ. Руками в html не править.
+
+   Тренажёр, ДЗ и проверочная рисуют код каждой задачи сами при открытии, и
+   заморозить его при выкладке нельзя — его ещё нет. Поэтому страница
+   рисует код на canvas и вставляет <img>: скопировать мышкой и запустить в
+   IDLE не выйдет — задача снова про чтение (Света, 14.09.2026).
+
+   Стиль тот же, что у блоков <pre>: Consolas 15px, тёмный фон, комментарий
+   после # серо-голубой. Рисуем в двойном размере — чётко на любом экране. */
+function frz(code) {
+  var S = 2, SIZE = 15, LEAD = 22, PX = 14, PY = 12;
+  var lines = String(code).replace(/\r/g, '').split('\n');
+  var c = document.createElement('canvas'), g = c.getContext('2d');
+  var font = (SIZE * S) + 'px Consolas, "Cascadia Mono", "Courier New", monospace';
+  g.font = font;
+  var w = 0;
+  for (var i = 0; i < lines.length; i++) w = Math.max(w, g.measureText(lines[i]).width);
+  c.width = Math.ceil(w) + 2 * PX * S;
+  c.height = lines.length * LEAD * S + 2 * PY * S;
+  g.fillStyle = '#1e2430';
+  g.fillRect(0, 0, c.width, c.height);
+  g.font = font;                       /* смена размера сбрасывает шрифт */
+  g.textBaseline = 'middle';
+  for (var k = 0; k < lines.length; k++) {
+    var y = PY * S + k * LEAD * S + LEAD * S / 2;
+    var line = lines[k], at = line.indexOf('#');
+    var head = at < 0 ? line : line.slice(0, at), tail = at < 0 ? '' : line.slice(at);
+    g.fillStyle = '#e7ecf5';
+    g.fillText(head, PX * S, y);
+    if (tail) {
+      g.fillStyle = '#8fa6c4';
+      g.fillText(tail, PX * S + g.measureText(head).width, y);
+    }
+  }
+  if (!document.getElementById('frz-css')) {
+    var st = document.createElement('style');
+    st.id = 'frz-css';
+    st.textContent = 'img.frz-b{display:block;max-width:100%;height:auto;'
+                   + 'border-radius:10px;margin:8px 0}';
+    document.head.appendChild(st);
+  }
+  return '<img class="frz-b" width="' + (c.width / S) + '" height="' + (c.height / S)
+       + '" alt="код задачи — читай с экрана" src="' + c.toDataURL('image/png') + '">';
+}
+/* ==== /FRZ ==== */
+
 function esc(s){ return String(s).replace(/[&<>]/g, c =>
   ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
 
@@ -1019,7 +1067,7 @@ function render(){
     div.id = "task" + idx;
     div.innerHTML =
       '<p class="tag">Задача ' + (idx + 1) + ' · ' + T_TYPES[t.type] + '</p>' +
-      (t.code ? '<pre><code>' + esc(t.code) + '</code></pre>' : '') +
+      (t.code ? frz(t.code) : '') +
       (t.input !== undefined
         ? '<p class="inp">Вход: <code>' + esc(t.input).replace(/\n/g, '</code>, затем <code>') + '</code></p>'
         : '') +
