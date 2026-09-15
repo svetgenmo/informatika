@@ -107,6 +107,9 @@ input[type=text]:disabled{background:#f1f2f6;color:var(--muted)}
 .done{margin:18px 0 0;padding:12px 16px;border-radius:10px;
       background:var(--ok-bg);border:1px solid var(--ok-line);
       color:var(--ok);font-weight:600}
+.note{margin:12px 0 0;padding:12px 16px;border-radius:10px;
+      background:var(--hi-bg);border:1px solid var(--hi-line);
+      color:var(--ink);font-size:15px}
 
 details{margin-top:26px;border:1px solid var(--line);border-radius:12px;
         padding:12px 18px;background:var(--card)}
@@ -131,7 +134,10 @@ th{background:#fff;color:var(--muted);font-size:14px}
 <h1>Файлы и папки — тренажёр</h1>
 <p class="sub">Двенадцать заданий: по одному на каждый поворот задания 2
    ВПР. Задачи при каждом запуске новые.
-   Ответ — <b>одна цифра</b>: номер верного варианта, как в бланке.</p>
+   Ответ — <b>одна цифра</b>: номер верного варианта, как в бланке.<br>
+   Оценку даёт <b>первый круг</b> — сколько из двенадцати решено верно.
+   «Добавить задачи» дорешивает ошибки, но поднимает оценку не больше
+   чем на балл. Выше — только «Начать заново».</p>
 
 <div class="panel">
   <div class="mark">
@@ -216,9 +222,17 @@ const TYPES_TOTAL = TYPES.length;
 const SCALE = [[11, 5], [9, 4], [7, 3]];
 const markFor = n => (SCALE.find(s => n >= s[0]) || [0, 2])[1];
 
+// Оценку даёт первый круг — двенадцать задач, по одной на поворот. Добор
+// поднимает её не больше чем на балл, выше — только новым кругом. При
+// четырёх вариантах ответа иначе добор закрывается тыком: жми одну цифру,
+// пока не совпадёт (Света, 15.09.2026).
+const BONUS = 1;
+
 let tasks = [];
-let firstRoundRight = 0;
-let used = new Set();       // какие задачи банка уже показаны в этом заходе
+// Какие задачи банка уже показаны. Между кругами не сбрасываем: двадцати
+// задач на поворот хватает на двадцать кругов без повторов, а повтор с тем
+// же порядком вариантов решался бы по памяти, а не по пути.
+let used = new Set();
 
 const shuffle = a => {
   const x = a.slice();
@@ -241,9 +255,7 @@ function takeTask(typeId){
 }
 
 function newRun(){
-  used = new Set();
-  firstRoundRight = 0;
-  tasks = shuffle(TYPES.map(t => t.id)).map(id =>
+  tasks =shuffle(TYPES.map(t => t.id)).map(id =>
       Object.assign(takeTask(id), {status: "open", extra: false, draft: ""}));
   render();
   const el = document.getElementById("in0");
@@ -259,6 +271,12 @@ const failedTypes = () => {
                       .map(t => t.type));
 };
 const allAnswered = () => tasks.every(t => t.status !== "open");
+
+const firstRound = () => tasks.filter(t => !t.extra);
+const firstRight = () => firstRound().filter(t => t.status === "ok").length;
+const roundOver  = () => firstRound().every(t => t.status !== "open");
+const capMark    = () => Math.min(5, markFor(firstRight()) + BONUS);
+const finalMark  = () => Math.min(markFor(masteredTypes().size), capMark());
 
 /* ------------------------------------------------------------ проверка */
 
@@ -286,7 +304,6 @@ function check(i){
   t.note = "";
   t.given = given;
   t.status = given === t.answer ? "ok" : "err";
-  if (t.status === "ok" && !t.extra) firstRoundRight++;
 
   render();
   focusNextOpen(i + 1);
@@ -408,20 +425,30 @@ function render(){
 
 function updatePanel(){
   const mastered = masteredTypes().size;
-  const mark = markFor(mastered);
-  const started = tasks.some(t => t.status !== "open");
+  const right = firstRight();
+  const over = roundOver();
+  const mark = finalMark();
+  const base = markFor(right), cap = capMark();
+  // пока круг не решён целиком, оценки нет: её даёт весь круг
   const el = document.getElementById("mark");
-  el.textContent = started ? mark : "—";
-  el.className = started ? "m" + mark : "";
+  el.textContent = over ? mark : "—";
+  el.className = over ? "m" + mark : "";
 
   const extras = tasks.filter(t => t.extra).length;
-  const nextUp = SCALE.filter(s => s[0] > mastered).pop();
-  document.getElementById("stats").innerHTML =
-    `освоено поворотов: <b>${mastered}</b> из ${TYPES_TOTAL}<br>` +
-    `верно с первой попытки: <b>${firstRoundRight}</b> из ${TYPES_TOTAL}` +
-    (extras ? ` &middot; добрано задач: <b>${extras}</b>` : "") +
-    (nextUp ? `<br>до оценки ${nextUp[1]} осталось закрыть: ` +
-              `<b>${nextUp[0] - mastered}</b>` : "");
+  let stats;
+  if (!over){
+    const answered = firstRound().filter(t => t.status !== "open").length;
+    stats = `первый круг: решено <b>${answered}</b> из ${TYPES_TOTAL}, ` +
+            `верно <b>${right}</b><br>оценку даёт первый круг`;
+  } else {
+    stats = `первый круг: верно <b>${right}</b> из ${TYPES_TOTAL} — ` +
+            `это <b>${base}</b>`;
+    if (base < 5)
+      stats += `<br>освоено поворотов: <b>${mastered}</b>` +
+               (extras ? ` &middot; добрано задач: <b>${extras}</b>` : "") +
+               `<br>добор поднимет не выше <b>${cap}</b>`;
+  }
+  document.getElementById("stats").innerHTML = stats;
 
   const need = failedTypes().size;
   const btn = document.getElementById("add");
@@ -429,11 +456,16 @@ function updatePanel(){
   btn.textContent = need && allAnswered()
       ? `Добавить задачи (${need})` : "Добавить задачи";
 
-  const done = document.getElementById("done");
-  done.innerHTML = (allAnswered() && need === 0)
-    ? `<div class="done">Все ${TYPES_TOTAL} поворотов закрыты.
-       Оценка ${mark}.</div>`
-    : "";
+  let msg = "";
+  if (allAnswered() && need === 0)
+    msg = `<div class="done">Все ${TYPES_TOTAL} поворотов закрыты.
+           Оценка ${mark}.</div>`;
+  if (over && cap < 5)
+    msg += `<div class="note">Оценку даёт первый круг: верно ${right} из
+            ${TYPES_TOTAL}, это ${base}. Добор поднимет её не выше
+            <b>${cap}</b>. Хочешь выше — нажми «Начать заново»: будут
+            двенадцать новых задач, и первый круг посчитается снова.</div>`;
+  document.getElementById("done").innerHTML = msg;
 }
 
 document.getElementById("again").addEventListener("click", newRun);

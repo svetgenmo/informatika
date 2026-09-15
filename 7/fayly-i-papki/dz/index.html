@@ -68,6 +68,7 @@ table.steps td.m{font-weight:700;color:var(--accent);font-size:17px}
      background:#fff}
 .dot.full{background:var(--ok);border-color:var(--ok)}
 .type.done .nm{color:var(--ok);font-weight:600}
+.type.miss .nm{color:var(--err)}
 @media (max-width:820px){ .types{grid-template-columns:repeat(2,1fr)} }
 @media (max-width:560px){ .types{grid-template-columns:1fr} }
 
@@ -133,6 +134,10 @@ button:focus-visible{outline:3px solid #a9c6e8;outline-offset:2px}
 .finish{border:3px solid var(--ok-line);background:var(--ok-bg);
         border-radius:14px;padding:22px 24px;margin-bottom:16px}
 .finish h2{margin:0 0 6px;font-size:22px;color:var(--ok)}
+.round{border:2px solid var(--accent);background:var(--card);
+       border-radius:14px;padding:20px 24px;margin-bottom:16px}
+.round h2{margin:0 0 8px;font-size:22px;color:var(--accent)}
+.round p{margin:6px 0}
 .code{font:700 34px/1.1 Consolas,monospace;letter-spacing:3px;
       color:var(--ink);background:#fff;border:2px solid var(--ok-line);
       border-radius:10px;padding:14px 18px;margin:14px 0;
@@ -173,20 +178,25 @@ table.hex th{background:#fff;color:var(--muted);font-size:14px}
 <div class="howto">
   <dl>
     <dt>Что делать</dt>
-    <dd>Решать задачи. Поворот темы считается закрытым, когда по нему
-        <b>две задачи подряд</b> решены верно. Ошибся — счёт по этому
-        повороту начинается заново, зато сразу будет разбор.</dd>
-    <dt>Сколько решать</dt>
-    <dd>Столько, на сколько хочешь наработать:
+    <dd>Сначала <b>первый круг</b> — двенадцать задач, по одной на каждый
+        поворот темы. Ошибся — сразу будет разбор.</dd>
+    <dt>Оценка</dt>
+    <dd>Её даёт первый круг — сколько задач решено верно:
       <table class="steps">
-        <tr><th>закрыто поворотов</th><th>7</th><th>9</th><th>11</th></tr>
+        <tr><th>верно в первом круге</th><th>7</th><th>9</th><th>11</th></tr>
         <tr><th>оценка</th><td class="m">3</td><td class="m">4</td>
             <td class="m">5</td></tr>
       </table>
-      Меньше семи — код не выдаётся, сдавать нечего.</dd>
+      После круга повороты с ошибкой можно <b>добрать</b>: каждый
+      закрывается двумя верными подряд. Добор поднимает оценку
+      <b>не больше чем на один балл</b>. Хочешь выше — «Начать заново»:
+      двенадцать новых задач и новый первый круг.
+      Меньше семи закрытых поворотов — код не выдаётся.</dd>
     <dt>Как сдать</dt>
     <dd>В конце страница выдаст <b>код работы</b>. Нажми «Сдать работу»,
-        впиши фамилию и класс — форма откроется с уже вписанным кодом.</dd>
+        впиши фамилию и класс — форма откроется с уже вписанным кодом.
+        Результат устраивает — сдай его, прежде чем начинать заново:
+        из всех сдач засчитывается лучшая.</dd>
   </dl>
 </div>
 
@@ -194,6 +204,7 @@ table.hex th{background:#fff;color:var(--muted);font-size:14px}
   <div class="ptop">
     <div class="score"><span>Наработано на</span><b id="mark">—</b></div>
     <div class="sp"></div>
+    <button id="restart" disabled>Начать заново</button>
     <button id="finish" disabled>Закончить и получить код</button>
   </div>
   <h2>Повороты темы</h2>
@@ -255,12 +266,34 @@ const BANK = {"types":[{"id":0,"name":"перенос каталога","rule":"
 const TYPES = BANK.types;
 const TYPES_TOTAL = TYPES.length;
 
-const STREAK = 2;              // две верные подряд — поворот закрыт
+const STREAK = 2;              // в доборе две верные подряд — поворот закрыт
 const SCALE = [[11, 5], [9, 4], [7, 3]];
 const MIN_TO_FINISH = SCALE[SCALE.length - 1][0];
 const markFor = n => (SCALE.find(s => n >= s[0]) || [0, 2])[1];
 
+// Оценку даёт первый круг — по задаче на поворот; добор поднимает её не
+// больше чем на балл, выше — только новым кругом. При четырёх вариантах
+// ответа иначе добор закрывается тыком (Света, 15.09.2026).
+const BONUS = 1;
+
 const randInt = (lo, hi) => lo + Math.floor(Math.random() * (hi - lo + 1));
+const shuffle = a => {
+  const x = a.slice();
+  for (let i = x.length - 1; i > 0; i--){
+    const j = randInt(0, i);
+    [x[i], x[j]] = [x[j], x[i]];
+  }
+  return x;
+};
+// «ещё 2 поворотов» режет глаз сильнее, чем кажется: текст читают
+// дети, и корявость они замечают раньше смысла
+const forms = n => {
+  const a = n % 100, b = a % 10;
+  if (a > 4 && a < 21) return "поворотов";
+  if (b === 1) return "поворот";
+  if (b > 1 && b < 5) return "поворота";
+  return "поворотов";
+};
 
 /* ------------------------------------------------------------ квитанция
    Код несёт цифры работы и контрольную сумму. Ключа нигде нет — иначе
@@ -289,6 +322,8 @@ function checksum(bits){
   return cs & 0x7F;
 }
 
+// cleanTypes здесь — верные в первом круге: по ним homework.py и считает
+// отметку (Topic.first_round), добор даёт не больше балла сверху.
 function makeCode(st){
   const day = Math.max(0, Math.min(2047, Math.floor(
       (Date.now() - EPOCH) / 86400000)));
@@ -305,10 +340,16 @@ function makeCode(st){
 /* --------------------------------------------------------- состояние */
 
 const st = {
+  order:  [],                      // первый круг: повороты вперемешку
+  pos:    0,                       // сколько задач первого круга выдано
+  roundAnswered: 0,                // ... и сколько из них уже решено
+  summaryShown: false,
   streak: TYPES.map(() => 0),
   done:   TYPES.map(() => false),
-  clean:  TYPES.map(() => true),   // закрыт без единой ошибки
-  solved: 0, wrong: 0,
+  // закрыт без единой ошибки — то же, что верно в первом круге: там по
+  // задаче на поворот, а добор бывает только после ошибки
+  clean:  TYPES.map(() => true),
+  solved: 0, wrong: 0,             // за все круги подряд — так виден перебор
   cur: null, answered: false, given: ""
 };
 Object.defineProperty(st, "typesDone",
@@ -316,6 +357,13 @@ Object.defineProperty(st, "typesDone",
 Object.defineProperty(st, "cleanTypes",
   {get(){ return st.done.filter((d, i) => d && st.clean[i]).length; }});
 
+const roundOver = () => st.roundAnswered >= TYPES_TOTAL;
+const capMark   = () => Math.min(5, markFor(st.cleanTypes) + BONUS);
+const markNow   = () => Math.min(markFor(st.typesDone), capMark());
+const canFinish = () => roundOver() && st.typesDone >= MIN_TO_FINISH;
+
+// Какие задачи банка уже показаны. Между кругами не сбрасываем: двадцати
+// задач на поворот хватает на двадцать кругов без повторов.
 let used = new Set();
 
 // Задачи считает gen.py, страница только выбирает готовую. Ключи в
@@ -339,11 +387,43 @@ function pickType(){
   return pool[randInt(0, pool.length - 1)];
 }
 
+function newRound(){
+  st.order = shuffle(TYPES.map(t => t.id));
+  st.pos = 0;
+  st.roundAnswered = 0;
+  st.summaryShown = false;
+  TYPES.forEach(t => {
+    st.streak[t.id] = 0; st.done[t.id] = false; st.clean[t.id] = true;
+  });
+  nextTask();
+}
+
+function restart(){
+  if (canFinish() && !confirm("Нынешний результат пропадёт. Если он тебя " +
+      "устраивает, сначала сдай код: из всех сдач засчитывается лучшая.\n\n" +
+      "Начать заново?")) return;
+  newRound();
+}
+
 function nextTask(){
-  const t = pickType();
+  let t, first = false;
+  if (st.pos < TYPES_TOTAL){
+    const id = st.order[st.pos++];
+    t = TYPES.find(x => x.id === id);
+    first = true;
+  } else {
+    // круг кончился — сначала итоги: добирать или начать заново, решает ученик
+    if (!st.summaryShown && st.typesDone < TYPES_TOTAL){
+      st.summaryShown = true;
+      renderRound();
+      return;
+    }
+    t = pickType();
+  }
   if (!t){ renderFinish(); return; }
   st.cur = takeTask(t.id);
   st.cur.name = t.name;
+  st.cur.first = first;
   st.answered = false;
   st.given = "";
   render();
@@ -380,12 +460,14 @@ function answer(){
   if (ok){
     st.solved++;
     st.streak[t.type]++;
-    if (st.streak[t.type] >= STREAK) st.done[t.type] = true;
+    // в первом круге поворот закрывает одна верная, в доборе — серия
+    if (t.first || st.streak[t.type] >= STREAK) st.done[t.type] = true;
   } else {
     st.wrong++;
     st.streak[t.type] = 0;
     st.clean[t.type] = false;
   }
+  if (t.first) st.roundAnswered++;
   t.ok = ok;
   render();
 }
@@ -411,47 +493,54 @@ function renderTypes(){
     const dots = Array.from({length: STREAK}, (_, k) =>
       `<span class="dot${k < st.streak[t.id] || st.done[t.id]
          ? " full" : ""}"></span>`).join("");
-    return `<div class="type${st.done[t.id] ? " done" : ""}">
+    const cls = st.done[t.id] ? " done" : !st.clean[t.id] ? " miss" : "";
+    return `<div class="type${cls}">
               <span class="nm">${esc(t.name)}</span>
               <span class="dots">${dots}</span></div>`;
   }).join("");
 
-  const done = st.typesDone;
-  const mark = markFor(done);
+  const done = st.typesDone, over = roundOver();
+  const mark = markNow(), right = st.cleanTypes, cap = capMark();
+  // до конца круга и до первой ступени оценки нет — прочерк, не двойка
+  const shown = canFinish();
   const el = document.getElementById("mark");
-  // до первой ступени оценки ещё нет — прочерк, не двойка
-  el.textContent = done >= MIN_TO_FINISH ? mark : "—";
-  el.className = done >= MIN_TO_FINISH ? "m" + mark : "";
+  el.textContent = shown ? mark : "—";
+  el.className = shown ? "m" + mark : "";
 
   const btn = document.getElementById("finish");
-  btn.disabled = done < MIN_TO_FINISH;
-  btn.textContent = done >= MIN_TO_FINISH
-      ? `Закончить и получить код (на ${mark})`
-      : "Закончить и получить код";
+  btn.disabled = !shown;
+  btn.textContent = shown ? `Закончить и получить код (на ${mark})`
+                          : "Закончить и получить код";
+  // посреди круга заново не начинают: круг доводится до конца
+  document.getElementById("restart").disabled = !over;
 
   const need = document.getElementById("need");
+  if (!over){
+    need.innerHTML = `Первый круг: задача <b>${st.pos}</b> из ${TYPES_TOTAL},` +
+        ` верно пока <b>${right}</b>. Оценку даёт первый круг — добор` +
+        ` поднимет её не больше чем на балл.`;
+    return;
+  }
+  let text = `Первый круг: верно <b>${right}</b> из ${TYPES_TOTAL}. `;
   const up = SCALE.filter(s => s[0] > done).pop();
-  // «ещё 2 поворотов» режет глаз сильнее, чем кажется: текст читают
-  // дети, и корявость они замечают раньше смысла
-  const forms = n => {
-    const a = n % 100, b = a % 10;
-    if (a > 4 && a < 21) return "поворотов";
-    if (b === 1) return "поворот";
-    if (b > 1 && b < 5) return "поворота";
-    return "поворотов";
-  };
-  if (!up){
-    need.innerHTML = "Закрыто всё, что нужно на пятёрку. " +
-                     "Забирай код и сдавай.";
+  if (done >= TYPES_TOTAL){
+    text += "Закрыты все повороты — забирай код и сдавай.";
+  } else if (mark >= cap){
+    text += cap < 5
+      ? `Добор выше <b>${cap}</b> уже не поднимет. Хочешь выше — ` +
+        `«Начать заново»: новый первый круг.`
+      : "Это уже пятёрка — забирай код и сдавай.";
   } else if (done >= MIN_TO_FINISH){
-    need.innerHTML = `Можно остановиться прямо сейчас — это <b>${mark}</b>. ` +
-        `Закрой ещё <b>${up[0] - done}</b> ${forms(up[0] - done)} — ` +
-        `и будет <b>${up[1]}</b>.`;
+    // mark < cap, значит следующая ступень ровно на балл выше и доступна
+    text += `Можно остановиться — это <b>${mark}</b>. Добери ещё ` +
+        `<b>${up[0] - done}</b> ${forms(up[0] - done)} — и будет ` +
+        `<b>${up[1]}</b>.`;
   } else {
     const left = MIN_TO_FINISH - done;
-    need.innerHTML = `Закрой ещё <b>${left}</b> ${forms(left)}, ` +
-        `чтобы получить код на <b>3</b>.`;
+    text += `Добери ещё <b>${left}</b> ${forms(left)}, чтобы получить ` +
+        `код на <b>3</b>.`;
   }
+  need.innerHTML = text;
 }
 
 function render(){
@@ -479,7 +568,9 @@ function render(){
           st.done[t.type] ? ` — «${esc(t.name)}» закрыто`
                           : `, подряд: ${st.streak[t.type]} из ${STREAK}`}</div>`
       : `<div class="verdict err">Ошибка. Верный ответ: ${t.answer}.
-           Серия по этому повороту начинается заново.</div>` + explain(t);
+           ${t.first ? "Этот поворот можно будет добрать после круга."
+                     : "Серия по этому повороту начинается заново."}</div>` +
+        explain(t);
   } else if (t.hint){
     tail = `<div class="verdict err">${t.hint}</div>`;
   }
@@ -488,8 +579,8 @@ function render(){
   // это наш собственный текст, а не ввод ученика
   main.innerHTML = `
     <div class="card">
-      <div class="kicker">${esc(t.name)} &middot; решено задач:
-           ${st.solved}</div>
+      <div class="kicker">${esc(t.name)} &middot; ${t.first
+           ? `первый круг, задача ${st.pos} из ${TYPES_TOTAL}` : "добор"}</div>
       <div class="q">${t.q}<small>В ответе — номер верного варианта,
         одна цифра.</small></div>
       <ol class="opts">${list}</ol>
@@ -499,7 +590,9 @@ function render(){
                value="${esc(st.given || "")}"
                ${st.answered ? "disabled" : ""}>
         <button class="primary" id="go">${
-          st.answered ? "Следующая задача" : "Проверить"}</button>
+          !st.answered ? "Проверить"
+          : t.first && st.pos >= TYPES_TOTAL ? "Итоги первого круга"
+          : "Следующая задача"}</button>
       </div>
       ${tail}
     </div>`;
@@ -551,31 +644,60 @@ function wireSend(code){
   });
 }
 
+// Итоги первого круга: оценка по нему уже известна, дальше выбор ученика —
+// добирать (не выше балла сверху) или начать новый круг.
+function renderRound(){
+  renderTypes();
+  const right = st.cleanTypes, cap = capMark();
+  const miss = TYPES_TOTAL - right;
+  document.getElementById("main").innerHTML = `
+    <div class="round">
+      <h2>Первый круг: верно ${right} из ${TYPES_TOTAL}</h2>
+      <p>${right >= MIN_TO_FINISH
+          ? `По первому кругу это <b>${markFor(right)}</b> — код уже можно
+             забрать кнопкой «Закончить и получить код».`
+          : `Для кода нужно закрыть хотя бы <b>${MIN_TO_FINISH}</b>
+             поворотов.`}</p>
+      <p>Добор — повороты с ошибкой (их ${miss}): каждый закрывается двумя
+         верными подряд. Он поднимет оценку не выше <b>${cap}</b>.</p>
+      ${cap < 5 ? `<p>Хочешь выше — начни заново: двенадцать новых задач,
+         и первый круг посчитается снова.</p>` : ""}
+    </div>
+    <div class="row">
+      <button class="primary" id="dobor">Добирать</button>
+      <button id="again">Начать заново</button>
+    </div>`;
+  const dobor = document.getElementById("dobor");
+  dobor.addEventListener("click", nextTask);
+  document.getElementById("again").addEventListener("click", restart);
+  dobor.focus();
+}
+
 function renderFinish(){
   renderTypes();
-  const done = st.typesDone, mark = markFor(done);
+  const done = st.typesDone, mark = markNow(), cap = capMark();
   const all = done >= TYPES_TOTAL;
   const code = makeCode(st);
-  const up = SCALE.filter(s => s[0] > done).pop();
+  const canRaise = !all && mark < cap;
 
   // Остановиться можно на любой ступени, поэтому «дальше» — не подачка,
-  // а обычный ход: закрыл ещё один поворот, забрал код получше.
-  const more = !up
-    ? `<button id="more">Потренироваться ещё</button>
-       <span class="stats">оценку это уже не изменит,
-             но перед ВПР полезно</span>`
-    : `<button id="back" class="primary">Решать дальше — до ${up[1]}</button>
-       <span class="stats">код останется, просто получишь новый,
-             когда закроешь ещё ${up[0] - done}</span>`;
+  // а обычный ход: добрал ещё поворот, забрал код получше.
+  const more = `
+    ${all ? "" : `<button id="back"${canRaise ? ' class="primary"' : ""}>Добирать
+                    дальше</button>`}
+    <button id="again">Начать заново</button>
+    <span class="stats">${canRaise
+      ? `добором можно дойти до ${mark + 1}; `
+      : mark < 5 ? `выше ${mark} — только новым первым кругом; ` : ""}
+      перед новым кругом сдай этот код — засчитывается лучшая сдача</span>`;
 
   document.getElementById("main").innerHTML = `
     <div class="finish">
-      <h2>${all ? "Готово — закрыты все двенадцать поворотов"
-                : `Готово — наработано на ${mark}`}</h2>
-      <p class="stats">Закрыто поворотов: <b>${done}</b> из
-         ${TYPES_TOTAL} &middot; решено задач: <b>${st.solved}</b> &middot;
-         ошибок: <b>${st.wrong}</b> &middot;
-         закрыто без единой ошибки: <b>${st.cleanTypes}</b></p>
+      <h2>Готово — наработано на ${mark}</h2>
+      <p class="stats">Первый круг: верно <b>${st.cleanTypes}</b> из
+         ${TYPES_TOTAL} &middot; закрыто поворотов: <b>${done}</b> &middot;
+         решено задач: <b>${st.solved}</b> &middot;
+         ошибок: <b>${st.wrong}</b></p>
       <div class="code">${code}</div>
       <p class="stats">Это код твоей работы. Он у каждого свой и зависит
          от того, сколько и как ты решал.</p>
@@ -598,20 +720,17 @@ function renderFinish(){
     <div class="row">${more}</div>`;
 
   wireSend(code);
-  const back = document.getElementById("back") || document.getElementById("more");
-  if (back) back.addEventListener("click", () => {
-    // закрыто всё до единого — открываем счёт заново, иначе просто
-    // продолжаем с оставшимися поворотами
-    if (all) TYPES.forEach(t => { st.done[t.id] = false; st.streak[t.id] = 0; });
-    nextTask();
-  });
+  const back = document.getElementById("back");
+  if (back) back.addEventListener("click", nextTask);
+  document.getElementById("again").addEventListener("click", restart);
 }
 
 document.getElementById("finish").addEventListener("click", () => {
-  if (st.typesDone >= MIN_TO_FINISH) renderFinish();
+  if (canFinish()) renderFinish();
 });
+document.getElementById("restart").addEventListener("click", restart);
 
-nextTask();
+newRound();
 </script>
 <p class="ai-mark" style="margin:34px auto 0;max-width:860px;padding-top:12px;border-top:1px solid #d9dce6;color:#5c6070;font:13px/1.5 'Segoe UI',system-ui,sans-serif">Материалы подготовлены с использованием технологий искусственного интеллекта.</p>
 </body>
