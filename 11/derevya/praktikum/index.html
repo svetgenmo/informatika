@@ -113,16 +113,18 @@ details.help pre{font-family:Consolas,"Cascadia Mono",monospace;
 <div class="intro">
   <dl>
     <dt>Что нужно сделать</dt>
-    <dd>Шесть задач — по одной на каждый вопрос темы. Ответил верно — вопрос
-        закрыт. Ошибся — сразу видно, как это решается, а вопрос остаётся
-        открытым: его можно сдать ещё раз с новыми числами. Сколько закрыл,
-        столько и наработал. Времени нужно около пятнадцати минут: дерево
-        поиска, обход и дерево вызовов удобнее нарисовать на черновике.</dd>
+    <dd>Шесть задач — по одной на каждый вопрос темы, и все сразу на
+        странице: решай в любом порядке. Ответил верно — вопрос закрыт.
+        Ошибся — сразу видно, как это решается, а вопрос остаётся
+        открытым: кнопка «Новые числа» даёт ту же задачу с другими данными,
+        и её можно сдать ещё раз. Сколько закрыл, столько и наработал.
+        Времени нужно около пятнадцати минут: дерево поиска, обход и дерево
+        вызовов удобнее нарисовать на черновике.</dd>
     <dt>Отметка и добор</dt>
-    <dd>Закрыто 6 из 6 — «5», 5 — «4», 3 или 4 — «3». Дойдя до нужной
-        отметки, можно остановиться и забрать код сразу, а можно
-        <b>досдать оставшиеся вопросы</b> и получить код получше — решать
-        самому, до какой отметки добирать.</dd>
+    <dd>Закрыто 6 из 6 — «5», 5 — «4», 3 или 4 — «3». Кнопка
+        <b>«Получить код»</b> внизу страницы появляется, как только закрыто
+        три вопроса: можно забрать код сразу, а можно дорешать оставшиеся и
+        получить код получше — решать самому, до какой отметки добирать.</dd>
     <dt>Ответ — число или буквы подряд</dt>
     <dd>Число — без единиц и пробелов: <code>34</code>. В задаче на обход —
         русские заглавные буквы вершин подряд: <code>ГЛЕБМДА</code>, а не
@@ -150,6 +152,7 @@ details.help pre{font-family:Consolas,"Cascadia Mono",monospace;
 </div>
 
 <div id="area"></div>
+<div id="bottom"></div>
 
 <details class="help">
   <summary>Подсказка: деревья</summary>
@@ -817,11 +820,14 @@ function makeCode(st){
 }
 
 /* ---------------------------------------------------------- состояние
-   Добор до желаемой отметки: вопрос закрывается одним верным ответом и
-   больше не спрашивается; ошибся — вопрос остаётся открытым и вернётся
-   в следующем раунде с новыми числами. Раунд — это проход по всем пока
-   не закрытым вопросам по одному разу. После раунда можно забрать код
-   (если закрыто хотя бы MIN_TO_FINISH) или досдать оставшиеся. */
+   Все вопросы темы лежат на странице сразу — решать можно в любом
+   порядке, объём виден с первого взгляда. Вопрос закрывается одним верным
+   ответом и больше не спрашивается. Ошибся — разбор сразу, а вопрос
+   остаётся открытым: кнопка «Новые числа» на той же карточке даёт задачу с
+   другими данными, и её можно сдать ещё раз. Код выдаётся, когда закрыто
+   хотя бы MIN_TO_FINISH; после кода карточки запираются.
+   До 17.09.2026 вопросы шли по одному, раундами; Света попросила
+   показывать все сразу: не видно объёма и нельзя выбрать порядок. */
 const T_COUNT = T_TYPES.length;
 const MIN_TO_FINISH = 3;
 
@@ -845,22 +851,15 @@ function wordQ(n){
 
 function newRng(){ return tRng((Date.now() ^ (Math.random() * 1e9)) >>> 0); }
 
-function shuffle(arr, rng){
-  const a = arr.slice();
-  for (let j = a.length - 1; j > 0; j--) {
-    const k = tRand(rng, 0, j);
-    const tmp = a[j]; a[j] = a[k]; a[k] = tmp;
-  }
-  return a;
-}
-
 function freshState(){
   const s = {
     closed: Array(T_COUNT).fill(false),
     clean:  Array(T_COUNT).fill(true),
-    solved: 0, wrong: 0,
-    queue: [], qi: 0, cur: null
+    tried:  Array(T_COUNT).fill(false),
+    tasks:  Array(T_COUNT).fill(null),
+    solved: 0, wrong: 0, code: null
   };
+  for (let i = 0; i < T_COUNT; i++) s.tasks[i] = tTask(i, newRng());
   Object.defineProperty(s, "typesDone",
     {get(){ return s.closed.filter(Boolean).length; }});
   Object.defineProperty(s, "cleanTypes",
@@ -873,9 +872,8 @@ function paint(){
   box.innerHTML = "";
   for (let i = 0; i < T_COUNT; i++) {
     const el = document.createElement("span");
-    const isCur = st.cur && st.cur.type === i;
-    el.className = "chip" + (st.closed[i] ? " done" : isCur ? " cur" : "");
-    el.textContent = T_TYPES[i];
+    el.className = "chip" + (st.closed[i] ? " done" : st.tried[i] ? " miss" : "");
+    el.textContent = (i + 1) + ". " + T_TYPES[i];
     box.appendChild(el);
   }
   const done = st.typesDone;
@@ -886,116 +884,116 @@ function paint(){
   document.getElementById("stats").textContent =
     "Закрыто: " + done + " из " + T_COUNT + ". Решено задач: " + st.solved +
     ", ошибок: " + st.wrong + ".";
+  renderBottom();
 }
 
-function startRound(){
-  const open = [];
-  for (let i = 0; i < T_COUNT; i++) if (!st.closed[i]) open.push(i);
-  st.queue = shuffle(open, newRng());
-  st.qi = 0;
-  askNext();
-}
-
-function askNext(){
-  if (st.qi >= st.queue.length) { roundEnd(); return; }
-  st.cur = tTask(st.queue[st.qi], newRng());
-  renderTask();
-}
-
-function renderTask(){
-  const t = st.cur;
-  document.getElementById("area").innerHTML =
-    '<div class="card" id="task">' +
-      '<p class="tag">' + T_TYPES[t.type] + ' &middot; решено задач: ' +
-        st.solved + '</p>' +
+function cardHtml(i){
+  const t = st.tasks[i];
+  return '<div class="card" id="task-' + i + '">' +
+      '<p class="tag">' + (i + 1) + ' &middot; ' + T_TYPES[i] + '</p>' +
       '<div class="q">' + t.question + '</div>' +
       '<div class="row">' +
-        '<input type="text" id="ans" autocomplete="off" spellcheck="false" ' +
-               'placeholder="ответ">' +
-        '<button class="primary" id="go">Ответить</button>' +
+        '<input type="text" id="ans-' + i + '" autocomplete="off" spellcheck="false" ' +
+               'placeholder="ответ"' + '>' +
+        '<button class="primary" id="go-' + i + '">Ответить</button>' +
       '</div>' +
-      '<div class="verdict" id="v"></div>' +
+      '<div class="verdict" id="v-' + i + '"></div>' +
     '</div>';
-  const input = document.getElementById("ans");
-  input.focus();
-  input.addEventListener("keydown", function(e){
-    if (e.key === "Enter") judge();
-  });
-  document.getElementById("go").addEventListener("click", judge);
-  paint();
 }
 
-function judge(){
-  const t = st.cur;
-  const raw = document.getElementById("ans").value;
-  const ok = tCheck(t, raw);
-  if (ok) { st.closed[t.type] = true; st.solved++; }
-  else { st.wrong++; st.clean[t.type] = false; }
+function bindCard(i){
+  document.getElementById("ans-" + i).addEventListener("keydown", function(e){
+    if (e.key === "Enter") judge(i);
+  });
+  document.getElementById("go-" + i).addEventListener("click", function(){ judge(i); });
+}
 
-  const card = document.getElementById("task");
+function renderAll(){
+  let html = "";
+  for (let i = 0; i < T_COUNT; i++) html += cardHtml(i);
+  document.getElementById("area").innerHTML = html;
+  for (let i = 0; i < T_COUNT; i++) bindCard(i);
+}
+
+function renderCard(i){
+  document.getElementById("task-" + i).outerHTML = cardHtml(i);
+  bindCard(i);
+}
+
+function judge(i){
+  if (st.code) return;
+  const t = st.tasks[i];
+  const raw = document.getElementById("ans-" + i).value;
+  const ok = tCheck(t, raw);
+  st.tried[i] = true;
+  if (ok) { st.closed[i] = true; st.solved++; }
+  else { st.wrong++; st.clean[i] = false; }
+
+  const card = document.getElementById("task-" + i);
   card.className = "card " + (ok ? "ok" : "err");
-  document.getElementById("ans").disabled = true;
-  document.getElementById("go").disabled = true;
-  document.getElementById("v").className = "verdict " + (ok ? "ok" : "err");
-  document.getElementById("v").innerHTML = ok
+  document.getElementById("ans-" + i).disabled = true;
+  document.getElementById("go-" + i).disabled = true;
+  const v = document.getElementById("v-" + i);
+  v.className = "verdict " + (ok ? "ok" : "err");
+  v.innerHTML = ok
     ? "Правильно — вопрос закрыт."
     : "Ошибка. Твой ответ: <code>" + esc(raw) + "</code>, верный: <code>" +
-      t.answer + "</code>." + (tHint(t, raw) ? " " + tHint(t, raw) : "") +
-      " Вопрос остался открытым — вернётся при доборе.";
+      t.answer + "</code>." +  (tHint(t, raw) ? " " + tHint(t, raw) : "") +
+      " Вопрос остался открытым: возьми ту же задачу с другими данными.";
   card.insertAdjacentHTML("beforeend",
     '<div class="why">' + t.explain + '</div>' +
-    '<div class="row"><button class="primary" id="nx">Дальше</button></div>');
-  document.getElementById("nx").addEventListener("click", function(){
-    st.qi++;
-    askNext();
+    (ok ? '' : '<div class="row"><button class="primary" id="re-' + i +
+               '">Новые числа</button></div>'));
+  if (!ok) document.getElementById("re-" + i).addEventListener("click", function(){
+    st.tasks[i] = tTask(i, newRng());
+    st.tried[i] = false;
+    renderCard(i);
+    document.getElementById("ans-" + i).focus();
+    paint();
   });
   paint();
 }
 
-function roundEnd(){
-  st.cur = null;
-  paint();
+function renderBottom(){
+  const box = document.getElementById("bottom");
+  if (st.code) return;
   const done = st.typesDone, open = T_COUNT - done;
-  if (done >= T_COUNT) { finish(); return; }
-
+  if (done < MIN_TO_FINISH) {
+    box.innerHTML = '<p class="stats">Код работы появится, когда будет закрыто ' +
+      'хотя бы ' + MIN_TO_FINISH + ' ' + wordQ(MIN_TO_FINISH) + ' (сейчас ' +
+      done + ').</p>';
+    return;
+  }
   const m = markFor(done);
   const up = SCALE.filter(s => s[0] > done).pop();
   let msg;
-  if (!m) {
-    msg = "Пока закрыто <b>" + done + "</b> из " + T_COUNT + " — этого мало " +
-      "даже на «3» (нужно " + MIN_TO_FINISH + "). Досдай оставшиеся вопросы: " +
-      "числа будут новые.";
-  } else if (up) {
+  if (up) {
     msg = "Наработано на <b>" + m + "</b> (закрыто " + done + " из " + T_COUNT +
-      "). Можно забрать код сейчас, а можно досдать ещё " + open + " " +
+      "). Можно забрать код сейчас, а можно дорешать ещё " + open + " " +
       wordQ(open) + " и дойти до <b>" + up[1] + "</b>.";
   } else {
-    msg = "Наработано на <b>" + m + "</b> (закрыто " + done + " из " + T_COUNT + ").";
+    msg = "Все " + T_COUNT + " " + wordQ(T_COUNT) + " закрыты — наработано на <b>" +
+      m + "</b>.";
   }
-  const canFinish = done >= MIN_TO_FINISH;
-  document.getElementById("area").innerHTML =
+  box.innerHTML =
     '<div class="card">' +
-      '<h2>Раунд пройден</h2>' +
       '<p>' + msg + '</p>' +
-      '<div class="row">' +
-        (open > 0 ? '<button class="primary" id="more">Досдать оставшиеся (' +
-          open + ')</button>' : '') +
-        (canFinish ? '<button id="stop"' + (open > 0 ? '' : ' class="primary"') +
-          '>Получить код' + (open > 0 ? ' сейчас' : '') + '</button>' : '') +
-      '</div>' +
+      '<div class="row"><button class="primary" id="stop">Получить код' +
+        (open > 0 ? ' сейчас' : '') + '</button></div>' +
     '</div>';
-  const moreBtn = document.getElementById("more");
-  if (moreBtn) moreBtn.addEventListener("click", startRound);
-  const stopBtn = document.getElementById("stop");
-  if (stopBtn) stopBtn.addEventListener("click", finish);
+  document.getElementById("stop").addEventListener("click", finish);
 }
 
 function finish(){
   const code = makeCode(st);
+  st.code = code;
+  document.querySelectorAll("#area input, #area button").forEach(function(el){
+    el.disabled = true;
+  });
   const m = markFor(st.typesDone);
   const open = [];
   for (let i = 0; i < T_COUNT; i++) if (!st.closed[i]) open.push(T_TYPES[i]);
-  document.getElementById("area").innerHTML =
+  document.getElementById("bottom").innerHTML =
     '<div class="card">' +
       '<h2>Работа завершена</h2>' +
       '<p>Закрыто <b>' + st.typesDone + '</b> из ' + T_COUNT +
@@ -1021,6 +1019,7 @@ function finish(){
         'нуля — для дополнительной тренировки. Сдавать нужно тот код, который ' +
         'получен сейчас.</p>' +
     '</div>';
+  document.getElementById("bottom").scrollIntoView({behavior: "smooth", block: "start"});
   document.getElementById("send").addEventListener("click", function(){
     const fam = document.getElementById("fam").value.trim();
     if (!fam) { document.getElementById("fam").focus(); return; }
@@ -1035,7 +1034,8 @@ function finish(){
 
 function resetAll(){
   st = freshState();
-  startRound();
+  renderAll();
+  paint();
 }
 
 resetAll();
