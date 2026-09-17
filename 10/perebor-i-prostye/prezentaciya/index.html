@@ -1,0 +1,545 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Перебор: делители и простые числа — презентация</title>
+<meta name="description" content="Презентация к шестому занятию 10 класса (углублённый): range и его границы, for против while, цифры числа, делители перебором, простые числа и проверка до корня, разложение на множители, задание 25 ЕГЭ как перебор с отбором.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E10%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ink)}
+body{font:20px/1.5 "Segoe UI",system-ui,sans-serif}
+.deck{height:100vh;display:flex;flex-direction:column}
+.stage{flex:1 1 auto;overflow-y:auto;padding:34px 56px 12px}
+.slide{display:none;max-width:1100px;margin:0 auto}
+.slide.on{display:block}
+
+h1{font-size:50px;line-height:1.1;margin:0 0 18px;text-wrap:balance}
+h2{font-size:36px;line-height:1.15;margin:0 0 20px;text-wrap:balance}
+.lead{font-size:24px;color:var(--muted);margin:0 0 26px}
+p{margin:0 0 14px}
+ul,ol{margin:0 0 14px;padding-left:28px}
+li{margin:8px 0}
+code{font-family:Consolas,"Cascadia Mono",monospace;background:var(--card);
+     border:1px solid var(--line);border-radius:6px;padding:1px 7px;font-size:.92em}
+pre{font-family:Consolas,"Cascadia Mono",monospace;background:#1e2430;color:#e7ecf5;
+    padding:16px 20px;border-radius:12px;font-size:22px;line-height:1.45;
+    overflow-x:auto;margin:10px 0}
+pre code{background:none;border:0;padding:0;color:inherit;font-size:inherit}
+pre .c{color:#8fa6c4}
+pre .out{color:#9dd4b4}
+pre .hl{color:#ffd479}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+.box{border:1px solid var(--line);border-radius:14px;padding:16px 20px;background:#fff}
+.box h3{margin:0 0 8px;font-size:22px}
+.good{border-color:var(--ok-line);background:var(--ok-bg)}
+.bad{border-color:var(--err-line);background:var(--err-bg)}
+.warn{border-color:var(--hi-line);background:var(--hi-bg)}
+.big{font-size:26px}
+table{border-collapse:collapse;width:100%;font-size:22px;margin:10px 0}
+th,td{border:1px solid var(--line);padding:9px 14px;text-align:left}
+th{background:var(--card)}
+.step[hidden]{display:none}
+.bar{flex:0 0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+     border-top:1px solid var(--line);background:var(--card);padding:12px 24px}
+.bar .spacer{flex:1 1 auto}
+.count{color:var(--muted);font-size:17px;font-variant-numeric:tabular-nums}
+.keys{color:var(--muted);font-size:15px}
+.keys kbd{font:600 13px/1 Consolas,monospace;border:1px solid var(--line);
+          border-bottom-width:2px;border-radius:5px;padding:2px 6px;background:#fff}
+button{font:600 17px/1 inherit;padding:11px 18px;border-radius:10px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);color:var(--muted)}
+
+/* ---- размер шрифта на проекторе: A− / A+ ---- */
+.zoom{display:inline-flex;align-items:center;gap:3px;margin-left:8px}
+.zoom button{padding:8px 10px;font-size:15px;min-width:36px;line-height:1}
+.zoom .z{color:var(--muted);font-size:15px;min-width:46px;text-align:center;
+         font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body>
+<div class="deck">
+<div class="stage" id="stage">
+
+<section class="slide on">
+  <h1>Перебор</h1>
+  <p class="lead">Цикл по переменной, делители и простые числа.<br>
+  10 класс, углублённый уровень — занятие шестое.</p>
+  <p>Три урока плана за одну пару: <code>for</code> по <code>range</code> мы уже писали,
+  цифры числа доставали в прошлый раз. Новое сегодня одно, зато большое: перебор
+  как метод решения — и задание 25 ЕГЭ как его экзаменационная форма.</p>
+</section>
+
+<section class="slide">
+  <h2>range: три числа, а не одно</h2>
+  <pre><code>for i in range(5):           <span class="c"># 0 1 2 3 4</span>
+for i in range(2, 6):        <span class="c"># 2 3 4 5</span>
+for i in range(1, 10, 3):    <span class="c"># 1 4 7</span>
+for i in range(10, 0, -2):   <span class="c"># 10 8 6 4 2</span></code></pre>
+  <p>Начало, конец, шаг. Без начала — с нуля. Без шага — по единице.
+  <b>Правая граница не входит никогда.</b></p>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="box warn">
+        <code>range(5, 1)</code> — пусто: начало больше конца, а шаг вперёд.
+        Идти вниз можно только отрицательным шагом.
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Ловушка 1: до n или до n − 1?</h2>
+  <div class="two">
+    <div class="box bad">
+      <h3>Так — неверно</h3>
+      <pre><code>n = 6
+for d in range(1, n):
+    if n % d == 0:
+        print(d)</code></pre>
+      <p>Напечатает <b>1 2 3</b>. Сама шестёрка потеряна.</p>
+    </div>
+    <div class="box good">
+      <h3>Так — верно</h3>
+      <pre><code>n = 6
+for d in range(1, n + 1):
+    if n % d == 0:
+        print(d)</code></pre>
+      <p>Напечатает <b>1 2 3 6</b>.</p>
+    </div>
+  </div>
+  <div class="steps">
+    <div class="step" hidden>
+      <p class="big">Самая частая правка сегодняшней темы — <code>+ 1</code> в
+      <code>range</code>. И самая коварная: на 7 из 10 проверок разницы не видно.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>for или while — одно и то же</h2>
+  <div class="two">
+    <div class="box">
+      <h3>for — шагов известно</h3>
+      <pre><code>for d in range(1, n + 1):
+    if n % d == 0:
+        print(d)</code></pre>
+      <p>«Перебрать всё от 1 до n».</p>
+    </div>
+    <div class="box">
+      <h3>while — то же самое руками</h3>
+      <pre><code>d = 1
+while d &lt;= n:
+    if n % d == 0:
+        print(d)
+    d = d + 1</code></pre>
+      <p>Шаг делаем сами.</p>
+    </div>
+  </div>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="box warn">
+        Любой цикл переписывается другим. Выбор — по удобству: известно число
+        шагов — <code>for</code>; шаги считает задача («пока делится») —
+        <code>while</code>.
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Ловушка 2: что осталось в переменной</h2>
+  <div class="two">
+    <div class="box">
+      <h3>После while</h3>
+      <pre><code>i = 1
+while i &lt; 10:
+    i = i + 1
+print(i)      <span class="out">10</span></code></pre>
+      <p><b>Первое неподошедшее</b> значение.</p>
+    </div>
+    <div class="box">
+      <h3>После for</h3>
+      <pre><code>for i in range(1, 10):
+    s = i
+print(i)      <span class="out">9</span></code></pre>
+      <p><b>Последнее пройденное</b>.</p>
+    </div>
+  </div>
+  <div class="steps">
+    <div class="step" hidden>
+      <pre><code>for i in range(5):
+    i = i * 10        <span class="c"># бесполезно: range выдаст своё</span>
+print(i)              <span class="out">40</span></code></pre>
+      <p>Менять переменную внутри <code>for</code> нельзя — точнее, можно, но на
+      следующем проходе <code>range</code> всё равно выдаст очередное. В
+      <code>while</code> такая строка сдвинула бы шаги.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Цифры числа: четыре накопителя</h2>
+  <table>
+    <tr><th>Что ищем</th><th>Старт</th><th>В теле</th></tr>
+    <tr><td>сумма цифр</td><td><code>s = 0</code></td><td><code>s = s + n % 10</code></td></tr>
+    <tr><td>произведение</td><td><code>p = 1</code></td><td><code>p = p * (n % 10)</code></td></tr>
+    <tr><td>минимальная цифра</td><td><code>m = 9</code></td><td><code>if n % 10 &lt; m: m = n % 10</code></td></tr>
+    <tr><td>есть ли цифра 7</td><td><code>f = "нет"</code></td><td><code>if n % 10 == 7: f = "да"</code></td></tr>
+  </table>
+  <pre><code>while n &gt; 0:
+    ...                 <span class="c"># одна из строк таблицы</span>
+    n = n // 10         <span class="c"># отрезать последнюю цифру</span></code></pre>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="box warn">
+        Половина ошибок — в <b>старте</b> накопителя: произведение с нуля даёт
+        ноль, минимум с нуля даёт ноль. Старт — это «значение, когда ещё ничего не
+        посмотрели».
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h1>Делители и простые</h1>
+  <p class="lead">Перебор как метод.</p>
+</section>
+
+<section class="slide">
+  <h2>Делители: перебрать всё от 1 до n</h2>
+  <pre><code>k = 0
+for d in range(1, n + 1):
+    if n % d == 0:
+        k = k + 1
+print(k)             <span class="c"># сколько делителей</span></code></pre>
+  <p>Тот же цикл со <code>s = s + d</code> — сумма, с <code>print(d)</code> — список,
+  с <code>m = d</code> — наибольший.</p>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="box good">
+        Делители ходят <b>парами</b>: 36 = 1 · 36 = 2 · 18 = 3 · 12 = 4 · 9 = 6 · 6.
+        Один из пары не больше корня из n. Поэтому искать делитель достаточно,
+        <b>пока d · d ≤ n</b>: для миллиона — тысяча проверок, не миллион.
+      </div>
+    </div>
+    <div class="step" hidden>
+      <p>У 36 пара 6 · 6 схлопнулась в один делитель — у точного квадрата делителей
+      <b>нечётное</b> число: у 36 их девять, у 49 — три.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Простое число</h2>
+  <p class="big">Ровно <b>два</b> делителя: 1 и само число.</p>
+  <ul>
+    <li><b>1 — не простое</b>: у неё один делитель.</li>
+    <li><b>2 — простое</b>, и единственное чётное.</li>
+  </ul>
+  <pre><code>prime = n &gt; 1            <span class="c"># флаг ставится ОДИН раз, до цикла</span>
+d = 2
+while d * d &lt;= n:
+    if n % d == 0:
+        prime = False    <span class="c"># в цикле флаг только сбивают</span>
+    d = d + 1</code></pre>
+  <div class="steps">
+    <div class="step" hidden>
+      <p>Проверка по количеству делителей ещё честнее: посчитали — ровно два —
+      простое. Тогда единица отпадает сама собой.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Ловушка 3: флаг, который сбрасывается</h2>
+  <div class="two">
+    <div class="box bad">
+      <h3>Так — неверно</h3>
+      <pre><code>for d in range(2, n):
+    if n % d == 0:
+        prime = False
+    else:
+        prime = True</code></pre>
+      <p>Последний проход — <code>d = n − 1</code>, на него n не делится, и флаг
+      снова <code>True</code>. Любое число «простое».</p>
+    </div>
+    <div class="box good">
+      <h3>Так — верно</h3>
+      <pre><code>prime = True
+for d in range(2, n):
+    if n % d == 0:
+        prime = False</code></pre>
+      <p>Флаг ставят до цикла, в цикле только сбивают.</p>
+    </div>
+  </div>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="box warn">
+        И даже правый вариант врёт на единице: <code>range(2, 1)</code> пуст, флаг
+        никто не сбил — «простое». Единицу проверяют отдельно:
+        <code>prime = n &gt; 1</code>.
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Разложение на множители</h2>
+  <pre><code>d = 2
+while n &gt; 1:
+    if n % d == 0:        <span class="c"># делится — снять множитель</span>
+        print(d)
+        n = n // d        <span class="c"># d НЕ двигаем: мог войти ещё раз</span>
+    else:
+        d = d + 1</code></pre>
+  <pre><code><span class="c"># n = 60:</span>  60 --2--&gt; 30 --2--&gt; 15 --3--&gt; 5 --5--&gt; 1</code></pre>
+  <div class="steps">
+    <div class="step" hidden>
+      <p>Здесь шаг делает не счётчик, а само число — поэтому <code>while</code>.
+      Составным <code>d</code> не окажется: все его простые множители уже сняты.</p>
+    </div>
+    <div class="step" hidden>
+      <div class="box bad">
+        <h3>if вместо «пока делится»</h3>
+        <p>Снимет двойку из 64 один раз и уйдёт дальше. Ровно эта ошибка ждёт вас
+        во втором задании — оболочка подаст 64.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Задание 25 ЕГЭ: перебор с отбором</h2>
+  <div class="box">
+    <p>В демоварианте 2027: перебирать числа, большие заданного, в порядке
+    возрастания и искать те, что являются произведением ровно двух простых
+    множителей — с дополнительным условием на запись множителей. В ответ —
+    первые пять найденных чисел и для каждого наименьший множитель.</p>
+  </div>
+  <p>Форма всегда одна: <b>перебрать по порядку → проверить свойство → напечатать
+  число и что-то рядом</b>. Свойство почти всегда про делители.</p>
+  <div class="steps">
+    <div class="step" hidden>
+      <pre><code>for n in range(a, b + 1):        <span class="c"># внешний: отрезок</span>
+    k = 0
+    for d in range(1, n + 1):    <span class="c"># внутренний: делители</span>
+        if n % d == 0:
+            k = k + 1
+    if k == 6:
+        print(n)</code></pre>
+    </div>
+    <div class="step" hidden>
+      <div class="box good">
+        На маленьких отрезках это делается в уме — так устроен шестой тип
+        тренажёра. На экзаменационных — только программой: это третье задание
+        сегодня.
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Считать делители, не перебирая</h2>
+  <table>
+    <tr><th>Сколько делителей</th><th>Какие числа</th><th>Пример</th></tr>
+    <tr><td>ровно 2</td><td>простые</td><td>2, 3, 5, 7, 11</td></tr>
+    <tr><td>ровно 3</td><td>квадрат простого</td><td>4, 9, 25, 49</td></tr>
+    <tr><td>ровно 4</td><td>p · q или p³</td><td>6, 10, 14, 15, 8, 27</td></tr>
+    <tr><td>нечётное</td><td>точные квадраты</td><td>1, 4, 9, 16, 25</td></tr>
+  </table>
+  <div class="steps">
+    <div class="step" hidden>
+      <p>Это не для заучивания, а чтобы <b>проверять себя</b>: если программа
+      нашла «число с тремя делителями» и оно не квадрат — программа врёт. На ЕГЭ
+      такая проверка стоит дороже, чем ещё один запуск.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Для сильных: степень за считанные умножения</h2>
+  <p>Сколько умножений нужно, чтобы посчитать <code>x<sup>16</sup></code>? Пятнадцать
+  подряд — или четыре, если возводить в квадрат: x² → x⁴ → x⁸ → x¹⁶.</p>
+  <pre><code>r = 1
+while n &gt; 0:
+    if n % 2 == 1:        <span class="c"># нечётная степень — снять одну x</span>
+        r = r * x
+    x = x * x             <span class="c"># дальше работаем с квадратом</span>
+    n = n // 2</code></pre>
+  <div class="steps">
+    <div class="step" hidden>
+      <p>Тот же приём «пока n &gt; 0: смотрим n % 2, режем n // 2», что и в разборе
+      числа на цифры, только цифры двоичные. В сегодняшний практикум это не входит —
+      оставляем тем, кто закончит раньше.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Что делаем сегодня</h2>
+  <table>
+    <tr><th>№</th><th>Программа</th><th>Ради чего</th></tr>
+    <tr><td>1</td><td><b>Делители</b>: список, количество, простое ли число</td>
+        <td><code>for</code> по <code>range</code> до <code>n + 1</code>, накопитель-строка</td></tr>
+    <tr><td>2</td><td><b>Множители</b>: разложение на простые, количество, наибольший</td>
+        <td><code>while</code>, где шаг делает само число; «пока делится»</td></tr>
+    <tr><td>3</td><td><b>Ровно k делителей</b>: перебрать отрезок, напечатать число и
+        его наибольший делитель</td>
+        <td>вложенные циклы — форма задания 25 ЕГЭ</td></tr>
+  </table>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="box warn">
+        В каждом задании спрятана ловушка темы, и оболочка подаст именно те
+        данные, на которых она вылезает: <b>единицу</b>, <b>64 и 194</b>,
+        <b>отрезок, оба конца которого подходят</b>, и отрезок, где не подходит
+        ничего.
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Как работаем</h2>
+  <ol>
+    <li>Открываем практикум из общей папки — сначала <b>тренажёр</b>:
+    двенадцать задач на чтение кода, оценки за него нет.</li>
+    <li>Пишем три программы в IDLE, сохраняем в свою папку как
+    <code>zadanie1.py</code>, <code>zadanie2.py</code>, <code>zadanie3.py</code>.</li>
+    <li>Запускаем <code>Проверка.bat</code> → «Найти мои файлы» → «Проверить всё».</li>
+    <li>Показываем отметку с экрана.</li>
+  </ol>
+  <div class="box warn">
+    Приглашений в <code>input()</code> быть не должно: <code>input()</code>, а не
+    <code>input("Введите число: ")</code>. Вывод читает машина. Списков не нужно:
+    числа копятся в строке, как траектория в прошлый раз.
+  </div>
+  <p>Отметка: три задания — «5», два — «4», одно — «3». Попыток сколько угодно,
+  оболочка каждый раз показывает, на каких данных программа ошиблась.</p>
+</section>
+
+<section class="slide">
+  <h1>За работу</h1>
+  <p class="lead">Сначала тренажёр, потом три программы.</p>
+  <p>Домашнее задание — на странице «Домашнее задание»: шесть типов задач на
+  чтение кода и перебор в уме, Python дома не нужен. В начале следующей пары —
+  проверочная по этим же типам.</p>
+</section>
+
+</div>
+
+<div class="bar">
+  <button id="prev">← Назад</button>
+  <button id="step" class="primary">Раскрыть</button>
+  <button id="next">Вперёд →</button>
+  <span class="count" id="count"></span>
+  <span class="zoom" title="Размер шрифта на экране: клавиши + и −"><button id="zoomOut" title="Мельче (клавиша −)">A−</button><span class="z" id="zoomVal"></span><button id="zoomIn" title="Крупнее (клавиша +)">A+</button></span>
+  <div class="spacer"></div>
+  <span class="ai-mark" style="color:#5c6070;font-size:13px">Материалы подготовлены с использованием технологий искусственного интеллекта.</span>
+  <span class="keys"><kbd>Пробел</kbd> раскрыть и дальше ·
+    <kbd>←</kbd> <kbd>→</kbd> слайды</span>
+</div>
+</div>
+
+<script>
+const slides = [...document.querySelectorAll(".slide")];
+let cur = 0, shown = 0;
+
+const stepsOf = i => [...slides[i].querySelectorAll(".steps > .step")];
+
+function show(i){
+  slides[cur].classList.remove("on");
+  cur = Math.max(0, Math.min(slides.length - 1, i));
+  slides[cur].classList.add("on");
+  shown = stepsOf(cur).filter(el => !el.hidden).length;
+  document.getElementById("stage").scrollTop = 0;
+  sync();
+}
+
+function sync(){
+  const total = stepsOf(cur).length;
+  document.getElementById("count").textContent = `${cur + 1} / ${slides.length}`;
+  document.getElementById("prev").disabled = cur === 0;
+  document.getElementById("next").disabled = cur === slides.length - 1;
+  const b = document.getElementById("step");
+  b.hidden = total === 0;
+  if (total){
+    b.disabled = shown >= total;
+    b.textContent = shown >= total ? "Всё открыто"
+                  : shown === 0 ? "Раскрыть" : `Дальше (${shown}/${total})`;
+  }
+}
+
+function nextStep(){
+  const steps = stepsOf(cur);
+  if (shown >= steps.length) return false;
+  steps[shown].hidden = false;
+  steps[shown].scrollIntoView({block: "nearest", behavior: "smooth"});
+  shown++;
+  sync();
+  return true;
+}
+
+document.getElementById("prev").addEventListener("click", () => show(cur - 1));
+document.getElementById("next").addEventListener("click", () => show(cur + 1));
+document.getElementById("step").addEventListener("click", nextStep);
+
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowRight" || e.key === "PageDown"){ show(cur + 1); }
+  else if (e.key === "ArrowLeft" || e.key === "PageUp"){ show(cur - 1); }
+  else if (e.key === " " || e.key === "Enter"){
+    if (!nextStep()) show(cur + 1);
+  } else return;
+  e.preventDefault();
+});
+
+show(0);
+
+/* ---- размер шрифта на проекторе ----
+   Zoom только на области слайда: zoom на body растягивает 100vh, и панель
+   уезжает за экран (проверено 17.09.2026). Шаг запоминается в
+   localStorage и общий для всех презентаций: один раз подобрала на
+   проекторе — дальше везде так. ZOOM_BASE — стартовый масштаб этой колоды:
+   у колод с базовым кеглем 20px он выше, чем у 24px. */
+const ZOOM_BASE = 1.2;
+const ZOOM_KEY = "slides-zoom-step";
+let zoomStep = 0;
+try { zoomStep = Math.max(-3, Math.min(6, parseInt(localStorage.getItem(ZOOM_KEY), 10) || 0)); }
+catch (e) {}
+function applyZoom(){
+  const z = Math.round(ZOOM_BASE * Math.pow(1.1, zoomStep) * 100) / 100;
+  document.getElementById("stage").style.zoom = z;
+  document.getElementById("zoomVal").textContent = Math.round(z * 100) + "%";
+}
+function setZoom(d){
+  zoomStep = Math.max(-3, Math.min(6, zoomStep + d));
+  try { localStorage.setItem(ZOOM_KEY, String(zoomStep)); } catch (e) {}
+  applyZoom();
+}
+document.getElementById("zoomIn").addEventListener("click", () => setZoom(1));
+document.getElementById("zoomOut").addEventListener("click", () => setZoom(-1));
+document.addEventListener("keydown", e => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key === "+" || e.key === "=") setZoom(1);
+  else if (e.key === "-" || e.key === "_") setZoom(-1);
+  else return;
+  e.preventDefault();
+});
+applyZoom();
+</script>
+</body>
+</html>
