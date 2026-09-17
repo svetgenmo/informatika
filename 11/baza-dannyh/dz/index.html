@@ -36,7 +36,7 @@ pre code{background:none;border:0;padding:0;color:inherit;font-size:inherit}
 .intro dd{margin:2px 0 0}
 details{margin-top:12px}
 summary{cursor:pointer;font-weight:600;color:var(--accent)}
-.progress{border:2px solid var(--accent);border-radius:12px;padding:12px 16px;
+.progress{position:sticky;top:0;z-index:5;border:2px solid var(--accent);border-radius:12px;padding:10px 16px;
           background:#fff;margin-bottom:18px}
 .ptop{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
 .ptop h2{margin:0}
@@ -49,7 +49,7 @@ summary{cursor:pointer;font-weight:600;color:var(--accent)}
 .m4 b{color:var(--accent);border-color:#a9c6e8}
 .m3 b{color:#8a5a00;border-color:var(--hi-line)}
 .types{display:flex;flex-wrap:wrap;gap:8px}
-.chip{border:1px solid var(--line);border-radius:20px;padding:4px 12px;
+.chip{cursor:pointer;border:1px solid var(--line);border-radius:20px;padding:4px 12px;
       font-size:14px;color:var(--muted);background:var(--card)}
 .chip.done{border-color:var(--ok-line);background:var(--ok-bg);color:var(--ok);
            font-weight:600}
@@ -81,6 +81,8 @@ button.primary:hover:not(:disabled){background:#194f8c}
 .verdict.ok{color:var(--ok)}
 .verdict.err{color:var(--err)}
 .why{margin-top:8px;font-size:15.5px;font-weight:400}
+.verdict details.why{margin-top:6px;font-weight:400}
+.verdict details.why summary{font-size:15px}
 .why-list{margin:6px 0 0;padding-left:22px}
 .why-list li{margin:4px 0}
 .note{border:1px solid var(--hi-line);background:var(--hi-bg);border-radius:10px;
@@ -110,10 +112,10 @@ table.steps th{background:var(--card)}
 <div class="intro">
   <dl>
     <dt>Как устроено</dt>
-    <dd>Шесть типов задач, тип закрывает <b>один верный ответ</b>.
-        Ошибся — разбор на экране, и следующей придёт задача того же типа
-        с новой базой: применить разбор надо по горячему. Задачи не
-        кончаются.</dd>
+    <dd>Шесть типов задач — <b>все на экране сразу</b>, решай в любом порядке.
+        Тип закрывает <b>один верный ответ</b>. Ошибся — разбор на экране, и
+        кнопка «Новая база» даст задачу того же типа с другим файлом:
+        применить разбор надо по горячему. Задачи не кончаются.</dd>
     <dt>Чем решать</dt>
     <dd>Электронными таблицами — так это делают на экзамене. К каждой задаче
         страница выдаёт свой файл <code>.xlsx</code> на три листа: скачай,
@@ -126,11 +128,11 @@ table.steps th{background:var(--card)}
         <a href="mailto:krevskayas+hw@gmail.com">krevskayas+hw@gmail.com</a>
         — приложи к нему свою книгу с расчётом.</dd>
     <dt>Что за файл</dt>
-    <dd>Книга последней решённой задачи, в которой <b>видны твои формулы</b>:
-        вспомогательные столбцы, <code>ВПР</code>, <code>СУММЕСЛИМН</code>.
+    <dd>Книга последней решённой задачи, в которой <b>видна твоя работа</b>:
+        вспомогательный столбец с <code>ВПР</code> и включённый фильтр.
         Сохрани её из своей программы (<b>Файл → Сохранить как</b>) и приложи
-        файлом. Число можно получить и не владея приёмом — формулы показывают,
-        что владеешь. <b>Код без файла не засчитывается.</b></dd>
+        файлом. Число можно получить и не владея приёмом — столбец и фильтр
+        показывают, что владеешь. <b>Код без файла не засчитывается.</b></dd>
     <dt>Учти</dt>
     <dd>В начале следующего занятия будет проверочная <b>на этих же типах</b>,
         только задач в ней четыре. Так что задача не «получить код», а
@@ -146,18 +148,20 @@ table.steps th{background:var(--card)}
         видна только в столбце «Адрес».</td></tr>
       <tr><td>3</td><td>В таблице движения делаем вспомогательный столбец со
         значением строки.</td></tr>
-      <tr><td>4</td><td>Складываем нужные строки.</td></tr>
+      <tr><td>4</td><td>Ставим автофильтр по условиям, выделяем вспомогательный
+        столбец — сумма внизу, в строке состояния.</td></tr>
     </table>
 <pre>= E2 * ВПР(D2; Товар.$A:$F; 5; 0)          масса строки, граммы
-= СУММЕСЛИМН(G:G; F:F; "Поступление";
-      B:B; "&gt;=" &amp; ДАТА(2025;9;5);
-      B:B; "&lt;=" &amp; ДАТА(2025;9;19))</pre>
+= ВПР(C2; Магазин.$A:$C; 2; 0)             район магазина</pre>
+    <p>Дальше — автофильтр по каждому условию (тип операции, даты, место,
+       товар), выделить столбец с массой и прочитать <b>Сумму</b> в строке
+       состояния внизу окна: она считает только видимые строки.</p>
     <p class="stats">В Excel лист отделяется восклицательным знаком
        (<code>Товар!$A:$F</code>), в LibreOffice — точкой.</p>
   </details>
 </div>
 
-<div class="progress">
+<div class="progress" id="panel">
   <div class="ptop">
     <h2>Типы задач</h2>
     <span class="sp"></span>
@@ -170,6 +174,12 @@ table.steps th{background:var(--card)}
 </div>
 
 <div id="area"></div>
+
+<div class="row" style="margin:6px 0 22px">
+  <button class="primary" id="total">Закончить и получить код</button>
+</div>
+<div id="result"></div>
+
 
 </div>
 
@@ -184,8 +194,10 @@ table.steps th{background:var(--card)}
    Особенность темы: задача — это не текст, а ФАЙЛ. Страница сама собирает
    базу данных из трёх листов, отдаёт её ученику книгой .xlsx и знает
    правильный ответ, потому что сама эту базу и построила. Решают в
-   электронных таблицах (решение Светы, 12.09.2026): фильтр или
-   СУММЕСЛИМН плюс ВПР. Python показывается вторым способом, без
+   электронных таблицах (решение Светы, 12.09.2026): ВПР для
+   вспомогательного столбца, автофильтр по условиям и сумма в строке
+   состояния — без СУММЕСЛИМН и ПРОМЕЖУТОЧНЫЕ.ИТОГИ (её решение
+   16.09.2026). Python показывается вторым способом, без
    обязательства им пользоваться.
 
    ЗАМЕР (12.09.2026). Разобраны одиннадцать задач с kompege.ru — демо 2027,
@@ -221,7 +233,8 @@ table.steps th{background:var(--card)}
      3 «прирост упаковок»     поступило минус продано по одному товару (27758,
                               27615)
      4 «склад: отгружено»     килограммы готовым весом упаковки, операция
-                              «Отгрузка», даты в формате дд.мм.гг (28689)
+                              «Отгрузка», даты в формате дд.мм.гг (28689);
+                              отбор по виду товара, а не по категории — см. B_WARE
      5 «театр: выручка»       три категории билетов и таблица тарифов,
                               отбор по автору и жанру (28924, 27269, 27268, 25342)
 
@@ -505,7 +518,20 @@ function bXlsx(sheets) {
    ответом. Проверяет это gen.py --selftest.
 
    Запись вида: 'Зефир|зефира: в шоколаде, ванильный' — именительный для
-   таблицы, родительный для вопроса. */
+   таблицы, родительный для вопроса.
+
+   ПРАВИЛО ФОРМУЛИРОВОК (после первого урока, Света, 16.09.2026: «ученики
+   намучились, много некорректных формулировок»). Каждое условие в вопросе
+   называет то, что ученик найдёт в таблице БУКВАЛЬНО: наименование в
+   кавычках, «все виды X» по первому слову наименования, район и улицу по
+   столбцам справочника мест. Ничего, что требует знания мира — вопросы про
+   «овощи», «фрукты», «крупы» и «специи» убраны совсем («дети не знают, что
+   это»), — и никаких склеек чужих слов («творога и сыров «Сметана»»). Наименование
+   в таблице само говорит, что это: «Диски ватные детские», а не «Диски
+   детские». И «все виды X» — только там, где X сам по себе товар: «все
+   виды средства» или «все виды геля» ничего не значат (Света, 16.09.2026:
+   «какие средства?»), уточнение входит в вид и в его родительный падеж —
+   «все виды средства для мытья посуды», «геля для стирки». */
 
 const B_GOODS = {
   sweets: {
@@ -538,7 +564,7 @@ const B_GOODS = {
         'Кофе|кофе: молотый, растворимый, в зёрнах',
         'Какао|какао: классическое, с молоком',
         'Цикорий|цикория: растворимый, с шиповником',
-        'Сахар|сахара: песок, рафинад',
+        'Сахар|сахара: песок, рафинад в кусках',
         'Мёд|мёда: липовый, гречишный'
       ]}
     ]
@@ -549,34 +575,34 @@ const B_GOODS = {
     units: [['мл', [100, 250, 500, 750, 1000, 2000]], ['шт', [1, 2, 4, 6, 10]]],
     depts: [
       {name: 'Бытовая химия', gen: 'бытовой химии', kinds: [
-        'Гель|геля: для стирки, для посуды, для чистки плит',
+        'Гель|геля для стирки: для стирки цветного, для стирки белого, для стирки детский',
         'Ополаскиватель|ополаскивателя для белья: лавандовый, хвойный, цитрусовый',
         'Отбеливатель|отбеливателя: кислородный, для белого белья',
-        'Порошок|порошка стирального: для белого, для цветного, детский',
+        'Порошок|стирального порошка: стиральный для белого, стиральный для цветного, стиральный детский',
         'Пятновыводитель|пятновыводителя: для ковров, для стирки',
-        'Средство|средства: для мытья полов, для мытья окон, для сантехники',
-        'Спрей|спрея: для дезинфекции, для мебели',
-        'Кондиционер|кондиционера: для белья, для утюга'
+        'Средство|средства для мытья посуды: для мытья посуды лимон, для мытья посуды яблоко, для мытья посуды бальзам',
+        'Освежитель|освежителя воздуха: воздуха лаванда, воздуха морской, воздуха цитрус',
+        'Кондиционер|кондиционера для белья: для белья лавандовый, для белья детский'
       ]},
       {name: 'Гигиена', gen: 'товаров для гигиены', kinds: [
         'Шампунь|шампуня: для сухих волос, для жирных волос, детский',
         'Мыло|мыла: жидкое, туалетное, детское',
         'Салфетки|салфеток: бумажные сервировочные, влажные, косметические',
-        'Полотенца|полотенец бумажных: в рулоне, листовые',
-        'Бумага|бумаги туалетной: двухслойная, однослойная',
-        'Паста|пасты зубной: мятная, отбеливающая',
-        'Щётка|щёток зубных: мягкая, средней жёсткости',
-        'Диски|дисков ватных: классические, детские'
+        'Полотенца|бумажных полотенец: бумажные в рулоне, бумажные листовые',
+        'Бумага|туалетной бумаги: туалетная двухслойная, туалетная однослойная',
+        'Паста|зубной пасты: зубная мятная, зубная отбеливающая',
+        'Щётка|зубных щёток: зубная мягкая, зубная средней жёсткости',
+        'Диски|ватных дисков: ватные классические, ватные детские'
       ]},
       {name: 'Хозяйственные товары', gen: 'хозяйственных товаров', kinds: [
-        'Губка|губок: для посуды, банная',
-        'Мешки|мешков для мусора: 30 литров, 60 литров',
-        'Перчатки|перчаток: резиновые, хозяйственные',
-        'Тряпка|тряпок: для пола, из микрофибры',
-        'Фольга|фольги: пищевая, для запекания',
-        'Пакеты|пакетов: фасовочные, с ручками',
-        'Плёнка|плёнки пищевой: в рулоне, в коробке',
-        'Ёршик|ёршиков: для посуды, для бутылок',
+        'Губка|губок для посуды: для посуды обычная, для посуды с абразивом',
+        'Мешки|мешков для мусора: для мусора 30 литров, для мусора 60 литров',
+        'Перчатки|хозяйственных перчаток: хозяйственные малые, хозяйственные большие',
+        'Тряпка|тряпок для пола: для пола хлопковая, для пола из микрофибры',
+        'Фольга|пищевой фольги: пищевая 10 м, пищевая 30 м',
+        'Пакеты|фасовочных пакетов: фасовочные малые, фасовочные большие',
+        'Плёнка|пищевой плёнки: пищевая в рулоне, пищевая в коробке',
+        'Ёршик|ёршиков для посуды: для посуды с ручкой, для посуды с губкой',
         'Швабра|швабр: с отжимом, плоская',
         'Ведро|вёдер: хозяйственное, с крышкой'
       ]}
@@ -594,14 +620,14 @@ const B_GOODS = {
         'Йогурт|йогурта: питьевой, густой, детский',
         'Ряженка|ряженки: классическая, детская',
         'Простокваша|простокваши: классическая, с мёдом',
-        'Айран|айрана: классический, с зеленью'
+        'Айран|айрана: классический, с зеленью',
+        'Сметана|сметаны: деревенская, классическая, лёгкая'
       ]},
       {name: 'Творог и сыры', gen: 'творога и сыров', kinds: [
-        'Сметана|сметаны: деревенская, классическая, лёгкая',
         'Творог|творога: рассыпчатый, мягкий, обезжиренный',
         'Сыр|сыра: полутвёрдый, мягкий, плавленый, копчёный',
         'Масло|масла: сливочное, топлёное',
-        'Масса|массы творожной: ванильная, с изюмом',
+        'Масса|творожной массы: творожная ванильная, творожная с изюмом',
         'Брынза|брынзы: классическая, малосольная',
         'Моцарелла|моцареллы: в рассоле, для салата'
       ]},
@@ -828,30 +854,20 @@ function bShopDb(rng, set, opt) {
 
    Второй сюжет магазинного типа (№ 28689): вместо магазинов — склады,
    вместо продажи — отгрузка, а вес упаковки лежит в справочнике уже в
-   килограммах, так что переводить единицы не нужно. Отбирают там по
-   КАТЕГОРИИ целиком («все специи»), а не по виду товара, и период
-   переходит через границу месяца — обе детали из замера. */
+   килограммах, так что переводить единицы не нужно; период переходит через
+   границу месяца, даты в формате дд.мм.гг — детали из замера.
+
+   Ассортимент склада — те же справочники, что у магазинов (bGoods), только
+   вес упаковки целыми килограммами. Отбор — по виду товара («все виды
+   зефира»), как в остальных типах. Прототип № 28689 отбирал по КАТЕГОРИИ
+   («специй»), и первая версия так и делала: овощи, фрукты, крупы, специи.
+   Убрано по решению Светы 16.09.2026 после первого урока: «дети не знают,
+   что это» — какой товар крупа, а какой специя, ученику неизвестно, а
+   спрашивать про столбец «Категория» без знания мира не выходит. */
 
 const B_WARE = {
-  base: 'Агрохолдинг',
-  about: 'о работе складов продовольственных товаров',
-  cats: [
-    {name: 'овощи', gen: 'овощей', items: ['огурцы короткоплодные', 'томаты розовые',
-      'картофель мытый', 'морковь мытая', 'свёкла столовая', 'капуста белокочанная',
-      'лук репчатый', 'перец сладкий']},
-    {name: 'фрукты', gen: 'фруктов', items: ['яблоки сезонные', 'груши конференц',
-      'бананы', 'апельсины', 'мандарины', 'лимоны', 'виноград кишмиш']},
-    {name: 'крупы', gen: 'круп', items: ['гречка ядрица', 'рис круглозёрный',
-      'пшено шлифованное', 'хлопья овсяные', 'перловка', 'булгур', 'кускус']},
-    {name: 'специи', gen: 'специй', items: ['перец чёрный горошек', 'паприка молотая',
-      'куркума', 'кориандр молотый', 'лист лавровый', 'смесь прованских трав',
-      'тмин', 'имбирь молотый']},
-    {name: 'консервы', gen: 'консервов', items: ['горошек зелёный', 'кукуруза сладкая',
-      'фасоль в томате', 'огурцы маринованные', 'томаты в собственном соку',
-      'шпроты', 'сайра']},
-    {name: 'заморозка', gen: 'замороженных продуктов', items: ['смесь овощная',
-      'брокколи', 'шпинат резаный', 'вишня без косточки', 'клубника', 'картофель фри']}
-  ],
+  base: 'Оптовый склад',
+  about: 'о работе складов оптовой торговли',
   districts: ['Подпорожский', 'Всеволожский', 'Приозерский', 'Лужский',
               'Кингисеппский', 'Тосненский', 'Выборгский', 'Гатчинский'],
   towns: ['пос. Токари', 'пос. Янино', 'пос. Сосново', 'пос. Мшинская',
@@ -860,19 +876,10 @@ const B_WARE = {
           'пос. Аннино', 'дер. Кипень', 'пос. Вырица', 'пос. Тайцы']
 };
 
-function bWareGoods(rng) {
-  const goods = [];
-  B_WARE.cats.forEach(function (c) {
-    c.items.forEach(function (name) {
-      goods.push({
-        art: goods.length + 1, dept: c.name, deptGen: c.gen, name: name,
-        kind: name.split(' ')[0], kindGen: name.split(' ')[0].toLowerCase(),
-        unit: 'кг', pack: tPick(rng, [5, 10, 15, 20, 25, 30, 40, 50]),
-        price: tRand(rng, 10, 90) * 10
-      });
-    });
+function bWareGoods(rng, set) {
+  return bGoods(rng, set).map(function (g) {
+    return Object.assign({}, g, {unit: 'кг', pack: tPick(rng, [5, 10, 15, 20, 25, 30, 40, 50])});
   });
-  return goods;
 }
 
 function bWareShops(rng, n) {
@@ -899,14 +906,14 @@ function bWareBook(db) {
   db.shops.forEach(s => shops.push([s.id, s.district.name, s.addr]));
   return [
     {name: 'Движение', widths: [12, 12, 10, 12, 21, 14], rows: mov},
-    {name: 'Продукты', widths: [10, 14, 30, 18], rows: goods},
+    {name: 'Товары', widths: [10, 18, 34, 18], rows: goods},
     {name: 'Склады', widths: [11, 16, 22], rows: shops}
   ];
 }
 
 function bWareDb(rng, opt) {
   opt = opt || {};
-  const goods = bWareGoods(rng);
+  const goods = bWareGoods(rng, tPick(rng, ['sweets', 'house']));
   const shops = bWareShops(rng, tRand(rng, 14, 17));
   const year = 2024;
   const month = tRand(rng, 3, 10);
@@ -1171,7 +1178,7 @@ function bWareIntro(db) {
     esc2(db.about) + '. База данных состоит из трёх таблиц.</p>' +
     '<p>Таблица «Движение» содержит данные о движении товаров: дату и тип операции ' +
     '(<b>Поступление</b> или <b>Отгрузка</b>), артикул товара, идентификатор склада ' +
-    'и количество полученных или отгруженных упаковок. Таблица «Продукты» содержит ' +
+    'и количество полученных или отгруженных упаковок. Таблица «Товары» содержит ' +
     'информацию о товарах: категория, название и вес одной упаковки в килограммах. ' +
     'Таблица «Склады» содержит информацию о складах: район и населённый пункт.</p>';
 }
@@ -1416,8 +1423,14 @@ function bType3(rng) {
     if (!bGuard(db, sel, full, [onlyIn, onlyOut, both])) continue;
     return {
       db: db, form: 'int', answer: bNum(full.sum),
+      /* «упаковок товара «Сметана классическая»», а не «творога и сыров
+         «Сметана классическая»»: родительный падеж отдела годился только там,
+         где отдел — одно слово и товар им же и назван («конфет «Суфле»»).
+         На уроке 16.09.2026 из этого вышло «сыр „сметана“» и «кофе с
+         бергамотом». Слово в вопросе обязано совпадать с тем, что ученик
+         увидит в таблице. */
       question: bShopIntro(db) + bAsk(', на сколько увеличилось количество упаковок ' +
-        esc2(good.deptGen) + ' «' + esc2(good.name) + '» в магазинах ' + esc2(dist.gen) +
+        'товара «' + esc2(good.name) + '» в магазинах ' + esc2(dist.gen) +
         ' района за период с ' + bDayMonth(per.from) + ' по ' + bDayMonth(per.to) +
         ' включительно.'),
       explain: bWhy([
@@ -1437,39 +1450,43 @@ function bType3(rng) {
   return null;
 }
 
-/* 4. Склады: масса отгруженного, вес упаковки уже в килограммах, отбор по
-   КАТЕГОРИИ целиком и период через границу месяца (№ 28689). */
+/* 4. Склады: масса отгруженного, вес упаковки уже в килограммах, период
+   через границу месяца (№ 28689). Отбор по виду товара — см. заметку у
+   B_WARE, почему не по категории. */
 function bType4(rng) {
   for (let tries = 0; tries < 30; tries++) {
-    let cat = null, dist = null, shopIds = null;
+    let kind = null, dist = null, shopIds = null;
     const db = bWareDb(rng, {choose: function (db) {
-      const cats = Array.from(new Set(db.goods.map(g => g.dept)));
-      const name = tPick(rng, cats);
-      cat = db.goods.filter(g => g.dept === name);
+      const byKind = {};
+      db.goods.forEach(g => (byKind[g.kind] = byKind[g.kind] || []).push(g));
+      const good = Object.keys(byKind).filter(k => byKind[k].length >= 3);
+      if (!good.length) return {};
+      kind = byKind[tPick(rng, good)];
       const byDist = {};
       db.shops.forEach(s => (byDist[s.district.name] = byDist[s.district.name] || []).push(s));
       const pickDist = tPick(rng, Object.keys(byDist));
       dist = byDist[pickDist][0].district;
       shopIds = byDist[pickDist].map(s => s.id);
-      return {must: cat.map(g => g.art)};
+      return {must: kind.map(g => g.art)};
     }});
-    if (!cat || !dist) continue;
+    if (!kind || !dist) continue;
     const per = bPeriod(rng, db);
-    const arts = new Set(cat.map(g => g.art));
+    const arts = new Set(kind.map(g => g.art));
     const sel = {ops: ['Отгрузка'], arts: arts, shops: new Set(shopIds),
                  from: per.from, to: per.to, value: (m, g) => m.qty * g.pack};
     const full = bMoveSum(db, sel);
     const packs = bMoveSum(db, Object.assign({}, sel, {value: m => m.qty})).sum;
     if (!bGuard(db, sel, full, [packs])) continue;
+    const kindGen = kind[0].kindGen;
     return {
       db: db, form: 'int', answer: bNum(full.sum),
-      question: bWareIntro(db) + bAsk('общее количество (в кг) ' + esc2(cat[0].deptGen) +
-        ', отгруженных покупателям со складов ' + esc2(dist.gen) + ' района с ' +
-        bDate2(per.from) + ' по ' + bDate2(per.to) + ' включительно.'),
+      question: bWareIntro(db) + bAsk('общее количество (в кг) всех видов ' +
+        esc2(kindGen) + ', отгруженных покупателям со складов ' + esc2(dist.gen) +
+        ' района с ' + bDate2(per.from) + ' по ' + bDate2(per.to) + ' включительно.'),
       explain: bWhy([
-        'Отбирается вся категория «' + cat[0].dept + '» — это <b>' + cat.length +
-          '</b> ' + tPl(cat.length, 'артикул', 'артикула', 'артикулов') +
-          ', а не одно название.',
+        'Виды ' + kindGen + ' — это <b>' + kind.length + '</b> ' +
+          tPl(kind.length, 'артикул', 'артикула', 'артикулов') + ' на листе «Товары»: ' +
+          kind.map(g => g.name + ' (арт. ' + g.art + ')').join(', ') + '.',
         'Склады ' + dist.gen + ' района: <b>' + shopIds.join(', ') + '</b>. Тип операции — ' +
           '<b>Отгрузка</b>; поступления в ответ не идут.',
         'Период ' + bDate2(per.from) + ' — ' + bDate2(per.to) +
@@ -1515,8 +1532,12 @@ function bType5(rng) {
     } else if (mode === 1) {
       const season = tPick(rng, B_SEASONS.slice(0, 4));
       tariffs = db.tariffs.filter(t => t.season === season.name);
+      /* Уточнение «кроме новогодних праздников» имеет смысл только зимой:
+         новогодние праздники — отдельный сезон в таблице тарифов, и без
+         оговорки «зимний сезон» читается двояко. У весны такой оговорки не
+         бывает (Света, 16.09.2026: «новый год зимой!»). */
       howAsk = 'по всем тарифам спектаклей ' + season.gen +
-               ' (кроме новогодних праздников)';
+               (season.name === 'зимний сезон' ? ' (кроме новогодних праздников)' : '');
     } else {
       const time = tPick(rng, B_TIMES);
       tariffs = db.tariffs.filter(t => t.time.word === time.word);
@@ -1683,16 +1704,17 @@ function makeCode(st){
   return PREFIX + "-" + out.slice(0, 4) + "-" + out.slice(4);
 }
 
-/* ---------------------------------------------------------- состояние */
+/* ---------------------------------------------------------- состояние
+
+   Все шесть типов лежат на экране сразу, порядок свой (Света, 16.09.2026 —
+   как в практикуме). Тип закрывает один верный ответ; после ошибки на том
+   же месте появляется задача того же типа с новой базой. */
 const N = B_TYPES.length;
 const rng = tRng((Date.now() ^ (Math.random() * 1e9)) >>> 0);
 const st = {
-  streak: Array(N).fill(0),
-  done: Array(N).fill(false),
-  clean: Array(N).fill(true),
-  solved: 0, wrong: 0,
-  cur: null, answered: false, tries: 0,
-  retry: null                 // тип, в котором только что ошиблись
+  tasks: [], done: Array(N).fill(false), clean: Array(N).fill(true),
+  tries: Array(N).fill(1), answered: Array(N).fill(false),
+  solved: 0, wrong: 0
 };
 Object.defineProperty(st, "typesDone",
   {get(){ return st.done.filter(Boolean).length; }});
@@ -1707,22 +1729,12 @@ function markFor(n){
 function esc(s){ return String(s).replace(/[&<>]/g, c =>
   ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
 
-function pickType(){
-  const open = [];
-  for (let i = 0; i < N; i++) if (!st.done[i]) open.push(i);
-  if (!open.length) return null;
-  /* Сразу после ошибки — тот же тип: разбор только что показан, и
-     применить его надо по горячему, а не через пять задач. */
-  if (st.retry !== null && open.indexOf(st.retry) >= 0) return st.retry;
-  return open[tRand(rng, 0, open.length - 1)];
-}
-
 /* Файл базы — ссылкой на Blob: страница работает и из общей папки, и с
-   сайта, сервера рядом нет. Номер в имени растёт, чтобы в «Загрузках» не
-   лежали три разных файла под одним именем. */
-function saveBook(){
-  const name = "zadanie-3-dz-" + st.tries + ".xlsx";
-  const blob = new Blob([bTaskBook(st.cur)],
+   сайта, сервера рядом нет. В имени тип и номер базы, чтобы в «Загрузках»
+   не лежали разные файлы под одним именем. */
+function saveBook(i){
+  const name = "zadanie-3-dz-" + (i + 1) + (st.tries[i] > 1 ? "-" + st.tries[i] : "") + ".xlsx";
+  const blob = new Blob([bTaskBook(st.tasks[i])],
     {type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
@@ -1739,9 +1751,12 @@ function paint(){
   box.innerHTML = "";
   B_TYPES.forEach(function(name, i){
     const c = document.createElement("span");
-    c.className = "chip" + (st.done[i] ? " done"
-                  : (st.cur && st.cur.type === i ? " cur" : ""));
-    c.textContent = name + (st.done[i] ? " ✓" : "");
+    c.className = "chip" + (st.done[i] ? " done" : "");
+    c.textContent = (i + 1) + " " + name + (st.done[i] ? " ✓" : "");
+    c.title = "перейти к задаче " + (i + 1);
+    c.addEventListener("click", function(){
+      document.getElementById("t" + i).scrollIntoView({behavior: "smooth", block: "start"});
+    });
     box.appendChild(c);
   });
   const m = markFor(st.typesDone);
@@ -1755,76 +1770,75 @@ function paint(){
       ? " · до кода работы осталось закрыть " + (MIN_TYPES - st.typesDone) : "");
 }
 
-function nextTask(){
-  const type = pickType();
-  if (type === null) return finish();
-  st.cur = bMake(type, rng);
-  st.answered = false;
-  st.tries++;
-  const t = st.cur;
-  document.getElementById("area").innerHTML =
-    '<div class="card" id="task">' +
-      '<p class="tag">' + B_TYPES[type] +
-        (st.retry === type ? ' · ещё раз, с новой базой' : '') + '</p>' +
-      '<div class="q">' + t.question + '</div>' +
-      '<div class="heads">' + bHeads(t.db) + '</div>' +
-      '<div class="file">' +
-        '<button id="dl">Скачать файл базы</button>' +
-        '<span class="hint" id="dlhint">Книга .xlsx на три листа — открой её в ' +
-          'электронных таблицах.</span>' +
-      '</div>' +
-      '<div class="row">' +
-        '<input type="text" id="ans" autocomplete="off" spellcheck="false" ' +
-               'placeholder="число">' +
-        '<button class="primary" id="go">Проверить</button>' +
-        '<button id="stop">Закончить</button>' +
-      '</div>' +
-      '<div class="verdict" id="v"></div>' +
-    '</div>';
-  const input = document.getElementById("ans");
-  input.focus();
-  input.addEventListener("keydown", e => { if (e.key === "Enter") judge(); });
-  document.getElementById("go").addEventListener("click", judge);
-  document.getElementById("stop").addEventListener("click", finish);
-  document.getElementById("dl").addEventListener("click", function(){
-    const name = saveBook();
-    document.getElementById("dlhint").innerHTML =
+function renderTask(i){
+  const t = st.tasks[i];
+  const card = document.getElementById("t" + i);
+  card.className = "card";
+  card.innerHTML =
+    '<p class="tag">Задача ' + (i + 1) + ' — ' + B_TYPES[t.type] +
+      (st.tries[i] > 1 ? ' · база ' + st.tries[i] : '') + '</p>' +
+    '<div class="q">' + t.question + '</div>' +
+    '<div class="heads">' + bHeads(t.db) + '</div>' +
+    '<div class="file">' +
+      '<button id="dl' + i + '">Скачать файл базы</button>' +
+      '<span class="hint" id="h' + i + '">Книга .xlsx на три листа — открой её в ' +
+        'электронных таблицах.</span>' +
+    '</div>' +
+    '<div class="row">' +
+      '<input type="text" id="a' + i + '" autocomplete="off" spellcheck="false" ' +
+             'placeholder="число">' +
+      '<button class="primary" id="go' + i + '">Проверить</button>' +
+    '</div>' +
+    '<div class="verdict" id="v' + i + '"></div>';
+  document.getElementById("a" + i).addEventListener("keydown", function(e){
+    if (e.key === "Enter") judge(i);
+  });
+  document.getElementById("go" + i).addEventListener("click", function(){ judge(i); });
+  document.getElementById("dl" + i).addEventListener("click", function(){
+    const name = saveBook(i);
+    document.getElementById("h" + i).innerHTML =
       'Файл <b>' + esc(name) + '</b> — в папке «Загрузки».';
   });
-  paint();
 }
 
-function judge(){
-  if (st.answered) return nextTask();
-  const raw = document.getElementById("ans").value;
+function judge(i){
+  if (st.answered[i]) return;
+  const raw = document.getElementById("a" + i).value;
   if (!raw.trim()) return;
-  const t = st.cur, type = t.type;
+  const t = st.tasks[i];
   const res = bVerdict(t, raw);
-  st.answered = true;
-  document.getElementById("go").textContent = "Дальше";
-  document.getElementById("ans").disabled = true;
-  const card = document.getElementById("task");
-  const v = document.getElementById("v");
+  st.answered[i] = true;
+  const card = document.getElementById("t" + i);
+  const go = document.getElementById("go" + i);
+  const v = document.getElementById("v" + i);
+  document.getElementById("a" + i).disabled = true;
   if (res.ok){
     st.solved++;
-    st.streak[type]++;
-    st.retry = null;
+    st.done[i] = true;
     card.className = "card ok";
+    go.disabled = true;
     v.className = "verdict ok";
-    let text = "Верно.";
-    if (st.streak[type] >= NEED_STREAK){ st.done[type] = true; text += " Тип закрыт."; }
-    v.innerHTML = text + '<div class="why">' + t.explain + '</div>';
+    v.innerHTML = "Верно. Тип закрыт." +
+      '<details class="why"><summary>как это решалось</summary>' + t.explain + '</details>';
   } else {
     st.wrong++;
-    st.streak[type] = 0;
-    st.clean[type] = false;
-    st.retry = type;
+    st.clean[i] = false;
     card.className = "card err";
     v.className = "verdict err";
     v.innerHTML = "Пока нет" + (res.why ? " — " + res.why : "") +
-      ". Верный ответ: <code>" + t.answer + "</code>. Следующая задача — " +
-      "этого же типа, с новой базой." +
+      ". Верный ответ: <code>" + t.answer + "</code>." +
       '<div class="why">' + t.explain + '</div>';
+    /* Тот же тип, та же позиция — другая база. Разбор только что показан,
+       применить его надо по горячему. */
+    go.textContent = "Новая база";
+    go.onclick = function(){
+      st.tasks[i] = bMake(t.type, rng);
+      st.tries[i]++;
+      st.answered[i] = false;
+      renderTask(i);
+      document.getElementById("a" + i).focus();
+      paint();
+    };
   }
   paint();
 }
@@ -1840,8 +1854,8 @@ var MAIL = "krevskayas+hw@gmail.com";
 var MAILBOX =
   '<div class="mailbox">' +
     '<h3>Осталось прислать таблицу</h3>' +
-    '<p>Книга последней задачи с твоими формулами — вспомогательные столбцы, ' +
-       '<code>ВПР</code>, <code>СУММЕСЛИМН</code>. Приложи её файлом.</p>' +
+    '<p>Книга последней задачи с твоей работой — вспомогательный столбец с ' +
+       '<code>ВПР</code> и включённый фильтр. Приложи её файлом.</p>' +
     '<div class="row"><button id="mailbtn">Отправить таблицу</button></div>' +
     '<p class="stats" id="mailnote">Кнопка откроет письмо на <b>' + MAIL +
        '</b> с уже вписанной темой — останется приложить файл и нажать ' +
@@ -1875,14 +1889,19 @@ function wireMail(code){
   });
 }
 
+/* Итог рисуется внизу, задачи остаются на экране: закрыл ещё тип — нажми
+   «Закончить» снова, код пересчитается. Фамилию и класс не теряем. */
 function finish(){
   const m = markFor(st.typesDone);
   const code = st.typesDone >= MIN_TYPES ? makeCode(st) : null;
-  const more = st.typesDone < N
-    ? '<button id="more">Закрыть ещё типы</button>' : "";
-  document.getElementById("area").innerHTML =
+  const famOld = document.getElementById("fam");
+  const klsOld = document.getElementById("kls");
+  const fam = famOld ? famOld.value : "";
+  const kls = klsOld ? klsOld.value : "11";
+  const box = document.getElementById("result");
+  box.innerHTML =
     '<div class="card">' +
-      '<h2>Работа окончена</h2>' +
+      '<h2>Итог</h2>' +
       '<p>Закрыто типов: <b>' + st.typesDone + '</b> из ' + N +
         '. Решено задач: ' + st.solved + ', ошибок: ' + st.wrong + '.' +
         (m ? ' Наработано на <b>' + m + '</b>.' : '') + '</p>' +
@@ -1890,36 +1909,51 @@ function finish(){
         ? '<p>Твой код работы:</p><div class="code">' + code + '</div>' +
           '<div class="note">Код хранит дату, число закрытых типов и число ' +
             'ошибок. Впиши фамилию и класс — кнопка откроет форму с уже ' +
-            'подставленным кодом.</div>' +
+            'подставленным кодом.' +
+            (st.typesDone < N ? ' Закроешь ещё тип — нажми «Закончить» снова, ' +
+              'код обновится.' : '') + '</div>' +
           '<div class="fields">' +
             '<div><label for="fam">Фамилия и имя</label>' +
               '<input type="text" id="fam" autocomplete="off"></div>' +
             '<div><label for="kls">Класс</label>' +
-              '<input type="text" id="kls" autocomplete="off" value="11"></div>' +
+              '<input type="text" id="kls" autocomplete="off"></div>' +
           '</div>' +
           '<div class="row"><button id="send" class="primary">Сдать работу</button></div>' +
           MAILBOX
         : '<div class="note">Закрыто меньше ' + MIN_TYPES +
           ' типов — кода работы нет. Закрой ещё хотя бы ' +
-          (MIN_TYPES - st.typesDone) + ', и он появится.</div>') +
-      '<div class="row">' + more + '</div>' +
+          (MIN_TYPES - st.typesDone) + ' выше, и нажми «Закончить» снова.</div>') +
     '</div>';
-  const b = document.getElementById("more");
-  if (b) b.addEventListener("click", nextTask);
+  const famEl = document.getElementById("fam");
+  if (famEl){ famEl.value = fam; document.getElementById("kls").value = kls || "11"; }
   const send = document.getElementById("send");
   if (send) send.addEventListener("click", function(){
-    const fam = document.getElementById("fam").value.trim();
-    if (!fam) { document.getElementById("fam").focus(); return; }
-    const kls = document.getElementById("kls").value.trim() || "11";
-    window.open(FORM.replace("ФАМИЛИЯ", encodeURIComponent(fam))
-                    .replace("КЛАСС", encodeURIComponent(kls))
+    const f = document.getElementById("fam").value.trim();
+    if (!f) { document.getElementById("fam").focus(); return; }
+    const k = document.getElementById("kls").value.trim() || "11";
+    window.open(FORM.replace("ФАМИЛИЯ", encodeURIComponent(f))
+                    .replace("КЛАСС", encodeURIComponent(k))
                     .replace("КОД", encodeURIComponent(code)), "_blank");
   });
   wireMail(code);
+  box.scrollIntoView({behavior: "smooth", block: "start"});
   paint();
 }
 
-nextTask();
+/* Старт: по задаче каждого типа, все сразу. */
+(function start(){
+  const area = document.getElementById("area");
+  for (let i = 0; i < N; i++){
+    st.tasks.push(bMake(i, rng));
+    const d = document.createElement("div");
+    d.className = "card";
+    d.id = "t" + i;
+    area.appendChild(d);
+    renderTask(i);
+  }
+  document.getElementById("total").addEventListener("click", finish);
+  paint();
+})();
 </script>
 <p class="ai-mark">Материалы подготовлены с использованием технологий искусственного интеллекта.</p>
 </body>
