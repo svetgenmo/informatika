@@ -1083,7 +1083,8 @@ function markFor(n){
 
 function freshTest(){
   return {closed: Array(T_COUNT).fill(false), clean: Array(T_COUNT).fill(true),
-          solved: 0, wrong: 0, queue: [], qi: 0, cur: null};
+          solved: 0, wrong: 0, tried: Array(T_COUNT).fill(false),
+          tasks: Array(T_COUNT).fill(null)};
 }
 
 function save(){
@@ -1332,15 +1333,6 @@ function openTrip(file){
 
 function newRng(){ return tRng((Date.now() ^ (Math.random() * 1e9)) >>> 0); }
 
-function shuffle(arr, rng){
-  const a = arr.slice();
-  for (let j = a.length - 1; j > 0; j--) {
-    const k = tRand(rng, 0, j);
-    const tmp = a[j]; a[j] = a[k]; a[k] = tmp;
-  }
-  return a;
-}
-
 function renderTestBox(){
   const box = document.getElementById("testbox");
   if (test) { box.innerHTML = ""; return; }
@@ -1349,91 +1341,83 @@ function renderTestBox(){
     'поднимется на балл.</p><div class="row"><button class="primary" ' +
     'id="starttest">Начать проверку</button></div></div>';
   document.getElementById("starttest").addEventListener("click", function(){
-    test = freshTest(); startRound();
+    test = freshTest(); startTest();
   });
 }
 
-function startRound(){
-  const open = [];
-  for (let i = 0; i < T_COUNT; i++) if (!test.closed[i]) open.push(i);
-  test.queue = shuffle(open, newRng());
-  test.qi = 0;
+function startTest(){
+  for (let i = 0; i < T_COUNT; i++) test.tasks[i] = tTask(i, newRng());
   renderTestBox();
-  askNext();
+  renderAll();
+  paint();
 }
 
-function askNext(){
-  if (test.qi >= test.queue.length) { roundEnd(); return; }
-  test.cur = tTask(test.queue[test.qi], newRng());
-  renderTask();
-}
-
-function renderTask(){
-  const t = test.cur;
-  document.getElementById("area").innerHTML =
-    '<div class="card" id="task">' +
-      '<p class="tag">' + T_TYPES[t.type] + ' &middot; решено задач: ' +
-        test.solved + '</p>' +
+/* Все шесть вопросов на странице сразу, отвечать можно в любом порядке.
+   Ошибся — разбор тут же, а кнопка «Новые числа» на той же карточке даёт
+   вопрос того же типа с другими данными. (До 17.09.2026 вопросы шли по
+   одному, раундами; Света попросила показывать все сразу.) */
+function cardHtml(i){
+  const t = test.tasks[i];
+  return '<div class="card" id="task-' + i + '">' +
+      '<p class="tag">' + (i + 1) + ' &middot; ' + T_TYPES[i] + '</p>' +
       '<div class="q">' + t.question + '</div>' +
       '<div class="row">' +
-        '<input type="text" id="ans" autocomplete="off" spellcheck="false" ' +
+        '<input type="text" id="ans-' + i + '" autocomplete="off" spellcheck="false" ' +
                'inputmode="numeric" placeholder="целое число">' +
-        '<button class="primary" id="go">Ответить</button>' +
+        '<button class="primary" id="go-' + i + '">Ответить</button>' +
       '</div>' +
-      '<div class="verdict" id="v"></div>' +
+      '<div class="verdict" id="v-' + i + '"></div>' +
     '</div>';
-  const input = document.getElementById("ans");
-  input.focus();
-  input.addEventListener("keydown", function(e){ if (e.key === "Enter") judge(); });
-  document.getElementById("go").addEventListener("click", judge);
-  paint();
 }
 
-function judge(){
-  const t = test.cur;
-  const raw = document.getElementById("ans").value;
-  const ok = tCheck(t, raw);
-  if (ok) { test.closed[t.type] = true; test.solved++; }
-  else { test.wrong++; test.clean[t.type] = false; }
+function bindCard(i){
+  document.getElementById("ans-" + i).addEventListener("keydown", function(e){
+    if (e.key === "Enter") judge(i);
+  });
+  document.getElementById("go-" + i).addEventListener("click", function(){ judge(i); });
+}
 
-  const card = document.getElementById("task");
+function renderAll(){
+  let html = "";
+  for (let i = 0; i < T_COUNT; i++) html += cardHtml(i);
+  document.getElementById("area").innerHTML = html;
+  for (let i = 0; i < T_COUNT; i++) bindCard(i);
+}
+
+function renderCard(i){
+  document.getElementById("task-" + i).outerHTML = cardHtml(i);
+  bindCard(i);
+}
+
+function judge(i){
+  const t = test.tasks[i];
+  const raw = document.getElementById("ans-" + i).value;
+  const ok = tCheck(t, raw);
+  test.tried[i] = true;
+  if (ok) { test.closed[i] = true; test.solved++; }
+  else { test.wrong++; test.clean[i] = false; }
+
+  const card = document.getElementById("task-" + i);
   card.className = "card " + (ok ? "ok" : "err");
-  document.getElementById("ans").disabled = true;
-  document.getElementById("go").disabled = true;
-  document.getElementById("v").className = "verdict " + (ok ? "ok" : "err");
-  document.getElementById("v").innerHTML = ok
+  document.getElementById("ans-" + i).disabled = true;
+  document.getElementById("go-" + i).disabled = true;
+  const v = document.getElementById("v-" + i);
+  v.className = "verdict " + (ok ? "ok" : "err");
+  v.innerHTML = ok
     ? "Правильно — вопрос закрыт."
     : "Ошибка. Твой ответ: <code>" + esc(raw) + "</code>, верный: <code>" +
-      t.answer + "</code>. Вопрос остался открытым — вернётся при доборе.";
+      t.answer + "</code>. Вопрос остался открытым: возьми его с другими данными.";
   card.insertAdjacentHTML("beforeend",
     '<div class="why">' + t.explain + '</div>' +
-    '<div class="row"><button class="primary" id="nx">Дальше</button></div>');
-  document.getElementById("nx").addEventListener("click", function(){
-    test.qi++; askNext();
+    (ok ? '' : '<div class="row"><button class="primary" id="re-' + i +
+               '">Новые числа</button></div>'));
+  if (!ok) document.getElementById("re-" + i).addEventListener("click", function(){
+    test.tasks[i] = tTask(i, newRng());
+    test.tried[i] = false;
+    renderCard(i);
+    document.getElementById("ans-" + i).focus();
+    paint();
   });
-  paint();
-}
-
-function roundEnd(){
-  test.cur = null;
-  const done = testDone(), open = T_COUNT - done;
-  let msg;
-  if (done >= T_COUNT) msg = "Все шесть вопросов закрыты.";
-  else if (done >= TEST_BONUS_AT)
-    msg = "Закрыто <b>" + done + "</b> из " + T_COUNT + " — балл к отметке " +
-      "уже добавлен. Можно остановиться, а можно закрыть оставшийся.";
-  else
-    msg = "Закрыто <b>" + done + "</b> из " + T_COUNT + ". До прибавки к " +
-      "отметке нужно " + TEST_BONUS_AT + " — досдай оставшиеся, задачи будут " +
-      "с другими числами.";
-  document.getElementById("area").innerHTML =
-    '<div class="card"><h2 class="plain">Раунд пройден</h2><p>' + msg + "</p>" +
-    '<div class="row">' +
-      (open > 0 ? '<button class="primary" id="more">Досдать оставшиеся (' +
-        open + ')</button>' : "") +
-    "</div></div>";
-  const b = document.getElementById("more");
-  if (b) b.addEventListener("click", startRound);
   paint();
 }
 

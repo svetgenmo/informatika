@@ -149,6 +149,7 @@ table.hex th{background:#fff;color:var(--muted);font-size:14px}
 
 .files a,.howto a{color:var(--accent);font-weight:600;
                   font-family:Consolas,"Courier New",monospace}
+.where.book{margin:22px 0 10px;font-weight:600}
 </style>
 </head>
 <body>
@@ -165,7 +166,8 @@ table.hex th{background:#fff;color:var(--muted);font-size:14px}
         и по ссылке на странице темы. Внутри:
       <ul id="filelist"></ul></dd>
     <dt>Что делать</dt>
-    <dd>Открыть нужный файл в текстовом редакторе и найти ответ поиском
+    <dd>Все двенадцать вопросов ниже, по три на книгу — отвечай в любом
+        порядке. Открыть нужный файл в текстовом редакторе и найти ответ поиском
         (<span class="mono">Ctrl + F</span>). Ответа нет на этой
         странице — только в книге.</dd>
     <dt>Сколько решать</dt>
@@ -194,6 +196,7 @@ table.hex th{background:#fff;color:var(--muted);font-size:14px}
 </div>
 
 <div id="main"></div>
+<div id="bottom"></div>
 
 <details>
   <summary>Подсказка: как искать в файле</summary>
@@ -313,19 +316,22 @@ function fingerprint(s, salt){
   return h.toString(16).padStart(8, "0");
 }
 
-/* --------------------------------------------------------- состояние */
+/* --------------------------------------------------------- состояние
+   Все двенадцать вопросов лежат на странице сразу, по книгам: открыл файл —
+   ответил на его три вопроса. Порядок любой. Ошибся — подсказка тут же,
+   поле остаётся открытым: вопрос тот же, попытки считаются.
+   (До 17.09.2026 вопросы шли по одному с кнопкой «Отложить»; Света
+   попросила показывать все сразу — виден объём и можно выбрать порядок.) */
 
 const st = {
-  queue: [],            // вопросы этого захода, по порядку
+  queue: [],            // вопросы этого захода, по книгам
   done: {},             // id → закрыт
   clean: {},            // id → закрыт с первой попытки
   attempts: {},         // id → сколько раз по нему уже ошиблись
-  solved: 0, wrong: 0,
-  cur: null, given: "", note: "", answered: false
+  note: {},             // id → замечание к записи ответа
+  solved: 0, wrong: 0
 };
 
-// Попытки считаются по вопросу, а не по показу: отложил и вернулся —
-// это по-прежнему вторая попытка, а не первая.
 const triesOf = q => st.attempts[q.id] || 0;
 Object.defineProperty(st, "typesDone",
   {get(){ return Object.keys(st.done).length; }});
@@ -333,63 +339,45 @@ Object.defineProperty(st, "cleanTypes",
   {get(){ return Object.values(st.clean).filter(Boolean).length; }});
 
 // По три вопроса из каждой книги: в наборе всегда есть и файл россыпью,
-// и файл из архива, а наборы у соседей не совпадают.
+// и файл из архива, а наборы у соседей не совпадают. На странице вопросы
+// стоят по книгам — чтобы файл открывать один раз.
 function buildQueue(){
   const picked = [];
   TEXTS.forEach(t => {
     const pool = BANK.questions.filter(q => q.text === t.id);
     picked.push(...shuffle(pool).slice(0, BANK.perText));
   });
-  return shuffle(picked);
+  return picked;
 }
 
 function start(){
   st.queue = buildQueue();
-  st.done = {}; st.clean = {}; st.attempts = {};
+  st.done = {}; st.clean = {}; st.attempts = {}; st.note = {};
   st.solved = 0; st.wrong = 0;
-  nextTask();
+  document.getElementById("bottom").innerHTML = "";
+  renderAll();
 }
 
-function openLeft(){
-  return st.queue.filter(q => !st.done[q.id]);
-}
-
-function nextTask(){
-  const left = openLeft();
-  if (!left.length){ renderFinish(); return; }
-  // не показываем один и тот же вопрос два раза подряд, если есть выбор
-  const pool = left.length > 1 && st.cur
-      ? left.filter(q => q.id !== st.cur.id) : left;
-  st.cur = pool[randInt(0, pool.length - 1)];
-  st.given = "";
-  st.note = "";
-  st.answered = false;
-  render();
-}
-
-function answer(){
-  const q = st.cur;
-  if (!q || st.answered) return;
-  const given = document.getElementById("ans").value.trim();
+function answer(q){
+  if (st.done[q.id]) return;
+  const given = document.getElementById("ans-" + q.id).value.trim();
   if (!given) return;
   if (!norm(given)){
-    st.note = "В ответе должно быть слово или число.";
-    render();
+    st.note[q.id] = "В ответе должно быть слово или число.";
+    renderCard(q, given);
     return;
   }
-
-  st.given = given;
-  st.note = "";
+  st.note[q.id] = "";
   if (q.fp.indexOf(fingerprint(given, q.id)) >= 0){
     st.solved++;
     st.done[q.id] = true;
     if (triesOf(q) === 0) st.clean[q.id] = true;
-    st.answered = true;
   } else {
     st.wrong++;
     st.attempts[q.id] = triesOf(q) + 1;
   }
-  render();
+  renderCard(q, given);
+  renderProgress();
 }
 
 /* ------------------------------------------------------------- вывод */
@@ -413,9 +401,7 @@ function renderFiles(){
 function renderProgress(){
   const done = st.typesDone;
   document.getElementById("dots").innerHTML = st.queue.map(q =>
-    `<span class="dot${st.done[q.id] ? " full" : ""}${
-      st.cur && q.id === st.cur.id && !st.done[q.id] ? " now" : ""}"></span>`)
-    .join("");
+    `<span class="dot${st.done[q.id] ? " full" : ""}"></span>`).join("");
 
   const mark = markFor(done);
   const el = document.getElementById("mark");
@@ -452,19 +438,14 @@ function renderProgress(){
   }
 }
 
-function render(){
-  renderFiles();
-  renderProgress();
-  const q = st.cur;
-  const main = document.getElementById("main");
-  if (!q) return;
+function cardHtml(q, n, given){
   const src = byId[q.text];
-
+  const done = !!st.done[q.id];
   let tail = "";
-  if (st.answered){
+  if (done){
     tail = `<div class="verdict ok">Правильно — ответ найден.</div>`;
-  } else if (st.note){
-    tail = `<div class="verdict err">${esc(st.note)}</div>`;
+  } else if (st.note[q.id]){
+    tail = `<div class="verdict err">${esc(st.note[q.id])}</div>`;
   } else if (triesOf(q) > 0){
     // Правильного ответа страница не знает — только отпечаток. Поэтому
     // подсказывает, ЧТО искать в файле, а не что написать.
@@ -478,40 +459,54 @@ function render(){
                   стоит в своём падеже.</div>` : "") +
            `</div>`;
   }
-
-  main.innerHTML = `
-    <div class="card">
-      <div class="kicker">${esc(q.kind)} &middot; найдено ответов:
-           ${st.typesDone} из ${TOTAL}</div>
-      <div class="where">${esc(src.author)}, «${esc(src.title)}» —
-        файл <b>${esc(src.file)}</b>,
-        ${src.zip ? `<span class="zip">${esc(src.where)}</span>`
-                  : esc(src.where)}</div>
+  return `
+    <div class="card${done ? " ok" : triesOf(q) > 0 ? " err" : ""}" id="card-${q.id}">
+      <div class="kicker">${n} &middot; ${esc(q.kind)}</div>
       <div class="q">${esc(q.q)}<small>Ответа на этой странице нет —
         он только в файле.</small></div>
       <div class="row">
-        <input type="text" id="ans" autocomplete="off" spellcheck="false"
-               placeholder="ответ" value="${esc(st.given || "")}"
-               ${st.answered ? "disabled" : ""}>
-        <button class="primary" id="go">${
-          st.answered ? "Следующий вопрос" : "Проверить"}</button>
-        ${st.answered || openLeft().length < 2 ? ""
-          : `<button id="skip">Отложить этот вопрос</button>`}
+        <input type="text" id="ans-${q.id}" autocomplete="off" spellcheck="false"
+               placeholder="ответ" value="${esc(given || "")}"
+               ${done ? "disabled" : ""}>
+        <button class="primary" id="go-${q.id}" ${done ? "disabled" : ""}>Проверить</button>
       </div>
       ${tail}
     </div>`;
+}
 
-  const btn = document.getElementById("go");
-  btn.addEventListener("click", () => st.answered ? nextTask() : answer());
-  const skip = document.getElementById("skip");
-  if (skip) skip.addEventListener("click", nextTask);
-  const inp = document.getElementById("ans");
-  if (!st.answered){
-    inp.addEventListener("keydown", e => {
-      if (e.key === "Enter"){ e.preventDefault(); answer(); }
-    });
-    inp.focus();
-  } else btn.focus();
+function bindCard(q){
+  if (st.done[q.id]) return;
+  document.getElementById("go-" + q.id).addEventListener("click", () => answer(q));
+  document.getElementById("ans-" + q.id).addEventListener("keydown", e => {
+    if (e.key === "Enter"){ e.preventDefault(); answer(q); }
+  });
+}
+
+function renderCard(q, given){
+  const n = st.queue.indexOf(q) + 1;
+  document.getElementById("card-" + q.id).outerHTML = cardHtml(q, n, given);
+  bindCard(q);
+  if (!st.done[q.id]) document.getElementById("ans-" + q.id).focus();
+}
+
+function renderAll(){
+  renderFiles();
+  renderProgress();
+  let html = "", n = 0, book = null;
+  st.queue.forEach(q => {
+    n++;
+    const src = byId[q.text];
+    if (src.id !== book){
+      book = src.id;
+      html += `<div class="where book">${esc(src.author)}, «${esc(src.title)}» —
+        файл <b>${esc(src.file)}</b>,
+        ${src.zip ? `<span class="zip">${esc(src.where)}</span>`
+                  : esc(src.where)}</div>`;
+    }
+    html += cardHtml(q, n, "");
+  });
+  document.getElementById("main").innerHTML = html;
+  st.queue.forEach(bindCard);
 }
 
 /* Кнопка «Сдать»: фамилию и класс страница помнит между заходами, код
@@ -562,7 +557,7 @@ function renderFinish(){
        <span class="stats">код останется, просто получишь новый,
              когда найдёшь ещё ${up[0] - done}</span>`;
 
-  document.getElementById("main").innerHTML = `
+  document.getElementById("bottom").innerHTML = `
     <div class="finish">
       <h2>${all ? "Готово — найдены все двенадцать ответов"
                 : `Готово — наработано на ${mark}`}</h2>
@@ -590,12 +585,17 @@ function renderFinish(){
     </div>
     <div class="row">${more}</div>`;
 
+  document.getElementById("bottom").scrollIntoView({behavior: "smooth", block: "start"});
   wireSend(code);
   const back = document.getElementById("back") || document.getElementById("more");
   if (back) back.addEventListener("click", () => {
     // всё найдено — берём другой набор вопросов из банка; иначе просто
-    // возвращаемся к оставшимся
-    if (all) start(); else nextTask();
+    // убираем итог, вопросы никуда не делись
+    if (all) start();
+    else {
+      document.getElementById("bottom").innerHTML = "";
+      window.scrollTo({top: 0, behavior: "smooth"});
+    }
   });
 }
 

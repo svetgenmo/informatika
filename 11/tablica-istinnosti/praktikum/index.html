@@ -99,7 +99,8 @@ button:disabled{opacity:.4;cursor:default;border-color:var(--line);color:var(--m
 <div class="intro">
   <dl>
     <dt>Что нужно сделать</dt>
-    <dd>Шесть задач, по одной на тип. Первые четыре — про то, как метод
+    <dd>Шесть задач, по одной на тип, и все сразу на странице — решай в
+        любом порядке. Первые четыре — про то, как метод
         устроен: их считают в голове. Последние две — задания 2 в том
         виде, как на ЕГЭ, они решаются <b>программой</b>: одно с пятью
         пропусками в таблице, одно с семью.</dd>
@@ -107,8 +108,8 @@ button:disabled{opacity:.4;cursor:default;border-color:var(--line);color:var(--m
     <dd>По баллу за задачу, всего <b>6</b>: шесть — «5», пять — «4»,
         четыре — «3». Оценивание жёсткое: на «5» надо решить всё.</dd>
     <dt>Ошибся — не страшно</dt>
-    <dd>Разбор появится сразу, а задача вернётся в конец очереди уже с новыми
-        числами: балл можно доработать. Отдельно видно, сколько задач сделано
+    <dd>Разбор появится сразу, а кнопка «Новые числа» даст задачу того же
+        типа с другими данными: балл можно доработать. Отдельно видно, сколько задач сделано
         <b>с первой попытки</b>.</dd>
     <dt>Ответ</dt>
     <dd>Буквы — подряд, латиницей, без пробелов и запятых:
@@ -143,6 +144,7 @@ button:disabled{opacity:.4;cursor:default;border-color:var(--line);color:var(--m
 </div>
 
 <div id="area"></div>
+<div id="bottom"></div>
 
 <details class="help">
   <summary>Подсказка: как решать задание 2 программой</summary>
@@ -1211,10 +1213,12 @@ function reset(){
     tasks: work,                       /* текущая задача на каждой позиции */
     ok: work.map(() => false),         /* закрыта ли позиция */
     clean: work.map(() => true),       /* закрыта ли с первой попытки */
-    queue: work.map((t, i) => i),      /* что осталось пройти */
-    solved: 0, wrong: 0, cur: null, answered: false
+    tried: work.map(() => false),      /* текущая задача уже отвечена */
+    solved: 0, wrong: 0
   };
-  nextTask();
+  renderAll();
+  renderBottom();
+  paint();
 }
 
 function esc(s){ return String(s).replace(/[&<>]/g, c =>
@@ -1227,9 +1231,7 @@ function paint(){
   box.innerHTML = "";
   st.tasks.forEach(function(t, i){
     const el = document.createElement("span");
-    el.className = "chip" + (st.ok[i] ? " done"
-                   : i === st.cur ? " cur"
-                   : st.clean[i] ? "" : " miss");
+    el.className = "chip" + (st.ok[i] ? " done" : st.clean[i] ? "" : " miss");
     el.innerHTML = '<span class="n">' + (i + 1) + '</span>' + L_TYPES[t.type] +
                    (st.ok[i] ? " ✓" : "");
     box.appendChild(el);
@@ -1253,72 +1255,98 @@ function paint(){
     " · ошибок: " + st.wrong;
 }
 
-function nextTask(){
-  if (!st.queue.length) return finish();
-  st.cur = st.queue[0];
-  st.answered = false;
-  const t = st.tasks[st.cur];
-  document.getElementById("area").innerHTML =
-    '<div class="card" id="task">' +
-      '<p class="tag">Задача ' + (st.cur + 1) + ' — ' + L_TYPES[t.type] +
+/* Все шесть задач на странице сразу, решать можно в любом порядке.
+   Ошибся — разбор тут же, а кнопка «Новые числа» даёт задачу того же типа
+   с другими данными на той же карточке. (До 17.09.2026 задачи шли по
+   одной, очередью; Света попросила показывать все сразу.) */
+function cardHtml(i){
+  const t = st.tasks[i];
+  return '<div class="card" id="task-' + i + '">' +
+      '<p class="tag">Задача ' + (i + 1) + ' — ' + L_TYPES[t.type] +
         (t.part === "theory" ? " · теория" : " · решается программой") + '</p>' +
       '<div class="q">' + t.question + '</div>' +
       (t.code ? '<pre><code>' + esc(t.code) + '</code></pre>' : '') +
       '<div class="row">' +
-        '<input type="text" id="ans" autocomplete="off" spellcheck="false" ' +
+        '<input type="text" id="ans-' + i + '" autocomplete="off" spellcheck="false" ' +
                'placeholder="' + (t.form === "letters" ? "буквы подряд" : "число") + '">' +
-        '<button class="primary" id="go">Ответить</button>' +
-        '<button id="stop">Показать итог</button>' +
+        '<button class="primary" id="go-' + i + '">Ответить</button>' +
       '</div>' +
-      '<div class="verdict" id="v"></div>' +
+      '<div class="verdict" id="v-' + i + '"></div>' +
     '</div>';
-  const input = document.getElementById("ans");
-  input.focus();
-  input.addEventListener("keydown", function(e){ if (e.key === "Enter") judge(); });
-  document.getElementById("go").addEventListener("click", judge);
-  document.getElementById("stop").addEventListener("click", finish);
-  paint();
 }
 
-function judge(){
-  if (st.answered) return nextTask();
-  const i = st.cur, t = st.tasks[i];
-  const raw = document.getElementById("ans").value;
+function bindCard(i){
+  document.getElementById("ans-" + i).addEventListener("keydown", function(e){
+    if (e.key === "Enter") judge(i);
+  });
+  document.getElementById("go-" + i).addEventListener("click", function(){ judge(i); });
+}
+
+function renderAll(){
+  let html = "";
+  for (let i = 0; i < st.tasks.length; i++) html += cardHtml(i);
+  document.getElementById("area").innerHTML = html;
+  for (let i = 0; i < st.tasks.length; i++) bindCard(i);
+}
+
+function renderCard(i){
+  document.getElementById("task-" + i).outerHTML = cardHtml(i);
+  bindCard(i);
+}
+
+function judge(i){
+  const t = st.tasks[i];
+  const raw = document.getElementById("ans-" + i).value;
   if (!raw.trim()) return;
   const v = lVerdict(t, raw);
-  st.answered = true;
-  st.queue.shift();
+  st.tried[i] = true;
   if (v.ok){
     st.solved++;
     st.ok[i] = true;
   } else {
     st.wrong++;
     st.clean[i] = false;
-    /* Задача того же типа с новыми числами — и в конец очереди. */
-    st.tasks[i] = lMake(t.type, rng);
-    st.tasks[i].part = t.part;
-    st.queue.push(i);
   }
-  const card = document.getElementById("task");
+  const card = document.getElementById("task-" + i);
   card.className = "card " + (v.ok ? "ok" : "err");
-  document.getElementById("ans").disabled = true;
-  document.getElementById("go").textContent = "Дальше";
-  const vb = document.getElementById("v");
+  document.getElementById("ans-" + i).disabled = true;
+  document.getElementById("go-" + i).disabled = true;
+  const vb = document.getElementById("v-" + i);
   vb.className = "verdict " + (v.ok ? "ok" : "err");
   vb.innerHTML = (v.ok
     ? "Верно."
     : "Пока нет" + (v.why ? " — " + v.why : "") +
       ". Твой ответ: <code>" + esc(raw.trim()) + "</code>, верный: <code>" +
-      t.answer + "</code>. Задача этого типа вернётся с новыми числами.") +
-    '<div class="why">' + t.explain + '</div>';
+      t.answer + "</code>. Возьми задачу этого типа с новыми числами.") +
+    '<div class="why">' + t.explain + '</div>' +
+    (v.ok ? '' : '<div class="row"><button class="primary" id="re-' + i +
+                 '">Новые числа</button></div>');
+  if (!v.ok) document.getElementById("re-" + i).addEventListener("click", function(){
+    /* Задача того же типа с новыми числами — на том же месте. */
+    st.tasks[i] = lMake(t.type, rng);
+    st.tasks[i].part = t.part;
+    st.tried[i] = false;
+    renderCard(i);
+    document.getElementById("ans-" + i).focus();
+    paint();
+  });
   paint();
+}
+
+function renderBottom(){
+  document.getElementById("bottom").innerHTML =
+    '<div class="row"><button id="stop">Показать итог</button></div>';
+  document.getElementById("stop").addEventListener("click", finish);
 }
 
 function finish(){
   const pts = lPoints(st.ok, W);
   const m = lMark(pts, W);
-  const left = st.queue.map(i => (i + 1) + " (" + L_TYPES[st.tasks[i].type] + ")");
-  document.getElementById("area").innerHTML =
+  const left = [];
+  st.ok.forEach(function(v, i){
+    if (!v) left.push((i + 1) + " (" + L_TYPES[st.tasks[i].type] + ")");
+  });
+  document.getElementById("bottom").innerHTML =
     '<div class="card">' +
       '<h2>Итог</h2>' +
       '<p>Баллов: <b>' + pts + '</b> из ' + W.max + ', отметка <b>' + m + '</b>.</p>' +
@@ -1327,12 +1355,13 @@ function finish(){
       (left.length ? '<p>Не сделано: ' + left.join(", ") + '.</p>' : '') +
       '<div class="note">Покажи этот экран учителю.</div>' +
       '<div class="row">' +
-        (left.length ? '<button class="primary" id="more">Продолжить</button>' : '') +
+        (left.length ? '<button class="primary" id="more">Вернуться к задачам</button>' : '') +
         '<button id="again">Начать заново</button>' +
       '</div>' +
     '</div>';
+  document.getElementById("bottom").scrollIntoView({behavior: "smooth", block: "start"});
   const more = document.getElementById("more");
-  if (more) more.addEventListener("click", nextTask);
+  if (more) more.addEventListener("click", renderBottom);
   document.getElementById("again").addEventListener("click", reset);
   paint();
 }
