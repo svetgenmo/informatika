@@ -1,0 +1,860 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Графы — обзорный практикум</title>
+<meta name="description" content="Обзорный практикум 11 класса (углублённый) к седьмой паре: матрица и списки смежности, виды графов, кратчайший путь по весовой матрице, число путей в ориентированном графе без циклов.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E11%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{margin:0;padding:20px 16px 60px;font:17px/1.55 "Segoe UI",system-ui,sans-serif}
+.wrap{max-width:820px;margin:0 auto}
+h1{font-size:23px;margin:0 0 4px}
+h2{font-size:18px;margin:0 0 10px}
+.sub{color:var(--muted);font-size:15px;margin:0 0 18px}
+code{font-family:Consolas,"Cascadia Mono",monospace;background:var(--card);
+     border:1px solid var(--line);border-radius:5px;padding:1px 6px;
+     font-size:15px;letter-spacing:.04em}
+.intro{border:1px solid var(--line);border-radius:12px;background:var(--card);
+       padding:14px 18px;margin-bottom:18px}
+.intro dl{margin:0}
+.intro dt{font-weight:700;margin-top:10px}
+.intro dt:first-child{margin-top:0}
+.intro dd{margin:2px 0 0}
+.progress{border:2px solid var(--accent);border-radius:12px;padding:12px 16px;
+          background:#fff;margin-bottom:18px}
+.ptop{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.ptop h2{margin:0}
+.sp{flex:1 1 auto}
+.score{display:flex;align-items:baseline;gap:10px;color:var(--muted);font-size:15px}
+.score b{font:700 34px/1 "Segoe UI",system-ui,sans-serif;color:var(--ink);
+         min-width:40px;text-align:center;border:2px solid var(--line);
+         border-radius:8px;padding:2px 8px}
+.m5 b{color:var(--ok);border-color:var(--ok-line)}
+.m4 b{color:var(--accent);border-color:#a9c6e8}
+.m3 b{color:#8a5a00;border-color:var(--hi-line)}
+.types{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);border-radius:20px;padding:4px 12px;
+      font-size:14px;color:var(--muted);background:var(--card)}
+.chip.done{border-color:var(--ok-line);background:var(--ok-bg);color:var(--ok);
+           font-weight:600}
+.chip.miss{border-color:var(--err-line);background:var(--err-bg);color:var(--err)}
+.chip.cur{border-color:var(--accent);color:var(--accent);font-weight:600}
+.card{border:1px solid var(--line);border-radius:12px;padding:16px 18px;
+      background:#fff;margin-bottom:14px}
+.card.ok{border-color:var(--ok-line);background:var(--ok-bg)}
+.card.err{border-color:var(--err-line);background:var(--err-bg)}
+.tag{font-size:13px;color:var(--muted);margin:0 0 6px}
+.q{font-size:17px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+input[type=text]{font:16px/1 Consolas,monospace;padding:10px 12px;border-radius:8px;
+                 border:1px solid var(--line);width:100%;max-width:340px}
+button{font:600 15px/1 inherit;padding:11px 16px;border-radius:9px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);color:var(--muted)}
+.verdict{margin-top:10px;font-size:15.5px;font-weight:600}
+.verdict.ok{color:var(--ok)}
+.verdict.err{color:var(--err)}
+.why{margin-top:8px;font-size:15.5px;color:var(--ink)}
+.note{border:1px solid var(--hi-line);background:var(--hi-bg);border-radius:10px;
+      padding:11px 15px;margin:12px 0;font-size:15.5px}
+.code{font:700 26px/1.2 Consolas,monospace;letter-spacing:.06em;
+      background:var(--card);border:2px dashed var(--accent);border-radius:12px;
+      padding:16px;text-align:center;margin:12px 0;user-select:all}
+.stats{color:var(--muted);font-size:14px}
+label{display:block;font-size:14px;color:var(--muted);margin-bottom:3px}
+.fields{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0}
+.fields div{flex:1 1 180px}
+.fields input{max-width:none}
+sup,sub{font-size:12px}
+h3{font-size:16.5px;margin:16px 0 6px;color:var(--accent)}
+details.help{margin-top:26px;border:1px solid var(--line);border-radius:12px;
+        padding:12px 18px;background:var(--card)}
+details.help summary{cursor:pointer;font-weight:600;font-size:17px;
+        color:var(--accent)}
+details.help p{margin:6px 0}
+details.help ol,details.help ul{margin:6px 0;padding-left:22px}
+details.help li{margin:4px 0}
+details.help table{border-collapse:collapse;margin:8px 0;font-size:15px}
+details.help th,details.help td{border:1px solid var(--line);
+        padding:4px 10px;text-align:center;background:#fff}
+details.help th{background:#fff;color:var(--muted);font-weight:600}
+table.gm{border-collapse:collapse;margin:10px 0;font:15px/1.2 Consolas,"Cascadia Mono",monospace}
+table.gm th,table.gm td{border:1px solid var(--line);min-width:34px;height:30px;
+        text-align:center;padding:0 4px;background:#fff}
+table.gm th{background:var(--card);color:var(--muted);font-weight:600}
+table.gm td.d{background:#e4e7ef}
+.adj{display:block;margin:8px 0}
+.adj code{display:inline-block;margin:0 8px 6px 0}
+details.help pre{font-family:Consolas,"Cascadia Mono",monospace;
+        background:#1e2430;color:#e7ecf5;padding:10px 12px;border-radius:9px;
+        font-size:14.5px;overflow-x:auto}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Графы: представление, кратчайший путь, число путей</h1>
+<p class="sub">11 класс, углублённый уровень. Обзорный практикум к седьмой паре:
+шесть задач по содержанию темы.</p>
+
+<div class="intro">
+  <dl>
+    <dt>Что нужно сделать</dt>
+    <dd>Шесть задач — по одной на каждый вопрос темы. Ответил верно — вопрос
+        закрыт. Ошибся — сразу видно, как это решается, а вопрос остаётся
+        открытым: его можно сдать ещё раз с новыми числами. Сколько закрыл,
+        столько и наработал. Времени нужно около пятнадцати минут: кратчайший
+        путь и подсчёт путей удобнее решать на черновике.</dd>
+    <dt>Отметка и добор</dt>
+    <dd>Закрыто 6 из 6 — «5», 5 — «4», 3 или 4 — «3». Дойдя до нужной
+        отметки, можно остановиться и забрать код сразу, а можно
+        <b>досдать оставшиеся вопросы</b> и получить код получше — решать
+        самому, до какой отметки добирать.</dd>
+    <dt>Ответ — целое число</dt>
+    <dd>Без единиц измерения и без пробелов: <code>34</code>, а не
+        <code>34 км</code>. На КЕГЭ ответ читает машина, и здесь так же.</dd>
+    <dt>Как сдать</dt>
+    <dd>В конце появится код работы и кнопка <b>«Сдать работу»</b>: впишешь
+        фамилию и класс, кнопка сама откроет форму с уже вписанным кодом.
+        Переписывать код руками не надо — на этом чаще всего и ошибаются.</dd>
+    <dt>Не успел на уроке</dt>
+    <dd>Открой эту же страницу дома и пройди целиком: вариант будет другой,
+        а сдаётся всё так же — одним кодом.</dd>
+  </dl>
+</div>
+
+<div class="progress">
+  <div class="ptop">
+    <h2>Вопросы темы</h2>
+    <span class="sp"></span>
+    <div class="score" id="scorebox">
+      <span>наработано на</span><b id="mark">—</b>
+    </div>
+  </div>
+  <div class="types" id="types"></div>
+  <p class="stats" id="stats"></p>
+</div>
+
+<div id="area"></div>
+
+<details class="help">
+  <summary>Подсказка: графы</summary>
+  <h3>Основные понятия</h3>
+  <p><b>Граф</b> — вершины и связи между ними. Связь без направления —
+     <b>ребро</b> (неориентированный граф), со стрелкой — <b>дуга</b>
+     (ориентированный). Если у связей есть числа (длина, цена, время),
+     граф <b>взвешенный</b>. <b>Степень вершины</b> — сколько рёбер из неё
+     выходит.</p>
+
+  <h3>Как граф записывают</h3>
+  <ul>
+    <li><b>матрица смежности</b> — таблица n × n, 1 в клетке: вершины
+        связаны. У неориентированного графа она симметрична, каждое ребро
+        записано дважды: <b>рёбер = единиц : 2</b>;</li>
+    <li><b>весовая матрица</b> — в клетке вес связи, пустая клетка — связи
+        нет;</li>
+    <li><b>списки смежности</b> — у каждой вершины перечислены соседи:
+        <code>А → Б, В</code>. У ориентированного графа строка вершины — это
+        выходящие дуги; входящие ищут по всем остальным спискам.</li>
+  </ul>
+
+  <h3>Виды графов</h3>
+  <ul>
+    <li><b>полный граф</b> — каждая вершина соединена с каждой:
+        <b>n · (n − 1) : 2</b> рёбер;</li>
+    <li><b>дерево</b> — связный граф без циклов: ровно <b>n − 1</b> рёбер.
+        Связный граф с m рёбрами становится деревом после удаления
+        <b>m − n + 1</b> рёбер.</li>
+  </ul>
+
+  <h3>Кратчайший путь (алгоритм Дейкстры)</h3>
+  <ol>
+    <li>у начальной вершины расстояние 0, у остальных — «не известно»;</li>
+    <li>взять ближайшую ещё не закреплённую вершину и закрепить её;</li>
+    <li>для каждого её соседа: если путь через неё короче записанного —
+        записать новое расстояние;</li>
+    <li>повторять, пока не закреплена нужная вершина.</li>
+  </ol>
+  <p>Прямая дорога не обязательно самая короткая — обход через другие
+     пункты бывает выгоднее.</p>
+
+  <h3>Число путей в графе без циклов</h3>
+  <p>Идти по вершинам от начальной: в начальную ведёт 1 путь, а в любую
+     другую — <b>сумма путей во все вершины, из которых в неё есть
+     дуга</b>.</p>
+  <table>
+    <tr><th>что спрашивают</th><th>как считать</th></tr>
+    <tr><td>через вершину X</td><td>(пути до X) · (пути от X до конца)</td></tr>
+    <tr><td>в обход X</td><td>вычеркнуть X со всеми дугами и пересчитать</td></tr>
+  </table>
+</details>
+
+</div>
+
+<script>
+/* ==== ЗАДАЧИ: вставлено gen.py, руками не править ==== */
+/* Обзорный тест-практикум к седьмой паре 11 класса (углублённый уровень).
+   Содержание ФГОС, уроки 13–14 официального плана: графы, виды графов,
+   матрица смежности, весовая матрица, списки смежности; кратчайший путь
+   между вершинами и число путей в ориентированном ациклическом графе.
+   В столбце «Задание ЕГЭ» плана у этих уроков стоит 1 и 23.
+
+   Единственный источник задач. В practice.html вписывается скриптом
+   gen.py между маркерами — руками страницу не править.
+
+   Ответ везде целое число: тест-практикум приучает к формату КЕГЭ, где
+   ответ сверяет машина. */
+
+const T_TYPES = [
+  "матрица смежности",
+  "списки смежности",
+  "кратчайший путь",
+  "число путей",
+  "виды графов",
+  "пути через вершину"
+];
+
+function tRng(seed) {
+  let s = seed >>> 0;
+  return function () {
+    s ^= s << 13; s >>>= 0;
+    s ^= s >> 17;
+    s ^= s << 5;  s >>>= 0;
+    return s / 4294967296;
+  };
+}
+
+function tRand(rng, a, b) { return a + Math.floor(rng() * (b - a + 1)); }
+function tPick(rng, arr) { return arr[tRand(rng, 0, arr.length - 1)]; }
+
+function tPl(n, one, few, many) {
+  const h = n % 100, t = n % 10;
+  if (h >= 11 && h <= 14) return many;
+  if (t === 1) return one;
+  if (t >= 2 && t <= 4) return few;
+  return many;
+}
+
+/* Й пропущена, как в заданиях ЕГЭ: её легко спутать с И. */
+const G_V = ["А", "Б", "В", "Г", "Д", "Е", "Ж", "З", "И", "К", "Л", "М"];
+
+/* -------------------------------------------------------------- механика */
+
+/* Таблица-матрица: первая строка и первый столбец — имена вершин,
+   диагональ затенена. cell(i, j) возвращает содержимое клетки. */
+function gTable(n, cell) {
+  let h = '<table class="gm"><tr><th></th>';
+  for (let j = 0; j < n; j++) h += "<th>" + G_V[j] + "</th>";
+  h += "</tr>";
+  for (let i = 0; i < n; i++) {
+    h += "<tr><th>" + G_V[i] + "</th>";
+    for (let j = 0; j < n; j++)
+      h += (i === j ? '<td class="d">' : "<td>") + cell(i, j) + "</td>";
+    h += "</tr>";
+  }
+  return h + "</table>";
+}
+
+/* Ациклический граф «дорог с односторонним движением»: дуги идут только
+   от вершины с меньшим номером к большей и не дальше чем на три шага
+   вперёд. У каждой вершины, кроме последней, есть выход, у каждой,
+   кроме первой, — вход: тупиков и недостижимых городов нет. */
+function gDag(rng, n) {
+  const arcs = [];
+  for (let i = 0; i < n - 1; i++) {
+    let out = 0;
+    for (let j = i + 1; j <= Math.min(n - 1, i + 3); j++)
+      if (rng() < 0.5) { arcs.push([i, j]); out++; }
+    if (!out) arcs.push([i, i + 1]);
+  }
+  for (let j = 1; j < n; j++)
+    if (!arcs.some(function (a) { return a[1] === j; })) arcs.push([j - 1, j]);
+  arcs.sort(function (a, b) { return a[0] - b[0] || a[1] - b[1]; });
+  return arcs;
+}
+
+/* Число путей из s во все вершины: в вершину ведёт столько путей,
+   сколько в сумме ведёт во все вершины, откуда в неё есть дуга. */
+function gPathsFrom(n, arcs, s, skip) {
+  const p = Array(n).fill(0);
+  p[s] = 1;
+  for (let j = s + 1; j < n; j++) {
+    if (j === skip) continue;
+    for (const a of arcs)
+      if (a[1] === j && a[0] !== skip) p[j] += p[a[0]];
+  }
+  return p;
+}
+
+function gArcs(arcs) {
+  return arcs.map(function (a) { return G_V[a[0]] + "→" + G_V[a[1]]; })
+    .join(" ");
+}
+
+/* ---------------------------------------------------------------- задачи */
+
+function tTask(type, rng) {
+  if (type === 0) return tAdjMatrix(rng);
+  if (type === 1) return tAdjLists(rng);
+  if (type === 2) return tShortest(rng);
+  if (type === 3) return tCountPaths(rng);
+  if (type === 4) return tKinds(rng);
+  return tViaVertex(rng);
+}
+
+/* 0. Матрица смежности: число рёбер или степень вершины. */
+function tAdjMatrix(rng) {
+  let n, m, edges, deg;
+  for (let k = 0; k < 100; k++) {
+    n = tRand(rng, 5, 7);
+    m = [];
+    for (let i = 0; i < n; i++) m.push(Array(n).fill(0));
+    edges = 0;
+    for (let i = 0; i < n; i++)
+      for (let j = i + 1; j < n; j++)
+        if (rng() < 0.45) { m[i][j] = m[j][i] = 1; edges++; }
+    deg = m.map(function (r) { return r.reduce(function (a, b) { return a + b; }, 0); });
+    if (Math.min.apply(null, deg) >= 1 && edges >= n) break;
+  }
+  const table = gTable(n, function (i, j) { return i === j ? "" : String(m[i][j]); });
+  const lead = "Неориентированный граф задан матрицей смежности: 1 в клетке " +
+    "означает, что вершины соединены ребром. " + table;
+  if (rng() < 0.5) {
+    return {
+      type: 0, kind: "edges", answer: String(edges),
+      question: lead + "Сколько рёбер в этом графе?",
+      explain: "Единиц в матрице " + (2 * edges) + ". Матрица неориентированного " +
+        "графа симметрична: каждое ребро записано дважды — в строке одной " +
+        "вершины и в строке другой. Поэтому рёбер вдвое меньше: " +
+        (2 * edges) + " : 2 = " + edges + "."
+    };
+  }
+  const v = tRand(rng, 0, n - 1);
+  const nb = [];
+  for (let j = 0; j < n; j++) if (m[v][j]) nb.push(G_V[j]);
+  return {
+    type: 0, kind: "degree", answer: String(deg[v]),
+    question: lead + "Какова степень вершины <b>" + G_V[v] + "</b>, то есть " +
+      "сколько рёбер из неё выходит?",
+    explain: "Степень вершины — число единиц в её строке (или в её столбце, " +
+      "это то же самое). В строке " + G_V[v] + " единицы стоят в столбцах " +
+      nb.join(", ") + " — степень " + deg[v] + "."
+  };
+}
+
+/* 1. Списки смежности ориентированного графа: сколько дуг входит в
+   вершину или в скольких вершинах не заканчивается ни одна дуга. Оба
+   вопроса требуют просмотреть ВСЕ списки, а не одну строку, — в этом и
+   разница между «откуда» и «куда». */
+function tAdjLists(rng) {
+  const kind = rng() < 0.5 ? "in" : "sources";
+  let n, adj, indeg, v, zero;
+  for (let k = 0; k < 200; k++) {
+    n = tRand(rng, 6, 7);
+    adj = [];
+    for (let i = 0; i < n; i++) {
+      const row = [];
+      for (let j = 0; j < n; j++) if (i !== j && rng() < 0.3) row.push(j);
+      adj.push(row);
+    }
+    /* Одна-две вершины без входящих дуг — иначе вопрос про них пуст. */
+    const cut = tRand(rng, 1, 2);
+    for (let c = 0; c < cut; c++) {
+      const w = tRand(rng, 0, n - 1);
+      for (let i = 0; i < n; i++)
+        adj[i] = adj[i].filter(function (j) { return j !== w; });
+    }
+    indeg = Array(n).fill(0);
+    let arcs = 0;
+    for (let i = 0; i < n; i++) for (const j of adj[i]) { indeg[j]++; arcs++; }
+    zero = [];
+    for (let i = 0; i < n; i++) if (!indeg[i]) zero.push(i);
+    v = tRand(rng, 0, n - 1);
+    if (arcs < n || !zero.length) continue;
+    if (kind === "in" && indeg[v] < 2) continue;
+    /* Список самой вершины не должен совпадать по длине с ответом —
+       иначе «посчитал её собственный список» тоже даёт верное число. */
+    if (kind === "in" && adj[v].length === indeg[v]) continue;
+    break;
+  }
+  let lists = '<span class="adj">';
+  for (let i = 0; i < n; i++)
+    lists += "<code>" + G_V[i] + " → " +
+      (adj[i].length ? adj[i].map(function (j) { return G_V[j]; }).join(", ") : "—") +
+      "</code> ";
+  lists = lists.trim() + "</span>";
+  const lead = "Ориентированный граф задан списками смежности: для каждой " +
+    "вершины перечислены вершины, в которые из неё ведут дуги. " + lists + " ";
+  if (kind === "in") {
+    const from = [];
+    for (let i = 0; i < n; i++) if (adj[i].indexOf(v) >= 0) from.push(G_V[i]);
+    return {
+      type: 1, kind: "in", answer: String(indeg[v]),
+      question: lead + "Сколько дуг <b>входит</b> в вершину <b>" + G_V[v] + "</b>?",
+      explain: "Строка " + G_V[v] + " говорит, куда из неё можно попасть, — это " +
+        "выходящие дуги, они не нужны. Входящие ищутся по всем остальным " +
+        "спискам: " + G_V[v] + " упомянута в списках " + from.join(", ") +
+        ", всего " + indeg[v] + "."
+    };
+  }
+  return {
+    type: 1, kind: "sources", answer: String(zero.length),
+    question: lead + "В скольких вершинах <b>не заканчивается ни одна</b> дуга " +
+      "(в них нельзя попасть ни из какой другой вершины)?",
+    explain: "Нужны вершины, которые не встречаются ни в одном списке справа " +
+      "от стрелки. Это " + zero.map(function (i) { return G_V[i]; }).join(", ") +
+      " — " + zero.length + "."
+  };
+}
+
+/* 2. Кратчайший путь по весовой матрице. Отбор: дорог не меньше восьми из
+   пятнадцати возможных, прямой дороги между концами нет или она длиннее
+   обхода, а в кратчайшем пути не меньше трёх дорог — иначе ответ читается
+   из одной клетки и задача не про алгоритм. */
+function tShortest(rng) {
+  let n, w, s, t, d, prev;
+  for (let k = 0; k < 400; k++) {
+    n = 6;
+    w = [];
+    for (let i = 0; i < n; i++) w.push(Array(n).fill(0));
+    let roads = 0;
+    for (let i = 0; i < n; i++)
+      for (let j = i + 1; j < n; j++)
+        if (rng() < 0.6) { w[i][j] = w[j][i] = tRand(rng, 1, 12); roads++; }
+    /* Редкая сеть вырождается в цепочку: путь один, выбирать не из чего. */
+    if (roads < 8) continue;
+    s = 0; t = tRand(rng, 3, n - 1);
+    /* Дейкстра на шести вершинах. */
+    d = Array(n).fill(Infinity); prev = Array(n).fill(-1);
+    const used = Array(n).fill(false);
+    d[s] = 0;
+    for (let r = 0; r < n; r++) {
+      let u = -1;
+      for (let i = 0; i < n; i++) if (!used[i] && (u < 0 || d[i] < d[u])) u = i;
+      if (d[u] === Infinity) break;
+      used[u] = true;
+      for (let i = 0; i < n; i++)
+        if (w[u][i] && d[u] + w[u][i] < d[i]) { d[i] = d[u] + w[u][i]; prev[i] = u; }
+    }
+    if (d.some(function (x) { return x === Infinity; })) continue;
+    let hops = 0;
+    for (let x = t; prev[x] >= 0; x = prev[x]) hops++;
+    if (hops < 3) continue;
+    if (w[s][t] && w[s][t] <= d[t]) continue;
+    break;
+  }
+  const route = [];
+  for (let x = t; x >= 0; x = prev[x]) route.unshift(x);
+  const parts = [];
+  for (let i = 1; i < route.length; i++) parts.push(w[route[i - 1]][route[i]]);
+  return {
+    type: 2, answer: String(d[t]),
+    question: "Между населёнными пунктами построены дороги, их длины (в " +
+      "километрах) даны в таблице. Пустая клетка — дороги нет. " +
+      gTable(n, function (i, j) { return w[i][j] ? String(w[i][j]) : ""; }) +
+      "Определите длину кратчайшего пути из пункта <b>" + G_V[s] +
+      "</b> в пункт <b>" + G_V[t] + "</b>. Передвигаться можно только по " +
+      "дорогам из таблицы.",
+    explain: "Расстояния от " + G_V[s] + " уточняются по одной вершине: берём " +
+      "ближайшую ещё не закреплённую и пробуем пройти через неё к соседям. " +
+      (w[s][t] ? "Прямая дорога " + G_V[s] + "–" + G_V[t] + " длиной " +
+        w[s][t] + " проигрывает обходу. " : "Прямой дороги нет. ") +
+      "Кратчайший путь: " + route.map(function (x) { return G_V[x]; }).join("–") +
+      ", " + parts.join(" + ") + " = " + d[t] + " км."
+  };
+}
+
+function gDagLead(n, arcs) {
+  return "Схема дорог между городами " + G_V[0] + ", " + G_V[1] + ", …, " +
+    G_V[n - 1] + " задана списком дорог. По каждой дороге можно двигаться " +
+    "только в направлении стрелки: <code>" + gArcs(arcs) + "</code>. ";
+}
+
+/* 3. Число путей в ациклическом графе. */
+function tCountPaths(rng) {
+  let n, arcs, p;
+  for (let k = 0; k < 400; k++) {
+    n = tRand(rng, 8, 10);
+    arcs = gDag(rng, n);
+    p = gPathsFrom(n, arcs, 0, -1);
+    if (p[n - 1] >= 8 && p[n - 1] <= 60) break;
+  }
+  return {
+    type: 3, answer: String(p[n - 1]),
+    question: gDagLead(n, arcs) + "Сколько существует различных путей из города <b>" +
+      G_V[0] + "</b> в город <b>" + G_V[n - 1] + "</b>?",
+    explain: "В город ведёт столько путей, сколько в сумме ведёт во все " +
+      "города, откуда в него есть дорога. Идём по порядку от " + G_V[0] +
+      ": " + p.map(function (x, i) { return G_V[i] + " = " + x; }).join(", ") +
+      ". Ответ " + p[n - 1] + "."
+  };
+}
+
+/* 4. Виды графов: полный граф и дерево. */
+function tKinds(rng) {
+  const kind = tPick(rng, ["complete", "vertices", "tree"]);
+  if (kind === "complete") {
+    const n = tRand(rng, 5, 25);
+    const e = n * (n - 1) / 2;
+    return {
+      type: 4, kind: kind, answer: String(e),
+      question: "В полном неориентированном графе <b>" + n + "</b> " +
+        tPl(n, "вершина", "вершины", "вершин") + " — каждая соединена ребром " +
+        "с каждой. Сколько в нём рёбер?",
+      explain: "Из каждой вершины выходит " + (n - 1) + " " +
+        tPl(n - 1, "ребро", "ребра", "рёбер") + ", но так каждое ребро " +
+        "посчитано дважды — с двух концов. " + n + " · " + (n - 1) + " : 2 = " + e + "."
+    };
+  }
+  if (kind === "vertices") {
+    const n = tRand(rng, 5, 25);
+    const e = n * (n - 1) / 2;
+    return {
+      type: 4, kind: kind, answer: String(n),
+      question: "В полном неориентированном графе (каждая вершина соединена " +
+        "ребром с каждой) <b>" + e + "</b> " + tPl(e, "ребро", "ребра", "рёбер") +
+        ". Сколько в нём вершин?",
+      explain: "В полном графе на n вершинах n · (n − 1) : 2 рёбер. Нужно " +
+        "n · (n − 1) = " + (2 * e) + ", это " + n + " · " + (n - 1) +
+        ". Вершин " + n + "."
+    };
+  }
+  const n = tRand(rng, 5, 15);
+  const e = tRand(rng, n, Math.min(n + 10, n * (n - 1) / 2));
+  return {
+    type: 4, kind: kind, answer: String(e - n + 1),
+    question: "Связный неориентированный граф содержит <b>" + n + "</b> " +
+      tPl(n, "вершину", "вершины", "вершин") + " и <b>" + e + "</b> " +
+      tPl(e, "ребро", "ребра", "рёбер") + ". Какое наименьшее число рёбер " +
+      "нужно удалить, чтобы он стал деревом — остался связным, но без циклов?",
+    explain: "В дереве на n вершинах ровно n − 1 рёбер: " + n + " − 1 = " + (n - 1) +
+      ". Лишних рёбер " + e + " − " + (n - 1) + " = " + (e - n + 1) +
+      ", и каждое из них можно убрать, не разрывая граф."
+  };
+}
+
+/* 5. Пути через вершину или в обход неё. */
+function tViaVertex(rng) {
+  const kind = rng() < 0.5 ? "via" : "avoid";
+  let n, arcs, total, x, via, a, b;
+  for (let k = 0; k < 400; k++) {
+    n = tRand(rng, 8, 10);
+    arcs = gDag(rng, n);
+    total = gPathsFrom(n, arcs, 0, -1)[n - 1];
+    if (total < 8 || total > 60) continue;
+    x = tRand(rng, 2, n - 3);
+    a = gPathsFrom(n, arcs, 0, -1)[x];
+    b = gPathsFrom(n, arcs, x, -1)[n - 1];
+    via = a * b;
+    if (via >= 1 && total - via >= 1) break;
+  }
+  const ans = kind === "via" ? via : total - via;
+  const how = "Путей из " + G_V[0] + " в " + G_V[x] + " — " + a + ", из " + G_V[x] +
+    " в " + G_V[n - 1] + " — " + b + "; любой путь до " + G_V[x] +
+    " продолжается любым путём после, значит через " + G_V[x] + " проходит " +
+    a + " · " + b + " = " + via + ".";
+  return {
+    type: 5, kind: kind, answer: String(ans),
+    question: gDagLead(n, arcs) + "Сколько существует различных путей из города <b>" +
+      G_V[0] + "</b> в город <b>" + G_V[n - 1] + "</b>, " +
+      (kind === "via" ? "<b>проходящих</b> через город <b>" :
+        "<b>не проходящих</b> через город <b>") + G_V[x] + "</b>?",
+    explain: kind === "via" ? how :
+      how + " Всего путей " + total + ", в обход " + G_V[x] + ": " + total +
+      " − " + via + " = " + ans + ". Тот же ответ даёт подсчёт, в котором " +
+      G_V[x] + " просто вычеркнут со всеми дорогами."
+  };
+}
+
+/* ------------------------------------------------------------- сборка */
+
+function tMake(seed) {
+  const rng = tRng(seed || 1);
+  const order = [0, 1, 2, 3, 4, 5];
+  for (let j = order.length - 1; j > 0; j--) {
+    const t = tRand(rng, 0, j);
+    const tmp = order[j]; order[j] = order[t]; order[t] = tmp;
+  }
+  return order.map(function (type) { return tTask(type, rng); });
+}
+
+function tCheck(task, raw) {
+  const s = String(raw === undefined || raw === null ? "" : raw)
+    .replace(/\s+/g, "");
+  if (!/^\d+$/.test(s)) return false;
+  return String(Number(s)) === task.answer;
+}
+/* ==== /ЗАДАЧИ ==== */
+
+/* Форма сдачи ДЗ — одна на все темы. Ссылку разносит set_form_link.py. */
+const FORM = "https://docs.google.com/forms/d/e/1FAIpQLSfQyhaxcnzn4ZaKSe_ZMsluw7qRQnrw_80H6SfrnYB5EThUIA/viewform?usp=pp_url&entry.853601231=ФАМИЛИЯ&entry.1091635917=КЛАСС&entry.487188307=КОД";
+
+const ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+const EPOCH = Date.UTC(2026, 0, 1);
+const PREFIX = "GF";
+const SCALE = [[6, 5], [5, 4], [3, 3]];
+
+const bin = (v, w) => v.toString(2).padStart(w, "0");
+
+/* Семибитными кусками строки: в нагрузке 33 бита, а побитовые операции в JS
+   32-битные — старший бит молча потерялся бы. */
+function checksum(bitstr){
+  let cs = 0x5B;
+  for (let i = 0; i < bitstr.length; i += 7)
+    cs ^= parseInt(bitstr.substr(i, 7).padEnd(7, "0"), 2);
+  return cs & 0x7F;
+}
+
+function makeCode(st){
+  const day = Math.max(0, Math.min(2047, Math.floor(
+      (Date.now() - EPOCH) / 86400000)));
+  const payload = bin(day, 11) + bin(Math.min(15, st.typesDone), 4) +
+                  bin(Math.min(15, st.cleanTypes), 4) +
+                  bin(Math.min(127, st.solved), 7) +
+                  bin(Math.min(127, st.wrong), 7);
+  const bitstr = payload + bin(checksum(payload), 7);
+  let out = "";
+  for (let i = 0; i < 40; i += 5)
+    out += ALPHABET[parseInt(bitstr.substr(i, 5), 2)];
+  return PREFIX + "-" + out.slice(0, 4) + "-" + out.slice(4);
+}
+
+/* ---------------------------------------------------------- состояние
+   Добор до желаемой отметки: вопрос закрывается одним верным ответом и
+   больше не спрашивается; ошибся — вопрос остаётся открытым и вернётся
+   в следующем раунде с новыми числами. Раунд — это проход по всем пока
+   не закрытым вопросам по одному разу. После раунда можно забрать код
+   (если закрыто хотя бы MIN_TO_FINISH) или досдать оставшиеся. */
+const T_COUNT = T_TYPES.length;
+const MIN_TO_FINISH = 3;
+
+let st;
+
+function esc(s){ return String(s).replace(/[&<>]/g, c =>
+  ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+
+function markFor(n){
+  for (const [need, m] of SCALE) if (n >= need) return m;
+  return null;
+}
+
+function wordQ(n){
+  const a = n % 100, b = a % 10;
+  if (a > 4 && a < 21) return "вопросов";
+  if (b === 1) return "вопрос";
+  if (b > 1 && b < 5) return "вопроса";
+  return "вопросов";
+}
+
+function newRng(){ return tRng((Date.now() ^ (Math.random() * 1e9)) >>> 0); }
+
+function shuffle(arr, rng){
+  const a = arr.slice();
+  for (let j = a.length - 1; j > 0; j--) {
+    const k = tRand(rng, 0, j);
+    const tmp = a[j]; a[j] = a[k]; a[k] = tmp;
+  }
+  return a;
+}
+
+function freshState(){
+  const s = {
+    closed: Array(T_COUNT).fill(false),
+    clean:  Array(T_COUNT).fill(true),
+    solved: 0, wrong: 0,
+    queue: [], qi: 0, cur: null
+  };
+  Object.defineProperty(s, "typesDone",
+    {get(){ return s.closed.filter(Boolean).length; }});
+  Object.defineProperty(s, "cleanTypes",
+    {get(){ return s.closed.filter((d, i) => d && s.clean[i]).length; }});
+  return s;
+}
+
+function paint(){
+  const box = document.getElementById("types");
+  box.innerHTML = "";
+  for (let i = 0; i < T_COUNT; i++) {
+    const el = document.createElement("span");
+    const isCur = st.cur && st.cur.type === i;
+    el.className = "chip" + (st.closed[i] ? " done" : isCur ? " cur" : "");
+    el.textContent = T_TYPES[i];
+    box.appendChild(el);
+  }
+  const done = st.typesDone;
+  const m = markFor(done);
+  const sb = document.getElementById("scorebox");
+  sb.className = "score" + (m ? " m" + m : "");
+  document.getElementById("mark").textContent = m ? m : "—";
+  document.getElementById("stats").textContent =
+    "Закрыто: " + done + " из " + T_COUNT + ". Решено задач: " + st.solved +
+    ", ошибок: " + st.wrong + ".";
+}
+
+function startRound(){
+  const open = [];
+  for (let i = 0; i < T_COUNT; i++) if (!st.closed[i]) open.push(i);
+  st.queue = shuffle(open, newRng());
+  st.qi = 0;
+  askNext();
+}
+
+function askNext(){
+  if (st.qi >= st.queue.length) { roundEnd(); return; }
+  st.cur = tTask(st.queue[st.qi], newRng());
+  renderTask();
+}
+
+function renderTask(){
+  const t = st.cur;
+  document.getElementById("area").innerHTML =
+    '<div class="card" id="task">' +
+      '<p class="tag">' + T_TYPES[t.type] + ' &middot; решено задач: ' +
+        st.solved + '</p>' +
+      '<div class="q">' + t.question + '</div>' +
+      '<div class="row">' +
+        '<input type="text" id="ans" autocomplete="off" spellcheck="false" ' +
+               'inputmode="numeric" placeholder="целое число">' +
+        '<button class="primary" id="go">Ответить</button>' +
+      '</div>' +
+      '<div class="verdict" id="v"></div>' +
+    '</div>';
+  const input = document.getElementById("ans");
+  input.focus();
+  input.addEventListener("keydown", function(e){
+    if (e.key === "Enter") judge();
+  });
+  document.getElementById("go").addEventListener("click", judge);
+  paint();
+}
+
+function judge(){
+  const t = st.cur;
+  const raw = document.getElementById("ans").value;
+  const ok = tCheck(t, raw);
+  if (ok) { st.closed[t.type] = true; st.solved++; }
+  else { st.wrong++; st.clean[t.type] = false; }
+
+  const card = document.getElementById("task");
+  card.className = "card " + (ok ? "ok" : "err");
+  document.getElementById("ans").disabled = true;
+  document.getElementById("go").disabled = true;
+  document.getElementById("v").className = "verdict " + (ok ? "ok" : "err");
+  document.getElementById("v").innerHTML = ok
+    ? "Правильно — вопрос закрыт."
+    : "Ошибка. Твой ответ: <code>" + esc(raw) + "</code>, верный: <code>" +
+      t.answer + "</code>. Вопрос остался открытым — вернётся при доборе.";
+  card.insertAdjacentHTML("beforeend",
+    '<div class="why">' + t.explain + '</div>' +
+    '<div class="row"><button class="primary" id="nx">Дальше</button></div>');
+  document.getElementById("nx").addEventListener("click", function(){
+    st.qi++;
+    askNext();
+  });
+  paint();
+}
+
+function roundEnd(){
+  st.cur = null;
+  paint();
+  const done = st.typesDone, open = T_COUNT - done;
+  if (done >= T_COUNT) { finish(); return; }
+
+  const m = markFor(done);
+  const up = SCALE.filter(s => s[0] > done).pop();
+  let msg;
+  if (!m) {
+    msg = "Пока закрыто <b>" + done + "</b> из " + T_COUNT + " — этого мало " +
+      "даже на «3» (нужно " + MIN_TO_FINISH + "). Досдай оставшиеся вопросы: " +
+      "числа будут новые.";
+  } else if (up) {
+    msg = "Наработано на <b>" + m + "</b> (закрыто " + done + " из " + T_COUNT +
+      "). Можно забрать код сейчас, а можно досдать ещё " + open + " " +
+      wordQ(open) + " и дойти до <b>" + up[1] + "</b>.";
+  } else {
+    msg = "Наработано на <b>" + m + "</b> (закрыто " + done + " из " + T_COUNT + ").";
+  }
+  const canFinish = done >= MIN_TO_FINISH;
+  document.getElementById("area").innerHTML =
+    '<div class="card">' +
+      '<h2>Раунд пройден</h2>' +
+      '<p>' + msg + '</p>' +
+      '<div class="row">' +
+        (open > 0 ? '<button class="primary" id="more">Досдать оставшиеся (' +
+          open + ')</button>' : '') +
+        (canFinish ? '<button id="stop"' + (open > 0 ? '' : ' class="primary"') +
+          '>Получить код' + (open > 0 ? ' сейчас' : '') + '</button>' : '') +
+      '</div>' +
+    '</div>';
+  const moreBtn = document.getElementById("more");
+  if (moreBtn) moreBtn.addEventListener("click", startRound);
+  const stopBtn = document.getElementById("stop");
+  if (stopBtn) stopBtn.addEventListener("click", finish);
+}
+
+function finish(){
+  const code = makeCode(st);
+  const m = markFor(st.typesDone);
+  const open = [];
+  for (let i = 0; i < T_COUNT; i++) if (!st.closed[i]) open.push(T_TYPES[i]);
+  document.getElementById("area").innerHTML =
+    '<div class="card">' +
+      '<h2>Работа завершена</h2>' +
+      '<p>Закрыто <b>' + st.typesDone + '</b> из ' + T_COUNT +
+        (m ? ', это отметка <b>' + m + '</b>' : '') + '.' +
+        (open.length ? ' Не закрыто: ' + open.join(", ") + '.' : '') +
+      '</p>' +
+      '<p>Код работы — его и надо сдать:</p>' +
+      '<div class="code">' + code + '</div>' +
+      '<div class="note">Код хранит дату, число закрытых вопросов, число ' +
+        'решённых и неверных задач. Переписывать его руками не нужно: впиши ' +
+        'фамилию и класс, и кнопка откроет форму с уже подставленным кодом.</div>' +
+      '<div class="fields">' +
+        '<div><label for="fam">Фамилия и имя</label>' +
+          '<input type="text" id="fam" autocomplete="off"></div>' +
+        '<div><label for="kls">Класс</label>' +
+          '<input type="text" id="kls" autocomplete="off" value="11"></div>' +
+      '</div>' +
+      '<div class="row">' +
+        '<button id="send" class="primary">Сдать работу</button>' +
+        '<button id="again">Начать заново</button>' +
+      '</div>' +
+      '<p class="stats">«Начать заново» откроет все ' + T_COUNT + ' вопросов с ' +
+        'нуля — для дополнительной тренировки. Сдавать нужно тот код, который ' +
+        'получен сейчас.</p>' +
+    '</div>';
+  document.getElementById("send").addEventListener("click", function(){
+    const fam = document.getElementById("fam").value.trim();
+    if (!fam) { document.getElementById("fam").focus(); return; }
+    const kls = document.getElementById("kls").value.trim() || "11";
+    window.open(FORM.replace("ФАМИЛИЯ", encodeURIComponent(fam))
+                    .replace("КЛАСС", encodeURIComponent(kls))
+                    .replace("КОД", encodeURIComponent(code)), "_blank");
+  });
+  document.getElementById("again").addEventListener("click", resetAll);
+  paint();
+}
+
+function resetAll(){
+  st = freshState();
+  startRound();
+}
+
+resetAll();
+</script>
+<p class="ai-mark" style="margin:34px auto 0;max-width:860px;padding-top:12px;border-top:1px solid #d9dce6;color:#5c6070;font:13px/1.5 "Segoe UI",system-ui,sans-serif">Материалы подготовлены с использованием технологий искусственного интеллекта.</p>
+</body>
+</html>

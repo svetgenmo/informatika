@@ -1,0 +1,1045 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Деревья — обзорный практикум</title>
+<meta name="description" content="Обзорный практикум 11 класса (углублённый) к восьмой паре: устройство дерева, двоичное дерево, дерево поиска, прямой, симметричный и обратный обход, арифметическое выражение в виде дерева, дерево вызовов рекурсивной функции.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E11%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{margin:0;padding:20px 16px 60px;font:17px/1.55 "Segoe UI",system-ui,sans-serif}
+.wrap{max-width:820px;margin:0 auto}
+h1{font-size:23px;margin:0 0 4px}
+h2{font-size:18px;margin:0 0 10px}
+.sub{color:var(--muted);font-size:15px;margin:0 0 18px}
+code{font-family:Consolas,"Cascadia Mono",monospace;background:var(--card);
+     border:1px solid var(--line);border-radius:5px;padding:1px 6px;
+     font-size:15px;letter-spacing:.04em}
+.intro{border:1px solid var(--line);border-radius:12px;background:var(--card);
+       padding:14px 18px;margin-bottom:18px}
+.intro dl{margin:0}
+.intro dt{font-weight:700;margin-top:10px}
+.intro dt:first-child{margin-top:0}
+.intro dd{margin:2px 0 0}
+.progress{border:2px solid var(--accent);border-radius:12px;padding:12px 16px;
+          background:#fff;margin-bottom:18px}
+.ptop{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.ptop h2{margin:0}
+.sp{flex:1 1 auto}
+.score{display:flex;align-items:baseline;gap:10px;color:var(--muted);font-size:15px}
+.score b{font:700 34px/1 "Segoe UI",system-ui,sans-serif;color:var(--ink);
+         min-width:40px;text-align:center;border:2px solid var(--line);
+         border-radius:8px;padding:2px 8px}
+.m5 b{color:var(--ok);border-color:var(--ok-line)}
+.m4 b{color:var(--accent);border-color:#a9c6e8}
+.m3 b{color:#8a5a00;border-color:var(--hi-line)}
+.types{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);border-radius:20px;padding:4px 12px;
+      font-size:14px;color:var(--muted);background:var(--card)}
+.chip.done{border-color:var(--ok-line);background:var(--ok-bg);color:var(--ok);
+           font-weight:600}
+.chip.miss{border-color:var(--err-line);background:var(--err-bg);color:var(--err)}
+.chip.cur{border-color:var(--accent);color:var(--accent);font-weight:600}
+.card{border:1px solid var(--line);border-radius:12px;padding:16px 18px;
+      background:#fff;margin-bottom:14px}
+.card.ok{border-color:var(--ok-line);background:var(--ok-bg)}
+.card.err{border-color:var(--err-line);background:var(--err-bg)}
+.tag{font-size:13px;color:var(--muted);margin:0 0 6px}
+.q{font-size:17px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+input[type=text]{font:16px/1 Consolas,monospace;padding:10px 12px;border-radius:8px;
+                 border:1px solid var(--line);width:100%;max-width:340px}
+button{font:600 15px/1 inherit;padding:11px 16px;border-radius:9px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);color:var(--muted)}
+.verdict{margin-top:10px;font-size:15.5px;font-weight:600}
+.verdict.ok{color:var(--ok)}
+.verdict.err{color:var(--err)}
+.why{margin-top:8px;font-size:15.5px;color:var(--ink)}
+.note{border:1px solid var(--hi-line);background:var(--hi-bg);border-radius:10px;
+      padding:11px 15px;margin:12px 0;font-size:15.5px}
+.code{font:700 26px/1.2 Consolas,monospace;letter-spacing:.06em;
+      background:var(--card);border:2px dashed var(--accent);border-radius:12px;
+      padding:16px;text-align:center;margin:12px 0;user-select:all}
+.stats{color:var(--muted);font-size:14px}
+label{display:block;font-size:14px;color:var(--muted);margin-bottom:3px}
+.fields{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0}
+.fields div{flex:1 1 180px}
+.fields input{max-width:none}
+sup,sub{font-size:12px}
+h3{font-size:16.5px;margin:16px 0 6px;color:var(--accent)}
+details.help{margin-top:26px;border:1px solid var(--line);border-radius:12px;
+        padding:12px 18px;background:var(--card)}
+details.help summary{cursor:pointer;font-weight:600;font-size:17px;
+        color:var(--accent)}
+details.help p{margin:6px 0}
+details.help ol,details.help ul{margin:6px 0;padding-left:22px}
+details.help li{margin:4px 0}
+details.help table{border-collapse:collapse;margin:8px 0;font-size:15px}
+details.help th,details.help td{border:1px solid var(--line);
+        padding:4px 10px;text-align:center;background:#fff}
+details.help th{background:#fff;color:var(--muted);font-weight:600}
+table.gm{border-collapse:collapse;margin:10px 0;font:15px/1.2 Consolas,"Cascadia Mono",monospace}
+table.gm th,table.gm td{border:1px solid var(--line);min-width:34px;height:30px;
+        text-align:center;padding:0 4px;background:#fff}
+table.gm th{background:var(--card);color:var(--muted);font-weight:600}
+table.gm td.d{background:#e4e7ef}
+.adj{display:block;margin:8px 0}
+.adj code{display:inline-block;margin:0 8px 6px 0}
+details.help pre{font-family:Consolas,"Cascadia Mono",monospace;
+        background:#1e2430;color:#e7ecf5;padding:10px 12px;border-radius:9px;
+        font-size:14.5px;overflow-x:auto}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Деревья: двоичные, поиска, обходы, выражения</h1>
+<p class="sub">11 класс, углублённый уровень. Обзорный практикум к восьмой паре:
+шесть задач по содержанию темы.</p>
+
+<div class="intro">
+  <dl>
+    <dt>Что нужно сделать</dt>
+    <dd>Шесть задач — по одной на каждый вопрос темы. Ответил верно — вопрос
+        закрыт. Ошибся — сразу видно, как это решается, а вопрос остаётся
+        открытым: его можно сдать ещё раз с новыми числами. Сколько закрыл,
+        столько и наработал. Времени нужно около пятнадцати минут: дерево
+        поиска, обход и дерево вызовов удобнее нарисовать на черновике.</dd>
+    <dt>Отметка и добор</dt>
+    <dd>Закрыто 6 из 6 — «5», 5 — «4», 3 или 4 — «3». Дойдя до нужной
+        отметки, можно остановиться и забрать код сразу, а можно
+        <b>досдать оставшиеся вопросы</b> и получить код получше — решать
+        самому, до какой отметки добирать.</dd>
+    <dt>Ответ — число или буквы подряд</dt>
+    <dd>Число — без единиц и пробелов: <code>34</code>. В задаче на обход —
+        русские заглавные буквы вершин подряд: <code>ГЛЕБМДА</code>, а не
+        <code>Г, Л, Е…</code>. На КЕГЭ ответ читает машина, и здесь так же.</dd>
+    <dt>Как сдать</dt>
+    <dd>В конце появится код работы и кнопка <b>«Сдать работу»</b>: впишешь
+        фамилию и класс, кнопка сама откроет форму с уже вписанным кодом.
+        Переписывать код руками не надо — на этом чаще всего и ошибаются.</dd>
+    <dt>Не успел на уроке</dt>
+    <dd>Открой эту же страницу дома и пройди целиком: вариант будет другой,
+        а сдаётся всё так же — одним кодом.</dd>
+  </dl>
+</div>
+
+<div class="progress">
+  <div class="ptop">
+    <h2>Вопросы темы</h2>
+    <span class="sp"></span>
+    <div class="score" id="scorebox">
+      <span>наработано на</span><b id="mark">—</b>
+    </div>
+  </div>
+  <div class="types" id="types"></div>
+  <p class="stats" id="stats"></p>
+</div>
+
+<div id="area"></div>
+
+<details class="help">
+  <summary>Подсказка: деревья</summary>
+  <h3>Основные понятия</h3>
+  <p><b>Дерево</b> — связный граф без циклов: на n вершинах ровно
+     <b>n − 1</b> рёбер. Одна вершина — <b>корень</b>, у остальных ровно
+     один <b>родитель</b>. Вершины без потомков — <b>листья</b>.
+     <b>Потомки</b> вершины — всё поддерево под ней, не только ближайшие.
+     <b>Высота</b> — число рёбер в самом длинном пути от корня до листа;
+     <b>уровней</b> на один больше.</p>
+
+  <h3>Двоичное дерево</h3>
+  <ul>
+    <li>у каждой вершины не больше двух потомков — <b>левый</b> и
+        <b>правый</b>, и это не одно и то же;</li>
+    <li>на уровне k — не больше 2<sup>k−1</sup> вершин; на L уровнях — не
+        больше <b>2<sup>L</sup> − 1</b>;</li>
+    <li>если у каждой вершины 0 или 2 потомка — листьев на
+        <b>один больше</b>, чем вершин с двумя потомками.</li>
+  </ul>
+
+  <h3>Дерево поиска</h3>
+  <p>Первое число — корень. Каждое следующее спускается от корня: меньше —
+     влево, больше — вправо, пока не найдёт пустое место. Поиск идёт тем же
+     путём: сравнений столько, сколько вершин на пути.</p>
+
+  <h3>Обходы двоичного дерева</h3>
+  <table>
+    <tr><th>обход</th><th>порядок в каждом поддереве</th></tr>
+    <tr><td>прямой</td><td>корень, левое, правое</td></tr>
+    <tr><td>симметричный</td><td>левое, корень, правое</td></tr>
+    <tr><td>обратный</td><td>левое, правое, корень</td></tr>
+  </table>
+  <p>У дерева поиска симметричный обход выдаёт числа по возрастанию.</p>
+
+  <h3>Выражение в виде дерева</h3>
+  <p>В листьях числа, в остальных вершинах знаки; знак применяется к левому и
+     правому потомку — именно в этом порядке. Прямой обход даёт
+     <b>прямую польскую запись</b> (<code>− · 9 7 2</code>), обратный —
+     <b>обратную</b> (<code>9 7 · 2 −</code>). Обратную читают слева
+     направо со стеком: число — в стек, знак снимает два верхних (первым
+     снятое — правое) и кладёт результат.</p>
+
+  <h3>Дерево вызовов</h3>
+  <p>Рекурсивная функция F(n) = F(n − a) + F(n − b) порождает дерево: у
+     вызова два потомка, вызов с базовым n — лист. Всего вызовов
+     C(n) = 1 + C(n − a) + C(n − b), у листа C = 1; считать снизу вверх.</p>
+</details>
+
+</div>
+
+<script>
+/* ==== ЗАДАЧИ: вставлено gen.py, руками не править ==== */
+/* Обзорный тест-практикум к восьмой паре 11 класса (углублённый уровень).
+   Содержание ФГОС, уроки 15–16 официального плана: деревья, двоичное
+   дерево, дерево поиска, способы обхода дерева, арифметическое выражение
+   в виде дерева (урок 16 — резерв: практикум по обходам и выражениям).
+   В столбце «Задание ЕГЭ» плана у урока 15 стоит 16 и 21: отсюда дерево
+   вызовов рекурсивной функции.
+
+   Единственный источник задач. В practice.html вписывается скриптом
+   gen.py между маркерами — руками страницу не править.
+
+   Ответ — целое число или, в обходах, буквы вершин подряд. Сверка знак в
+   знак, как на КЕГЭ; tHint объясняет, что не так с формой ответа. */
+
+const T_TYPES = [
+  "устройство дерева",
+  "двоичное дерево",
+  "дерево поиска",
+  "обходы дерева",
+  "дерево выражения",
+  "дерево вызовов"
+];
+
+function tRng(seed) {
+  let s = seed >>> 0;
+  return function () {
+    s ^= s << 13; s >>>= 0;
+    s ^= s >> 17;
+    s ^= s << 5;  s >>>= 0;
+    return s / 4294967296;
+  };
+}
+
+function tRand(rng, a, b) { return a + Math.floor(rng() * (b - a + 1)); }
+function tPick(rng, arr) { return arr[tRand(rng, 0, arr.length - 1)]; }
+
+function tPl(n, one, few, many) {
+  const h = n % 100, t = n % 10;
+  if (h >= 11 && h <= 14) return many;
+  if (t === 1) return one;
+  if (t >= 2 && t <= 4) return few;
+  return many;
+}
+
+/* Й пропущена, как в заданиях ЕГЭ: её легко спутать с И. */
+const D_V = ["А", "Б", "В", "Г", "Д", "Е", "Ж", "З", "И", "К", "Л", "М"];
+
+/* -------------------------------------------------------------- механика */
+
+/* Случайные имена для n вершин: буквы не идут по порядку дерева, иначе
+   обход читается из алфавита. */
+function dNames(rng, n) {
+  const a = D_V.slice();
+  for (let j = a.length - 1; j > 0; j--) {
+    const k = tRand(rng, 0, j);
+    const t = a[j]; a[j] = a[k]; a[k] = t;
+  }
+  return a.slice(0, n);
+}
+
+function dSorted(names) {
+  return names.slice().sort(function (x, y) {
+    return D_V.indexOf(x) - D_V.indexOf(y);
+  });
+}
+
+function dTable(head, rows) {
+  let h = '<table class="gm"><tr>';
+  for (const c of head) h += "<th>" + c + "</th>";
+  h += "</tr>";
+  for (const r of rows) {
+    h += "<tr><th>" + r[0] + "</th>";
+    for (let i = 1; i < r.length; i++) h += "<td>" + r[i] + "</td>";
+    h += "</tr>";
+  }
+  return h + "</table>";
+}
+
+/* Двоичное дерево на n вершинах: вершина 0 — корень, каждая следующая
+   встаёт в случайное свободное место (левое или правое) уже стоящих. */
+function dBinary(rng, n) {
+  const L = Array(n).fill(-1), R = Array(n).fill(-1);
+  for (let v = 1; v < n; v++) {
+    const free = [];
+    for (let u = 0; u < v; u++) {
+      if (L[u] < 0) free.push([u, 0]);
+      if (R[u] < 0) free.push([u, 1]);
+    }
+    const f = tPick(rng, free);
+    if (f[1] === 0) L[f[0]] = v; else R[f[0]] = v;
+  }
+  return {L: L, R: R};
+}
+
+function dLevels(L, R, v) {
+  if (v < 0) return 0;
+  return 1 + Math.max(dLevels(L, R, L[v]), dLevels(L, R, R[v]));
+}
+
+function dOrder(L, R, v, kind, out) {
+  if (v < 0) return out;
+  if (kind === "pre") out.push(v);
+  dOrder(L, R, L[v], kind, out);
+  if (kind === "in") out.push(v);
+  dOrder(L, R, R[v], kind, out);
+  if (kind === "post") out.push(v);
+  return out;
+}
+
+/* ---------------------------------------------------------------- задачи */
+
+function tTask(type, rng) {
+  if (type === 0) return tStructure(rng);
+  if (type === 1) return tBinaryCount(rng);
+  if (type === 2) return tSearchTree(rng);
+  if (type === 3) return tTraversal(rng);
+  if (type === 4) return tExpression(rng);
+  return tCallTree(rng);
+}
+
+/* 0. Устройство дерева: листья, высота, потомки вершины. Дерево задано
+   списками потомков, корень назван. */
+function tStructure(rng) {
+  const kind = tPick(rng, ["leaves", "height", "desc"]);
+  let n, par, kids, depth, names, leaves, height, x, desc;
+  for (let k = 0; k < 400; k++) {
+    n = tRand(rng, 8, 11);
+    par = [-1]; depth = [0];
+    for (let v = 1; v < n; v++) {
+      const p = tRand(rng, Math.max(0, v - 4), v - 1);
+      par.push(p); depth.push(depth[p] + 1);
+    }
+    kids = [];
+    for (let v = 0; v < n; v++) kids.push([]);
+    for (let v = 1; v < n; v++) kids[par[v]].push(v);
+    leaves = kids.filter(function (c) { return !c.length; }).length;
+    height = Math.max.apply(null, depth);
+    desc = function (v) {
+      let s = 0;
+      for (const c of kids[v]) s += 1 + desc(c);
+      return s;
+    };
+    x = tRand(rng, 1, n - 1);
+    if (height < 3 || height > 6) continue;
+    if (leaves < 3 || leaves > n - 3) continue;
+    /* Потомки: внуки обязательны, иначе хватает строки самой вершины. */
+    if (kind === "desc" && desc(x) < kids[x].length + 2) continue;
+    /* Высота не должна совпасть с числом листьев — две разные ошибки
+       чтения не должны давать верный ответ. */
+    if (kind === "height" && height === leaves) continue;
+    break;
+  }
+  names = dNames(rng, n);
+  const byName = dSorted(names);
+  let lists = '<span class="adj">';
+  for (const nm of byName) {
+    const v = names.indexOf(nm);
+    lists += "<code>" + nm + " → " + (kids[v].length ?
+      kids[v].map(function (c) { return names[c]; }).join(", ") : "—") + "</code> ";
+  }
+  lists = lists.trim() + "</span>";
+  const lead = "Дерево задано списками: у каждой вершины перечислены её " +
+    "непосредственные потомки (прочерк — потомков нет). Корень — <b>" +
+    names[0] + "</b>. " + lists + " ";
+  if (kind === "leaves") {
+    const lv = [];
+    for (let v = 0; v < n; v++) if (!kids[v].length) lv.push(names[v]);
+    return {
+      type: 0, kind: kind, answer: String(leaves),
+      question: lead + "Сколько в этом дереве <b>листьев</b>?",
+      explain: "Лист — вершина без потомков, у неё в списке прочерк: " +
+        dSorted(lv).join(", ") + ". Всего " + leaves + "."
+    };
+  }
+  if (kind === "height") {
+    let deep = 0;
+    for (let v = 0; v < n; v++) if (depth[v] === height) { deep = v; break; }
+    const path = [];
+    for (let v = deep; v >= 0; v = par[v]) path.unshift(names[v]);
+    return {
+      type: 0, kind: kind, answer: String(height),
+      question: lead + "Сколько <b>рёбер</b> в самом длинном пути от корня " +
+        "до листа (это высота дерева)?",
+      explain: "Идём от корня вниз по уровням: потомки корня на глубине 1, " +
+        "их потомки на глубине 2 и так далее. Глубже всех " + names[deep] +
+        ": путь " + path.join("–") + ", рёбер " + height + "."
+    };
+  }
+  const all = [];
+  (function walk(v) { for (const c of kids[v]) { all.push(names[c]); walk(c); } })(x);
+  return {
+    type: 0, kind: kind, answer: String(desc(x)),
+    question: lead + "Сколько <b>всего потомков</b> (не только " +
+      "непосредственных) у вершины <b>" + names[x] + "</b>?",
+    explain: "Потомки — всё поддерево под вершиной, не только её строка. " +
+      "Из " + names[x] + " выходят " + kids[x].map(function (c) { return names[c]; })
+        .join(", ") + ", дальше спускаемся по их спискам: " +
+      dSorted(all).join(", ") + ". Всего " + desc(x) + "."
+  };
+}
+
+/* 1. Двоичное дерево: счёт вершин, листьев, уровней. */
+function tBinaryCount(rng) {
+  const kind = tPick(rng, ["full", "leaves", "levels"]);
+  if (kind === "full") {
+    const L = tRand(rng, 3, 10);
+    const n = Math.pow(2, L) - 1;
+    return {
+      type: 1, kind: kind, answer: String(n),
+      question: "Двоичное дерево заполнено полностью: у каждой вершины, кроме " +
+        "листьев, два потомка, и все листья стоят на последнем уровне. Уровней " +
+        "<b>" + L + "</b> (корень — первый уровень). Сколько в дереве вершин?",
+      explain: "На каждом следующем уровне вершин вдвое больше: " +
+        (L <= 4 ? [1, 2, 4, 8].slice(0, L).join(", ") : "1, 2, 4, …, " + Math.pow(2, L - 1)) + ". Сумма 1 + 2 + … + 2<sup>" + (L - 1) +
+        "</sup> = 2<sup>" + L + "</sup> − 1 = " + n + "."
+    };
+  }
+  if (kind === "leaves") {
+    const k = tRand(rng, 3, 60);
+    return {
+      type: 1, kind: kind, answer: String(k + 1),
+      question: "В двоичном дереве у каждой вершины либо два потомка, либо ни " +
+        "одного. Вершин с двумя потомками <b>" + k + "</b>. Сколько в дереве " +
+        "листьев?",
+      explain: "Рёбер в дереве на одно меньше, чем вершин. Рёбра выходят только " +
+        "из вершин с двумя потомками: 2 · " + k + " = " + (2 * k) + ". Значит, " +
+        "вершин " + (2 * k + 1) + ", из них листьев " + (2 * k + 1) + " − " + k +
+        " = " + (k + 1) + ". Короче: листьев всегда на один больше."
+    };
+  }
+  let n, L;
+  for (let t = 0; t < 50; t++) {
+    n = tRand(rng, 6, 300);
+    L = Math.ceil(Math.log2(n + 1));
+    if (Math.pow(2, L) - 1 !== n) break;
+  }
+  return {
+    type: 1, kind: kind, answer: String(L),
+    question: "Двоичное дерево содержит <b>" + n + "</b> " +
+      tPl(n, "вершину", "вершины", "вершин") + ". Какое наименьшее число " +
+      "уровней может в нём быть (корень — первый уровень)?",
+    explain: "Уровней меньше всего, когда дерево заполнено плотно: на L уровнях " +
+      "помещается не больше 2<sup>L</sup> − 1 вершин. 2<sup>" + (L - 1) +
+      "</sup> − 1 = " + (Math.pow(2, L - 1) - 1) + " — мало, 2<sup>" + L +
+      "</sup> − 1 = " + (Math.pow(2, L) - 1) + " — хватает. Уровней " + L + "."
+  };
+}
+
+/* 2. Дерево поиска: числа добавляются по порядку. */
+function tSearchTree(rng) {
+  const kind = tPick(rng, ["compare", "levels", "parent"]);
+  let keys, L, R, depth, par, x, levels;
+  for (let t = 0; t < 400; t++) {
+    const cnt = tRand(rng, 8, 10);
+    keys = [];
+    while (keys.length < cnt) {
+      const v = tRand(rng, 10, 99);
+      if (keys.indexOf(v) < 0) keys.push(v);
+    }
+    L = Array(cnt).fill(-1); R = Array(cnt).fill(-1);
+    depth = [0]; par = [-1];
+    for (let i = 1; i < cnt; i++) {
+      let u = 0, d = 1;
+      for (;;) {
+        if (keys[i] < keys[u]) {
+          if (L[u] < 0) { L[u] = i; break; }
+          u = L[u];
+        } else {
+          if (R[u] < 0) { R[u] = i; break; }
+          u = R[u];
+        }
+        d++;
+      }
+      depth.push(d); par.push(u);
+    }
+    levels = Math.max.apply(null, depth) + 1;
+    x = tRand(rng, 1, cnt - 1);
+    if (levels < 4 || levels > 6) continue;
+    if (kind !== "levels" && depth[x] < 2) continue;
+    /* Родитель не должен быть предыдущим числом в списке — иначе ответ
+       угадывается без дерева. */
+    if (kind === "parent" && par[x] === x - 1) continue;
+    break;
+  }
+  const lead = "В пустое дерево поиска (слева от вершины — меньшие числа, " +
+    "справа — большие) по очереди добавили числа: <code>" + keys.join(" ") +
+    "</code>. ";
+  const path = [];
+  for (let v = x; v >= 0; v = par[v]) path.unshift(keys[v]);
+  if (kind === "compare") {
+    return {
+      type: 2, kind: kind, answer: String(depth[x] + 1),
+      question: lead + "Поиск начинается с корня. Сколько сравнений понадобится, " +
+        "чтобы найти число <b>" + keys[x] + "</b>? Считается каждое сравнение с " +
+        "числом в вершине, включая последнее, когда число найдено.",
+      explain: "Построим дерево: первое число — корень, каждое следующее " +
+        "спускается влево, если меньше, и вправо, если больше. Путь поиска: " +
+        path.join(" → ") + " — " + path.length + " " +
+        tPl(path.length, "вершина", "вершины", "вершин") + ", столько и сравнений."
+    };
+  }
+  if (kind === "parent") {
+    return {
+      type: 2, kind: kind, answer: String(keys[par[x]]),
+      question: lead + "Какое число стоит в вершине, непосредственным потомком " +
+        "которой стало число <b>" + keys[x] + "</b>?",
+      explain: "Число " + keys[x] + " спускается от корня: " + path.join(" → ") +
+        ". Оно встало под " + keys[par[x]] + " — " +
+        (keys[x] < keys[par[x]] ? "слева, потому что меньше" : "справа, потому что больше") +
+        ". Порядок в списке тут ничего не говорит: родитель — не предыдущее число."
+    };
+  }
+  let deep = 0;
+  for (let i = 0; i < keys.length; i++) if (depth[i] + 1 === levels) { deep = i; break; }
+  const dp = [];
+  for (let v = deep; v >= 0; v = par[v]) dp.unshift(keys[v]);
+  return {
+    type: 2, kind: kind, answer: String(levels),
+    question: lead + "Сколько уровней в получившемся дереве (корень — первый " +
+      "уровень)?",
+    explain: "Строим дерево и следим за глубиной каждого нового числа. Глубже " +
+      "всех " + keys[deep] + ": путь " + dp.join(" → ") + ", это " + levels +
+      " " + tPl(levels, "уровень", "уровня", "уровней") + "."
+  };
+}
+
+/* 3. Обходы двоичного дерева: прямой, симметричный, обратный. */
+const D_ORDERS = {
+  pre: ["прямого", "корень, затем левое поддерево, затем правое"],
+  in: ["симметричного", "левое поддерево, затем корень, затем правое"],
+  post: ["обратного", "левое поддерево, затем правое, затем корень"]
+};
+
+function tTraversal(rng) {
+  const kind = tPick(rng, ["pre", "in", "post"]);
+  let n, t, names, seq;
+  for (let k = 0; k < 400; k++) {
+    n = tRand(rng, 7, 9);
+    t = dBinary(rng, n);
+    const lv = dLevels(t.L, t.R, 0);
+    let single = 0;
+    for (let v = 0; v < n; v++) if ((t.L[v] < 0) !== (t.R[v] < 0)) single++;
+    if (lv < 4 || lv > 5 || !single) continue;
+    names = dNames(rng, n);
+    const pre = dOrder(t.L, t.R, 0, "pre", []).map(function (v) { return names[v]; }).join("");
+    const ino = dOrder(t.L, t.R, 0, "in", []).map(function (v) { return names[v]; }).join("");
+    const post = dOrder(t.L, t.R, 0, "post", []).map(function (v) { return names[v]; }).join("");
+    if (pre === ino || ino === post || pre === post) continue;
+    seq = kind === "pre" ? pre : kind === "in" ? ino : post;
+    /* Ответ не должен читаться из таблицы сверху вниз. */
+    if (seq === dSorted(names).join("")) continue;
+    break;
+  }
+  const rows = dSorted(names).map(function (nm) {
+    const v = names.indexOf(nm);
+    return [nm, t.L[v] < 0 ? "—" : names[t.L[v]], t.R[v] < 0 ? "—" : names[t.R[v]]];
+  });
+  const o = D_ORDERS[kind];
+  return {
+    type: 3, kind: kind, answer: seq,
+    question: "Двоичное дерево задано таблицей: для каждой вершины указаны левый " +
+      "и правый потомок. Корень — <b>" + names[0] + "</b>. " +
+      dTable(["вершина", "левый", "правый"], rows) +
+      "Запишите вершины в порядке <b>" + o[0] + "</b> обхода (" + o[1] +
+      "). Ответ — буквы подряд, без пробелов.",
+    explain: "Правило «" + o[1] + "» применяется в каждом поддереве заново, " +
+      "начиная с корня " + names[0] + ". Получается " + seq.split("").join(" ") +
+      ". Для сравнения: прямой — " + dOrder(t.L, t.R, 0, "pre", []).map(function (v) { return names[v]; }).join("") +
+      ", симметричный — " + dOrder(t.L, t.R, 0, "in", []).map(function (v) { return names[v]; }).join("") +
+      ", обратный — " + dOrder(t.L, t.R, 0, "post", []).map(function (v) { return names[v]; }).join("") + "."
+  };
+}
+
+/* 4. Дерево арифметического выражения: таблица вершин, прямая или
+   обратная запись. Операции + - *, числа однозначные. */
+function dExpr(rng, ops) {
+  /* Узел: {op, l, r} или {num}. Растим, заменяя случайный лист операцией. */
+  let root = {num: tRand(rng, 1, 9)};
+  const leaves = [root];
+  for (let i = 0; i < ops; i++) {
+    const idx = tRand(rng, 0, leaves.length - 1);
+    const lf = leaves[idx];
+    delete lf.num;
+    lf.op = tPick(rng, ["+", "-", "*"]);
+    lf.l = {num: tRand(rng, 1, 9)};
+    lf.r = {num: tRand(rng, 1, 9)};
+    leaves.splice(idx, 1, lf.l, lf.r);
+  }
+  return root;
+}
+
+function dVal(e) {
+  if (e.op === undefined) return e.num;
+  const a = dVal(e.l), b = dVal(e.r);
+  return e.op === "+" ? a + b : e.op === "-" ? a - b : a * b;
+}
+
+function dInfix(e, top) {
+  if (e.op === undefined) return String(e.num);
+  const s = dInfix(e.l, false) + " " + (e.op === "*" ? "·" : e.op === "-" ? "−" : "+") +
+    " " + dInfix(e.r, false);
+  return top ? s : "(" + s + ")";
+}
+
+function dWalk(e, kind, out) {
+  const me = e.op === undefined ? String(e.num) : e.op;
+  if (kind === "prefix") out.push(me);
+  if (e.op !== undefined) { dWalk(e.l, kind, out); dWalk(e.r, kind, out); }
+  if (kind === "postfix") out.push(me);
+  return out;
+}
+
+function tExpression(rng) {
+  const kind = tPick(rng, ["table", "postfix", "prefix"]);
+  let e, v;
+  for (let k = 0; k < 400; k++) {
+    e = dExpr(rng, tRand(rng, 3, 4));
+    v = dVal(e);
+    const ops = dWalk(e, "prefix", []).join("");
+    if (ops.indexOf("-") < 0 || ops.indexOf("*") < 0) continue;
+    if (v < 1 || v > 150) continue;
+    /* Порядок имеет значение: вычисление «слева направо без дерева»
+       должно давать другое число. */
+    const flat = dWalk(e, "postfix", []).filter(function (s) { return /\d/.test(s); });
+    const signs = dWalk(e, "postfix", []).filter(function (s) { return !/\d/.test(s); });
+    let naive = Number(flat[0]);
+    for (let i = 0; i < signs.length; i++) {
+      const b = Number(flat[i + 1]);
+      naive = signs[i] === "+" ? naive + b : signs[i] === "-" ? naive - b : naive * b;
+    }
+    if (naive === v) continue;
+    break;
+  }
+  const how = "Выражение со скобками: " + dInfix(e, true) + " = " + v + ".";
+  if (kind === "table") {
+    /* Нумеруем вершины обходом в ширину, буквы — случайно. */
+    const nodes = [e];
+    for (let i = 0; i < nodes.length; i++)
+      if (nodes[i].op !== undefined) nodes.push(nodes[i].l, nodes[i].r);
+    const names = dNames(rng, nodes.length);
+    const rows = dSorted(names).map(function (nm) {
+      const nd = nodes[names.indexOf(nm)];
+      if (nd.op === undefined) return [nm, String(nd.num), "—", "—"];
+      return [nm, nd.op === "*" ? "·" : nd.op === "-" ? "−" : "+",
+        names[nodes.indexOf(nd.l)], names[nodes.indexOf(nd.r)]];
+    });
+    return {
+      type: 4, kind: kind, answer: String(v),
+      question: "Арифметическое выражение записано деревом: в листьях числа, в " +
+        "остальных вершинах знаки операций, которые применяются к значению " +
+        "левого и правого потомка (именно в таком порядке). Корень — <b>" +
+        names[0] + "</b>. " + dTable(["вершина", "содержимое", "левый", "правый"], rows) +
+        "Вычислите значение выражения.",
+      explain: "Считаем снизу вверх: значение вершины — операция над значениями " +
+        "её потомков, левый всегда первый (это важно для вычитания). " + how
+    };
+  }
+  const tokens = dWalk(e, kind, []);
+  const shown = tokens.map(function (s) { return s === "*" ? "·" : s === "-" ? "−" : s; });
+  return {
+    type: 4, kind: kind, answer: String(v),
+    question: "Дерево арифметического выражения обошли " +
+      (kind === "postfix" ? "<b>обратным</b> обходом (левое поддерево, правое, " +
+        "вершина) — получилась обратная польская запись:" :
+        "<b>прямым</b> обходом (вершина, левое поддерево, правое) — получилась " +
+        "прямая польская запись:") +
+      " <code>" + shown.join(" ") + "</code>. Вычислите значение выражения.",
+    explain: (kind === "postfix" ?
+      "Обратную запись читают слева направо со стеком: число кладут в стек, знак " +
+      "снимает два верхних числа (первым снятое — правое) и кладёт результат. " :
+      "Прямую запись удобно читать справа налево со стеком: число кладут в стек, " +
+      "знак снимает два верхних числа (первым снятое — левое) и кладёт результат. ") +
+      how
+  };
+}
+
+/* 5. Дерево вызовов рекурсивной функции (линия задания 16 ЕГЭ). */
+function tCallTree(rng) {
+  const kind = rng() < 0.5 ? "calls" : "times";
+  let a, b, th, N, k, calls, times;
+  for (let t = 0; t < 400; t++) {
+    const p = tPick(rng, [[1, 2], [1, 3], [2, 3], [1, 2]]);
+    a = p[0]; b = p[1];
+    th = tRand(rng, 1, 3);
+    N = tRand(rng, th + 4, th + 12);
+    const memo = {};
+    calls = function (n) {
+      if (n <= th) return 1;
+      if (memo[n] === undefined) memo[n] = 1 + calls(n - a) + calls(n - b);
+      return memo[n];
+    };
+    /* Сколько раз вызвано F(m) при вычислении F(N). */
+    times = function (m) {
+      const cnt = {};
+      cnt[N] = 1;
+      for (let n = N; n > m; n--) {
+        if (!cnt[n] || n <= th) continue;
+        cnt[n - a] = (cnt[n - a] || 0) + cnt[n];
+        cnt[n - b] = (cnt[n - b] || 0) + cnt[n];
+      }
+      return cnt[m] || 0;
+    };
+    if (kind === "calls" && (calls(N) < 9 || calls(N) > 150)) continue;
+    k = tRand(rng, Math.max(th - b + 1, 1), N - 2);
+    if (kind === "times" && (times(k) < 3 || times(k) > 60)) continue;
+    break;
+  }
+  const lead = "Функция задана так: F(n) = 1 при n ≤ <b>" + th + "</b>; " +
+    "F(n) = F(n − <b>" + a + "</b>) + F(n − <b>" + b + "</b>) при n > " + th +
+    ". Значение F(<b>" + N + "</b>) вычисляют по этому правилу, без запоминания " +
+    "уже найденных значений. ";
+  const tab = [];
+  for (let n = Math.max(1, th); n <= N; n++) tab.push("C(" + n + ") = " + calls(n));
+  if (kind === "calls") {
+    return {
+      type: 5, kind: kind, answer: String(calls(N)),
+      question: lead + "Сколько всего раз будет вычислена функция F, считая и " +
+        "самый первый вызов F(" + N + ")?",
+      explain: "Вызовы образуют дерево: у вызова с n > " + th + " два потомка, " +
+        "F(n − " + a + ") и F(n − " + b + "), вызов с n ≤ " + th + " — лист. " +
+        "Число вершин поддерева C(n) = 1 + C(n − " + a + ") + C(n − " + b +
+        "), для листа (n ≤ " + th + ") C = 1. Считаем снизу: " + tab.join(", ") + "."
+    };
+  }
+  const steps = [];
+  const cnt = {};
+  cnt[N] = 1;
+  for (let n = N; n > k; n--) {
+    if (!cnt[n] || n <= th) continue;
+    cnt[n - a] = (cnt[n - a] || 0) + cnt[n];
+    cnt[n - b] = (cnt[n - b] || 0) + cnt[n];
+  }
+  for (let n = N; n >= k; n--) if (cnt[n]) steps.push("F(" + n + ") — " + cnt[n]);
+  return {
+    type: 5, kind: kind, answer: String(times(k)),
+    question: lead + "Сколько раз при этом будет вычислено F(<b>" + k + "</b>)?",
+    explain: "Идём по дереву вызовов сверху вниз, от больших n к меньшим: каждый " +
+      "вызов F(n) с n > " + th + " по разу вызывает F(n − " + a + ") и F(n − " + b +
+      "), так что число вызовов переходит к ним целиком. " + steps.join(", ") + "."
+  };
+}
+
+/* ------------------------------------------------------------- сборка */
+
+function tMake(seed) {
+  const rng = tRng(seed || 1);
+  const order = [0, 1, 2, 3, 4, 5];
+  for (let j = order.length - 1; j > 0; j--) {
+    const t = tRand(rng, 0, j);
+    const tmp = order[j]; order[j] = order[t]; order[t] = tmp;
+  }
+  return order.map(function (type) { return tTask(type, rng); });
+}
+
+/* Сверка знак в знак. Прощаются только пробелы по краям — их не видно. */
+function tCheck(task, raw) {
+  const s = String(raw === undefined || raw === null ? "" : raw).trim();
+  return s === task.answer;
+}
+
+/* Что не так с ФОРМОЙ ответа. null — форма в порядке, ошибка в сути. */
+function tHint(task, raw) {
+  const s = String(raw === undefined || raw === null ? "" : raw).trim();
+  if (!s) return "Ответ пустой.";
+  if (/^[А-ЯЁ]+$/.test(task.answer)) {
+    if (/[\s,.;]/.test(s)) return "Буквы пишутся подряд — без пробелов и запятых.";
+    if (/[A-Za-z]/.test(s)) return "В ответе латинские буквы — нужны русские.";
+    if (s !== s.toUpperCase()) return "Буквы пишутся заглавными.";
+    if (s.length !== task.answer.length)
+      return "В дереве " + task.answer.length + " вершин — в ответе должно быть " +
+        task.answer.length + " букв, а их " + s.length + ".";
+    if (new Set(s.split("")).size !== s.length)
+      return "Буква повторяется: каждая вершина обходится один раз.";
+    return null;
+  }
+  if (/^-?\d+$/.test(s)) return null;
+  if (/\d/.test(s)) return "Только число — без единиц, пробелов и знаков.";
+  return "Ответ — целое число.";
+}
+/* ==== /ЗАДАЧИ ==== */
+
+/* Форма сдачи ДЗ — одна на все темы. Ссылку разносит set_form_link.py. */
+const FORM = "https://docs.google.com/forms/d/e/1FAIpQLSfQyhaxcnzn4ZaKSe_ZMsluw7qRQnrw_80H6SfrnYB5EThUIA/viewform?usp=pp_url&entry.853601231=ФАМИЛИЯ&entry.1091635917=КЛАСС&entry.487188307=КОД";
+
+const ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+const EPOCH = Date.UTC(2026, 0, 1);
+const PREFIX = "DR";
+const SCALE = [[6, 5], [5, 4], [3, 3]];
+
+const bin = (v, w) => v.toString(2).padStart(w, "0");
+
+/* Семибитными кусками строки: в нагрузке 33 бита, а побитовые операции в JS
+   32-битные — старший бит молча потерялся бы. */
+function checksum(bitstr){
+  let cs = 0x5B;
+  for (let i = 0; i < bitstr.length; i += 7)
+    cs ^= parseInt(bitstr.substr(i, 7).padEnd(7, "0"), 2);
+  return cs & 0x7F;
+}
+
+function makeCode(st){
+  const day = Math.max(0, Math.min(2047, Math.floor(
+      (Date.now() - EPOCH) / 86400000)));
+  const payload = bin(day, 11) + bin(Math.min(15, st.typesDone), 4) +
+                  bin(Math.min(15, st.cleanTypes), 4) +
+                  bin(Math.min(127, st.solved), 7) +
+                  bin(Math.min(127, st.wrong), 7);
+  const bitstr = payload + bin(checksum(payload), 7);
+  let out = "";
+  for (let i = 0; i < 40; i += 5)
+    out += ALPHABET[parseInt(bitstr.substr(i, 5), 2)];
+  return PREFIX + "-" + out.slice(0, 4) + "-" + out.slice(4);
+}
+
+/* ---------------------------------------------------------- состояние
+   Добор до желаемой отметки: вопрос закрывается одним верным ответом и
+   больше не спрашивается; ошибся — вопрос остаётся открытым и вернётся
+   в следующем раунде с новыми числами. Раунд — это проход по всем пока
+   не закрытым вопросам по одному разу. После раунда можно забрать код
+   (если закрыто хотя бы MIN_TO_FINISH) или досдать оставшиеся. */
+const T_COUNT = T_TYPES.length;
+const MIN_TO_FINISH = 3;
+
+let st;
+
+function esc(s){ return String(s).replace(/[&<>]/g, c =>
+  ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+
+function markFor(n){
+  for (const [need, m] of SCALE) if (n >= need) return m;
+  return null;
+}
+
+function wordQ(n){
+  const a = n % 100, b = a % 10;
+  if (a > 4 && a < 21) return "вопросов";
+  if (b === 1) return "вопрос";
+  if (b > 1 && b < 5) return "вопроса";
+  return "вопросов";
+}
+
+function newRng(){ return tRng((Date.now() ^ (Math.random() * 1e9)) >>> 0); }
+
+function shuffle(arr, rng){
+  const a = arr.slice();
+  for (let j = a.length - 1; j > 0; j--) {
+    const k = tRand(rng, 0, j);
+    const tmp = a[j]; a[j] = a[k]; a[k] = tmp;
+  }
+  return a;
+}
+
+function freshState(){
+  const s = {
+    closed: Array(T_COUNT).fill(false),
+    clean:  Array(T_COUNT).fill(true),
+    solved: 0, wrong: 0,
+    queue: [], qi: 0, cur: null
+  };
+  Object.defineProperty(s, "typesDone",
+    {get(){ return s.closed.filter(Boolean).length; }});
+  Object.defineProperty(s, "cleanTypes",
+    {get(){ return s.closed.filter((d, i) => d && s.clean[i]).length; }});
+  return s;
+}
+
+function paint(){
+  const box = document.getElementById("types");
+  box.innerHTML = "";
+  for (let i = 0; i < T_COUNT; i++) {
+    const el = document.createElement("span");
+    const isCur = st.cur && st.cur.type === i;
+    el.className = "chip" + (st.closed[i] ? " done" : isCur ? " cur" : "");
+    el.textContent = T_TYPES[i];
+    box.appendChild(el);
+  }
+  const done = st.typesDone;
+  const m = markFor(done);
+  const sb = document.getElementById("scorebox");
+  sb.className = "score" + (m ? " m" + m : "");
+  document.getElementById("mark").textContent = m ? m : "—";
+  document.getElementById("stats").textContent =
+    "Закрыто: " + done + " из " + T_COUNT + ". Решено задач: " + st.solved +
+    ", ошибок: " + st.wrong + ".";
+}
+
+function startRound(){
+  const open = [];
+  for (let i = 0; i < T_COUNT; i++) if (!st.closed[i]) open.push(i);
+  st.queue = shuffle(open, newRng());
+  st.qi = 0;
+  askNext();
+}
+
+function askNext(){
+  if (st.qi >= st.queue.length) { roundEnd(); return; }
+  st.cur = tTask(st.queue[st.qi], newRng());
+  renderTask();
+}
+
+function renderTask(){
+  const t = st.cur;
+  document.getElementById("area").innerHTML =
+    '<div class="card" id="task">' +
+      '<p class="tag">' + T_TYPES[t.type] + ' &middot; решено задач: ' +
+        st.solved + '</p>' +
+      '<div class="q">' + t.question + '</div>' +
+      '<div class="row">' +
+        '<input type="text" id="ans" autocomplete="off" spellcheck="false" ' +
+               'placeholder="ответ">' +
+        '<button class="primary" id="go">Ответить</button>' +
+      '</div>' +
+      '<div class="verdict" id="v"></div>' +
+    '</div>';
+  const input = document.getElementById("ans");
+  input.focus();
+  input.addEventListener("keydown", function(e){
+    if (e.key === "Enter") judge();
+  });
+  document.getElementById("go").addEventListener("click", judge);
+  paint();
+}
+
+function judge(){
+  const t = st.cur;
+  const raw = document.getElementById("ans").value;
+  const ok = tCheck(t, raw);
+  if (ok) { st.closed[t.type] = true; st.solved++; }
+  else { st.wrong++; st.clean[t.type] = false; }
+
+  const card = document.getElementById("task");
+  card.className = "card " + (ok ? "ok" : "err");
+  document.getElementById("ans").disabled = true;
+  document.getElementById("go").disabled = true;
+  document.getElementById("v").className = "verdict " + (ok ? "ok" : "err");
+  document.getElementById("v").innerHTML = ok
+    ? "Правильно — вопрос закрыт."
+    : "Ошибка. Твой ответ: <code>" + esc(raw) + "</code>, верный: <code>" +
+      t.answer + "</code>." + (tHint(t, raw) ? " " + tHint(t, raw) : "") +
+      " Вопрос остался открытым — вернётся при доборе.";
+  card.insertAdjacentHTML("beforeend",
+    '<div class="why">' + t.explain + '</div>' +
+    '<div class="row"><button class="primary" id="nx">Дальше</button></div>');
+  document.getElementById("nx").addEventListener("click", function(){
+    st.qi++;
+    askNext();
+  });
+  paint();
+}
+
+function roundEnd(){
+  st.cur = null;
+  paint();
+  const done = st.typesDone, open = T_COUNT - done;
+  if (done >= T_COUNT) { finish(); return; }
+
+  const m = markFor(done);
+  const up = SCALE.filter(s => s[0] > done).pop();
+  let msg;
+  if (!m) {
+    msg = "Пока закрыто <b>" + done + "</b> из " + T_COUNT + " — этого мало " +
+      "даже на «3» (нужно " + MIN_TO_FINISH + "). Досдай оставшиеся вопросы: " +
+      "числа будут новые.";
+  } else if (up) {
+    msg = "Наработано на <b>" + m + "</b> (закрыто " + done + " из " + T_COUNT +
+      "). Можно забрать код сейчас, а можно досдать ещё " + open + " " +
+      wordQ(open) + " и дойти до <b>" + up[1] + "</b>.";
+  } else {
+    msg = "Наработано на <b>" + m + "</b> (закрыто " + done + " из " + T_COUNT + ").";
+  }
+  const canFinish = done >= MIN_TO_FINISH;
+  document.getElementById("area").innerHTML =
+    '<div class="card">' +
+      '<h2>Раунд пройден</h2>' +
+      '<p>' + msg + '</p>' +
+      '<div class="row">' +
+        (open > 0 ? '<button class="primary" id="more">Досдать оставшиеся (' +
+          open + ')</button>' : '') +
+        (canFinish ? '<button id="stop"' + (open > 0 ? '' : ' class="primary"') +
+          '>Получить код' + (open > 0 ? ' сейчас' : '') + '</button>' : '') +
+      '</div>' +
+    '</div>';
+  const moreBtn = document.getElementById("more");
+  if (moreBtn) moreBtn.addEventListener("click", startRound);
+  const stopBtn = document.getElementById("stop");
+  if (stopBtn) stopBtn.addEventListener("click", finish);
+}
+
+function finish(){
+  const code = makeCode(st);
+  const m = markFor(st.typesDone);
+  const open = [];
+  for (let i = 0; i < T_COUNT; i++) if (!st.closed[i]) open.push(T_TYPES[i]);
+  document.getElementById("area").innerHTML =
+    '<div class="card">' +
+      '<h2>Работа завершена</h2>' +
+      '<p>Закрыто <b>' + st.typesDone + '</b> из ' + T_COUNT +
+        (m ? ', это отметка <b>' + m + '</b>' : '') + '.' +
+        (open.length ? ' Не закрыто: ' + open.join(", ") + '.' : '') +
+      '</p>' +
+      '<p>Код работы — его и надо сдать:</p>' +
+      '<div class="code">' + code + '</div>' +
+      '<div class="note">Код хранит дату, число закрытых вопросов, число ' +
+        'решённых и неверных задач. Переписывать его руками не нужно: впиши ' +
+        'фамилию и класс, и кнопка откроет форму с уже подставленным кодом.</div>' +
+      '<div class="fields">' +
+        '<div><label for="fam">Фамилия и имя</label>' +
+          '<input type="text" id="fam" autocomplete="off"></div>' +
+        '<div><label for="kls">Класс</label>' +
+          '<input type="text" id="kls" autocomplete="off" value="11"></div>' +
+      '</div>' +
+      '<div class="row">' +
+        '<button id="send" class="primary">Сдать работу</button>' +
+        '<button id="again">Начать заново</button>' +
+      '</div>' +
+      '<p class="stats">«Начать заново» откроет все ' + T_COUNT + ' вопросов с ' +
+        'нуля — для дополнительной тренировки. Сдавать нужно тот код, который ' +
+        'получен сейчас.</p>' +
+    '</div>';
+  document.getElementById("send").addEventListener("click", function(){
+    const fam = document.getElementById("fam").value.trim();
+    if (!fam) { document.getElementById("fam").focus(); return; }
+    const kls = document.getElementById("kls").value.trim() || "11";
+    window.open(FORM.replace("ФАМИЛИЯ", encodeURIComponent(fam))
+                    .replace("КЛАСС", encodeURIComponent(kls))
+                    .replace("КОД", encodeURIComponent(code)), "_blank");
+  });
+  document.getElementById("again").addEventListener("click", resetAll);
+  paint();
+}
+
+function resetAll(){
+  st = freshState();
+  startRound();
+}
+
+resetAll();
+</script>
+<p class="ai-mark" style="margin:34px auto 0;max-width:860px;padding-top:12px;border-top:1px solid #d9dce6;color:#5c6070;font:13px/1.5 "Segoe UI",system-ui,sans-serif">Материалы подготовлены с использованием технологий искусственного интеллекта.</p>
+</body>
+</html>
