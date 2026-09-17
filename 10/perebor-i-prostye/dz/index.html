@@ -1,0 +1,1335 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Домашнее задание — перебор и простые числа</title>
+<meta name="description" content="Домашнее задание 10 класса (углублённый) к шестому занятию: что даёт range, for или while, делители числа, перебор в уме как в задании 25 ЕГЭ, поиск данных, на которых чужая программа врёт, и вопросы про границы range, проверку до корня и простые числа.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E10%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{margin:0;padding:20px 16px 60px;font:17px/1.55 "Segoe UI",system-ui,sans-serif}
+.wrap{max-width:820px;margin:0 auto}
+h1{font-size:23px;margin:0 0 4px}
+h2{font-size:18px;margin:0 0 10px}
+.sub{color:var(--muted);font-size:15px;margin:0 0 18px}
+code,pre{font-family:Consolas,"Cascadia Mono",monospace}
+pre{background:#1e2430;color:#e7ecf5;padding:13px 16px;border-radius:10px;
+    overflow-x:auto;font-size:15px;line-height:1.5;margin:10px 0}
+code{background:var(--card);border:1px solid var(--line);border-radius:5px;
+     padding:1px 5px;font-size:15px}
+pre code{background:none;border:0;padding:0;color:inherit;font-size:inherit}
+.intro{border:1px solid var(--line);border-radius:12px;background:var(--card);
+       padding:14px 18px;margin-bottom:18px}
+.intro dl{margin:0}
+.intro dt{font-weight:700;margin-top:10px}
+.intro dt:first-child{margin-top:0}
+.intro dd{margin:2px 0 0}
+.progress{border:2px solid var(--accent);border-radius:12px;padding:12px 16px;
+          background:#fff;margin-bottom:18px}
+.ptop{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.ptop h2{margin:0}
+.sp{flex:1 1 auto}
+.score{display:flex;align-items:baseline;gap:10px;color:var(--muted);font-size:15px}
+.score b{font:700 34px/1 "Segoe UI",system-ui,sans-serif;color:var(--ink);
+         min-width:40px;text-align:center;border:2px solid var(--line);
+         border-radius:8px;padding:2px 8px}
+.m5 b{color:var(--ok);border-color:var(--ok-line)}
+.m4 b{color:var(--accent);border-color:#a9c6e8}
+.m3 b{color:#8a5a00;border-color:var(--hi-line)}
+.types{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);border-radius:20px;padding:4px 12px;
+      font-size:14px;color:var(--muted);background:var(--card)}
+.chip.done{border-color:var(--ok-line);background:var(--ok-bg);color:var(--ok);
+           font-weight:600}
+.chip.cur{border-color:var(--accent);color:var(--accent);font-weight:600}
+.card{border:1px solid var(--line);border-radius:12px;padding:16px 18px;
+      background:#fff;margin-bottom:14px}
+.card.ok{border-color:var(--ok-line);background:var(--ok-bg)}
+.card.err{border-color:var(--err-line);background:var(--err-bg)}
+.tag{font-size:13px;color:var(--muted);margin:0 0 6px}
+.inp{font-size:15px;color:var(--muted);margin:4px 0}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px}
+input[type=text]{font:16px/1 Consolas,monospace;padding:10px 12px;border-radius:8px;
+                 border:1px solid var(--line);width:100%;max-width:340px}
+button{font:600 15px/1 inherit;padding:11px 16px;border-radius:9px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);color:var(--muted)}
+.verdict{margin-top:10px;font-size:15.5px}
+.verdict.ok{color:var(--ok)}
+.verdict.err{color:var(--err)}
+.note{border:1px solid var(--hi-line);background:var(--hi-bg);border-radius:10px;
+      padding:11px 15px;margin:12px 0;font-size:15.5px}
+.code{font:700 26px/1.2 Consolas,monospace;letter-spacing:.06em;
+      background:var(--card);border:2px dashed var(--accent);border-radius:12px;
+      padding:16px;text-align:center;margin:12px 0;user-select:all}
+.stats{color:var(--muted);font-size:14px}
+label{display:block;font-size:14px;color:var(--muted);margin-bottom:3px}
+.fields{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0}
+.fields div{flex:1 1 180px}
+.fields input{max-width:none}
+details{margin-top:10px;border:1px dashed var(--line);border-radius:9px;padding:8px 12px}
+summary{cursor:pointer;color:var(--accent);font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Домашнее задание — перебор и простые числа</h1>
+<p class="sub">10 класс, углублённый уровень. Читаем программы и предсказываем,
+что напечатает Python; перебираем числа в уме, как в задании 25 ЕГЭ; ищем данные,
+на которых чужая программа врёт; отвечаем на вопросы про range, делители и
+простые числа. Python не нужен.</p>
+
+<div class="intro">
+  <dl>
+    <dt>Что нужно сделать</dt>
+    <dd>Закрыть шесть типов задач — по одной верно решённой на каждый. Ошибся —
+        тип не закрыт, и следующей придёт задача того же типа: разбор только что
+        показан, примени его.</dd>
+    <dt>Сколько закроешь — на то и наработал</dt>
+    <dd>Шесть типов — «5», пять — «4», четыре — «3». Меньше четырёх кода не
+        будет: сдавать нечего.</dd>
+    <dt>Ответ — ровно то, что на экране</dt>
+    <dd>Если программа печатает несколько строк, перечисли их через пробел.
+        Считать в уме и на бумаге: на проверочной Python тоже не будет, а
+        запустив программу, ответ узнаешь, но не научишься.</dd>
+    <dt>Как сдать</dt>
+    <dd>В конце появится кнопка <b>«Сдать работу»</b>: впишешь фамилию и
+        класс, кнопка сама откроет форму с уже вписанным кодом. Переписывать
+        код руками не надо — именно на этом чаще всего и ошибаются.</dd>
+  </dl>
+</div>
+
+<div class="progress">
+  <div class="ptop">
+    <h2>Что осталось закрыть</h2>
+    <span class="sp"></span>
+    <div class="score" id="scorebox">
+      <span>наработано на</span><b id="mark">—</b>
+    </div>
+  </div>
+  <div class="types" id="types"></div>
+  <p class="stats" id="stats"></p>
+</div>
+
+<div id="area"></div>
+
+</div>
+
+<script>
+/* ==== ТИПЫ: вставлено gen.py, руками не править ==== */
+/* Перебор, делители и простые числа — источник правды для тренажёра практикума,
+   ДЗ и проверочной. Вставляется скриптом gen.py --sync между маркерами.
+   Руками в html не править.
+
+   Шесть типов задач — три урока плана (11, 12, 13), сшитые в одну пару:
+     0 «range: что перебирает»   — границы, шаг, отрицательный шаг, пустой range
+     1 «for или while»           — один цикл двумя способами, значение после выхода
+     2 «цифры числа»             — произведение, минимум, счёт, первая цифра
+     3 «делители»                — перебор от 1 до n: количество, сумма, список
+     4 «простое или нет»         — наименьший делитель, до корня, разложение
+     5 «перебор в уме (ЕГЭ 25)»  — условие словами, без кода, ответ — число
+
+   Ответ у задач 0–4 — ровно то, что напечатает Python, и gen.py --selftest
+   берёт этот код КАК ЕСТЬ, исполняет настоящим Python и сверяет. Задачи типа 5
+   кода не содержат: Python пересчитывает их по параметрам (meta) сам.        */
+
+const T_TYPES = [
+  'range: что перебирает',
+  'for или while',
+  'цифры числа',
+  'делители',
+  'простое или нет',
+  'перебор в уме (ЕГЭ 25)'
+];
+const T_PER_TYPE = 2;      /* задач каждого типа в наборе тренажёра */
+
+/* Что сказать, когда ответ не сошёлся: приём, а не ответ ([[answer-fingerprints]]). */
+const T_HINTS = [
+  'Выпиши, какие числа даёт range: от первого числа, шагом третьего, ПОКА не дошли '
+    + 'до второго — само второе число не входит. Пустой range даёт ноль проходов.',
+  'Проверь, что остаётся в переменной ПОСЛЕ цикла: у while это первое значение, '
+    + 'на котором условие стало ложным, у for — последнее из range.',
+  'Веди таблицу по проходам: n % 10 — последняя цифра, n // 10 отрезает её. '
+    + 'И посмотри, с какого значения стартует накопитель.',
+  'Перебери d от 1 до n подряд и отметь те, на которые n делится без остатка. '
+    + 'Не забудь про 1 и про сам n — если, конечно, range до них доходит.',
+  'Ищи делители по порядку с двойки. Если ни один d с d · d ≤ n не подошёл — '
+    + 'число простое. Помни: 1 — не простое, а 2 — простое.',
+  'Перебирай числа по порядку и для каждого выписывай делители парами: '
+    + 'd и n // d. У квадрата одна пара «схлопывается», поэтому делителей нечётное число.'
+];
+
+function tRng(seed) {
+  let s = seed >>> 0;
+  return function () {
+    s = (s * 1664525 + 1013904223) >>> 0;
+    return s / 4294967296;
+  };
+}
+function tRand(rng, a, b) { return a + Math.floor(rng() * (b - a + 1)); }
+function tPick(rng, arr) { return arr[tRand(rng, 0, arr.length - 1)]; }
+function tShuffle(rng, arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = tRand(rng, 0, i);
+    const tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+  }
+  return a;
+}
+
+/* --------------------------------------------- арифметика по правилам Python */
+function pyDiv(a, b) { return Math.floor(a / b); }                 /* a // b */
+function pyMod(a, b) { return a - b * Math.floor(a / b); }         /* a % b  */
+function pyRange(a, b, s) {
+  const out = [];
+  if (s > 0) for (let i = a; i < b; i += s) out.push(i);
+  else for (let i = a; i > b; i += s) out.push(i);
+  return out;
+}
+function divisorsOf(n) {
+  const out = [];
+  for (let d = 1; d <= n; d++) if (n % d === 0) out.push(d);
+  return out;
+}
+function isPrime(n) { return n >= 2 && divisorsOf(n).length === 2; }
+function factorsOf(n) {
+  const out = [];
+  let d = 2;
+  while (d * d <= n) {
+    while (n % d === 0) { out.push(d); n = n / d; }
+    d += 1;
+  }
+  if (n > 1) out.push(n);
+  return out;
+}
+
+/* ------------------------------------------- тип 0: range: что перебирает */
+function m0(rng) {
+  const v = tRand(rng, 0, 5);
+
+  if (v === 0) {                                       /* правая граница не входит */
+    const a = tRand(rng, 1, 6), b = a + tRand(rng, 3, 6);
+    const nums = pyRange(a, b, 1);
+    return {
+      code: 'for i in range(' + a + ', ' + b + '):\n    print(i)',
+      answer: nums.join(' '),
+      question: 'Что напечатает программа? Числа перечисли через пробел.',
+      explain: 'range(' + a + ', ' + b + ') — это числа от ' + a + ' до ' + (b - 1)
+             + ': правая граница НЕ входит. Всего ' + nums.length + ' чисел.'
+    };
+  }
+
+  if (v === 1) {                                              /* шаг и сумма */
+    const a = tRand(rng, 1, 4), b = tRand(rng, 15, 30), st = tPick(rng, [2, 3, 4, 5]);
+    const nums = pyRange(a, b, st);
+    const s = nums.reduce(function (x, y) { return x + y; }, 0);
+    return {
+      code: 's = 0\nfor i in range(' + a + ', ' + b + ', ' + st + '):\n    s = s + i\nprint(s)',
+      answer: '' + s,
+      explain: 'Третье число в range — шаг. i пробегает ' + nums.join(', ')
+             + ' (следующее, ' + (nums[nums.length - 1] + st) + ', уже не меньше ' + b
+             + '). Сумма ' + s + '.'
+    };
+  }
+
+  if (v === 2) {                                        /* отрицательный шаг */
+    const b = tRand(rng, 8, 15), a = tRand(rng, 0, 3), st = tPick(rng, [1, 2, 3]);
+    const nums = pyRange(b, a, -st);
+    return {
+      code: 'for i in range(' + b + ', ' + a + ', -' + st + '):\n    print(i)',
+      answer: nums.join(' '),
+      question: 'Что напечатает программа? Числа перечисли через пробел.',
+      explain: 'Отрицательный шаг идёт вниз: от ' + b + ' с шагом ' + st + ', пока '
+             + 'i больше ' + a + ' — граница снова не входит. Получается ' + nums.join(', ') + '.'
+    };
+  }
+
+  if (v === 3) {                                  /* range(n): ноль и n штук */
+    const n = tRand(rng, 3, 9);
+    return {
+      code: 'k = 0\nfor i in range(' + n + '):\n    k = k + 1\nprint(k, i)',
+      answer: n + ' ' + (n - 1),
+      explain: 'range(' + n + ') — это ' + n + ' чисел от 0 до ' + (n - 1) + '. Тело '
+             + 'выполнилось ' + n + ' раз, а после цикла i хранит последнее значение, '
+             + (n - 1) + '. print через запятую печатает оба через пробел.'
+    };
+  }
+
+  if (v === 4) {                                            /* пустой range */
+    const a = tRand(rng, 5, 12), b = tRand(rng, 1, 4);
+    return {
+      code: 'k = 0\nfor i in range(' + a + ', ' + b + '):\n    k = k + 1\nprint(k)',
+      answer: '0',
+      explain: 'range(' + a + ', ' + b + ') пуст: начало больше конца, а шаг '
+             + 'положительный. Тело не выполнилось ни разу, k осталось 0. '
+             + 'Чтобы идти вниз, нужен отрицательный шаг.'
+    };
+  }
+
+  const n = tRand(rng, 6, 16);                           /* сумма чётных до n */
+  let s = 0;
+  for (let i = 1; i <= n; i++) if (i % 2 === 0) s += i;
+  return {
+    code: 's = 0\nfor i in range(1, ' + n + ' + 1):\n    if i % 2 == 0:\n        s = s + i\nprint(s)',
+    answer: '' + s,
+    explain: 'range(1, ' + n + ' + 1) доходит до ' + n + ' включительно — ради этого и '
+           + 'пишут + 1. Чётные от 2 до ' + (n - n % 2) + ' в сумме дают ' + s + '. '
+           + 'То же самое короче: range(2, ' + n + ' + 1, 2).'
+  };
+}
+
+/* ------------------------------------------------- тип 1: for или while */
+function m1(rng) {
+  const v = tRand(rng, 0, 5);
+
+  if (v === 0) {                                  /* while, написанный как for */
+    const a = tRand(rng, 1, 5), st = tPick(rng, [2, 3, 4]);
+    const b = a + st * tRand(rng, 2, 4) + tRand(rng, 0, st - 1);
+    const nums = pyRange(a, b, st);
+    return {
+      code: 'i = ' + a + '\nwhile i < ' + b + ':\n    print(i)\n    i = i + ' + st,
+      answer: nums.join(' '),
+      question: 'Что напечатает программа? Числа перечисли через пробел.',
+      explain: 'Это тот же for i in range(' + a + ', ' + b + ', ' + st + '), только шаг '
+             + 'делаем сами. Печатается ' + nums.join(', ') + '; следующее значение, '
+             + (nums[nums.length - 1] + st) + ', уже не меньше ' + b + '.'
+    };
+  }
+
+  if (v === 1) {                              /* значение после while: первое ложное */
+    const n = tRand(rng, 5, 30);
+    return {
+      code: 'i = 1\nwhile i < ' + n + ':\n    i = i + 1\nprint(i)',
+      answer: '' + n,
+      explain: 'while крутится, пока i < ' + n + ', и останавливается на первом i, '
+             + 'для которого это ложно: ' + n + '. После while переменная хранит '
+             + 'уже НЕподошедшее значение.'
+    };
+  }
+
+  if (v === 2) {                                /* значение после for: последнее */
+    const n = tRand(rng, 5, 30);
+    return {
+      code: 'for i in range(1, ' + n + '):\n    s = i\nprint(i, s)',
+      answer: (n - 1) + ' ' + (n - 1),
+      explain: 'range(1, ' + n + ') кончается на ' + (n - 1) + ', и после for в i '
+             + 'остаётся последнее ПРОЙДЕННОЕ значение — ' + (n - 1) + '. Сравни с '
+             + 'while: там осталось бы первое неподошедшее, то есть ' + n + '.'
+    };
+  }
+
+  if (v === 3) {                                          /* for с break */
+    const d = tPick(rng, [3, 4, 5, 6, 7]), a = tRand(rng, 10, 60);
+    let i = a;
+    while (i % d !== 0) i += 1;
+    return {
+      code: 'for i in range(' + a + ', ' + (a + 100) + '):\n    if i % ' + d + ' == 0:\n        break\nprint(i)',
+      answer: '' + i,
+      explain: 'Перебор с ' + a + ' идёт, пока не встретится число, кратное ' + d + ': '
+             + 'это ' + i + ', и break обрывает цикл. Так for заменяет while — когда '
+             + 'верхняя граница заведомо не понадобится.'
+    };
+  }
+
+  if (v === 4) {                                 /* for сам сбрасывает счётчик */
+    const n = tRand(rng, 4, 9), m = tPick(rng, [2, 3, 10]);
+    return {
+      code: 'for i in range(' + n + '):\n    i = i * ' + m + '\nprint(i)',
+      answer: '' + ((n - 1) * m),
+      explain: 'В for менять i внутри тела бесполезно: на следующем проходе range '
+             + 'выдаст очередное значение, как ни в чём не бывало. Проходов ' + n
+             + ', последний i = ' + (n - 1) + ', после умножения ' + ((n - 1) * m)
+             + '. В while такое изменение сдвинуло бы все шаги.'
+    };
+  }
+
+  const n = tRand(rng, 20, 60), st = tPick(rng, [3, 4, 6, 7]);
+  let i = n, k = 0;
+  while (i > 0) { i -= st; k += 1; }
+  return {
+    code: 'i = ' + n + '\nk = 0\nwhile i > 0:\n    i = i - ' + st + '\n    k = k + 1\nprint(k, i)',
+    answer: k + ' ' + i,
+    explain: 'От ' + n + ' отнимаем по ' + st + ', пока не уйдём в ноль или ниже: '
+           + 'проходов ' + k + ', последнее i = ' + i + (i < 0 ? ' (отрицательное — '
+           + 'условие «больше нуля» нарушилось перескоком)' : '') + '. Здесь while '
+           + 'уместнее for: число шагов заранее считать неудобно.'
+  };
+}
+
+/* --------------------------------------------------- тип 2: цифры числа */
+function digitsOf(n) {
+  const ds = [];
+  while (n > 0) { ds.push(n % 10); n = Math.floor(n / 10); }
+  return ds;
+}
+
+function m2(rng) {
+  const v = tRand(rng, 0, 5);
+
+  if (v === 0) {                                          /* произведение цифр */
+    let n0 = 0;
+    while (true) {
+      n0 = tRand(rng, 1000, 9999);
+      if (String(n0).indexOf('0') < 0) break;
+    }
+    const p = digitsOf(n0).reduce(function (x, y) { return x * y; }, 1);
+    return {
+      code: 'n = ' + n0 + '\np = 1\nwhile n > 0:\n    p = p * (n % 10)\n    n = n // 10\nprint(p)',
+      answer: '' + p,
+      explain: 'Цифры снимаются с конца: ' + digitsOf(n0).join(', ') + '. Накопитель '
+             + 'произведения стартует с единицы (с нуля всё обнулилось бы): ' + p + '.'
+    };
+  }
+
+  if (v === 1) {                                          /* сколько чётных цифр */
+    const n0 = tRand(rng, 10000, 99999);
+    const k = digitsOf(n0).filter(function (d) { return d % 2 === 0; }).length;
+    return {
+      code: 'n = ' + n0 + '\nk = 0\nwhile n > 0:\n    if n % 10 % 2 == 0:\n        k = k + 1\n    n = n // 10\nprint(k)',
+      answer: '' + k,
+      explain: 'n % 10 — последняя цифра, % 2 == 0 — её чётность. Чётных цифр у '
+             + n0 + ' ровно ' + k + ' (ноль — чётная цифра).'
+    };
+  }
+
+  if (v === 2) {                                            /* минимальная цифра */
+    const n0 = tRand(rng, 1000, 99999);
+    const m = Math.min.apply(null, digitsOf(n0));
+    return {
+      code: 'n = ' + n0 + '\nm = 9\nwhile n > 0:\n    d = n % 10\n    if d < m:\n        m = d\n    n = n // 10\nprint(m)',
+      answer: '' + m,
+      explain: 'Минимум накоплением: m стартует с 9 — с наибольшей цифры, чтобы первая '
+             + 'же настоящая цифра его сбила. У ' + n0 + ' наименьшая цифра ' + m
+             + '. Старт с нуля был бы ошибкой: ноль меньше любой цифры.'
+    };
+  }
+
+  if (v === 3) {                                           /* есть ли цифра t */
+    const t = tRand(rng, 1, 9);
+    const n0 = tRand(rng, 1000, 99999);
+    const has = digitsOf(n0).indexOf(t) >= 0;
+    return {
+      code: 'n = ' + n0 + '\nf = "нет"\nwhile n > 0:\n    if n % 10 == ' + t + ':\n        f = "да"\n    n = n // 10\nprint(f)',
+      answer: has ? 'да' : 'нет',
+      explain: 'Флаг: f стоит на «нет», и любая встреченная цифра ' + t + ' переключает '
+             + 'его на «да» навсегда. В числе ' + n0 + ' цифра ' + t
+             + (has ? ' есть.' : ' не встречается.')
+    };
+  }
+
+  if (v === 4) {                                                /* первая цифра */
+    const n0 = tRand(rng, 100, 99999);
+    return {
+      code: 'n = ' + n0 + '\nwhile n >= 10:\n    n = n // 10\nprint(n)',
+      answer: '' + String(n0).charAt(0),
+      explain: 'Отрезаем последнюю цифру, пока число двузначное или длиннее. Когда '
+             + 'осталась одна цифра — это первая цифра исходного числа: '
+             + String(n0).charAt(0) + '.'
+    };
+  }
+
+  const t = tRand(rng, 3, 6), n0 = tRand(rng, 1000, 99999);
+  const big = digitsOf(n0).filter(function (d) { return d > t; });
+  const s = big.reduce(function (x, y) { return x + y; }, 0);
+  return {
+    code: 'n = ' + n0 + '\ns = 0\nwhile n > 0:\n    d = n % 10\n    if d > ' + t + ':\n        s = s + d\n    n = n // 10\nprint(s)',
+    answer: '' + s,
+    explain: 'Складываются только цифры больше ' + t + ': из ' + digitsOf(n0).join(', ')
+           + ' это ' + (big.length ? big.join(', ') : 'ни одна') + '. Сумма ' + s + '.'
+  };
+}
+
+/* ----------------------------------------------------- тип 3: делители */
+function m3(rng) {
+  const v = tRand(rng, 0, 5);
+
+  if (v === 0) {                                        /* количество делителей */
+    const n = tRand(rng, 12, 120);
+    const ds = divisorsOf(n);
+    return {
+      code: 'n = ' + n + '\nk = 0\nfor d in range(1, n + 1):\n    if n % d == 0:\n        k = k + 1\nprint(k)',
+      answer: '' + ds.length,
+      explain: 'Делители ' + n + ': ' + ds.join(', ') + ' — всего ' + ds.length
+             + '. range(1, n + 1) доходит до самого n, так что и 1, и n сосчитаны.'
+    };
+  }
+
+  if (v === 1) {                                            /* список делителей */
+    const n = tRand(rng, 12, 60);
+    const ds = divisorsOf(n);
+    return {
+      code: 'n = ' + n + '\nfor d in range(1, n + 1):\n    if n % d == 0:\n        print(d)',
+      answer: ds.join(' '),
+      question: 'Что напечатает программа? Числа перечисли через пробел.',
+      explain: 'Перебор d от 1 до ' + n + ', печатаются те, на которые ' + n
+             + ' делится без остатка: ' + ds.join(', ') + '.'
+    };
+  }
+
+  if (v === 2) {                                   /* сумма собственных делителей */
+    const n = tPick(rng, [6, 12, 15, 20, 24, 28, 30, 36, 45, 48]);
+    const ds = divisorsOf(n).slice(0, -1);
+    const s = ds.reduce(function (x, y) { return x + y; }, 0);
+    return {
+      code: 'n = ' + n + '\ns = 0\nfor d in range(1, n):\n    if n % d == 0:\n        s = s + d\nprint(s)',
+      answer: '' + s,
+      explain: 'range(1, n) до самого n не доходит, поэтому складываются делители '
+             + 'без него: ' + ds.join(' + ') + ' = ' + s + '.'
+             + (s === n ? ' Сумма равна числу — ' + n + ' называют совершенным.' : '')
+    };
+  }
+
+  if (v === 3) {                                      /* наибольший собственный */
+    const n = tPick(rng, [21, 26, 33, 34, 35, 38, 39, 44, 46, 51, 55, 57, 62, 65]);
+    const ds = divisorsOf(n);
+    return {
+      code: 'n = ' + n + '\nm = 1\nfor d in range(2, n):\n    if n % d == 0:\n        m = d\nprint(m)',
+      answer: '' + ds[ds.length - 2],
+      explain: 'Максимум накоплением: каждый найденный делитель перезаписывает m, и '
+             + 'в конце остаётся последний — наибольший, не равный самому числу: '
+             + ds[ds.length - 2] + '. Делители ' + n + ': ' + ds.join(', ') + '.'
+    };
+  }
+
+  if (v === 4) {                                    /* делители до корня и d после */
+    const n = tRand(rng, 10, 80);
+    let d = 1, k = 0;
+    while (d * d <= n) { if (n % d === 0) k += 1; d += 1; }
+    return {
+      code: 'n = ' + n + '\nk = 0\nd = 1\nwhile d * d <= n:\n    if n % d == 0:\n        k = k + 1\n    d = d + 1\nprint(k, d)',
+      answer: k + ' ' + d,
+      explain: 'Цикл смотрит только d с d · d ≤ ' + n + ', то есть до ' + (d - 1)
+             + '. Из них делителей ' + k + '. После выхода d = ' + d + ' — первое, '
+             + 'у которого квадрат больше n. Каждому делителю до корня отвечает парный '
+             + 'n // d выше корня.'
+    };
+  }
+
+  const dd = tPick(rng, [3, 4, 5, 6, 7]), a = tRand(rng, 1, 40), b = a + tRand(rng, 10, 30);
+  let k = 0;
+  for (let i = a; i <= b; i++) if (i % dd === 0) k += 1;
+  return {
+    code: 'k = 0\nfor i in range(' + a + ', ' + b + ' + 1):\n    if i % ' + dd + ' == 0:\n        k = k + 1\nprint(k)',
+    answer: '' + k,
+    explain: 'Перебор отрезка от ' + a + ' до ' + b + ' включительно (ради этого + 1). '
+           + 'Кратных ' + dd + ' на нём ' + k + '. Это ровно форма задания 25: перебрать '
+           + 'отрезок и отобрать числа со свойством.'
+  };
+}
+
+/* ------------------------------------------------ тип 4: простое или нет */
+function m4(rng) {
+  const v = tRand(rng, 0, 5);
+
+  if (v === 0) {                                     /* наименьший делитель > 1 */
+    const n = tPick(rng, [91, 77, 121, 143, 97, 169, 187, 101, 221, 209, 133, 103]);
+    let d = 2;
+    while (n % d !== 0) d += 1;
+    return {
+      code: 'n = ' + n + '\nd = 2\nwhile n % d != 0:\n    d = d + 1\nprint(d)',
+      answer: '' + d,
+      explain: 'Ищем первое d с двойки, на которое ' + n + ' делится: это ' + d + '.'
+             + (d === n ? ' Делитель нашёлся только на самом числе — ' + n + ' простое.'
+                        : ' Наименьший делитель больше единицы всегда простой.')
+    };
+  }
+
+  if (v === 1) {                                       /* флаг: простое / составное */
+    const n = tPick(rng, [1, 2, 9, 11, 15, 17, 21, 23, 25, 29, 31, 33, 37, 39, 41, 49, 51, 53]);
+    const ans = (n === 1 || isPrime(n)) ? 'простое' : 'составное';
+    return {
+      code: 'n = ' + n + '\nprime = True\nfor d in range(2, n):\n    if n % d == 0:\n        prime = False\nif prime:\n    print("простое")\nelse:\n    print("составное")',
+      answer: ans,
+      explain: n === 1
+        ? 'range(2, 1) пуст, флаг никто не сбил — программа напечатает «простое». А '
+          + 'единица простым числом НЕ считается: у неё один делитель, а не два. '
+          + 'Это ошибка программы, и она нам ещё встретится.'
+        : 'Флаг стоит на True, и любой делитель от 2 до ' + (n - 1) + ' сбивает его. '
+          + (isPrime(n) ? 'У ' + n + ' таких делителей нет — «простое».'
+                        : n + ' делится на ' + divisorsOf(n)[1] + ' — «составное».')
+    };
+  }
+
+  if (v === 2) {                                        /* проверка до корня */
+    const n = tPick(rng, [49, 53, 77, 79, 83, 87, 91, 97, 111, 113, 121, 127, 133, 139]);
+    let d = 2;
+    while (d * d <= n && n % d !== 0) d += 1;
+    const prime = d * d > n;
+    return {
+      code: 'n = ' + n + '\nd = 2\nwhile d * d <= n and n % d != 0:\n    d = d + 1\nif d * d > n:\n    print("простое")\nelse:\n    print("делится на", d)',
+      answer: prime ? 'простое' : 'делится на ' + d,
+      explain: 'Достаточно проверить d до корня: если у n есть делитель больше корня, '
+             + 'парный ему меньше корня и нашёлся бы раньше. '
+             + (prime ? 'Дошли до d = ' + d + ', d · d = ' + (d * d) + ' > ' + n
+                        + ' — делителя нет, «простое».'
+                      : 'Остановились на d = ' + d + ': ' + n + ' = ' + d + ' · ' + (n / d) + '.')
+    };
+  }
+
+  if (v === 3) {                                  /* сколько простых на отрезке */
+    const a = tRand(rng, 2, 40), b = a + tRand(rng, 5, 10);
+    let k = 0;
+    const found = [];
+    for (let n = a; n <= b; n++) if (isPrime(n)) { k += 1; found.push(n); }
+    return {
+      code: 'k = 0\nfor n in range(' + a + ', ' + b + ' + 1):\n    prime = True\n    for d in range(2, n):\n        if n % d == 0:\n            prime = False\n    if prime:\n        k = k + 1\nprint(k)',
+      answer: '' + k,
+      explain: 'Внешний цикл перебирает отрезок от ' + a + ' до ' + b + ', внутренний '
+             + 'проверяет каждое число. Простых здесь ' + k
+             + (k ? ': ' + found.join(', ') : '') + '.'
+    };
+  }
+
+  if (v === 4) {                                         /* разложение печатью */
+    const n = tPick(rng, [12, 18, 20, 24, 28, 30, 36, 40, 42, 45, 48, 50, 54, 56, 60, 63, 72, 75, 84, 90, 98, 100]);
+    const fs = factorsOf(n);
+    return {
+      code: 'n = ' + n + '\nd = 2\nwhile n > 1:\n    if n % d == 0:\n        print(d)\n        n = n // d\n    else:\n        d = d + 1',
+      answer: fs.join(' '),
+      question: 'Что напечатает программа? Числа перечисли через пробел.',
+      explain: 'Пока n делится на d — печатаем d и делим; не делится — двигаем d. '
+             + 'Повторный множитель печатается столько раз, сколько раз входит: '
+             + n + ' = ' + fs.join(' · ') + '.'
+    };
+  }
+
+  const k = tRand(rng, 1, 5), odd = tPick(rng, [3, 5, 7, 9, 11, 15]);
+  const n0 = Math.pow(2, k) * odd;
+  return {
+    code: 'n = ' + n0 + '\nk = 0\nwhile n % 2 == 0:\n    n = n // 2\n    k = k + 1\nprint(k, n)',
+    answer: k + ' ' + odd,
+    explain: 'Делим на 2, ПОКА делится: ' + n0 + ' → ' + (n0 / 2)
+           + (k > 1 ? ' → …' : '') + ' → ' + odd + '. Двойка вошла ' + k
+           + (k === 1 ? ' раз' : ' раза') + ', остался нечётный ' + odd + '. '
+           + 'С if вместо while двойка снялась бы только один раз.'
+  };
+}
+
+/* ------------------------------------ тип 5: перебор в уме (задание 25 ЕГЭ) */
+/* Кода здесь нет: условие словами, как в задании 25, только отрезок такой,
+   что перебрать можно в уме. Python пересчитывает ответ по meta сам. */
+
+function m5(rng) {
+  const kind = tPick(rng, ['least_k', 'count_primes', 'two_primes', 'odd_div']);
+
+  if (kind === 'least_k') {
+    const k = tPick(rng, [3, 4, 6]), N = tRand(rng, 10, 120);
+    let n = N + 1;
+    while (divisorsOf(n).length !== k) n += 1;
+    return {
+      code: '',
+      question: 'Перебирая целые числа, большие <b>' + N + '</b>, в порядке возрастания, '
+              + 'найдите первое, у которого ровно <b>' + k + '</b> делител' + (k === 3 ? 'я' : 'ей')
+              + ' (считая 1 и само число). Считать в уме, без программы.',
+      answer: '' + n,
+      meta: { kind: 'least_k', N: N, k: k },
+      explain: 'Первое подходящее — ' + n + ': его делители ' + divisorsOf(n).join(', ')
+             + '. ' + (k === 3 ? 'Ровно три делителя бывает только у квадрата простого числа.'
+                     : k === 4 ? 'Четыре делителя — это p · q с разными простыми p, q или куб простого.'
+                     : 'Шесть делителей — это p² · q или пятая степень простого.')
+    };
+  }
+
+  if (kind === 'count_primes') {
+    const a = tRand(rng, 2, 90), b = a + tRand(rng, 8, 12);
+    const found = [];
+    for (let n = a; n <= b; n++) if (isPrime(n)) found.push(n);
+    return {
+      code: '',
+      question: 'Сколько простых чисел на отрезке от <b>' + a + '</b> до <b>' + b + '</b> '
+              + 'включительно? Считать в уме, без программы.',
+      answer: '' + found.length,
+      meta: { kind: 'count_primes', a: a, b: b },
+      explain: 'Простые здесь: ' + (found.length ? found.join(', ') : 'нет ни одного')
+             + '. Чётные, кроме 2, отпадают сразу, дальше проверяем деление на 3, 5, 7.'
+    };
+  }
+
+  if (kind === 'two_primes') {
+    const N = tRand(rng, 10, 80);
+    let n = N + 1;
+    while (true) {
+      const fs = factorsOf(n);
+      if (fs.length === 2 && fs[0] !== fs[1]) break;
+      n += 1;
+    }
+    const fs = factorsOf(n);
+    return {
+      code: '',
+      question: 'Перебирая целые числа, большие <b>' + N + '</b>, в порядке возрастания, '
+              + 'найдите первое, которое является произведением ровно двух <u>различных</u> '
+              + 'простых чисел. Считать в уме, без программы.',
+      answer: '' + n,
+      meta: { kind: 'two_primes', N: N },
+      explain: 'Первое подходящее — ' + n + ' = ' + fs[0] + ' · ' + fs[1] + '. У такого числа '
+             + 'ровно четыре делителя: 1, ' + fs[0] + ', ' + fs[1] + ', ' + n + '.'
+    };
+  }
+
+  const N = tRand(rng, 10, 200);
+  let n = N + 1;
+  while (divisorsOf(n).length % 2 === 0) n += 1;
+  const r = Math.round(Math.sqrt(n));
+  return {
+    code: '',
+    question: 'Перебирая целые числа, большие <b>' + N + '</b>, в порядке возрастания, '
+            + 'найдите первое, у которого <b>нечётное</b> количество делителей. '
+            + 'Считать в уме, без программы.',
+    answer: '' + n,
+    meta: { kind: 'odd_div', N: N },
+    explain: 'Делители ходят парами d и n // d, и только у точного квадрата одна пара '
+           + 'схлопывается в один делитель. Первый квадрат больше ' + N + ' — это '
+           + r + '² = ' + n + '; его делители: ' + divisorsOf(n).join(', ') + '.'
+  };
+}
+
+const T_MAKERS = [m0, m1, m2, m3, m4, m5];
+
+/* --------------------------------------------------------------- задачи */
+function tTask(type, rng) {
+  const m = T_MAKERS[type](rng);
+  const t = { type, code: m.code, answer: m.answer, explain: m.explain,
+              question: m.question || 'Что напечатает программа?' };
+  if (m.input !== undefined) {
+    t.input = m.input;
+    if (!m.question) t.question = 'Что напечатает программа, если на вход подать <b>'
+                                + m.input.replace(/\n/g, '</b> и <b>') + '</b>?';
+  }
+  if (m.meta !== undefined) t.meta = m.meta;
+  return t;
+}
+
+/* Сверка ответа. Пробелы схлопываем, запятую в числах прощаем, регистр у слов
+   («простое», «да») не важен. Кавычки вокруг напечатанной строки прощаем тоже:
+   print("да") печатает да, но написать «да» в кавычках не ошибка. */
+function tNorm(s) {
+  return String(s).replace(/\s+/g, ' ').trim().replace(/(\d),(\d)/g, '$1.$2')
+      .replace(/["«»']/g, '');
+}
+function tCheck(task, raw) {
+  const got = tNorm(raw), want = tNorm(task.answer);
+  if (/^[a-zа-яё]/i.test(want)) return got.toLowerCase() === want.toLowerCase();
+  return got.replace(/\b(true|false)\b/gi, function (w) { return w.toLowerCase(); })
+      === want.replace(/\b(true|false)\b/gi, function (w) { return w.toLowerCase(); });
+}
+
+/* Набор для практикума: два круга по всем типам, внутри круга типы перемешаны —
+   одинаковые не идут подряд, и работа читается как два прохода. */
+function tMake(seed) {
+  const rng = tRng(seed);
+  const out = [];
+  for (let round = 0; round < T_PER_TYPE; round++) {
+    const order = tShuffle(rng, [0, 1, 2, 3, 4, 5]);
+    for (let i = 0; i < order.length; i++) out.push(tTask(order[i], rng));
+  }
+  return out;
+}
+/* ==== /ТИПЫ ==== */
+
+/* ==== ЗАДАЧИ ДЗ: вставлено gen.py, руками не править ==== */
+/* Домашнее задание: что сдают после пары «Перебор: делители и простые числа».
+   Источник правды. Вставляется gen.py --sync в homework.html и test.html.
+
+   Четыре типа берутся из types.js (чтение кода: range, for или while, делители,
+   перебор в уме), дальше два своих:
+     4 «найди контрпример» — программа с ТОНКОЙ ошибкой из сегодняшней темы:
+                             флаг «простое» сбрасывается на каждом проходе;
+                             range(a, b) без правой границы; if вместо while
+                             при разложении на множители; делители парами без
+                             поправки на квадрат.
+                             Ключа нет: считаем верным и кривым способом и
+                             смотрим, разошлись ли.
+     5 «как это работает»  — вопрос с тремя вариантами: границы range, шаг,
+                             for против while, проверка до корня, единица и
+                             двойка, число делителей у квадрата.
+*/
+
+const HW_TYPES = [
+  'range: что перебирает',
+  'for или while',
+  'делители',
+  'перебор в уме (ЕГЭ 25)',
+  'найди контрпример',
+  'как это работает'
+];
+/* тип ДЗ -> тип задачи из types.js */
+const HW_FROM_TRAINER = { 0: 0, 1: 1, 2: 3, 3: 5 };
+
+/* --------------------------------------------- тип 4: найди контрпример */
+
+const HW_BUGS = {
+  reset: {
+    title: 'простое или нет',
+    spec: 'Программа читает число n от 2 до 1000 и печатает «простое», если у него '
+        + 'ровно два делителя, иначе «составное».',
+    code: 'n = int(input())\nprime = True\n'
+        + 'for d in range(2, n):\n    if n % d == 0:\n        prime = False\n'
+        + '    else:\n        prime = True\n'
+        + 'if prime:\n    print("простое")\nelse:\n    print("составное")',
+    fields: 'одно целое число от 2 до 1000',
+    hint: 'На простых числах программа права. Проследи, что происходит с флагом на '
+        + 'ПОСЛЕДНЕМ проходе цикла, когда d = n − 1.',
+    why: 'Ветка else возвращает флаг на True при каждом d, которое не делит n. '
+       + 'Последнее d — это n − 1, а на него n не делится (кроме n = 2), так что флаг '
+       + 'в конце всегда True и любое составное число объявляется простым. Флаг '
+       + 'ставят один раз ДО цикла, а в цикле только сбивают: else здесь лишний.'
+  },
+  range: {
+    title: 'кратные трём',
+    spec: 'Программа читает два числа a и b (a ≤ b) и печатает, сколько чисел от a '
+        + 'до b <u>включительно</u> делятся на 3.',
+    code: 'a = int(input())\nb = int(input())\nk = 0\n'
+        + 'for i in range(a, b):\n    if i % 3 == 0:\n        k = k + 1\nprint(k)',
+    fields: 'два целых числа через пробел: a и b, от 1 до 1000, a не больше b',
+    hint: 'Чаще всего программа считает верно. Подумай, какое число отрезка она '
+        + 'не проверяет вовсе, и подбери отрезок, где это число важно.',
+    why: 'range(a, b) не доходит до b, поэтому правый конец отрезка не проверяется. '
+       + 'Пока b на 3 не делится, разницы нет; но если b кратно трём, программа '
+       + 'недосчитывает ровно одно число. Нужно range(a, b + 1).'
+  },
+  once: {
+    title: 'разложение на множители',
+    spec: 'Программа читает n от 2 до 1000 и печатает его простые множители через '
+        + 'пробел в порядке неубывания: для 12 — «2 2 3», для 30 — «2 3 5».',
+    code: 'n = int(input())\ns = ""\n'
+        + 'for d in range(2, n + 1):\n    if n % d == 0:\n'
+        + '        s = s + " " + str(d)\n        n = n // d\nprint(s)',
+    fields: 'одно целое число от 2 до 1000',
+    hint: 'Для 6, 10, 30 программа права. Подумай, что будет, если один и тот же '
+        + 'множитель входит в число несколько раз.',
+    why: 'if снимает множитель d один раз и идёт дальше, а он мог входить в число '
+       + 'дважды или трижды: для 12 после деления на 2 остаётся 6, но d уже '
+       + 'двигается к 3 — и вторая двойка теряется (а иногда вылезает составной '
+       + 'множитель вроде 4). Делить надо ПОКА делится: while n % d == 0.'
+  },
+  pair: {
+    title: 'сколько делителей',
+    spec: 'Программа читает n от 1 до 10000 и печатает количество его делителей '
+        + '(считая 1 и само число).',
+    code: 'n = int(input())\nk = 0\nd = 1\n'
+        + 'while d * d <= n:\n    if n % d == 0:\n        k = k + 2\n    d = d + 1\n'
+        + 'print(k)',
+    fields: 'одно целое число от 1 до 10000',
+    hint: 'Идея верная: каждому делителю до корня отвечает парный выше корня, '
+        + 'поэтому + 2. Подумай, у каких чисел одна пара — это один и тот же делитель.',
+    why: 'У точного квадрата делитель d = √n парный сам себе: пара (d, n // d) — это '
+       + 'один делитель, а программа считает его дважды. Для 36 она печатает 10 '
+       + 'вместо 9. Лечится проверкой: если d * d == n, прибавлять 1, а не 2.'
+  }
+};
+
+function hwCounter(rng) {
+  const bug = tPick(rng, ['reset', 'range', 'once', 'pair']);
+  const b = HW_BUGS[bug];
+  return {
+    kind: 'counter', bug,
+    code: b.code,
+    question: '<b>Что программа должна делать.</b> ' + b.spec
+            + '<br><b>Задание.</b> Здесь спрятана ошибка, из-за которой программа '
+            + 'врёт не всегда, а на особых данных. Назови такие данные (' + b.fields
+            + ').',
+    hint: b.hint,
+    explain: b.why
+  };
+}
+
+/* Кривое разложение — ровно то, что делает программа с if вместо while. */
+function hwBadFactors(n) {
+  let s = '';
+  const top = n;
+  for (let d = 2; d <= top; d++) {
+    if (n % d === 0) { s += ' ' + d; n = Math.floor(n / d); }
+  }
+  return s.trim();
+}
+
+/* Кривая проверка на простоту — флаг сбрасывается на каждом проходе. */
+function hwBadPrime(n) {
+  let prime = true;
+  for (let d = 2; d < n; d++) prime = (n % d !== 0);
+  return prime ? 'простое' : 'составное';
+}
+
+function hwCheckCounter(task, raw) {
+  const parts = String(raw).trim().split(/[\s,;]+/).filter(function (s) { return s; });
+
+  if (task.bug === 'reset') {
+    if (parts.length !== 1 || !/^\d+$/.test(parts[0]))
+      return { ok: false, why: 'нужно одно целое число' };
+    const n = Number(parts[0]);
+    if (n < 2 || n > 1000) return { ok: false, why: 'число — от 2 до 1000' };
+    const good = isPrime(n) ? 'простое' : 'составное';
+    const bad = hwBadPrime(n);
+    if (good === bad)
+      return { ok: false, why: 'для ' + n + ' программа отвечает верно («' + good
+                             + '») — ошибка прячется в других числах' };
+    return { ok: true, why: 'верно: ' + n + ' составное (делится на ' + divisorsOf(n)[1]
+                          + '), а программа печатает «простое»' };
+  }
+
+  if (task.bug === 'range') {
+    if (parts.length !== 2 || !parts.every(function (s) { return /^\d+$/.test(s); }))
+      return { ok: false, why: 'нужно два целых числа через пробел: a и b' };
+    const a = Number(parts[0]), b = Number(parts[1]);
+    if (a < 1 || b > 1000 || a > b) return { ok: false, why: 'нужно 1 ≤ a ≤ b ≤ 1000' };
+    let good = 0, bad = 0;
+    for (let i = a; i <= b; i++) if (i % 3 === 0) good += 1;
+    for (let i = a; i < b; i++) if (i % 3 === 0) bad += 1;
+    if (good === bad)
+      return { ok: false, why: 'на отрезке от ' + a + ' до ' + b + ' программа считает верно ('
+                             + good + ') — ошибка прячется в других отрезках' };
+    return { ok: true, why: 'верно: на отрезке от ' + a + ' до ' + b + ' кратных трём '
+                          + good + ', а программа насчитает ' + bad + ' — правый конец '
+                          + b + ' она не проверяет' };
+  }
+
+  if (task.bug === 'once') {
+    if (parts.length !== 1 || !/^\d+$/.test(parts[0]))
+      return { ok: false, why: 'нужно одно целое число' };
+    const n = Number(parts[0]);
+    if (n < 2 || n > 1000) return { ok: false, why: 'число — от 2 до 1000' };
+    const good = factorsOf(n).join(' '), bad = hwBadFactors(n);
+    if (good === bad)
+      return { ok: false, why: 'для ' + n + ' программа печатает верное «' + good
+                             + '» — ошибка прячется в других числах' };
+    return { ok: true, why: 'верно: ' + n + ' = ' + factorsOf(n).join(' · ')
+                          + ', а программа печатает «' + bad + '»' };
+  }
+
+  if (parts.length !== 1 || !/^\d+$/.test(parts[0]))
+    return { ok: false, why: 'нужно одно целое число' };
+  const n = Number(parts[0]);
+  if (n < 1 || n > 10000) return { ok: false, why: 'число — от 1 до 10000' };
+  const good = divisorsOf(n).length;
+  let bad = 0;
+  for (let d = 1; d * d <= n; d++) if (n % d === 0) bad += 2;
+  if (good === bad)
+    return { ok: false, why: 'у ' + n + ' программа насчитывает верные ' + good
+                           + ' делителей — ошибка прячется в других числах' };
+  return { ok: true, why: 'верно: ' + n + ' = ' + Math.round(Math.sqrt(n)) + '², делителей '
+                        + good + ', а программа печатает ' + bad };
+}
+
+/* --------------------------------------------- тип 5: как это работает */
+const HW_THEORY = [
+  {
+    q: 'Какие числа перебирает <code>for i in range(1, 10):</code>?',
+    opts: ['От 1 до 9 — правая граница не входит',
+           'От 1 до 10 включительно',
+           'От 0 до 9 — счёт всегда с нуля'],
+    right: 0,
+    why: 'range(a, b) даёт числа от a до b − 1. Чтобы дойти до самого n, пишут '
+       + 'range(1, n + 1) — это самая частая правка в задачах про делители.'
+  },
+  {
+    q: 'Что даёт <code>range(10, 0, -2)</code>?',
+    opts: ['10, 8, 6, 4, 2', '10, 8, 6, 4, 2, 0', 'Ничего: начало больше конца'],
+    right: 0,
+    why: 'Третье число — шаг, и он может быть отрицательным: тогда счёт идёт вниз, '
+       + 'пока не дошли до границы. Граница 0 по-прежнему не входит. Без шага '
+       + 'range(10, 0) действительно пуст.'
+  },
+  {
+    q: 'Когда цикл <code>for</code> удобнее цикла <code>while</code>?',
+    opts: ['Когда заранее известно, сколько раз повторять — например, перебрать d от 1 до n',
+           'Когда внутри нужно ветвление',
+           'Когда повторений много — for работает быстрее'],
+    right: 0,
+    why: 'for хорош для перебора известного отрезка: счётчик двигается сам. while — '
+       + 'когда шаги считает задача: «пока делится», «пока не нашли». Любой цикл можно '
+       + 'переписать другим, а ветвление и скорость тут ни при чём.'
+  },
+  {
+    q: 'Что останется в <code>i</code> после <code>for i in range(1, 5): s = i</code>?',
+    opts: ['4 — последнее пройденное значение',
+           '5 — первое, на котором цикл остановился',
+           '1 — for возвращает переменную к началу'],
+    right: 0,
+    why: 'После for переменная хранит последнее значение из range — здесь 4. У while '
+       + 'наоборот: там остаётся первое значение, на котором условие стало ложным.'
+  },
+  {
+    q: 'Почему при проверке на простоту достаточно перебрать <code>d</code>, пока '
+     + '<code>d * d &lt;= n</code>?',
+    opts: ['Делители ходят парами d и n // d, и один из пары не больше корня из n',
+           'Простые числа не бывают больше корня из n',
+           'Это просто ускорение, проверять до n нельзя'],
+    right: 0,
+    why: 'Если n = d · e, то меньший из d и e не превосходит √n. Значит, если делителя '
+       + 'до корня нет, нет и вовсе. Проверять до n тоже можно — ответ тот же, только '
+       + 'для миллиона это в тысячу раз дольше.'
+  },
+  {
+    q: 'Является ли 1 простым числом?',
+    opts: ['Нет: у простого ровно два делителя, а у единицы один',
+           'Да: единица делится только на себя',
+           'Да, но только в задачах про разложение на множители'],
+    right: 0,
+    why: 'Простое — то, у которого ровно два делителя: 1 и само число. У единицы один '
+       + 'делитель. Программа, которая проверяет делители «от 2 до n − 1» и не '
+       + 'нашла ни одного, объявит 1 простой — это ошибка, её надо ловить отдельно.'
+  },
+  {
+    q: 'Почему при разложении на множители пишут <code>while n % d == 0</code>, а '
+     + 'не <code>if n % d == 0</code>?',
+    opts: ['Множитель может входить в число несколько раз: 12 = 2 · 2 · 3',
+           'while быстрее, чем if',
+           'if нельзя использовать внутри другого цикла'],
+    right: 0,
+    why: 'if снимет двойку один раз, и вторая двойка в 12 потеряется. while делит, '
+       + 'пока делится, и только потом двигает d дальше. Заодно d никогда не окажется '
+       + 'составным: все его простые множители к тому моменту уже сняты.'
+  },
+  {
+    q: 'Сколько делителей у числа 49?',
+    opts: ['Три: 1, 7, 49', 'Два: 1 и 49', 'Четыре: 1, 7, 7, 49'],
+    right: 0,
+    why: 'Делители парами: 1 и 49, а 7 парен сам себе. У квадрата простого числа '
+       + 'всегда ровно три делителя — и вообще у точного квадрата их нечётное число.'
+  },
+  {
+    q: 'Что напечатает <code>for i in range(3): i = 10</code>, а затем <code>print(i)</code>?',
+    opts: ['10 — на последнем проходе i присвоили 10, и range больше не вмешивался',
+           '2 — присваивание внутри for не действует',
+           'Программа зависнет'],
+    right: 0,
+    why: 'Присваивание действует, но только до конца текущего прохода: на следующем '
+       + 'range выдаёт очередное значение. Проходов три, на последнем i стало 10, '
+       + 'дальше range ничего не выдал — и в i осталось 10. В while такая строка '
+       + 'сдвинула бы все шаги.'
+  },
+  {
+    q: 'Программа ищет числа от a до b с нужным свойством: <code>for n in range(a, b):</code>. '
+     + 'Что она пропустит?',
+    opts: ['Само b — правая граница не входит',
+           'Само a — счёт начинается со следующего',
+           'Ничего: range берёт весь отрезок'],
+    right: 0,
+    why: 'В задании 25 отрезок дан включительно, а range правую границу не берёт. '
+       + 'Ошибка вылезет только тогда, когда b само подходит под условие — на '
+       + 'проверке это случается редко, на экзамене — обязательно.'
+  }
+];
+
+function hwTheory(rng) {
+  const item = tPick(rng, HW_THEORY);
+  const idx = tShuffle(rng, [0, 1, 2]);
+  const letters = ['A', 'Б', 'В'];
+  const opts = idx.map(function (k, pos) {
+    return letters[pos] + ') ' + item.opts[k];
+  });
+  const right = letters[idx.indexOf(item.right)];
+  return {
+    kind: 'theory',
+    code: '',
+    question: item.q + '<br><br>' + opts.join('<br>')
+            + '<br><br>Ответ — одна буква.',
+    answer: right,
+    explain: 'Верно: ' + right + ') ' + item.opts[item.right] + '. ' + item.why
+  };
+}
+
+/* ------------------------------------------------------------ сборка */
+function hwMake(type, rng) {
+  let t;
+  if (type in HW_FROM_TRAINER) {
+    t = tTask(HW_FROM_TRAINER[type], rng);
+    t.kind = 'trainer';
+  } else if (type === 4) {
+    t = hwCounter(rng);
+  } else {
+    t = hwTheory(rng);
+  }
+  t.hwType = type;
+  return t;
+}
+
+function hwVerdict(task, raw) {
+  if (!String(raw).trim()) return { ok: false, why: '' };
+  if (task.kind === 'counter') return hwCheckCounter(task, raw);
+  if (task.kind === 'theory') {
+    const map = { 'A': 'A', 'А': 'A', 'a': 'A', 'а': 'A',
+                  'Б': 'Б', 'б': 'Б', 'B': 'Б',
+                  'В': 'В', 'в': 'В', 'C': 'В', 'c': 'В' };
+    const got = map[String(raw).trim().charAt(0)] || '';
+    return { ok: got === task.answer, why: '' };
+  }
+  return { ok: tCheck(task, raw), why: '' };
+}
+/* ==== /ЗАДАЧИ ДЗ ==== */
+
+/* Форма сдачи ДЗ — одна на все темы. Ссылку разносит set_form_link.py. */
+const FORM = "https://docs.google.com/forms/d/e/1FAIpQLSfQyhaxcnzn4ZaKSe_ZMsluw7qRQnrw_80H6SfrnYB5EThUIA/viewform?usp=pp_url&entry.853601231=ФАМИЛИЯ&entry.1091635917=КЛАСС&entry.487188307=КОД";
+const ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+const EPOCH = Date.UTC(2026, 0, 1);
+const PREFIX = "PD";
+const NEED_STREAK = 1;     // тип закрывает один верный ответ
+const MIN_TYPES = 4;       // ниже этого код не выдаётся
+const SCALE = [[6, 5], [5, 4], [4, 3]];
+
+const bin = (v, w) => v.toString(2).padStart(w, "0");
+// Семибитными кусками строки: в нагрузке 33 бита, а побитовые операции в JS
+// 32-битные — старший бит молча потерялся бы.
+function checksum(bitstr){
+  let cs = 0x5B;
+  for (let i = 0; i < bitstr.length; i += 7)
+    cs ^= parseInt(bitstr.substr(i, 7).padEnd(7, "0"), 2);
+  return cs & 0x7F;
+}
+function makeCode(st){
+  const day = Math.max(0, Math.min(2047, Math.floor(
+      (Date.now() - EPOCH) / 86400000)));
+  const payload = bin(day, 11) + bin(Math.min(15, st.typesDone), 4) +
+                  bin(Math.min(15, st.cleanTypes), 4) +
+                  bin(Math.min(127, st.solved), 7) +
+                  bin(Math.min(127, st.wrong), 7);
+  const bitstr = payload + bin(checksum(payload), 7);
+  let out = "";
+  for (let i = 0; i < 40; i += 5)
+    out += ALPHABET[parseInt(bitstr.substr(i, 5), 2)];
+  return PREFIX + "-" + out.slice(0, 4) + "-" + out.slice(4);
+}
+
+/* ---------------------------------------------------------- состояние */
+const N = HW_TYPES.length;
+const rng = tRng((Date.now() ^ (Math.random() * 1e9)) >>> 0);
+const st = {
+  streak: Array(N).fill(0),
+  done: Array(N).fill(false),
+  clean: Array(N).fill(true),
+  solved: 0, wrong: 0,
+  cur: null, answered: false, retry: null
+};
+Object.defineProperty(st, "typesDone",
+  {get(){ return st.done.filter(Boolean).length; }});
+Object.defineProperty(st, "cleanTypes",
+  {get(){ return st.done.filter((d, i) => d && st.clean[i]).length; }});
+
+function markFor(n){
+  for (const [need, m] of SCALE) if (n >= need) return m;
+  return null;
+}
+/* После ошибки — тот же тип: разбор только что показан, применить его надо по
+   горячему. Иначе — любой незакрытый. */
+function pickType(){
+  if (st.retry !== null && !st.done[st.retry]) return st.retry;
+  const open = [];
+  for (let i = 0; i < N; i++) if (!st.done[i]) open.push(i);
+  if (!open.length) return null;
+  return open[tRand(rng, 0, open.length - 1)];
+}
+/* ==== FRZ: вставлено freeze.py, руками не править ==== */
+/* Код задачи — картинкой, прямо в браузере.
+   Вставляется freeze.py --sync между маркерами FRZ. Руками в html не править.
+
+   Тренажёр, ДЗ и проверочная рисуют код каждой задачи сами при открытии, и
+   заморозить его при выкладке нельзя — его ещё нет. Поэтому страница
+   рисует код на canvas и вставляет <img>: скопировать мышкой и запустить в
+   IDLE не выйдет — задача снова про чтение (Света, 14.09.2026).
+
+   Стиль тот же, что у блоков <pre>: Consolas 15px, тёмный фон, комментарий
+   после # серо-голубой. Рисуем в двойном размере — чётко на любом экране. */
+function frz(code) {
+  var S = 2, SIZE = 15, LEAD = 22, PX = 14, PY = 12;
+  var lines = String(code).replace(/\r/g, '').split('\n');
+  var c = document.createElement('canvas'), g = c.getContext('2d');
+  var font = (SIZE * S) + 'px Consolas, "Cascadia Mono", "Courier New", monospace';
+  g.font = font;
+  var w = 0;
+  for (var i = 0; i < lines.length; i++) w = Math.max(w, g.measureText(lines[i]).width);
+  c.width = Math.ceil(w) + 2 * PX * S;
+  c.height = lines.length * LEAD * S + 2 * PY * S;
+  g.fillStyle = '#1e2430';
+  g.fillRect(0, 0, c.width, c.height);
+  g.font = font;                       /* смена размера сбрасывает шрифт */
+  g.textBaseline = 'middle';
+  for (var k = 0; k < lines.length; k++) {
+    var y = PY * S + k * LEAD * S + LEAD * S / 2;
+    var line = lines[k], at = line.indexOf('#');
+    var head = at < 0 ? line : line.slice(0, at), tail = at < 0 ? '' : line.slice(at);
+    g.fillStyle = '#e7ecf5';
+    g.fillText(head, PX * S, y);
+    if (tail) {
+      g.fillStyle = '#8fa6c4';
+      g.fillText(tail, PX * S + g.measureText(head).width, y);
+    }
+  }
+  if (!document.getElementById('frz-css')) {
+    var st = document.createElement('style');
+    st.id = 'frz-css';
+    st.textContent = 'img.frz-b{display:block;max-width:100%;height:auto;'
+                   + 'border-radius:10px;margin:8px 0}';
+    document.head.appendChild(st);
+  }
+  return '<img class="frz-b" width="' + (c.width / S) + '" height="' + (c.height / S)
+       + '" alt="код задачи — читай с экрана" src="' + c.toDataURL('image/png') + '">';
+}
+/* ==== /FRZ ==== */
+
+function esc(s){ return String(s).replace(/[&<>]/g, c =>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+/* ------------------------------------------------------------- экран */
+function paintProgress(){
+  const box = document.getElementById("types");
+  box.innerHTML = "";
+  HW_TYPES.forEach((name, i) => {
+    const c = document.createElement("span");
+    c.className = "chip" + (st.done[i] ? " done"
+                          : (st.cur && st.cur.hwType === i ? " cur" : ""));
+    c.textContent = name + (st.done[i] ? " ✓" : "");
+    box.appendChild(c);
+  });
+  const m = markFor(st.typesDone);
+  const sb = document.getElementById("scorebox");
+  sb.className = "score" + (m ? " m" + m : "");
+  document.getElementById("mark").textContent = m || "—";
+  document.getElementById("stats").textContent =
+    "закрыто типов: " + st.typesDone + " из " + N +
+    " · решено задач: " + st.solved + " · ошибок: " + st.wrong +
+    (st.typesDone < MIN_TYPES
+      ? " · до кода работы осталось закрыть " + (MIN_TYPES - st.typesDone) : "");
+}
+
+function nextTask(){
+  const type = pickType();
+  if (type === null) { finish(); return; }
+  st.cur = hwMake(type, rng);
+  st.answered = false;
+  const t = st.cur;
+  const hint = t.hint
+    ? '<details><summary>Подсказка</summary><p>' + t.hint + '</p></details>' : "";
+  document.getElementById("area").innerHTML =
+    '<div class="card" id="task">' +
+      '<p class="tag">' + HW_TYPES[type] +
+        (st.retry === type ? ' · ещё раз, тот же тип' : '') + '</p>' +
+      (t.code ? frz(t.code) : '') +
+      (t.input !== undefined
+        ? '<p class="inp">Вход: <code>' + esc(t.input).replace(/\n/g, '</code>, затем <code>') + '</code></p>'
+        : '') +
+      '<p>' + (t.question || "Что напечатает программа?") + '</p>' +
+      '<div class="row">' +
+        '<input type="text" id="ans" autocomplete="off" spellcheck="false">' +
+        '<button class="primary" id="go">Проверить</button>' +
+      '</div>' +
+      hint +
+      '<div class="verdict" id="v"></div>' +
+    '</div>';
+  document.getElementById("go").addEventListener("click", judge);
+  document.getElementById("ans").addEventListener("keydown", e => {
+    if (e.key === "Enter") judge();
+  });
+  document.getElementById("ans").focus();
+  paintProgress();
+}
+
+function judge(){
+  if (st.answered) { nextTask(); return; }
+  const raw = document.getElementById("ans").value;
+  if (!raw.trim()) return;
+  const t = st.cur, type = t.hwType;
+  const res = hwVerdict(t, raw);
+  const card = document.getElementById("task");
+  const v = document.getElementById("v");
+  st.answered = true;
+  document.getElementById("go").textContent = "Дальше";
+  document.getElementById("ans").disabled = true;
+  if (res.ok){
+    st.solved++;
+    st.streak[type]++;
+    st.retry = null;
+    card.className = "card ok";
+    v.className = "verdict ok";
+    let text = "Верно. " + (res.why ? res.why + " " : "") + (t.explain || "");
+    if (st.streak[type] >= NEED_STREAK){
+      st.done[type] = true;
+      text += " Тип закрыт.";
+    }
+    v.innerHTML = text;
+  } else {
+    st.wrong++;
+    st.streak[type] = 0;
+    st.clean[type] = false;
+    st.retry = type;
+    card.className = "card err";
+    v.className = "verdict err";
+    v.innerHTML = "Пока нет" + (res.why ? " — " + res.why : "") +
+      ". " + (t.explain || "") +
+      " Следующая задача — того же типа.";
+  }
+  paintProgress();
+}
+
+function finish(){
+  const m = markFor(st.typesDone);
+  const code = st.typesDone >= MIN_TYPES ? makeCode(st) : null;
+  const more = st.typesDone < N
+    ? '<button id="more">Закрыть ещё типы</button>' : "";
+  document.getElementById("area").innerHTML =
+    '<div class="card">' +
+      '<h2>Работа окончена</h2>' +
+      '<p>Закрыто типов: <b>' + st.typesDone + '</b> из ' + N +
+        '. Решено задач: ' + st.solved + ', ошибок: ' + st.wrong + '.' +
+        (m ? ' Наработано на <b>' + m + '</b>.' : '') + '</p>' +
+      (code
+        ? '<p>Твой код работы:</p><div class="code">' + code + '</div>' +
+          '<div class="fields">' +
+            '<div><label for="fam">Фамилия</label>' +
+              '<input type="text" id="fam" autocomplete="off"></div>' +
+            '<div><label for="kls">Класс</label>' +
+              '<input type="text" id="kls" autocomplete="off"></div>' +
+          '</div>' +
+          '<div class="row"><button id="send" class="primary">Сдать работу</button></div>' +
+          '<p class="stats">Кнопка откроет форму: фамилия, класс и код уже ' +
+            'будут вписаны — останется нажать «Отправить».</p>'
+        : '<div class="note">Закрыто меньше ' + MIN_TYPES +
+          ' типов — кода работы нет. Закрой ещё хотя бы ' +
+          (MIN_TYPES - st.typesDone) + ', и он появится.</div>') +
+      '<div class="row">' + more + '</div>' +
+    '</div>';
+  const b = document.getElementById("more");
+  if (b) b.addEventListener("click", nextTask);
+  wireSend(code);
+}
+
+function wireSend(code){
+  const btn = document.getElementById("send");
+  if (!btn) return;
+  const fam = document.getElementById("fam"), kls = document.getElementById("kls");
+  try {
+    fam.value = localStorage.getItem("fam") || "";
+    kls.value = localStorage.getItem("kls") || "";
+  } catch (e) {}
+  btn.addEventListener("click", () => {
+    if (!fam.value.trim()){ fam.focus(); return; }
+    try {
+      localStorage.setItem("fam", fam.value.trim());
+      localStorage.setItem("kls", kls.value.trim());
+    } catch (e) {}
+    const url = FORM.replace("ФАМИЛИЯ", encodeURIComponent(fam.value.trim()))
+                    .replace("КЛАСС", encodeURIComponent(kls.value.trim()))
+                    .replace("КОД", encodeURIComponent(code));
+    window.open(url, "_blank", "noopener");
+  });
+}
+
+paintProgress();
+nextTask();
+</script>
+<p class="ai-mark" style="margin:34px auto 0;max-width:860px;padding-top:12px;border-top:1px solid #d9dce6;color:#5c6070;font:13px/1.5 "Segoe UI",system-ui,sans-serif">Материалы подготовлены с использованием технологий искусственного интеллекта.</p>
+</body>
+</html>
