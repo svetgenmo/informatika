@@ -1,0 +1,496 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Инвариант цикла и документирование — презентация</title>
+<meta name="description" content="Презентация к седьмому занятию 10 класса (углублённый): таблица витков, инвариант как фраза, верная на каждом витке, цикл по фразе — начало, шаг, выход, проверка на границе, НОД вычитанием; полезный комментарий, шапка программы с примером, help().">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E10%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ink)}
+body{font:20px/1.5 "Segoe UI",system-ui,sans-serif}
+.deck{height:100vh;display:flex;flex-direction:column}
+.stage{flex:1 1 auto;overflow-y:auto;padding:34px 56px 12px}
+.slide{display:none;max-width:1100px;margin:0 auto}
+.slide.on{display:block}
+
+h1{font-size:50px;line-height:1.1;margin:0 0 18px;text-wrap:balance}
+h2{font-size:36px;line-height:1.15;margin:0 0 20px;text-wrap:balance}
+.lead{font-size:24px;color:var(--muted);margin:0 0 26px}
+p{margin:0 0 14px}
+ul,ol{margin:0 0 14px;padding-left:28px}
+li{margin:8px 0}
+code{font-family:Consolas,"Cascadia Mono",monospace;background:var(--card);
+     border:1px solid var(--line);border-radius:6px;padding:1px 7px;font-size:.92em}
+pre{font-family:Consolas,"Cascadia Mono",monospace;background:#1e2430;color:#e7ecf5;
+    padding:16px 20px;border-radius:12px;font-size:22px;line-height:1.45;
+    overflow-x:auto;margin:10px 0}
+pre code{background:none;border:0;padding:0;color:inherit;font-size:inherit}
+pre .c{color:#8fa6c4}
+pre .out{color:#9dd4b4}
+pre .hl{color:#ffd479}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+.box{border:1px solid var(--line);border-radius:14px;padding:16px 20px;background:#fff}
+.box h3{margin:0 0 8px;font-size:22px}
+.good{border-color:var(--ok-line);background:var(--ok-bg)}
+.bad{border-color:var(--err-line);background:var(--err-bg)}
+.warn{border-color:var(--hi-line);background:var(--hi-bg)}
+.big{font-size:26px}
+table{border-collapse:collapse;width:100%;font-size:22px;margin:10px 0}
+th,td{border:1px solid var(--line);padding:9px 14px;text-align:left}
+th{background:var(--card)}
+.step[hidden]{display:none}
+.bar{flex:0 0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+     border-top:1px solid var(--line);background:var(--card);padding:12px 24px}
+.bar .spacer{flex:1 1 auto}
+.count{color:var(--muted);font-size:17px;font-variant-numeric:tabular-nums}
+.keys{color:var(--muted);font-size:15px}
+.keys kbd{font:600 13px/1 Consolas,monospace;border:1px solid var(--line);
+          border-bottom-width:2px;border-radius:5px;padding:2px 6px;background:#fff}
+button{font:600 17px/1 inherit;padding:11px 18px;border-radius:10px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);color:var(--muted)}
+
+/* ---- размер шрифта на проекторе: A− / A+ ---- */
+.zoom{display:inline-flex;align-items:center;gap:3px;margin-left:8px}
+.zoom button{padding:8px 10px;font-size:15px;min-width:36px;line-height:1}
+.zoom .z{color:var(--muted);font-size:15px;min-width:46px;text-align:center;
+         font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body>
+<div class="deck">
+<div class="stage" id="stage">
+
+<section class="slide on">
+  <h1>Инвариант цикла и документирование</h1>
+  <p class="lead">Как написать цикл, чтобы он был верным,<br>и как записать, что он
+  делает. 10 класс, углублённый уровень — занятие седьмое.</p>
+  <p>Два урока плана за одну пару: «Инвариант цикла» и «Документирование
+  программ». Они про одно и то же: самая ценная строка документации цикла — та
+  фраза, которая верна на каждом его витке.</p>
+</section>
+
+<section class="slide">
+  <h2>Вспомним вклад из пары 4</h2>
+  <pre><code>total = 1000
+year = 0
+while total &lt; 8000:
+    total = total + total * 100 // 100
+    year = year + 1
+print(year, total)</code></pre>
+  <div class="steps">
+    <div class="step" hidden>
+      <table>
+        <tr><th>проверка условия</th><th>year</th><th>total</th></tr>
+        <tr><td>до цикла</td><td>0</td><td>1000</td></tr>
+        <tr><td>после 1-го витка</td><td>1</td><td>2000</td></tr>
+        <tr><td>после 2-го</td><td>2</td><td>4000</td></tr>
+        <tr><td>на выходе</td><td>3</td><td>8000</td></tr>
+      </table>
+    </div>
+    <div class="step" hidden>
+      <p class="big">В каждой строке верно одно и то же: <b>total — сумма на счёте
+      через year лет</b>. Переменные меняются, фраза — нет.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Инвариант — фраза, верная на каждом витке</h2>
+  <p>Утверждение о переменных, которое верно <b>перед каждой проверкой условия</b>:
+  до первого витка, после каждого и на выходе.</p>
+  <div class="two">
+    <div class="box">
+      <h3>Не условие цикла</h3>
+      <p>Условие на выходе становится <b>ложным</b>. Инвариант остаётся
+      <b>верным</b> всегда.</p>
+    </div>
+    <div class="box">
+      <h3>Не «переменная, которая не меняется»</h3>
+      <p>Меняется всё. Не меняется <b>связь</b> между переменными.</p>
+    </div>
+  </div>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="box good">
+        <b>Выход + фраза = ответ.</b> На выходе известно и то, и другое:
+        <code>total ≥ 8000</code> (условие ложно) и «total — сумма через year лет»
+        (фраза верна). Значит, year — первый год, когда вклад дорос до цели.
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Сумма цифр: фраза, которую видно в таблице</h2>
+  <div class="two">
+    <pre><code>n = 5372
+s = 0
+while n &gt; 0:
+    s = s + n % 10
+    n = n // 10
+print(s)</code></pre>
+    <table>
+      <tr><th>n</th><th>s</th><th>s + сумма цифр n</th></tr>
+      <tr><td>5372</td><td>0</td><td>0 + 17</td></tr>
+      <tr><td>537</td><td>2</td><td>2 + 15</td></tr>
+      <tr><td>53</td><td>9</td><td>9 + 8</td></tr>
+      <tr><td>5</td><td>12</td><td>12 + 5</td></tr>
+      <tr><td>0</td><td>17</td><td>17 + 0</td></tr>
+    </table>
+  </div>
+  <div class="steps">
+    <div class="step" hidden>
+      <p class="big">Фраза: <b>s + сумма цифр n = сумма цифр исходного числа</b>.
+      Проще: <i>s — сумма уже оторванных цифр, n — то, что осталось</i>.</p>
+    </div>
+    <div class="step" hidden>
+      <p>На выходе <code>n == 0</code> — подставляем в фразу: <code>s + 0 = 17</code>.
+      Программа считает сумму цифр — это доказано, а не проверено на трёх
+      примерах.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Строим цикл по фразе: три места</h2>
+  <table>
+    <tr><th>Место</th><th>Вопрос к фразе</th><th>Сумма цифр</th></tr>
+    <tr><td><b>Начало</b></td><td>при каких значениях фраза верна до первого витка?</td>
+        <td>ничего не оторвано: <code>s = 0</code></td></tr>
+    <tr><td><b>Шаг</b></td><td>как сдвинуться к цели, чтобы фраза снова стала верной?</td>
+        <td>оторвали <code>n % 10</code> — прибавили к <code>s</code></td></tr>
+    <tr><td><b>Выход</b></td><td>когда фраза превращается в ответ?</td>
+        <td><code>n == 0</code> → <code>while n &gt; 0</code></td></tr>
+  </table>
+  <div class="steps">
+    <div class="step" hidden>
+      <p class="big">Это и есть «составление цикла по заранее определённому
+      инварианту» из плана: сначала фраза, потом код.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Степень двойки: фраза и граница</h2>
+  <p>Наибольшая степень двойки, не больше N. Фраза: <b>p = 2 ** k и p ≤ N</b>.</p>
+  <div class="two">
+    <pre><code>k = 0
+p = 1              <span class="c"># 2 ** 0 = 1 ≤ N</span>
+while p * 2 &lt;= N:
+    p = p * 2
+    k = k + 1
+print(k, p)</code></pre>
+    <div class="steps">
+      <div class="step" hidden>
+        <div class="box bad">
+          <h3><code>while p &lt;= N</code></h3>
+          <p>Лишний виток: на выходе <code>p &gt; N</code> — фраза сломалась.</p>
+        </div>
+      </div>
+      <div class="step" hidden>
+        <div class="box bad">
+          <h3><code>while p * 2 &lt; N</code></h3>
+          <p>Фраза цела, но на <code>N = 16</code> выходим на 8: «не больше» — это
+          <code>&lt;=</code>.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="steps">
+    <div class="step" hidden>
+      <p class="big">Проверять фразу надо <b>на границе</b>: N = 1, N — точная
+      степень двойки, N на единицу меньше степени.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Ловушка: накопитель стартует с чужого числа</h2>
+  <div class="two">
+    <div class="box bad">
+      <h3>Так — неверно</h3>
+      <pre><code>mn = 0
+for i in range(K):
+    x = int(input())
+    if x &lt; mn:
+        mn = x</code></pre>
+      <p>«mn — наименьшее из прочитанных» неверна <b>уже до цикла</b>. На
+      5, 8, 3 напечатает 0.</p>
+    </div>
+    <div class="box good">
+      <h3>Так — верно</h3>
+      <pre><code>mn = int(input())
+for i in range(K - 1):
+    x = int(input())
+    if x &lt; mn:
+        mn = x</code></pre>
+      <p>Из одного прочитанного числа оно само и наименьшее — фраза верна с
+      начала.</p>
+    </div>
+  </div>
+  <div class="steps">
+    <div class="step" hidden>
+      <p class="big">И номер <b>первого</b> наибольшего: строгое <code>&gt;</code>.
+      С <code>&gt;=</code> равное число перезапишет номер.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>НОД вычитанием: фраза, которой нет в коде</h2>
+  <div class="two">
+    <pre><code>while a != b:
+    if a &gt; b:
+        a = a - b
+    else:
+        b = b - a
+print(a)</code></pre>
+    <table>
+      <tr><th>a</th><th>b</th></tr>
+      <tr><td>12</td><td>18</td></tr>
+      <tr><td>12</td><td>6</td></tr>
+      <tr><td>6</td><td>6</td></tr>
+    </table>
+  </div>
+  <div class="steps">
+    <div class="step" hidden>
+      <p class="big">Фраза: <b>НОД(a, b) не меняется</b>. Общий делитель a и b делит
+      и a − b — поэтому вычитание НОД не трогает.</p>
+    </div>
+    <div class="step" hidden>
+      <p>Выход: <code>a == b</code>. А НОД двух равных чисел — само число. Из кода
+      этого не видно; из фразы — сразу. Это задание 3 практикума.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Документирование: что писать в комментарии</h2>
+  <div class="two">
+    <div class="box bad">
+      <h3>Шум</h3>
+      <pre><code>i = i + 1   <span class="c"># увеличиваем i</span>
+<span class="c"># цикл</span>
+while n &gt; 0:</code></pre>
+      <p>Пересказ строки: читать надо, нового ноль.</p>
+    </div>
+    <div class="box good">
+      <h3>Польза</h3>
+      <pre><code><span class="c"># Инвариант: s — сумма</span>
+<span class="c"># уже оторванных цифр</span>
+while n &gt; 0:</code></pre>
+      <p>То, что верно, — и чего в строках не видно.</p>
+    </div>
+  </div>
+  <div class="steps">
+    <div class="step" hidden>
+      <p class="big">Комментарий, который <b>врёт</b>, хуже, чем никакого. В
+      тренажёре есть такой тип: три комментария, один неправда.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Шапка программы — договор</h2>
+  <pre><code><span class="c"># Ввод: натуральное число n</span>
+<span class="c"># Вывод: сумма цифр числа n</span>
+<span class="c"># Пример: 5372 -&gt; 17</span>
+n = int(input())</code></pre>
+  <p>Что дать, что получить и пример. Карточка задания в практикуме устроена ровно
+  так же — это и есть документация.</p>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="box warn">
+        <b>Пример ценнее слов:</b> его можно проверить запуском. Оболочка сегодня так
+        и делает — берёт вход из примера, запускает программу, сверяет. Не сошлось —
+        врёт либо программа, либо шапка.
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Документация для людей и чужая документация</h2>
+  <div class="two">
+    <div class="box">
+      <h3>Для пользователя</h3>
+      <p><code>input("Введите число: ")</code> — подсказка человеку за
+      клавиатурой.</p>
+      <p>Когда вывод читает машина (оболочка, ЕГЭ), текста в <code>input()</code>
+      нет.</p>
+    </div>
+    <div class="box">
+      <h3>Чужая</h3>
+      <pre><code>&gt;&gt;&gt; help(abs)
+&gt;&gt;&gt; help(round)</code></pre>
+      <p>Шапки, которые написали авторы Python. Попробуйте в IDLE.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Что делаем сегодня</h2>
+  <table>
+    <tr><th>№</th><th>Программа</th><th>Фраза</th></tr>
+    <tr><td>1</td><td><b>Степень двойки</b>: наибольшая, не больше N</td>
+        <td><code>p = 2 ** k</code> и <code>p ≤ N</code></td></tr>
+    <tr><td>2</td><td><b>Наименьшее и наибольшее</b> из K чисел и номер первого
+        наибольшего</td>
+        <td>mn, mx — из прочитанных; num — первый наибольший</td></tr>
+    <tr><td>3</td><td><b>НОД вычитанием</b> и число вычитаний — <b>с шапкой</b></td>
+        <td>НОД(a, b) не меняется</td></tr>
+  </table>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="box warn">
+        Оболочка подаст границу: <b>N = 1</b> и <b>точные степени двойки</b>,
+        <b>все положительные</b> и <b>все отрицательные</b> числа, <b>два равных
+        максимума</b>, <b>равные a и b</b>. И запустит пример из шапки.
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Как работаем</h2>
+  <ol>
+    <li>Открываем практикум из общей папки — сначала <b>тренажёр</b>:
+    двенадцать задач на чтение циклов, оценки за него нет.</li>
+    <li>Пишем три программы в IDLE, сохраняем в свою папку как
+    <code>zadanie1.py</code>, <code>zadanie2.py</code>, <code>zadanie3.py</code>.</li>
+    <li>Запускаем <code>Проверка.bat</code> → «Найти мои файлы» → «Проверить всё».</li>
+    <li>Показываем отметку с экрана.</li>
+  </ol>
+  <div class="box warn">
+    В задании 3 обязательны строки <code># Ввод:</code>, <code># Вывод:</code>,
+    <code># Пример: вход -&gt; вывод</code> и <code># Инвариант: ...</code> перед
+    циклом. Без них оболочка задание не примет, даже если программа считает верно.
+  </div>
+  <p>Отметка: три задания — «5», два — «4», одно — «3». Попыток сколько угодно.</p>
+</section>
+
+<section class="slide">
+  <h1>За работу</h1>
+  <p class="lead">Сначала тренажёр, потом три программы.</p>
+  <p>Домашнее задание — на странице «Домашнее задание»: шесть типов задач на
+  чтение циклов и документации, Python дома не нужен. В начале следующей пары —
+  проверочная по этим же типам.</p>
+</section>
+
+</div>
+
+<div class="bar">
+  <button id="prev">← Назад</button>
+  <button id="step" class="primary">Раскрыть</button>
+  <button id="next">Вперёд →</button>
+  <span class="count" id="count"></span>
+  <span class="zoom" title="Размер шрифта на экране: клавиши + и −"><button id="zoomOut" title="Мельче (клавиша −)">A−</button><span class="z" id="zoomVal"></span><button id="zoomIn" title="Крупнее (клавиша +)">A+</button></span>
+  <div class="spacer"></div>
+  <span class="ai-mark" style="color:#5c6070;font-size:13px">Материалы подготовлены с использованием технологий искусственного интеллекта.</span>
+  <span class="keys"><kbd>Пробел</kbd> раскрыть и дальше ·
+    <kbd>←</kbd> <kbd>→</kbd> слайды</span>
+</div>
+</div>
+
+<script>
+const slides = [...document.querySelectorAll(".slide")];
+let cur = 0, shown = 0;
+
+const stepsOf = i => [...slides[i].querySelectorAll(".steps > .step")];
+
+function show(i){
+  slides[cur].classList.remove("on");
+  cur = Math.max(0, Math.min(slides.length - 1, i));
+  slides[cur].classList.add("on");
+  shown = stepsOf(cur).filter(el => !el.hidden).length;
+  document.getElementById("stage").scrollTop = 0;
+  sync();
+}
+
+function sync(){
+  const total = stepsOf(cur).length;
+  document.getElementById("count").textContent = `${cur + 1} / ${slides.length}`;
+  document.getElementById("prev").disabled = cur === 0;
+  document.getElementById("next").disabled = cur === slides.length - 1;
+  const b = document.getElementById("step");
+  b.hidden = total === 0;
+  if (total){
+    b.disabled = shown >= total;
+    b.textContent = shown >= total ? "Всё открыто"
+                  : shown === 0 ? "Раскрыть" : `Дальше (${shown}/${total})`;
+  }
+}
+
+function nextStep(){
+  const steps = stepsOf(cur);
+  if (shown >= steps.length) return false;
+  steps[shown].hidden = false;
+  steps[shown].scrollIntoView({block: "nearest", behavior: "smooth"});
+  shown++;
+  sync();
+  return true;
+}
+
+document.getElementById("prev").addEventListener("click", () => show(cur - 1));
+document.getElementById("next").addEventListener("click", () => show(cur + 1));
+document.getElementById("step").addEventListener("click", nextStep);
+
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowRight" || e.key === "PageDown"){ show(cur + 1); }
+  else if (e.key === "ArrowLeft" || e.key === "PageUp"){ show(cur - 1); }
+  else if (e.key === " " || e.key === "Enter"){
+    if (!nextStep()) show(cur + 1);
+  } else return;
+  e.preventDefault();
+});
+
+show(0);
+
+/* ---- размер шрифта на проекторе ----
+   Zoom только на области слайда: zoom на body растягивает 100vh, и панель
+   уезжает за экран (проверено 17.09.2026). Шаг запоминается в
+   localStorage и общий для всех презентаций: один раз подобрала на
+   проекторе — дальше везде так. ZOOM_BASE — стартовый масштаб этой колоды:
+   у колод с базовым кеглем 20px он выше, чем у 24px. */
+const ZOOM_BASE = 1.2;
+const ZOOM_KEY = "slides-zoom-step";
+let zoomStep = 0;
+try { zoomStep = Math.max(-3, Math.min(6, parseInt(localStorage.getItem(ZOOM_KEY), 10) || 0)); }
+catch (e) {}
+function applyZoom(){
+  const z = Math.round(ZOOM_BASE * Math.pow(1.1, zoomStep) * 100) / 100;
+  document.getElementById("stage").style.zoom = z;
+  document.getElementById("zoomVal").textContent = Math.round(z * 100) + "%";
+}
+function setZoom(d){
+  zoomStep = Math.max(-3, Math.min(6, zoomStep + d));
+  try { localStorage.setItem(ZOOM_KEY, String(zoomStep)); } catch (e) {}
+  applyZoom();
+}
+document.getElementById("zoomIn").addEventListener("click", () => setZoom(1));
+document.getElementById("zoomOut").addEventListener("click", () => setZoom(-1));
+document.addEventListener("keydown", e => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key === "+" || e.key === "=") setZoom(1);
+  else if (e.key === "-" || e.key === "_") setZoom(-1);
+  else return;
+  e.preventDefault();
+});
+applyZoom();
+</script>
+</body>
+</html>
