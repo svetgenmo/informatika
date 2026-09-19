@@ -74,6 +74,8 @@ table.steps td.m{font-weight:700;color:var(--accent);font-size:17px}
 /* ------------------------------------------------------------ задача */
 .card{border:1px solid var(--line);border-radius:12px;padding:18px 20px;
       margin-bottom:14px;background:#fff}
+.card.ok{border-color:var(--ok-line);background:var(--ok-bg)}
+.card.locked{opacity:.75}
 .card .kicker{font-size:13px;letter-spacing:.08em;text-transform:uppercase;
               color:var(--muted);margin-bottom:8px}
 .intro{font-size:18px;margin-bottom:4px}
@@ -164,11 +166,11 @@ code{font:600 15px/1.4 Consolas,"Courier New",monospace;
 <div class="howto">
   <dl>
     <dt>Как устроено</dt>
-    <dd>Задачи идут по одной, ответ набирается с клавиатуры — одним
-        словом, как в условии. Тип считается <b>закрытым</b>, когда
-        ответишь по нему верно <b>два раза подряд</b>. Ошибся — счёт по
-        этому типу начинается заново, зато сразу увидишь весь ход
-        решения.</dd>
+    <dd>Все шесть задач лежат на странице сразу — решай в любом
+        порядке; ответ набирается с клавиатуры — одним словом, как в условии. Тип считается <b>закрытым</b>, когда
+        ответишь по нему верно. Ошибся — сразу увидишь весь ход решения,
+        а на той же карточке появится кнопка <b>«Новые числа»</b>:
+        такая же задача с другим текстом.</dd>
 
     <dt>Сколько решать</dt>
     <dd><b>Сколько хочешь — на какую оценку наработаешь, такую и
@@ -176,19 +178,19 @@ code{font:600 15px/1.4 Consolas,"Courier New",monospace;
         <table class="steps">
           <tr><th>закрыто типов</th><th>оценка</th>
               <th>задач минимум</th></tr>
-          <tr><td>4 из 6</td><td class="m">3</td><td>8</td></tr>
-          <tr><td>5 из 6</td><td class="m">4</td><td>10</td></tr>
-          <tr><td>6 из 6</td><td class="m">5</td><td>12</td></tr>
+          <tr><td>4 из 6</td><td class="m">3</td><td>4</td></tr>
+          <tr><td>5 из 6</td><td class="m">4</td><td>5</td></tr>
+          <tr><td>6 из 6</td><td class="m">5</td><td>6</td></tr>
         </table>
         Задач будет больше, если ошибаться. Остановиться можно в любой
-        момент — кнопка «Закончить и получить код».</dd>
+        момент — кнопка «Закончить и получить код» внизу страницы.</dd>
 
     <dt>Что получишь</dt>
     <dd><b>Код работы</b> — в нём записано, сколько типов ты закрыл,
         сколько решил задач и сколько было ошибок.</dd>
 
     <dt>Как сдать</dt>
-    <dd>В конце появится кнопка <b>«Сдать работу»</b>: впишешь фамилию
+    <dd>Рядом с кодом появится кнопка <b>«Сдать работу»</b>: впишешь фамилию
         и класс, кнопка сама откроет форму с уже вписанным кодом.
         Останется нажать «Отправить». Переписывать код руками не надо —
         именно на этом чаще всего и ошибаются.</dd>
@@ -202,13 +204,20 @@ code{font:600 15px/1.4 Consolas,"Courier New",monospace;
     <div class="score">
       <span>наработано на</span><b id="mark">—</b>
     </div>
-    <button id="finish" class="primary" disabled>Закончить и получить код</button>
   </div>
   <div class="types" id="types"></div>
   <p class="need" id="need"></p>
 </div>
 
 <div id="main"></div>
+
+<div class="card" id="finishbar">
+  <div class="row" style="margin-top:0">
+    <button id="finish" class="primary" disabled>Закончить и получить код</button>
+    <span class="stats" id="finishnote"></span>
+  </div>
+</div>
+<div id="final"></div>
 
 <details>
   <summary>Подсказка: как решается задание 1</summary>
@@ -663,10 +672,6 @@ function renderCondition(t){
 
 /* ==== /БАЗА ==== */
 
-// Два верных подряд, а не три: случайное попадание они всё равно
-// отсекают, но объём укладывается в норматив времени на домашнюю работу.
-const STREAK = 2;
-
 // Ступени. Домашнее задание добровольное — ученик набирает столько,
 // сколько ему нужно, и останавливается. Шкала та же, что в тренажёре.
 const SCALE = [[6, 5], [5, 4], [4, 3]];
@@ -717,57 +722,64 @@ function makeCode(st){
   return "TX-" + out.slice(0, 4) + "-" + out.slice(4);
 }
 
-/* --------------------------------------------------------- состояние */
+/* --------------------------------------------------------- состояние
+   Все задания лежат на странице сразу (правило Светы от 17.09.2026):
+   виден объём, порядок ученик выбирает сам. Карточка на тип; верный
+   ответ её закрывает, ошибка показывает разбор и кнопку «Новые числа» —
+   такая же задача с другими данными на той же карточке.
+
+   Один верный ответ закрывает тип — не два, как в тренажёре: норма
+   домашней работы от 07.09.2026 (по одной задаче на тип, длинное
+   домашнее просто не сделают).                                        */
 
 const st = {
-  streak: TYPES.map(() => 0),
-  done:   TYPES.map(() => false),
-  clean:  TYPES.map(() => true),   // закрыт без единой ошибки
+  cards: TYPES.map(t => ({task: makeTask(t.id), state: "open",
+                          given: "", hint: null, draft: ""})),
+  clean: TYPES.map(() => true),    // закрыт без единой ошибки
   solved: 0, wrong: 0,
-  cur: null, answered: false, given: ""
+  locked: false                    // код выдан — карточки заперты
 };
 Object.defineProperty(st, "typesDone",
-  {get(){ return st.done.filter(Boolean).length; }});
+  {get(){ return st.cards.filter(c => c.state === "ok").length; }});
 Object.defineProperty(st, "cleanTypes",
-  {get(){ return st.done.filter((d, i) => d && st.clean[i]).length; }});
+  {get(){ return st.cards.filter((c, i) => c.state === "ok"
+                                           && st.clean[i]).length; }});
 
-function pickType(){
-  const open = TYPES.filter(t => !st.done[t.id]);
-  if (!open.length) return null;
-  // берём тот, где серия длиннее нуля — не бросаем начатое на полпути
-  const started = open.filter(t => st.streak[t.id] > 0);
-  const pool = started.length ? started : open;
-  return pool[randInt(0, pool.length - 1)];
+function captureDrafts(){
+  st.cards.forEach((c, i) => {
+    const el = document.getElementById("ans" + i);
+    if (el && c.state === "open") c.draft = el.value;
+  });
 }
 
-function nextTask(){
-  const t = pickType();
-  if (!t){ renderFinish(); return; }
-  st.cur = makeTask(t.id);
-  st.answered = false;
-  st.given = "";
-  render();
-}
-
-function answer(){
-  if (st.answered) return;
-  const given = document.getElementById("ans").value.trim();
+function answer(i){
+  const c = st.cards[i];
+  if (c.state !== "open" || st.locked) return;
+  const given = document.getElementById("ans" + i).value.trim();
   if (!given) return;                    // пустое — не считаем ответом
-  const t = st.cur, v = verdict(t, given);
-  st.given = given;
-  st.answered = true;
-  t.hint = v.hint;
-  t.ok = v.ok;
+  captureDrafts();
+  const v = verdict(c.task, given);
+  c.given = given;
+  c.hint = v.hint;
   if (v.ok){
     st.solved++;
-    st.streak[t.type]++;
-    if (st.streak[t.type] >= STREAK) st.done[t.type] = true;
+    c.state = "ok";
   } else {
     st.wrong++;
-    st.streak[t.type] = 0;
-    st.clean[t.type] = false;
+    st.clean[i] = false;
+    c.state = "err";
   }
   render();
+}
+
+function newNumbers(i){
+  if (st.locked) return;
+  captureDrafts();
+  st.cards[i] = {task: makeTask(TYPES[i].id), state: "open",
+                 given: "", hint: null, draft: ""};
+  render();
+  const el = document.getElementById("ans" + i);
+  if (el) el.focus();
 }
 
 /* ------------------------------------------------------------- вывод */
@@ -784,13 +796,12 @@ function explain(t){
 }
 
 function renderTypes(){
-  document.getElementById("types").innerHTML = TYPES.map(t => {
-    const dots = Array.from({length: STREAK}, (_, k) =>
-      `<span class="dot${k < st.streak[t.id] || st.done[t.id]
-         ? " full" : ""}"></span>`).join("");
-    return `<div class="type${st.done[t.id] ? " done" : ""}">
-              <span class="nm">${esc(t.name)}</span>
-              <span class="dots">${dots}</span></div>`;
+  document.getElementById("types").innerHTML = TYPES.map((t, i) => {
+    const ok = st.cards[i].state === "ok";
+    return `<div class="type${ok ? " done" : ""}">
+              <span class="nm">${i + 1}. ${esc(t.name)}</span>
+              <span class="dots"><span class="dot${ok ? " full" : ""}">
+              </span></span></div>`;
   }).join("");
 
   const done = st.typesDone;
@@ -801,12 +812,11 @@ function renderTypes(){
   el.className = done >= MIN_TO_FINISH ? "m" + mark : "";
 
   const btn = document.getElementById("finish");
-  btn.disabled = done < MIN_TO_FINISH;
+  btn.disabled = done < MIN_TO_FINISH || st.locked;
   btn.textContent = done >= MIN_TO_FINISH
       ? `Закончить и получить код (на ${mark})`
       : "Закончить и получить код";
 
-  const need = document.getElementById("need");
   const up = SCALE.filter(s => s[0] > done).pop();
   const kinds = n => {
     const a = n % 100, b = a % 10;
@@ -815,70 +825,77 @@ function renderTypes(){
     if (b > 1 && b < 5) return "типа";
     return "типов";
   };
+  let text;
   if (!up){
-    need.innerHTML = "Закрыто всё, что нужно на пятёрку. " +
-                     "Забирай код и сдавай.";
+    text = "Закрыто всё, что нужно на пятёрку. Забирай код и сдавай.";
   } else if (done >= MIN_TO_FINISH){
-    need.innerHTML = `Можно остановиться прямо сейчас — это <b>${mark}</b>. ` +
+    text = `Можно остановиться прямо сейчас — это <b>${mark}</b>. ` +
         `Закрой ещё <b>${up[0] - done}</b> ${kinds(up[0] - done)} — ` +
         `и будет <b>${up[1]}</b>.`;
   } else {
     const left = MIN_TO_FINISH - done;
-    need.innerHTML = `Закрой ещё <b>${left}</b> ${kinds(left)}, ` +
+    text = `Закрой ещё <b>${left}</b> ${kinds(left)}, ` +
         `чтобы получить код на <b>3</b>.`;
   }
+  document.getElementById("need").innerHTML = text;
+  document.getElementById("finishnote").innerHTML = st.locked ? "" : text;
 }
 
 function render(){
   renderTypes();
-  const t = st.cur;
   const main = document.getElementById("main");
-  if (!t) return;
+  main.innerHTML = "";
 
-  const quote = t.quote
-    ? `<div class="quote">${t.quote.map(l => `<div>${esc(l)}</div>`)
-                                   .join("")}</div>`
-    : "";
+  st.cards.forEach((c, i) => {
+    const t = c.task;
+    const card = document.createElement("div");
+    card.className = "card" + (c.state === "ok" ? " ok" : "")
+                   + (st.locked ? " locked" : "");
 
-  let tail = "";
-  if (st.answered){
-    tail = t.ok
-      ? `<div class="verdict ok">Правильно${
-          st.done[t.type] ? ` — «${esc(t.name)}» закрыто`
-                          : `, подряд: ${st.streak[t.type]} из ${STREAK}`}</div>`
-      : `<div class="verdict err">Ошибка. ${t.hint
-           ? t.hint + " " : `Верный ответ: ${esc(t.answer)}. `}
-           Серия по этому типу начинается заново.</div>` + explain(t);
-  }
+    let tail;
+    if (c.state === "open"){
+      tail = `<div class="row">
+        <input type="text" id="ans${i}" autocomplete="off"
+               spellcheck="false" placeholder="ответ" maxlength="24"
+               value="${esc(c.draft || "")}"
+               ${st.locked ? "disabled" : ""}>
+        <button class="primary" data-go="${i}"
+                ${st.locked ? "disabled" : ""}>Проверить</button>
+      </div>`;
+    } else if (c.state === "ok"){
+      tail = `<div class="row">
+        <input type="text" value="${esc(c.given)}" disabled></div>
+        <div class="verdict ok">Правильно — «${esc(t.name)}» закрыто</div>`;
+    } else {
+      tail = `<div class="row">
+        <input type="text" value="${esc(c.given)}" disabled>
+        <button class="primary" data-new="${i}"
+                ${st.locked ? "disabled" : ""}>Новые числа</button></div>
+        <div class="verdict err">Ошибка. ${c.hint
+           ? c.hint + " " : `Верный ответ: ${esc(t.answer)}. `}
+           Тип остаётся незакрытым — нажми «Новые числа»: будет
+           такая же задача с другим текстом.</div>` + explain(t);
+    }
 
-  main.innerHTML = `
-    <div class="card">
-      <div class="kicker">${esc(t.name)} &middot; решено задач:
-           ${st.solved}</div>
+    card.innerHTML = `
+      <div class="kicker">${i + 1} &middot; ${esc(t.name)}</div>
       <div class="intro">${esc(t.intro)}</div>
-      ${quote}
+      ${t.quote ? `<div class="quote">${t.quote.map(l =>
+          `<div>${esc(l)}</div>`).join("")}</div>` : ""}
       <div class="ask">${esc(t.tail)}<small>Одно слово, как в условии:
         без кавычек и знаков препинания.</small></div>
-      <div class="row">
-        <input type="text" id="ans" autocomplete="off"
-               spellcheck="false" placeholder="ответ" maxlength="24"
-               value="${esc(st.given || "")}"
-               ${st.answered ? "disabled" : ""}>
-        <button class="primary" id="go">${
-          st.answered ? "Следующая задача" : "Проверить"}</button>
-      </div>
-      ${tail}
-    </div>`;
+      ${tail}`;
+    main.appendChild(card);
+  });
 
-  const btn = document.getElementById("go");
-  btn.addEventListener("click", () => st.answered ? nextTask() : answer());
-  const inp = document.getElementById("ans");
-  if (!st.answered){
+  main.querySelectorAll("button[data-go]").forEach(b =>
+    b.addEventListener("click", () => answer(+b.dataset.go)));
+  main.querySelectorAll("button[data-new]").forEach(b =>
+    b.addEventListener("click", () => newNumbers(+b.dataset.new)));
+  main.querySelectorAll("input[type=text]:not(:disabled)").forEach(inp =>
     inp.addEventListener("keydown", e => {
-      if (e.key === "Enter"){ e.preventDefault(); answer(); }
-    });
-    inp.focus();
-  } else btn.focus();
+      if (e.key === "Enter"){ e.preventDefault(); answer(+inp.id.slice(3)); }
+    }));
 }
 
 /* Кнопка «Сдать»: фамилию и класс страница помнит между заходами, код
@@ -917,23 +934,31 @@ function wireSend(code){
 }
 
 function renderFinish(){
-  renderTypes();
+  captureDrafts();
+  st.locked = true;
+  render();
   const done = st.typesDone, mark = markFor(done);
   const all = done >= TYPES_TOTAL;
   const code = makeCode(st);
   const up = SCALE.filter(s => s[0] > done).pop();
+  // у темы с письмом (снимки черновика) поля фамилии и класса нужны и
+  // без подключённой формы: из них собирается тема письма
+  const mail = typeof MAILBOX !== "undefined";
+  const who = `<label>Фамилия
+          <input id="fam" autocomplete="off" placeholder="как в журнале"></label>
+        <label>Класс
+          <input id="kls" autocomplete="off" placeholder="9б"
+                 style="width:110px"></label>`;
 
   // Остановиться можно на любой ступени, поэтому «дальше» — не подачка,
   // а обычный ход: закрыл ещё один тип, забрал код получше.
-  const more = !up
-    ? `<button id="more">Потренироваться ещё</button>
-       <span class="stats">оценку это уже не изменит,
-             но перед ОГЭ полезно</span>`
-    : `<button id="back" class="primary">Решать дальше — до ${up[1]}</button>
-       <span class="stats">код останется, просто получишь новый,
-             когда закроешь ещё ${up[0] - done}</span>`;
+  const more = !up ? ""
+    : `<div class="row"><button id="back">Вернуться к задачам — до ${up[1]}</button>
+       <span class="stats">закроешь ещё ${up[0] - done} — получишь новый
+             код, получше; сдавать надо будет его</span></div>`;
 
-  document.getElementById("main").innerHTML = `
+  const box = document.getElementById("final");
+  box.innerHTML = `
     <div class="finish">
       <h2>${all ? "Готово — закрыты все шесть типов"
                 : `Готово — наработано на ${mark}`}</h2>
@@ -944,38 +969,35 @@ function renderFinish(){
       <div class="code">${code}</div>
       <p class="stats">Это код твоей работы. Он у каждого свой и зависит
          от того, сколько и как ты решал.</p>
-      ${FORM ? `<div class="send">
-        <label>Фамилия
-          <input id="fam" autocomplete="off" placeholder="как в журнале"></label>
-        <label>Класс
-          <input id="kls" autocomplete="off" placeholder="9б"
-                 style="width:110px"></label>
+      ${FORM ? `<div class="send">${who}
         <button id="send" class="primary">Сдать работу</button>
         <p class="stats note" id="sendnote">Кнопка откроет форму: фамилия,
            класс и код уже будут вписаны — останется нажать
            «Отправить».</p>
-      </div>` : `<ol class="todo">
-        <li>Открой форму сдачи домашнего задания (ссылку даст учитель).</li>
-        <li>Впиши фамилию, класс и этот код — <b>ровно как здесь</b>.</li>
-      </ol>`}
-    </div>
-    <div class="row">${more}</div>`;
+      </div>` : `<div class="send">${mail ? who : ""}
+        <p class="stats note">Форму сдачи ещё не подключили — код впиши в
+           неё сам(а), ссылку даст учитель.</p>
+      </div>`}
+      ${mail ? MAILBOX : ""}
+      ${more}
+    </div>`;
 
   wireSend(code);
-  const back = document.getElementById("back") || document.getElementById("more");
+  if (mail) wireMail(code);
+  box.scrollIntoView({block: "start", behavior: "smooth"});
+  const back = document.getElementById("back");
   if (back) back.addEventListener("click", () => {
-    // закрыто всё до единого — открываем счёт заново, иначе просто
-    // продолжаем с оставшимися типами
-    if (all) TYPES.forEach(t => { st.done[t.id] = false; st.streak[t.id] = 0; });
-    nextTask();
+    st.locked = false;
+    box.innerHTML = "";
+    render();
   });
 }
 
 document.getElementById("finish").addEventListener("click", () => {
-  if (st.typesDone >= MIN_TO_FINISH) renderFinish();
+  if (st.typesDone >= MIN_TO_FINISH && !st.locked) renderFinish();
 });
 
-nextTask();
+render();
 </script>
 <p class="ai-mark" style="margin:34px auto 0;max-width:860px;padding-top:12px;border-top:1px solid #d9dce6;color:#5c6070;font:13px/1.5 "Segoe UI",system-ui,sans-serif">Материалы подготовлены с использованием технологий искусственного интеллекта.</p>
 </body>
