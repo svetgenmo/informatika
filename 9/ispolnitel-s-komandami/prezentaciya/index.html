@@ -1,0 +1,1220 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Исполнитель с командами — презентация</title>
+<meta name="description" content="Презентация к заданию 5 ОГЭ по информатике, 9 класс: исполнитель с двумя командами — обратный ход от цели, деление только нацело, поиск числа b.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E5%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#16181d; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);overflow:hidden;
+     font:24px/1.45 "Segoe UI",system-ui,sans-serif}
+.mono{font-family:Consolas,"Courier New",monospace}
+
+.deck{height:100vh;display:flex;flex-direction:column}
+.stage{flex:1 1 auto;overflow-y:auto;padding:34px 56px 12px}
+.slide{display:none;max-width:1100px;margin:0 auto}
+.slide.on{display:block}
+
+h1{font-size:50px;line-height:1.1;margin:0 0 18px;text-wrap:balance}
+h2{font-size:36px;line-height:1.15;margin:0 0 20px;text-wrap:balance}
+.eyebrow{font-size:16px;letter-spacing:.1em;text-transform:uppercase;
+         color:var(--accent);font-weight:700;margin:0 0 8px}
+.lead{font-size:26px;color:var(--muted);margin:0 0 24px}
+.lead b{color:var(--ink)}
+p.note{margin-top:22px;color:var(--muted);font-size:21px}
+
+.bar{flex:0 0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+     border-top:1px solid var(--line);background:var(--card);padding:12px 24px}
+.bar .spacer{flex:1 1 auto}
+.count{color:var(--muted);font-size:17px;font-variant-numeric:tabular-nums}
+.keys{color:var(--muted);font-size:15px}
+.keys kbd{font:600 13px/1 Consolas,monospace;border:1px solid var(--line);
+     border-bottom-width:2px;border-radius:5px;padding:2px 6px;
+     background:#fff;color:var(--ink)}
+button{font:600 18px/1 inherit;padding:12px 20px;border-radius:10px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);
+       cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.35;cursor:default;border-color:var(--line);
+                color:var(--muted);background:#fff}
+button:focus-visible{outline:3px solid #a9c6e8;outline-offset:2px}
+
+/* ---- блоки разбора ---- */
+.task{border:3px solid var(--accent);border-radius:16px;padding:18px 24px;
+      background:var(--card);font-size:25px;margin:0 0 20px}
+.task p{margin:8px 0}
+.task .ask{margin-top:12px;font-weight:600}
+.steps{display:flex;flex-direction:column;gap:14px}
+.step{border:1px solid var(--line);border-radius:12px;padding:16px 22px;
+      background:#fff;font-size:23px}
+.step.hint{background:var(--hi-bg);border-color:var(--hi-line);color:var(--hi)}
+.step.answer{background:var(--ok-bg);border-color:var(--ok-line);
+             color:var(--ok);font-size:29px;font-weight:700}
+.step .cap{display:block;font-size:15px;letter-spacing:.08em;
+           text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.step.hint .cap{color:var(--hi)}
+.step.answer .cap{color:var(--ok)}
+.step b{color:var(--ink)}
+
+/* ---- само выражение ---- */
+.expr{font-size:32px;text-align:center;margin:18px 0;line-height:1.45}
+.expr.small{font-size:26px}
+.task .expr{margin:12px 0}
+
+/* ---- числовая прямая ---- */
+.axis{margin:10px 0 6px}
+.axis svg{display:block;width:100%;height:auto}
+.axis .cap{font-size:19px;color:var(--muted);margin:2px 0 10px}
+
+/* ---- разбор по значениям ---- */
+table.grid{border-collapse:collapse;font-size:22px;width:100%}
+table.grid td,table.grid th{border:1px solid var(--line);padding:10px 16px;
+     text-align:left;vertical-align:top}
+table.grid th{background:var(--card);color:var(--muted);font-size:17px;
+     letter-spacing:.05em;text-transform:uppercase;font-weight:600}
+table.grid td.k{font-weight:700;color:var(--accent);white-space:nowrap}
+table.grid td.y{color:var(--ok);font-weight:700}
+table.grid td.n{color:var(--err);font-weight:700}
+
+ol.vsteps{list-style:none;counter-reset:v;margin:0;padding:0;
+          display:flex;flex-direction:column;gap:12px}
+ol.vsteps li{counter-increment:v;display:flex;gap:18px;align-items:flex-start;
+             border:1px solid var(--line);border-left:5px solid var(--accent);
+             border-radius:12px;padding:14px 22px;background:#fff}
+ol.vsteps li::before{content:counter(v);flex:0 0 44px;height:44px;
+     border-radius:50%;background:var(--accent);color:#fff;
+     font:700 24px/44px Consolas,monospace;text-align:center}
+ol.vsteps li b{color:var(--accent)}
+ol.vsteps li .txt{font-size:23px;padding-top:6px}
+ol.vsteps li .txt small{display:block;font-size:19px;color:var(--muted);
+     margin-top:4px}
+
+ul.cards{list-style:none;padding:0;margin:0;display:grid;
+         grid-template-columns:repeat(2,1fr);gap:14px 24px}
+ul.cards li{border:1px solid var(--line);border-radius:12px;
+            padding:14px 20px;font-size:23px;background:#fff}
+ul.cards li b{color:var(--accent)}
+ul.cards li small{display:block;font-size:19px;color:var(--muted);
+                  margin-top:4px}
+ul.plain{margin:0;padding-left:26px;font-size:24px}
+ul.plain li{margin:8px 0}
+
+.two{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.box{border:1px solid var(--line);border-radius:14px;padding:18px 22px;
+     background:#fff}
+.box.warm{background:var(--hi-bg);border-color:var(--hi-line)}
+.box.cool{background:var(--ok-bg);border-color:var(--ok-line)}
+.box h3{margin:0 0 8px;font-size:26px;color:var(--accent)}
+.box.warm h3{color:var(--hi)}
+.box.cool h3{color:var(--ok)}
+.box p{margin:6px 0;font-size:21px}
+.box ul{margin:6px 0 0;padding-left:22px;font-size:21px}
+
+@media (max-width:820px){
+  body{font-size:18px}
+  .stage{padding:20px 18px 8px}
+  h1{font-size:32px} h2{font-size:25px} .lead{font-size:20px}
+  .task{font-size:20px} .step{font-size:19px}
+  .expr{font-size:23px} .expr.small{font-size:20px}
+  ul.cards,.two{grid-template-columns:1fr}
+  ol.vsteps li .txt{font-size:19px}
+}
+
+/* ---- задание 5: команды и цепочки ---- */
+.side{display:flex;gap:36px;align-items:flex-start;margin:14px 0}
+.side p{margin:0 0 12px;font-size:23px}
+.side p.q{font-size:23px}
+.side .grow{flex:1 1 0;min-width:0}
+.cmdbox{flex:0 0 auto;border:2px solid var(--accent);border-radius:12px;
+        background:var(--card);padding:12px 20px;font-size:24px;
+        font-weight:700;line-height:1.7;white-space:nowrap}
+.cmdbox .n{display:inline-block;width:30px;height:30px;line-height:28px;
+           border:1.5px solid var(--muted);border-radius:50%;
+           text-align:center;font-size:18px;margin-right:12px;
+           background:#fff;vertical-align:2px}
+.chainbox{background:var(--card);border:1px solid var(--line);
+          border-radius:12px;padding:12px 16px}
+.chainbox.wide{margin:6px 0 10px}
+/* высота ограничена экраном: на 768 строках слайд обязан влезать без
+   прокрутки даже при шрифте 110% */
+.chainbox svg{display:block;width:100%;height:auto;max-height:30vh}
+.side p.legend,.chainbox p.legend{font-size:18px;color:var(--muted);margin:8px 0 0}
+.side p.legend.plain{display:block}
+.task .cmds{font-weight:700;margin:6px 0 6px 28px;line-height:1.5}
+/* Слайд-пример: условие слева и на месте, шаги разбора справа. Иначе на
+   пятом шаге команды уже уехали за край, а без них шаг не прочитать. */
+.exwrap{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);
+        gap:28px;align-items:start}
+.exwrap .task{position:sticky;top:0;font-size:19px;padding:12px 18px}
+.exwrap .task p{margin:5px 0}
+/* «(Например, 12122 — это алгоритм…)» на слайде прячем: на экзамене эта
+   строка есть, и в тренажёре она есть, но на доске она только отнимает
+   место у разбора. */
+.exwrap .task p.ex{display:none}
+.exwrap .step{padding:10px 18px;font-size:21px}
+.exwrap .steps{gap:10px}
+@media (max-width:1000px){ .exwrap{grid-template-columns:1fr}
+                           .exwrap .task{position:static} }
+.task p.ex{font-style:italic;color:var(--muted)}
+
+/* ---- размер шрифта на проекторе: A− / A+ ---- */
+.zoom{display:inline-flex;align-items:center;gap:3px;margin-left:8px}
+.zoom button{padding:8px 10px;font-size:15px;min-width:36px;line-height:1}
+.zoom .z{color:var(--muted);font-size:15px;min-width:46px;text-align:center;
+         font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body>
+<div class="deck">
+<div class="stage" id="stage">
+
+  <!-- 1 ------------------------------------------------------------- -->
+  <section class="slide on">
+    <p class="eyebrow">ОГЭ, задание 5</p>
+    <h1>Исполнитель с командами</h1>
+    <p class="lead">Пятое задание экзамена. У исполнителя <b>две команды</b>,
+       у каждой свой номер. Надо составить программу, которая из одного
+       числа делает другое, — или найти число, спрятанное в команде.</p>
+    <div class="side">
+      <div class="cmdbox"><div><span class="n">1</span>умножь на 2</div><div><span class="n">2</span>прибавь 3</div></div>
+      <p class="q">Составьте алгоритм получения <b>из числа 2 числа
+         52</b>, содержащий не более 5 команд. В ответе запишите только
+         номера команд. Если таких алгоритмов более одного, то запишите
+         любой из них.</p>
+    </div>
+    <p class="note">Задание стоит 1 балл, на него уходит три-четыре минуты.
+       Перебирать программы наугад — долго: их 62. Есть приём, который
+       приводит к ответу за пять шагов.</p>
+  </section>
+
+  <!-- 2 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">с чего начать</p>
+    <h2>Программа — это номера команд подряд</h2>
+    <div class="side">
+      <div class="cmdbox"><div><span class="n">1</span>умножь на 2</div><div><span class="n">2</span>прибавь 3</div></div>
+      <div class="grow chainbox"><svg viewBox="0 0 954 106" role="img" aria-label="Программа 21211: 2 → 5 → 10 → 13 → 26 → 52"><g font-family="Segoe UI, system-ui, sans-serif"><rect x="6" y="36" width="92" height="56" rx="10" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="3"/><text x="52.0" y="74" text-anchor="middle" font-size="27" font-weight="700" fill="#1b1b1f">2</text><line x1="105" y1="64" x2="169" y2="64" stroke="#1f5fa8" stroke-width="3"/><path d="M169,64 l-10,-6 v12 z" fill="#1f5fa8"/><text x="137.0" y="52" text-anchor="middle" font-size="21" font-weight="700" fill="#1f5fa8">+3</text><circle cx="137.0" cy="84" r="12" fill="#fff" stroke="#5c6070" stroke-width="1.5"/><text x="137.0" y="90" text-anchor="middle" font-size="16" font-weight="700" fill="#1b1b1f">2</text><rect x="176" y="36" width="92" height="56" rx="10" fill="#fff" stroke="#5c6070" stroke-width="3"/><text x="222.0" y="74" text-anchor="middle" font-size="27" font-weight="700" fill="#1b1b1f">5</text><line x1="275" y1="64" x2="339" y2="64" stroke="#1f5fa8" stroke-width="3"/><path d="M339,64 l-10,-6 v12 z" fill="#1f5fa8"/><text x="307.0" y="52" text-anchor="middle" font-size="21" font-weight="700" fill="#1f5fa8">×2</text><circle cx="307.0" cy="84" r="12" fill="#fff" stroke="#5c6070" stroke-width="1.5"/><text x="307.0" y="90" text-anchor="middle" font-size="16" font-weight="700" fill="#1b1b1f">1</text><rect x="346" y="36" width="92" height="56" rx="10" fill="#fff" stroke="#5c6070" stroke-width="3"/><text x="392.0" y="74" text-anchor="middle" font-size="27" font-weight="700" fill="#1b1b1f">10</text><line x1="445" y1="64" x2="509" y2="64" stroke="#1f5fa8" stroke-width="3"/><path d="M509,64 l-10,-6 v12 z" fill="#1f5fa8"/><text x="477.0" y="52" text-anchor="middle" font-size="21" font-weight="700" fill="#1f5fa8">+3</text><circle cx="477.0" cy="84" r="12" fill="#fff" stroke="#5c6070" stroke-width="1.5"/><text x="477.0" y="90" text-anchor="middle" font-size="16" font-weight="700" fill="#1b1b1f">2</text><rect x="516" y="36" width="92" height="56" rx="10" fill="#fff" stroke="#5c6070" stroke-width="3"/><text x="562.0" y="74" text-anchor="middle" font-size="27" font-weight="700" fill="#1b1b1f">13</text><line x1="615" y1="64" x2="679" y2="64" stroke="#1f5fa8" stroke-width="3"/><path d="M679,64 l-10,-6 v12 z" fill="#1f5fa8"/><text x="647.0" y="52" text-anchor="middle" font-size="21" font-weight="700" fill="#1f5fa8">×2</text><circle cx="647.0" cy="84" r="12" fill="#fff" stroke="#5c6070" stroke-width="1.5"/><text x="647.0" y="90" text-anchor="middle" font-size="16" font-weight="700" fill="#1b1b1f">1</text><rect x="686" y="36" width="92" height="56" rx="10" fill="#fff" stroke="#5c6070" stroke-width="3"/><text x="732.0" y="74" text-anchor="middle" font-size="27" font-weight="700" fill="#1b1b1f">26</text><line x1="785" y1="64" x2="849" y2="64" stroke="#1f5fa8" stroke-width="3"/><path d="M849,64 l-10,-6 v12 z" fill="#1f5fa8"/><text x="817.0" y="52" text-anchor="middle" font-size="21" font-weight="700" fill="#1f5fa8">×2</text><circle cx="817.0" cy="84" r="12" fill="#fff" stroke="#5c6070" stroke-width="1.5"/><text x="817.0" y="90" text-anchor="middle" font-size="16" font-weight="700" fill="#1b1b1f">1</text><rect x="856" y="36" width="92" height="56" rx="10" fill="#e6f5ec" stroke="#137a41" stroke-width="3"/><text x="902.0" y="74" text-anchor="middle" font-size="27" font-weight="700" fill="#1b1b1f">52</text></g></svg>
+        <p class="legend plain">Над стрелкой — что делает команда, в кружке —
+           её <b>номер</b>. Номера слева направо и есть программа:
+           <b class="mono">21211</b>.</p>
+      </div>
+    </div>
+    <p class="note">Исполнитель выполняет программу слева направо, по одной
+       команде. В ответ идут только номера — подряд, без пробелов и
+       запятых.</p>
+  </section>
+
+  <!-- 3 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">главный приём</p>
+    <h2>Идём от цели к началу</h2>
+    <div class="side">
+      <div class="cmdbox"><div><span class="n">1</span>умножь на 2</div><div><span class="n">2</span>прибавь 3</div></div>
+      <div class="grow chainbox"><svg viewBox="0 0 954 156" role="img" aria-label="От цели к началу: 2 ← 5 ← 10 ← 13 ← 26 ← 52"><g font-family="Segoe UI, system-ui, sans-serif"><rect x="6" y="36" width="92" height="56" rx="10" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="3"/><text x="52.0" y="74" text-anchor="middle" font-size="27" font-weight="700" fill="#1b1b1f">2</text><text x="52.0" y="116" text-anchor="middle" font-size="15" fill="#5c6070">начало</text><line x1="105" y1="64" x2="169" y2="64" stroke="#b3261e" stroke-width="3"/><path d="M105,64 l10,-6 v12 z" fill="#b3261e"/><text x="137.0" y="52" text-anchor="middle" font-size="21" font-weight="700" fill="#b3261e">−3</text><circle cx="137.0" cy="84" r="12" fill="#fff" stroke="#5c6070" stroke-width="1.5"/><text x="137.0" y="90" text-anchor="middle" font-size="16" font-weight="700" fill="#1b1b1f">2</text><rect x="176" y="36" width="92" height="56" rx="10" fill="#fff" stroke="#5c6070" stroke-width="3"/><text x="222.0" y="74" text-anchor="middle" font-size="27" font-weight="700" fill="#1b1b1f">5</text><text x="222.0" y="116" text-anchor="middle" font-size="15" fill="#5c6070">на 2</text><text x="222.0" y="135" text-anchor="middle" font-size="15" fill="#5c6070">не делится</text><line x1="275" y1="64" x2="339" y2="64" stroke="#b3261e" stroke-width="3"/><path d="M275,64 l10,-6 v12 z" fill="#b3261e"/><text x="307.0" y="52" text-anchor="middle" font-size="21" font-weight="700" fill="#b3261e">:2</text><circle cx="307.0" cy="84" r="12" fill="#fff" stroke="#5c6070" stroke-width="1.5"/><text x="307.0" y="90" text-anchor="middle" font-size="16" font-weight="700" fill="#1b1b1f">1</text><rect x="346" y="36" width="92" height="56" rx="10" fill="#fff" stroke="#5c6070" stroke-width="3"/><text x="392.0" y="74" text-anchor="middle" font-size="27" font-weight="700" fill="#1b1b1f">10</text><text x="392.0" y="116" text-anchor="middle" font-size="15" fill="#5c6070">делится на 2</text><line x1="445" y1="64" x2="509" y2="64" stroke="#b3261e" stroke-width="3"/><path d="M445,64 l10,-6 v12 z" fill="#b3261e"/><text x="477.0" y="52" text-anchor="middle" font-size="21" font-weight="700" fill="#b3261e">−3</text><circle cx="477.0" cy="84" r="12" fill="#fff" stroke="#5c6070" stroke-width="1.5"/><text x="477.0" y="90" text-anchor="middle" font-size="16" font-weight="700" fill="#1b1b1f">2</text><rect x="516" y="36" width="92" height="56" rx="10" fill="#fff" stroke="#5c6070" stroke-width="3"/><text x="562.0" y="74" text-anchor="middle" font-size="27" font-weight="700" fill="#1b1b1f">13</text><text x="562.0" y="116" text-anchor="middle" font-size="15" fill="#5c6070">на 2</text><text x="562.0" y="135" text-anchor="middle" font-size="15" fill="#5c6070">не делится</text><line x1="615" y1="64" x2="679" y2="64" stroke="#b3261e" stroke-width="3"/><path d="M615,64 l10,-6 v12 z" fill="#b3261e"/><text x="647.0" y="52" text-anchor="middle" font-size="21" font-weight="700" fill="#b3261e">:2</text><circle cx="647.0" cy="84" r="12" fill="#fff" stroke="#5c6070" stroke-width="1.5"/><text x="647.0" y="90" text-anchor="middle" font-size="16" font-weight="700" fill="#1b1b1f">1</text><rect x="686" y="36" width="92" height="56" rx="10" fill="#fff" stroke="#5c6070" stroke-width="3"/><text x="732.0" y="74" text-anchor="middle" font-size="27" font-weight="700" fill="#1b1b1f">26</text><text x="732.0" y="116" text-anchor="middle" font-size="15" fill="#5c6070">делится на 2</text><line x1="785" y1="64" x2="849" y2="64" stroke="#b3261e" stroke-width="3"/><path d="M785,64 l10,-6 v12 z" fill="#b3261e"/><text x="817.0" y="52" text-anchor="middle" font-size="21" font-weight="700" fill="#b3261e">:2</text><circle cx="817.0" cy="84" r="12" fill="#fff" stroke="#5c6070" stroke-width="1.5"/><text x="817.0" y="90" text-anchor="middle" font-size="16" font-weight="700" fill="#1b1b1f">1</text><rect x="856" y="36" width="92" height="56" rx="10" fill="#e6f5ec" stroke="#137a41" stroke-width="3"/><text x="902.0" y="74" text-anchor="middle" font-size="27" font-weight="700" fill="#1b1b1f">52</text><text x="902.0" y="116" text-anchor="middle" font-size="15" fill="#5c6070">делится на 2</text></g></svg>
+        <p class="legend plain">Красные стрелки — <b>обратный ход</b>: команду
+           отменяем. «Умножь на 2» отменяется делением, «прибавь 3» —
+           вычитанием.</p>
+      </div>
+    </div>
+    <p class="note">52 делится на 2 — последней могла быть «умножь»:
+       26. Потом 13 — на 2 не делится, значит, последней была
+       «прибавь 3». И так до 2. Почему с конца? От начала на каждом шаге
+       две дороги, а с конца <b>выбор часто один</b>.</p>
+  </section>
+
+  <!-- 4 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">не забыть</p>
+    <h2>Дошли до начала — перевернуть и проверить</h2>
+    <div class="two">
+      <div class="box warm">
+        <h3>Перевернуть</h3>
+        <p>Шли от цели и записывали команды: <span class="mono">11212</span>.
+           Но исполнитель выполняет программу <b>слева направо</b>, от
+           начала. В ответ — наоборот:
+           <b class="mono">21211</b>.</p>
+      </div>
+      <div class="box cool">
+        <h3>Проверить</h3>
+        <p>Выполнить программу от начала:
+           <span class="mono">2 → 5 → 10 → 13 → 26 → 52</span>. Десять
+           секунд — и ловятся почти все ошибки.</p>
+      </div>
+    </div>
+    <p class="note">«Если таких алгоритмов более одного, запишите любой» —
+       эта фраза есть в каждом условии. На деле во всех вариантах алгоритм
+       <b>один</b> и занимает <b>все</b> разрешённые команды. Получилось
+       короче — ищите ошибку в счёте.</p>
+  </section>
+
+  <!-- 5 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">второй вид команд</p>
+    <h2>Квадратор: ищем квадрат снизу</h2>
+    <div class="side">
+      <div class="cmdbox"><div><span class="n">1</span>возведи в квадрат</div><div><span class="n">2</span>прибавь 2</div></div>
+      <div class="grow chainbox"><svg viewBox="0 0 954 156" role="img" aria-label="От цели к началу: 1 ← 3 ← 9 ← 81 ← 83 ← 85"><g font-family="Segoe UI, system-ui, sans-serif"><rect x="6" y="36" width="92" height="56" rx="10" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="3"/><text x="52.0" y="74" text-anchor="middle" font-size="27" font-weight="700" fill="#1b1b1f">1</text><text x="52.0" y="116" text-anchor="middle" font-size="15" fill="#5c6070">начало</text><line x1="105" y1="64" x2="169" y2="64" stroke="#b3261e" stroke-width="3"/><path d="M105,64 l10,-6 v12 z" fill="#b3261e"/><text x="137.0" y="52" text-anchor="middle" font-size="21" font-weight="700" fill="#b3261e">−2</text><circle cx="137.0" cy="84" r="12" fill="#fff" stroke="#5c6070" stroke-width="1.5"/><text x="137.0" y="90" text-anchor="middle" font-size="16" font-weight="700" fill="#1b1b1f">2</text><rect x="176" y="36" width="92" height="56" rx="10" fill="#fff" stroke="#5c6070" stroke-width="3"/><text x="222.0" y="74" text-anchor="middle" font-size="27" font-weight="700" fill="#1b1b1f">3</text><text x="222.0" y="116" text-anchor="middle" font-size="15" fill="#5c6070">не квадрат</text><line x1="275" y1="64" x2="339" y2="64" stroke="#b3261e" stroke-width="3"/><path d="M275,64 l10,-6 v12 z" fill="#b3261e"/><text x="307.0" y="52" text-anchor="middle" font-size="21" font-weight="700" fill="#b3261e">√</text><circle cx="307.0" cy="84" r="12" fill="#fff" stroke="#5c6070" stroke-width="1.5"/><text x="307.0" y="90" text-anchor="middle" font-size="16" font-weight="700" fill="#1b1b1f">1</text><rect x="346" y="36" width="92" height="56" rx="10" fill="#fff" stroke="#5c6070" stroke-width="3"/><text x="392.0" y="74" text-anchor="middle" font-size="27" font-weight="700" fill="#1b1b1f">9</text><text x="392.0" y="116" text-anchor="middle" font-size="15" fill="#5c6070">это 3²</text><line x1="445" y1="64" x2="509" y2="64" stroke="#b3261e" stroke-width="3"/><path d="M445,64 l10,-6 v12 z" fill="#b3261e"/><text x="477.0" y="52" text-anchor="middle" font-size="21" font-weight="700" fill="#b3261e">√</text><circle cx="477.0" cy="84" r="12" fill="#fff" stroke="#5c6070" stroke-width="1.5"/><text x="477.0" y="90" text-anchor="middle" font-size="16" font-weight="700" fill="#1b1b1f">1</text><rect x="516" y="36" width="92" height="56" rx="10" fill="#fff" stroke="#5c6070" stroke-width="3"/><text x="562.0" y="74" text-anchor="middle" font-size="27" font-weight="700" fill="#1b1b1f">81</text><text x="562.0" y="116" text-anchor="middle" font-size="15" fill="#5c6070">это 9²</text><line x1="615" y1="64" x2="679" y2="64" stroke="#b3261e" stroke-width="3"/><path d="M615,64 l10,-6 v12 z" fill="#b3261e"/><text x="647.0" y="52" text-anchor="middle" font-size="21" font-weight="700" fill="#b3261e">−2</text><circle cx="647.0" cy="84" r="12" fill="#fff" stroke="#5c6070" stroke-width="1.5"/><text x="647.0" y="90" text-anchor="middle" font-size="16" font-weight="700" fill="#1b1b1f">2</text><rect x="686" y="36" width="92" height="56" rx="10" fill="#fff" stroke="#5c6070" stroke-width="3"/><text x="732.0" y="74" text-anchor="middle" font-size="27" font-weight="700" fill="#1b1b1f">83</text><text x="732.0" y="116" text-anchor="middle" font-size="15" fill="#5c6070">не квадрат</text><line x1="785" y1="64" x2="849" y2="64" stroke="#b3261e" stroke-width="3"/><path d="M785,64 l10,-6 v12 z" fill="#b3261e"/><text x="817.0" y="52" text-anchor="middle" font-size="21" font-weight="700" fill="#b3261e">−2</text><circle cx="817.0" cy="84" r="12" fill="#fff" stroke="#5c6070" stroke-width="1.5"/><text x="817.0" y="90" text-anchor="middle" font-size="16" font-weight="700" fill="#1b1b1f">2</text><rect x="856" y="36" width="92" height="56" rx="10" fill="#e6f5ec" stroke="#137a41" stroke-width="3"/><text x="902.0" y="74" text-anchor="middle" font-size="27" font-weight="700" fill="#1b1b1f">85</text><text x="902.0" y="116" text-anchor="middle" font-size="15" fill="#5c6070">не квадрат</text></g></svg>
+        <p class="legend plain">Из 1 надо получить 85. Снова от цели:
+           не квадрат — отменяем «прибавь 2», пока не дойдём до квадрата.</p>
+      </div>
+    </div>
+    <p class="note">85 → 83 → 81 = 9². Квадраты надо
+       знать в лицо: 4, 9, 16, 25, 36, 49, 64, 81, 100. Квадрат резко
+       увеличивает число, поэтому возводят пораньше, а прибавляют — до и
+       после.</p>
+  </section>
+
+  <!-- 6 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">третий вид команд</p>
+    <h2>Делитель: здесь — от начала</h2>
+    <div class="side">
+      <div class="cmdbox"><div><span class="n">1</span>раздели на 2</div><div><span class="n">2</span>вычти 3</div></div>
+      <div class="grow chainbox"><svg viewBox="0 0 954 156" role="img" aria-label="От начала: 37 → 34 → 17 → 14 → 7 → 4"><g font-family="Segoe UI, system-ui, sans-serif"><rect x="6" y="36" width="92" height="56" rx="10" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="3"/><text x="52.0" y="74" text-anchor="middle" font-size="27" font-weight="700" fill="#1b1b1f">37</text><text x="52.0" y="116" text-anchor="middle" font-size="15" fill="#5c6070">на 2</text><text x="52.0" y="135" text-anchor="middle" font-size="15" fill="#5c6070">не делится</text><line x1="105" y1="64" x2="169" y2="64" stroke="#1f5fa8" stroke-width="3"/><path d="M169,64 l-10,-6 v12 z" fill="#1f5fa8"/><text x="137.0" y="52" text-anchor="middle" font-size="21" font-weight="700" fill="#1f5fa8">−3</text><circle cx="137.0" cy="84" r="12" fill="#fff" stroke="#5c6070" stroke-width="1.5"/><text x="137.0" y="90" text-anchor="middle" font-size="16" font-weight="700" fill="#1b1b1f">2</text><rect x="176" y="36" width="92" height="56" rx="10" fill="#fff" stroke="#5c6070" stroke-width="3"/><text x="222.0" y="74" text-anchor="middle" font-size="27" font-weight="700" fill="#1b1b1f">34</text><text x="222.0" y="116" text-anchor="middle" font-size="15" fill="#5c6070">делится на 2</text><line x1="275" y1="64" x2="339" y2="64" stroke="#1f5fa8" stroke-width="3"/><path d="M339,64 l-10,-6 v12 z" fill="#1f5fa8"/><text x="307.0" y="52" text-anchor="middle" font-size="21" font-weight="700" fill="#1f5fa8">:2</text><circle cx="307.0" cy="84" r="12" fill="#fff" stroke="#5c6070" stroke-width="1.5"/><text x="307.0" y="90" text-anchor="middle" font-size="16" font-weight="700" fill="#1b1b1f">1</text><rect x="346" y="36" width="92" height="56" rx="10" fill="#fff" stroke="#5c6070" stroke-width="3"/><text x="392.0" y="74" text-anchor="middle" font-size="27" font-weight="700" fill="#1b1b1f">17</text><text x="392.0" y="116" text-anchor="middle" font-size="15" fill="#5c6070">на 2</text><text x="392.0" y="135" text-anchor="middle" font-size="15" fill="#5c6070">не делится</text><line x1="445" y1="64" x2="509" y2="64" stroke="#1f5fa8" stroke-width="3"/><path d="M509,64 l-10,-6 v12 z" fill="#1f5fa8"/><text x="477.0" y="52" text-anchor="middle" font-size="21" font-weight="700" fill="#1f5fa8">−3</text><circle cx="477.0" cy="84" r="12" fill="#fff" stroke="#5c6070" stroke-width="1.5"/><text x="477.0" y="90" text-anchor="middle" font-size="16" font-weight="700" fill="#1b1b1f">2</text><rect x="516" y="36" width="92" height="56" rx="10" fill="#fff" stroke="#5c6070" stroke-width="3"/><text x="562.0" y="74" text-anchor="middle" font-size="27" font-weight="700" fill="#1b1b1f">14</text><text x="562.0" y="116" text-anchor="middle" font-size="15" fill="#5c6070">делится на 2</text><line x1="615" y1="64" x2="679" y2="64" stroke="#1f5fa8" stroke-width="3"/><path d="M679,64 l-10,-6 v12 z" fill="#1f5fa8"/><text x="647.0" y="52" text-anchor="middle" font-size="21" font-weight="700" fill="#1f5fa8">:2</text><circle cx="647.0" cy="84" r="12" fill="#fff" stroke="#5c6070" stroke-width="1.5"/><text x="647.0" y="90" text-anchor="middle" font-size="16" font-weight="700" fill="#1b1b1f">1</text><rect x="686" y="36" width="92" height="56" rx="10" fill="#fff" stroke="#5c6070" stroke-width="3"/><text x="732.0" y="74" text-anchor="middle" font-size="27" font-weight="700" fill="#1b1b1f">7</text><text x="732.0" y="116" text-anchor="middle" font-size="15" fill="#5c6070">на 2</text><text x="732.0" y="135" text-anchor="middle" font-size="15" fill="#5c6070">не делится</text><line x1="785" y1="64" x2="849" y2="64" stroke="#1f5fa8" stroke-width="3"/><path d="M849,64 l-10,-6 v12 z" fill="#1f5fa8"/><text x="817.0" y="52" text-anchor="middle" font-size="21" font-weight="700" fill="#1f5fa8">−3</text><circle cx="817.0" cy="84" r="12" fill="#fff" stroke="#5c6070" stroke-width="1.5"/><text x="817.0" y="90" text-anchor="middle" font-size="16" font-weight="700" fill="#1b1b1f">2</text><rect x="856" y="36" width="92" height="56" rx="10" fill="#e6f5ec" stroke="#137a41" stroke-width="3"/><text x="902.0" y="74" text-anchor="middle" font-size="27" font-weight="700" fill="#1b1b1f">4</text><text x="902.0" y="116" text-anchor="middle" font-size="15" fill="#5c6070">цель</text></g></svg>
+        <p class="legend plain">«Исполнитель работает только с натуральными
+           числами» — делить можно, <b>только когда делится нацело</b>.</p>
+      </div>
+    </div>
+    <p class="note">37 на 2 не делится — выбора нет, только «вычти 3».
+       Там, где есть деление, выбор сужается <b>от начала</b>: не делится —
+       остаётся одна команда. Делится — пробуем делить, так число убывает
+       быстрее.</p>
+  </section>
+
+  <!-- 7 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">редкая форма</p>
+    <h2>Раздели и возведи в квадрат: команд четыре</h2>
+    <div class="side">
+      <div class="cmdbox"><div><span class="n">1</span>возведи в квадрат</div><div><span class="n">2</span>раздели на 2</div></div>
+      <div class="grow chainbox"><svg viewBox="0 0 784 106" role="img" aria-label="Программа 1212: 4 → 16 → 8 → 64 → 32"><g font-family="Segoe UI, system-ui, sans-serif"><rect x="6" y="36" width="92" height="56" rx="10" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="3"/><text x="52.0" y="74" text-anchor="middle" font-size="27" font-weight="700" fill="#1b1b1f">4</text><line x1="105" y1="64" x2="169" y2="64" stroke="#1f5fa8" stroke-width="3"/><path d="M169,64 l-10,-6 v12 z" fill="#1f5fa8"/><text x="137.0" y="52" text-anchor="middle" font-size="21" font-weight="700" fill="#1f5fa8">x²</text><circle cx="137.0" cy="84" r="12" fill="#fff" stroke="#5c6070" stroke-width="1.5"/><text x="137.0" y="90" text-anchor="middle" font-size="16" font-weight="700" fill="#1b1b1f">1</text><rect x="176" y="36" width="92" height="56" rx="10" fill="#fff" stroke="#5c6070" stroke-width="3"/><text x="222.0" y="74" text-anchor="middle" font-size="27" font-weight="700" fill="#1b1b1f">16</text><line x1="275" y1="64" x2="339" y2="64" stroke="#1f5fa8" stroke-width="3"/><path d="M339,64 l-10,-6 v12 z" fill="#1f5fa8"/><text x="307.0" y="52" text-anchor="middle" font-size="21" font-weight="700" fill="#1f5fa8">:2</text><circle cx="307.0" cy="84" r="12" fill="#fff" stroke="#5c6070" stroke-width="1.5"/><text x="307.0" y="90" text-anchor="middle" font-size="16" font-weight="700" fill="#1b1b1f">2</text><rect x="346" y="36" width="92" height="56" rx="10" fill="#fff" stroke="#5c6070" stroke-width="3"/><text x="392.0" y="74" text-anchor="middle" font-size="27" font-weight="700" fill="#1b1b1f">8</text><line x1="445" y1="64" x2="509" y2="64" stroke="#1f5fa8" stroke-width="3"/><path d="M509,64 l-10,-6 v12 z" fill="#1f5fa8"/><text x="477.0" y="52" text-anchor="middle" font-size="21" font-weight="700" fill="#1f5fa8">x²</text><circle cx="477.0" cy="84" r="12" fill="#fff" stroke="#5c6070" stroke-width="1.5"/><text x="477.0" y="90" text-anchor="middle" font-size="16" font-weight="700" fill="#1b1b1f">1</text><rect x="516" y="36" width="92" height="56" rx="10" fill="#fff" stroke="#5c6070" stroke-width="3"/><text x="562.0" y="74" text-anchor="middle" font-size="27" font-weight="700" fill="#1b1b1f">64</text><line x1="615" y1="64" x2="679" y2="64" stroke="#1f5fa8" stroke-width="3"/><path d="M679,64 l-10,-6 v12 z" fill="#1f5fa8"/><text x="647.0" y="52" text-anchor="middle" font-size="21" font-weight="700" fill="#1f5fa8">:2</text><circle cx="647.0" cy="84" r="12" fill="#fff" stroke="#5c6070" stroke-width="1.5"/><text x="647.0" y="90" text-anchor="middle" font-size="16" font-weight="700" fill="#1b1b1f">2</text><rect x="686" y="36" width="92" height="56" rx="10" fill="#e6f5ec" stroke="#137a41" stroke-width="3"/><text x="732.0" y="74" text-anchor="middle" font-size="27" font-weight="700" fill="#1b1b1f">32</text></g></svg>
+        <p class="legend plain">Из 4 получить 32, не более
+           <b>4 команд</b>. Число в условии другое — читайте до конца.</p>
+      </div>
+    </div>
+    <p class="note">Квадрат растёт быстро, поэтому числа бывают большими —
+       до двухсот-трёхсот. Делить можно только нацело. Вариантов программ
+       здесь мало: проще всего аккуратно пробовать от начала.</p>
+  </section>
+
+  <!-- 8 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">вторая форма задания</p>
+    <h2>Найди b: выполняем программу с буквой</h2>
+    <div class="side">
+      <div class="cmdbox"><div><span class="n">1</span>прибавь b</div><div><span class="n">2</span>умножь на 3</div></div>
+      <p class="q">Известно, что программа <b>12121</b> переводит число
+         2 в число 70. Определите значение b.</p>
+    </div>
+    <div class="chainbox wide"><svg viewBox="0 0 1036 106" role="img" aria-label="Программа с буквой: 2 → 2 + b → 6 + 3b → 6 + 4b → 18 + 12b → 18 + 13b"><g font-family="Segoe UI, system-ui, sans-serif"><rect x="6" y="36" width="134" height="56" rx="10" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="3"/><text x="73.0" y="74" text-anchor="middle" font-size="23" font-weight="700" fill="#1b1b1f">2</text><line x1="147" y1="64" x2="177" y2="64" stroke="#1f5fa8" stroke-width="3"/><path d="M177,64 l-10,-6 v12 z" fill="#1f5fa8"/><text x="162.0" y="52" text-anchor="middle" font-size="21" font-weight="700" fill="#1f5fa8">+b</text><circle cx="162.0" cy="84" r="12" fill="#fff" stroke="#5c6070" stroke-width="1.5"/><text x="162.0" y="90" text-anchor="middle" font-size="16" font-weight="700" fill="#1b1b1f">1</text><rect x="184" y="36" width="134" height="56" rx="10" fill="#fff" stroke="#5c6070" stroke-width="3"/><text x="251.0" y="74" text-anchor="middle" font-size="23" font-weight="700" fill="#1b1b1f">2 + b</text><line x1="325" y1="64" x2="355" y2="64" stroke="#1f5fa8" stroke-width="3"/><path d="M355,64 l-10,-6 v12 z" fill="#1f5fa8"/><text x="340.0" y="52" text-anchor="middle" font-size="21" font-weight="700" fill="#1f5fa8">×3</text><circle cx="340.0" cy="84" r="12" fill="#fff" stroke="#5c6070" stroke-width="1.5"/><text x="340.0" y="90" text-anchor="middle" font-size="16" font-weight="700" fill="#1b1b1f">2</text><rect x="362" y="36" width="134" height="56" rx="10" fill="#fff" stroke="#5c6070" stroke-width="3"/><text x="429.0" y="74" text-anchor="middle" font-size="23" font-weight="700" fill="#1b1b1f">6 + 3b</text><line x1="503" y1="64" x2="533" y2="64" stroke="#1f5fa8" stroke-width="3"/><path d="M533,64 l-10,-6 v12 z" fill="#1f5fa8"/><text x="518.0" y="52" text-anchor="middle" font-size="21" font-weight="700" fill="#1f5fa8">+b</text><circle cx="518.0" cy="84" r="12" fill="#fff" stroke="#5c6070" stroke-width="1.5"/><text x="518.0" y="90" text-anchor="middle" font-size="16" font-weight="700" fill="#1b1b1f">1</text><rect x="540" y="36" width="134" height="56" rx="10" fill="#fff" stroke="#5c6070" stroke-width="3"/><text x="607.0" y="74" text-anchor="middle" font-size="23" font-weight="700" fill="#1b1b1f">6 + 4b</text><line x1="681" y1="64" x2="711" y2="64" stroke="#1f5fa8" stroke-width="3"/><path d="M711,64 l-10,-6 v12 z" fill="#1f5fa8"/><text x="696.0" y="52" text-anchor="middle" font-size="21" font-weight="700" fill="#1f5fa8">×3</text><circle cx="696.0" cy="84" r="12" fill="#fff" stroke="#5c6070" stroke-width="1.5"/><text x="696.0" y="90" text-anchor="middle" font-size="16" font-weight="700" fill="#1b1b1f">2</text><rect x="718" y="36" width="134" height="56" rx="10" fill="#fff" stroke="#5c6070" stroke-width="3"/><text x="785.0" y="74" text-anchor="middle" font-size="23" font-weight="700" fill="#1b1b1f">18 + 12b</text><line x1="859" y1="64" x2="889" y2="64" stroke="#1f5fa8" stroke-width="3"/><path d="M889,64 l-10,-6 v12 z" fill="#1f5fa8"/><text x="874.0" y="52" text-anchor="middle" font-size="21" font-weight="700" fill="#1f5fa8">+b</text><circle cx="874.0" cy="84" r="12" fill="#fff" stroke="#5c6070" stroke-width="1.5"/><text x="874.0" y="90" text-anchor="middle" font-size="16" font-weight="700" fill="#1b1b1f">1</text><rect x="896" y="36" width="134" height="56" rx="10" fill="#e6f5ec" stroke="#137a41" stroke-width="3"/><text x="963.0" y="74" text-anchor="middle" font-size="23" font-weight="700" fill="#1b1b1f">18 + 13b</text></g></svg></div>
+    <p class="note">Умножение действует на <b>всё выражение</b> — и на число,
+       и на b: (2 + b) · 3 = 6 + 3b. В конце:
+       18 + 13b = 70, 13b = 52, <b>b = 4</b>. Проверка:
+       2 → 6 → 18 → 22 → 66 → 70.</p>
+  </section>
+
+  <!-- 9 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">если b в умножении</p>
+    <h2>«Умножь на b» дважды — подбираем</h2>
+    <div class="side">
+      <div class="cmdbox"><div><span class="n">1</span>умножь на b</div><div><span class="n">2</span>прибавь 1</div></div>
+      <p class="q">Известно, что программа <b>21212</b> переводит число
+         2 в число 81. Определите значение b.</p>
+    </div>
+    <div class="chainbox wide"><svg viewBox="0 0 1036 106" role="img" aria-label="Программа с буквой: 2 → 3 → 3b → 3b + 1 → 3b² + b → 3b² + b + 1"><g font-family="Segoe UI, system-ui, sans-serif"><rect x="6" y="36" width="134" height="56" rx="10" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="3"/><text x="73.0" y="74" text-anchor="middle" font-size="22" font-weight="700" fill="#1b1b1f">2</text><line x1="147" y1="64" x2="177" y2="64" stroke="#1f5fa8" stroke-width="3"/><path d="M177,64 l-10,-6 v12 z" fill="#1f5fa8"/><text x="162.0" y="52" text-anchor="middle" font-size="21" font-weight="700" fill="#1f5fa8">+1</text><circle cx="162.0" cy="84" r="12" fill="#fff" stroke="#5c6070" stroke-width="1.5"/><text x="162.0" y="90" text-anchor="middle" font-size="16" font-weight="700" fill="#1b1b1f">2</text><rect x="184" y="36" width="134" height="56" rx="10" fill="#fff" stroke="#5c6070" stroke-width="3"/><text x="251.0" y="74" text-anchor="middle" font-size="22" font-weight="700" fill="#1b1b1f">3</text><line x1="325" y1="64" x2="355" y2="64" stroke="#1f5fa8" stroke-width="3"/><path d="M355,64 l-10,-6 v12 z" fill="#1f5fa8"/><text x="340.0" y="52" text-anchor="middle" font-size="21" font-weight="700" fill="#1f5fa8">×b</text><circle cx="340.0" cy="84" r="12" fill="#fff" stroke="#5c6070" stroke-width="1.5"/><text x="340.0" y="90" text-anchor="middle" font-size="16" font-weight="700" fill="#1b1b1f">1</text><rect x="362" y="36" width="134" height="56" rx="10" fill="#fff" stroke="#5c6070" stroke-width="3"/><text x="429.0" y="74" text-anchor="middle" font-size="22" font-weight="700" fill="#1b1b1f">3b</text><line x1="503" y1="64" x2="533" y2="64" stroke="#1f5fa8" stroke-width="3"/><path d="M533,64 l-10,-6 v12 z" fill="#1f5fa8"/><text x="518.0" y="52" text-anchor="middle" font-size="21" font-weight="700" fill="#1f5fa8">+1</text><circle cx="518.0" cy="84" r="12" fill="#fff" stroke="#5c6070" stroke-width="1.5"/><text x="518.0" y="90" text-anchor="middle" font-size="16" font-weight="700" fill="#1b1b1f">2</text><rect x="540" y="36" width="134" height="56" rx="10" fill="#fff" stroke="#5c6070" stroke-width="3"/><text x="607.0" y="74" text-anchor="middle" font-size="22" font-weight="700" fill="#1b1b1f">3b + 1</text><line x1="681" y1="64" x2="711" y2="64" stroke="#1f5fa8" stroke-width="3"/><path d="M711,64 l-10,-6 v12 z" fill="#1f5fa8"/><text x="696.0" y="52" text-anchor="middle" font-size="21" font-weight="700" fill="#1f5fa8">×b</text><circle cx="696.0" cy="84" r="12" fill="#fff" stroke="#5c6070" stroke-width="1.5"/><text x="696.0" y="90" text-anchor="middle" font-size="16" font-weight="700" fill="#1b1b1f">1</text><rect x="718" y="36" width="134" height="56" rx="10" fill="#fff" stroke="#5c6070" stroke-width="3"/><text x="785.0" y="74" text-anchor="middle" font-size="22" font-weight="700" fill="#1b1b1f">3b² + b</text><line x1="859" y1="64" x2="889" y2="64" stroke="#1f5fa8" stroke-width="3"/><path d="M889,64 l-10,-6 v12 z" fill="#1f5fa8"/><text x="874.0" y="52" text-anchor="middle" font-size="21" font-weight="700" fill="#1f5fa8">+1</text><circle cx="874.0" cy="84" r="12" fill="#fff" stroke="#5c6070" stroke-width="1.5"/><text x="874.0" y="90" text-anchor="middle" font-size="16" font-weight="700" fill="#1b1b1f">2</text><rect x="896" y="36" width="134" height="56" rx="10" fill="#e6f5ec" stroke="#137a41" stroke-width="3"/><text x="963.0" y="74" text-anchor="middle" font-size="22" font-weight="700" fill="#1b1b1f">3b² + b + 1</text></g></svg></div>
+    <p class="note">Вышло 3b² + b + 1 = 81 — b в квадрате. Решать
+       квадратное уравнение незачем: b натуральное и небольшое. При b = 3
+       выходит 31, при b = 4 — 53, при b = 5 — 81.
+       <b>b = 5</b>.</p>
+  </section>
+
+  <!-- 10 ------------------------------------------------------------ -->
+  <section class="slide">
+    <p class="eyebrow">порядок работы</p>
+    <h2>Пять шагов — и не наоборот</h2>
+    <ol class="vsteps">
+      <li><div class="txt"><b>Прочитать условие до конца.</b>
+          <small>Сколько команд разрешено; составить программу или найти
+                 b.</small></div></li>
+      <li><div class="txt"><b>Выбрать, с какого конца идти.</b>
+          <small>Умножение, квадрат — от цели. Деление — от начала.</small></div></li>
+      <li><div class="txt"><b>Идти по шагам, записывая номер каждой
+          команды.</b></div></li>
+      <li><div class="txt"><b>Шли от цели — перевернуть программу.</b></div></li>
+      <li><div class="txt"><b>Выполнить программу и сверить результат.</b>
+          <small>В ответ — только номера команд подряд.</small></div></li>
+    </ol>
+  </section>
+
+  <!-- 11 ------------------------------------------------------------ -->
+  <section class="slide">
+    <p class="eyebrow">где теряют балл</p>
+    <h2>Четыре ошибки, и все ловятся проверкой</h2>
+    <div class="two">
+      <div class="box warm">
+        <h3>Записали с конца</h3>
+        <p>Шли от цели и забыли перевернуть:
+           <span class="mono">11212</span> вместо
+           <span class="mono">21211</span>.</p>
+      </div>
+      <div class="box warm">
+        <h3>Перепутали номера</h3>
+        <p>Команда 1 — не всегда умножение. В каждом варианте номера
+           расставлены по-своему: смотрите в условие.</p>
+      </div>
+      <div class="box warm">
+        <h3>Умножили только число</h3>
+        <p>(2 + b) · 3 — это 6 + <b>3b</b>, а не 6 + b. В задаче про b
+           это самая частая ошибка.</p>
+      </div>
+      <div class="box warm">
+        <h3>Записали лишнее</h3>
+        <p>«1 2 1 2 2», «1,2,1,2,2», «b = 5». Ответ сверяет машина: только
+           <span class="mono">12122</span> и только
+           <span class="mono">5</span>.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 12-15: примеры собирает генератор ------------------------------ -->
+  <section class="slide" data-ex data-type="1"></section>
+  <section class="slide" data-ex data-type="4"></section>
+  <section class="slide" data-ex data-type="6"></section>
+  <section class="slide" data-ex data-type="7"></section>
+
+  <!-- 16 ------------------------------------------------------------ -->
+  <section class="slide">
+    <p class="eyebrow">итог</p>
+    <h2>Две формы задания — два приёма</h2>
+    <div class="two">
+      <div class="box cool">
+        <h3>Составь алгоритм</h3>
+        <p><b>Умножь, квадрат</b> — от цели к началу: делится? квадрат?</p>
+        <p><b>Раздели</b> — от начала: делить можно только нацело</p>
+        <p>Шли от цели — <b>перевернуть</b></p>
+      </div>
+      <div class="box warm">
+        <h3>Найди b</h3>
+        <p>Выполнить программу <b>с буквой</b></p>
+        <p>Умножение действует на <b>всё</b> выражение</p>
+        <p>Уравнение — или подбор, если b в квадрате</p>
+      </div>
+    </div>
+    <p class="note">И всегда — проверка: выполнить программу от начала до
+       конца. Дальше — тренажёр: восемь задач, по одной на каждый тип.
+       Числа у всех свои, страница сама выполнит вашу программу и покажет,
+       что вышло.</p>
+  </section>
+
+</div>
+
+<div class="bar">
+  <button id="prev">← Назад</button>
+  <button id="next">Вперёд →</button>
+  <span class="count" id="count"></span>
+  <span class="zoom" title="Размер шрифта на экране: клавиши + и −"><button id="zoomOut" title="Мельче (клавиша −)">A−</button><span class="z" id="zoomVal"></span><button id="zoomIn" title="Крупнее (клавиша +)">A+</button></span>
+  <span class="spacer"></span>
+  <button id="step" class="primary" hidden>Показать</button>
+  <button id="reroll" hidden>Другой пример</button>
+  <span class="ai-mark" style="color:#5c6070;font-size:13px">Материалы подготовлены с использованием технологий искусственного интеллекта.</span>
+  <span class="keys"><kbd>→</kbd> слайд &middot;
+        <kbd>Пробел</kbd> шаг &middot; <kbd>F11</kbd> во весь экран</span>
+</div>
+</div>
+
+<script>
+"use strict";
+
+/* ==== БАЗА: вставлено gen.py, руками не править ==== */
+const TYPES = [
+  {"id": 0, "key": "mul-add", "kind": "compose", "lim": 5, "name": "умножь и прибавь", "rule": "Идут от цели к началу. Если число не делится — последней была «прибавь», и её отменяют вычитанием. Если делится — последней могло быть умножение: пробуют разделить. Дойдя до исходного числа, команды записывают в обратном порядке — от начала к концу."},
+  {"id": 1, "key": "mul-sub", "kind": "compose", "lim": 5, "name": "умножь и вычти", "rule": "Тоже от цели к началу, только «вычти» отменяют прибавлением: прибавляют, пока число не разделится. Делить сразу, как только делится, не всегда верно — если ветка не приводит к исходному числу, возвращаются и прибавляют ещё раз."},
+  {"id": 2, "key": "sq-add", "kind": "compose", "lim": 5, "name": "возведи в квадрат и прибавь", "rule": "От цели к началу ищут ближайший снизу квадрат: 55 — не квадрат, вычитаем 3 — 52, ещё 3 — 49 = 7². Квадрат резко увеличивает число, поэтому возводить надо пораньше, а прибавлять — до и после."},
+  {"id": 3, "key": "div-sub", "kind": "compose", "lim": 5, "name": "раздели и вычти", "rule": "Исполнитель работает только с натуральными числами: делить можно, только когда делится нацело. Здесь удобнее идти от начала: не делится — выбора нет, только «вычти»; делится — пробуют делить, так число убывает быстрее."},
+  {"id": 4, "key": "div-add", "kind": "compose", "lim": 5, "name": "раздели и прибавь", "rule": "Прибавление здесь нужно, чтобы «подогнать» число под деление: 25 на 3 не делится, а 25 + 2 = 27 делится. Делить можно только нацело — исполнитель работает с натуральными числами."},
+  {"id": 5, "key": "div-sq", "kind": "compose", "lim": 4, "name": "раздели и возведи в квадрат", "rule": "Команд всего четыре, а квадрат растёт быстро: обычно сначала делят, чтобы получить маленькое число, а потом возводят в квадрат. Делить можно только нацело."},
+  {"id": 6, "key": "b-add", "kind": "find", "name": "найди b: прибавь b или вычти b", "rule": "Программу выполняют по шагам, оставляя b буквой: было 6 — стало 6 + b, умножили на 3 — стало 18 + 3b. В конце получается уравнение: выражение с b равно известному результату. Умножение действует на ВСЁ выражение, и на число, и на b."},
+  {"id": 7, "key": "b-mul", "kind": "find", "name": "найди b: умножь на b", "rule": "Если «умножь на b» встречается в программе один раз, выходит обычное уравнение. Если дважды — появляется b в квадрате, и проще подобрать: b натуральное и небольшое, пробуют 2, 3, 4… пока результат не совпадёт."}
+];
+
+const SHAPES = {"mul-add": {"start": [1, 5], "target": [30, 70], "peak": 100}, "mul-sub": {"start": [1, 3], "target": [20, 60], "peak": 100}, "sq-add": {"start": [1, 5], "target": [20, 100], "peak": 100}, "div-sub": {"start": [30, 80], "target": [1, 5], "peak": 100}, "div-add": {"start": [40, 90], "target": [2, 9], "peak": 100}, "div-sq": {"start": [4, 48], "target": [4, 150], "peak": 300}, "b-add": {"start": [2, 15], "result": [10, 130], "b": [2, 12], "bcmds": [2, 3]}, "b-mul": {"start": [1, 8], "result": [10, 130], "b": [2, 10], "bcmds": [1, 2]}};
+
+const TYPES_TOTAL = TYPES.length;
+
+/* Источник случайности — один на все страницы темы. Тренажёр, ДЗ и
+   презентация оставляют Math.random: задачи новые при каждом открытии.
+   Проверочная подменяет RND генератором по фамилии — тогда вариант у
+   ученика один и тот же, сколько бы раз он ни перезагрузил страницу. */
+let RND = Math.random;
+const randInt = (lo, hi) => lo + Math.floor(RND() * (hi - lo + 1));
+const pick = arr => arr[randInt(0, arr.length - 1)];
+const maybe = p => RND() < p;
+
+function shuffle(arr){
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(RND() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+const sample = (arr, k) => shuffle(arr).slice(0, k);
+
+/* --------------------------------------------------------- исполнитель
+   Команда — массив: ["mul", 3], ["add", 2], ["sub", 1], ["sq"],
+   ["div", 2]. У задач «найди b» на месте числа стоит строка "b", а само
+   значение передаётся отдельно. Один исполнитель на всё: он строит
+   задачу, проверяет единственность, выполняет ответ ученика и пишет
+   разбор.                                                            */
+
+const valOf = (op, b) => op[1] === "b" ? b : op[1];
+
+// «Исполнитель работает только с натуральными числами» в вариантах стоит
+// лишь там, где есть деление. Без этой оговорки «вычти» выполнима всегда,
+// пусть и уводит в минус; с ней — только пока число остаётся натуральным.
+const isNat = ops => ops.some(o => o[0] === "div");
+
+function applyOp(op, x, b, nat){
+  const n = valOf(op, b);
+  switch (op[0]){
+    case "mul": return x * n;
+    case "add": return x + n;
+    case "sub": return nat && x - n < 1 ? null : x - n;
+    case "sq":  return x * x;
+    case "div": return x % n === 0 ? x / n : null;    // только нацело
+  }
+  return null;
+}
+
+// Выполнить программу. Возвращает след [x0, x1, …] и, если исполнитель
+// споткнулся, номер шага (с единицы), на котором команда невыполнима.
+function runProg(ops, prog, x, b){
+  const trace = [x], nat = isNat(ops);
+  for (let i = 0; i < prog.length; i++){
+    const y = applyOp(ops[+prog[i] - 1], x, b, nat);
+    if (y === null || Math.abs(y) > 1000000) return {trace: trace, failAt: i + 1};
+    trace.push(y);
+    x = y;
+  }
+  return {trace: trace, failAt: 0};
+}
+
+// Все программы не длиннее lim, которые переводят a в target.
+function allSolutions(ops, a, target, lim){
+  const out = [], nat = isNat(ops);
+  const rec = (prog, x) => {
+    if (prog.length && x === target) out.push(prog);
+    if (prog.length === lim) return;
+    for (const d of "12"){
+      const y = applyOp(ops[+d - 1], x, undefined, nat);
+      if (y !== null && Math.abs(y) <= 100000) rec(prog + d, y);
+    }
+  };
+  rec("", a);
+  return out;
+}
+
+/* --------------------------------------------------------------- слова */
+
+const times = n => n === "b" ? "b раз"
+    : n + (n >= 2 && n <= 4 ? " раза" : " раз");
+
+function cmdText(op){
+  switch (op[0]){
+    case "mul": return "умножь на " + op[1];
+    case "add": return "прибавь " + op[1];
+    case "sub": return "вычти " + op[1];
+    case "sq":  return "возведи в квадрат";
+    case "div": return "раздели на " + op[1];
+  }
+}
+// «Первая из них увеличивает число на экране в 3 раза, вторая уменьшает
+// его на 1» — второе упоминание числа в вариантах всегда «его».
+function describe(op, first){
+  const obj = first ? "число на экране" : "его";
+  switch (op[0]){
+    case "mul": return "увеличивает " + obj + " в " + times(op[1]);
+    case "add": return "увеличивает " + obj + " на " + op[1];
+    case "sub": return "уменьшает " + obj + " на " + op[1];
+    case "div": return "уменьшает " + obj + " в " + times(op[1]);
+    case "sq":  return first ? "возводит число на экране во вторую степень"
+                             : "возводит его в квадрат";
+  }
+}
+function executorName(ops, kind){
+  const has = k => ops.some(o => o[0] === k);
+  if (kind === "find") return pick(["Вычислитель", "Альфа", "Вычислитель"]);
+  if (has("sq")) return "Квадратор";
+  if (has("div")) return "Делитель";
+  const m = ops.find(o => o[0] === "mul");
+  if (m && m[1] === 2 && maybe(0.5)) return "Удвоитель";
+  if (m && m[1] === 3 && maybe(0.5)) return "Утроитель";
+  return pick(["Вычислитель", "Программист"]);
+}
+const progWords = (ops, prog) =>
+    prog.split("").map(d => cmdText(ops[+d - 1])).join(" ");
+
+/* ------------------------------------------------ «составь алгоритм» */
+
+// Пара команд по типу; какая из них первая — случайно (это не тип).
+function opsFor(key){
+  let pair;
+  switch (key){
+    case "mul-add": pair = [["mul", pick([2, 3, 3])], ["add", randInt(1, 3)]]; break;
+    case "mul-sub": pair = [["mul", pick([3, 4])], ["sub", randInt(1, 3)]]; break;
+    case "sq-add":  pair = [["sq"], ["add", randInt(1, 4)]]; break;
+    case "div-sub": pair = [["div", pick([2, 3])], ["sub", randInt(2, 3)]]; break;
+    case "div-add": pair = [["div", pick([2, 3])], ["add", randInt(1, 3)]]; break;
+    case "div-sq":  pair = [["div", pick([2, 3, 4])], ["sq"]]; break;
+  }
+  return maybe(0.5) ? pair : [pair[1], pair[0]];
+}
+
+// Случайная программа заданной длины, где каждая команда не меньше двух
+// раз: так во всех задачах замера.
+function randomProg(len){
+  for (;;){
+    let p = "";
+    for (let i = 0; i < len; i++) p += maybe(0.5) ? "1" : "2";
+    const ones = p.split("1").length - 1;
+    if (ones >= 2 && len - ones >= 2) return p;
+  }
+}
+
+function makeExample(ops, lim, avoidProg, avoidStart, peak){
+  for (let i = 0; i < 400; i++){
+    const prog = randomProg(lim);
+    const a = randInt(1, 70);
+    if (prog === avoidProg || a === avoidStart) continue;
+    const r = runProg(ops, prog, a);
+    if (r.failAt) continue;
+    const last = r.trace[r.trace.length - 1];
+    if (Math.max(...r.trace) > peak || last === a) continue;
+    return {prog: prog, a: a, res: last};
+  }
+  return null;
+}
+
+function tryCompose(type){
+  const sh = SHAPES[type.key];
+  const ops = opsFor(type.key);
+  const lim = type.lim;
+  const a = randInt(sh.start[0], sh.start[1]);
+  const prog = randomProg(lim);
+  const r = runProg(ops, prog, a);
+  if (r.failAt) return null;
+  const tr = r.trace;
+  const target = tr[tr.length - 1];
+  if (target < sh.target[0] || target > sh.target[1]) return null;
+  if (Math.max(...tr) > sh.peak || Math.min(...tr) < 1) return null;
+  if (new Set(tr).size !== tr.length) return null;      // число не повторяется
+  // единственность: ровно одна программа не длиннее предела
+  const sols = allSolutions(ops, a, target, lim);
+  if (sols.length !== 1 || sols[0] !== prog) return null;
+  const ex = makeExample(ops, lim, prog, a, sh.peak);
+  if (!ex) return null;
+  return {ops: ops, a: a, target: target, lim: lim, prog: prog, trace: tr,
+          example: ex};
+}
+
+/* Разбор. Направление выбирает пара команд: с делением — от начала
+   (делить можно не всегда, и это сужает выбор), без деления — от цели
+   (делится ли число, квадрат ли оно — видно сразу).                   */
+function composeSteps(g){
+  const ops = g.ops, tr = g.trace, prog = g.prog;
+  const steps = [];
+  const other = d => ops[d === "1" ? 1 : 0];
+  const q = op => "«" + cmdText(op) + "»";
+  const forward = ops.some(o => o[0] === "div");
+
+  if (forward){
+    steps.push("Исполнитель работает только с натуральными числами, "
+        + "поэтому делить можно не всегда. Идём от начала, от числа "
+        + g.a + ", и на каждом шаге смотрим, что разрешено.");
+    for (let i = 0; i < prog.length; i++){
+      const op = ops[+prog[i] - 1], alt = other(prog[i]);
+      const cur = tr[i], nxt = tr[i + 1];
+      const altOk = applyOp(alt, cur, undefined, true) !== null;
+      let why;
+      if (op[0] === "div")
+        why = cur + " делится на " + op[1] + " — делим: " + nxt + "."
+            + (altOk ? "" : "");
+      else if (!altOk)
+        why = cur + " на " + alt[1] + " не делится — остаётся " + q(op)
+            + ": " + nxt + ".";
+      else
+        why = cur + ": делить можно, но эта ветка к " + g.target
+            + " за оставшиеся команды не приводит. Берём " + q(op) + ": "
+            + nxt + ".";
+      steps.push(why);
+    }
+    steps.push("Дошли до " + g.target + ". Команды по порядку: " + prog + ".");
+  } else {
+    steps.push("Идём от цели к началу: для числа " + g.target
+        + " выясняем, какой командой оно могло получиться, и отменяем её.");
+    for (let i = prog.length - 1; i >= 0; i--){
+      const op = ops[+prog[i] - 1], alt = other(prog[i]);
+      const cur = tr[i + 1], prev = tr[i];
+      // могла ли последней быть другая команда?
+      let altPrev = null;
+      if (alt[0] === "mul") altPrev = cur % alt[1] === 0 ? cur / alt[1] : null;
+      else if (alt[0] === "sq"){
+        const s = Math.round(Math.sqrt(cur));
+        altPrev = s * s === cur ? s : null;
+      } else if (alt[0] === "add") altPrev = cur - alt[1] >= 1 ? cur - alt[1] : null;
+      else if (alt[0] === "sub") altPrev = cur + alt[1];
+      let why;
+      if (op[0] === "mul")
+        why = cur + " делится на " + op[1] + " — последней могла быть "
+            + q(op) + ": " + cur + " : " + op[1] + " = " + prev + ".";
+      else if (op[0] === "sq")
+        why = cur + " — это " + prev + " в квадрате: последней была "
+            + q(op) + ".";
+      else {
+        const undo = op[0] === "add" ? cur + " \u2212 " + op[1]
+                                     : cur + " + " + op[1];
+        if (altPrev === null)
+          why = cur + (alt[0] === "sq" ? " — не квадрат"
+                : " на " + alt[1] + " не делится") + ", значит, последней "
+                + "была " + q(op) + ": " + undo + " = " + prev + ".";
+        else
+          why = cur + (alt[0] === "sq" ? " — квадрат" : " делится на " + alt[1])
+              + ", но эта ветка к числу " + g.a + " за оставшиеся команды "
+              + "не приводит. Значит, последней была " + q(op) + ": " + undo
+              + " = " + prev + ".";
+      }
+      steps.push(why);
+    }
+    steps.push("Дошли до исходного числа " + g.a + ". Команды записываем "
+        + "в обратном порядке — от начала к концу: " + prog + ".");
+  }
+  steps.push("Проверка: " + tr.join(" \u2192 ") + ". Команд " + prog.length
+      + ", каждая выполнима. Ответ: " + prog + ".");
+  return steps;
+}
+
+/* ------------------------------------------------------ «найди b» */
+
+// Многочлен от b: [c0, c1, c2…]. Программа выполняется «с буквой».
+function polyStep(op, p){
+  if (op[0] === "mul") return op[1] === "b" ? [0].concat(p) : p.map(c => c * op[1]);
+  const q = p.slice();
+  const sign = op[0] === "add" ? 1 : -1;
+  if (op[1] === "b"){ while (q.length < 2) q.push(0); q[1] += sign; }
+  else q[0] += sign * op[1];
+  return q;
+}
+const SUP = {2: "\u00b2", 3: "\u00b3"};
+function polyText(p){
+  const term = (c, i) => {
+    const a = Math.abs(c);
+    if (i === 0) return String(a);
+    return (a === 1 ? "" : a) + "b" + (i > 1 ? SUP[i] : "");
+  };
+  let idx = p.map((c, i) => i).filter(i => p[i] !== 0);
+  if (!idx.length) return "0";
+  // линейное читается с числа: «54 + 12b»; со степенями — со старшей
+  if (p.length > 2) idx = idx.reverse();
+  let s = "";
+  idx.forEach((i, k) => {
+    const neg = p[i] < 0;
+    if (k === 0) s += (neg ? "\u2212" : "") + term(p[i], i);
+    else s += (neg ? " \u2212 " : " + ") + term(p[i], i);
+  });
+  return s;
+}
+const polyVal = (p, b) => p.reduce((s, c, i) => s + c * Math.pow(b, i), 0);
+
+function tryFind(type){
+  const sh = SHAPES[type.key];
+  let pair;
+  if (type.key === "b-add")
+    pair = [["mul", randInt(2, 5)], [maybe(0.5) ? "add" : "sub", "b"]];
+  else
+    pair = [["mul", "b"], ["add", randInt(1, 3)]];
+  const ops = maybe(0.5) ? pair : [pair[1], pair[0]];
+  const bIdx = ops[0][1] === "b" ? "1" : "2";
+  const len = type.key === "b-add" && maybe(0.25) ? 6 : 5;
+  let prog = "";
+  for (let i = 0; i < len; i++) prog += maybe(0.5) ? "1" : "2";
+  const bCount = prog.split(bIdx).length - 1;
+  if (bCount < sh.bcmds[0] || bCount > sh.bcmds[1]) return null;
+  if (len - bCount < 2) return null;
+  // «умножь на b» последней командой — это просто деление результата;
+  // в замере после неё всегда идёт ещё хотя бы одна команда
+  if (type.key === "b-mul" && prog[len - 1] === bIdx) return null;
+  const b = randInt(sh.b[0], sh.b[1]);
+  const a = randInt(sh.start[0], sh.start[1]);
+  const r = runProg(ops, prog, a, b);
+  if (r.failAt) return null;
+  const res = r.trace[r.trace.length - 1];
+  if (res < sh.result[0] || res > sh.result[1] || res === a) return null;
+  if (Math.max(...r.trace) > 400 || Math.min(...r.trace) < 1) return null;
+  // единственность: другое натуральное b того же результата не даёт
+  for (let v = 1; v <= 200; v++){
+    if (v === b) continue;
+    const o = runProg(ops, prog, a, v);
+    if (!o.failAt && o.trace[o.trace.length - 1] === res) return null;
+  }
+  return {ops: ops, a: a, prog: prog, b: b, res: res, trace: r.trace};
+}
+
+function findSteps(g){
+  const steps = [];
+  let p = [g.a];
+  const chain = [polyText(p)];
+  for (const d of g.prog){ p = polyStep(g.ops[+d - 1], p); chain.push(polyText(p)); }
+  steps.push("Выполняем программу " + g.prog + " по шагам, оставляя b "
+      + "буквой. Умножение действует на всё выражение — и на число, и "
+      + "на b.");
+  steps.push(chain.join(" \u2192 ") + ".");
+  steps.push("Результат известен: " + polyText(p) + " = " + g.res + ".");
+  if (p.length === 2){
+    const c0 = p[0], c1 = p[1];
+    steps.push(c0 === 0
+        ? "b = " + g.res + " : " + c1 + " = " + g.b + "."
+        : c1 > 0
+        ? (c1 === 1 ? "" : c1) + "b = " + g.res + " \u2212 " + c0 + " = "
+          + (g.res - c0) + ", откуда b = " + g.b + "."
+        : (c1 === -1 ? "" : -c1) + "b = " + c0 + " \u2212 " + g.res + " = "
+          + (c0 - g.res) + ", откуда b = " + g.b + ".");
+  } else {
+    const tries = [];
+    for (let v = Math.max(2, g.b - 2); v <= g.b; v++)
+      tries.push("при b = " + v + " выходит " + polyVal(p, v));
+    steps.push("Здесь b стоит в квадрате, поэтому подбираем — b "
+        + "натуральное и небольшое: " + tries.join(", ") + ". Значит, b = "
+        + g.b + ".");
+  }
+  steps.push("Проверка: " + g.trace.join(" \u2192 ") + ". Ответ: " + g.b + ".");
+  return steps;
+}
+
+/* ------------------------------------------------------ сборка задачи */
+
+const B = s => ({t: s, b: 1});
+const N = s => ({t: s, b: 0});
+
+function tryMake(type){
+  const g = type.kind === "compose" ? tryCompose(type) : tryFind(type);
+  if (!g) return null;
+  const ops = g.ops;
+  const dot = maybe(0.2) ? ")" : ".";
+  const t = {
+    type: type.id, key: type.key, kind: type.kind, name: type.name,
+    rule: type.rule
+  };
+  const who = executorName(ops, type.kind);
+  const blocks = [
+    {k: "p", segs: [N("У исполнителя " + who + " две команды, которым "
+                      + "присвоены номера:")]},
+    {k: "cmds", lines: ["1" + dot + " " + cmdText(ops[0]),
+                        "2" + dot + " " + cmdText(ops[1])]}
+  ];
+  let second = "Первая из них " + describe(ops[0], true) + ", вторая "
+             + describe(ops[1], false) + ".";
+  if (ops.some(o => o[0] === "div"))
+    second += " Исполнитель работает только с натуральными числами.";
+
+  if (type.kind === "compose"){
+    const ex = g.example;
+    blocks.push({k: "p", segs: [N(second)]});
+    blocks.push({k: "p", segs: [
+      N("Составьте алгоритм получения "),
+      B("из числа " + g.a + " числа " + g.target),
+      N(", содержащий не более " + g.lim + " команд. В ответе запишите "
+        + "только номера команд.")]});
+    blocks.push({k: "p", i: 1, segs: [N("(Например, " + ex.prog
+      + " \u2013 это алгоритм: " + progWords(ops, ex.prog) + ", который "
+      + "преобразует число " + ex.a + " в число " + ex.res + ".)")]});
+    blocks.push({k: "p", segs: [N("Если таких алгоритмов более одного, то "
+      + "запишите любой из них.")]});
+    t.answer = g.prog;
+    t.tail = "В ответ — номера команд подряд.";
+    t.howto = "Только цифры 1 и 2, без пробелов и запятых.";
+    t.steps = composeSteps(g);
+    t.meta = {kind: "compose", ops: ops, a: g.a, target: g.target,
+              lim: g.lim, prog: g.prog, example: g.example};
+  } else {
+    const demo = maybe(0.3);
+    blocks.splice(2, 0, {k: "p", segs: [N("(b \u2013 неизвестное натуральное "
+      + "число" + (demo ? "; b \u2265 2" : "") + ")")]});
+    blocks.push({k: "p", segs: [N(second)]});
+    blocks.push({k: "p", segs: demo
+      ? [N("Найдите значение числа b, при котором из числа " + g.a
+           + " по алгоритму " + g.prog + " будет получено число " + g.res + ".")]
+      : [N("Известно, что программа " + g.prog + " переводит число " + g.a
+           + " в число " + g.res + ". Определите значение b.")]});
+    t.answer = String(g.b);
+    t.tail = "В ответ — значение b, одно число.";
+    t.howto = "Только цифры: без «b =», пробелов и нуля впереди.";
+    t.steps = findSteps(g);
+    t.meta = {kind: "find", ops: ops, a: g.a, prog: g.prog, b: g.b,
+              res: g.res};
+  }
+  t.blocks = blocks;
+  t.plain = blocks.map(b => b.k === "cmds" ? b.lines.join("; ") + "."
+                         : b.segs.map(s => s.t).join("")).join(" ");
+  return t;
+}
+
+function makeTask(typeId){
+  const type = TYPES[typeId];
+  for (let i = 0; i < 200000; i++){
+    const t = tryMake(type);
+    if (t) return t;
+  }
+  throw new Error("не собралась задача типа " + type.key);
+}
+
+/* ------------------------------------------------------------ проверка
+   «Составь алгоритм» проверяется ИСПОЛНЕНИЕМ: страница выполняет то, что
+   ввёл ученик, и говорит, что получилось. Сравнение со строкой ответа
+   дало бы тот же вердикт (алгоритм единственный), но не дало бы
+   подсказки. Запись ответа — знак в знак: на экзамене её читает машина. */
+
+function verdict(t, raw){
+  const given = String(raw).trim();
+  if (!given) return null;
+  const m = t.meta;
+
+  if (m.kind === "find"){
+    if (given === t.answer) return {ok: true, hint: null};
+    if (/^\d+[\s.,]*$/.test(given) && given.replace(/[\s.,]/g, "") === t.answer)
+      return {ok: false, hint: "Число верное, но записано с лишним знаком. "
+              + "В ответ идут <b>только цифры</b>."};
+    if (/^0\d+$/.test(given) && String(+given) === t.answer)
+      return {ok: false, hint: "Число верное, но с лишним нулём впереди. "
+              + "Ответ на экзамене сверяет машина: <b>05</b> и <b>5</b> для "
+              + "неё разные ответы."};
+    if (!/^\d+$/.test(given))
+      return {ok: false, hint: "Ответ здесь — <b>число</b>: значение b. "
+              + "Набери только цифры, без «b =» и без слов."};
+    const v = +given;
+    if (v < 1) return {ok: false, hint: "b — натуральное число, нуля быть "
+                                      + "не может."};
+    const r = runProg(m.ops, m.prog, m.a, v);
+    if (r.failAt)
+      return {ok: false, hint: "При b = " + v + " программа не выполняется: "
+              + "на шаге " + r.failAt + " число перестаёт быть натуральным."};
+    const got = r.trace[r.trace.length - 1];
+    return {ok: false, hint: "Подставим b = " + v + ": " + r.trace.join(" \u2192 ")
+            + ". Вышло <b>" + got + "</b>, а нужно " + m.res + " — b должно "
+            + "быть <b>" + ((got < m.res) === (m.ops.some(o => o[0] === "sub"
+              && o[1] === "b")) ? "меньше" : "больше") + "</b>."};
+  }
+
+  // ---- «составь алгоритм»
+  if (!/^[12]+$/.test(given)){
+    const squeezed = given.replace(/[\s.,;\-]/g, "");
+    if (/^[12]+$/.test(squeezed))
+      return {ok: false, hint: "Номера команд пишут <b>подряд</b>, без "
+              + "пробелов и запятых: " + squeezed.slice(0, 2) + "…, а не «"
+              + given.slice(0, 5) + "…». Ответ читает машина."};
+    return {ok: false, hint: "В ответе — только <b>номера команд</b>, цифры "
+            + "1 и 2. Сами числа и названия команд писать не нужно."};
+  }
+  if (given.length > m.lim)
+    return {ok: false, hint: "Команд получилось " + given.length + ", а в "
+            + "условии — <b>не более " + m.lim + "</b>."};
+
+  const r = runProg(m.ops, given, m.a);
+  const got = r.trace[r.trace.length - 1];
+  if (!r.failAt && got === m.target) return {ok: true, hint: null};
+
+  // записал с конца: шёл от цели к началу и не перевернул
+  const rev = given.split("").reverse().join("");
+  const rr = runProg(m.ops, rev, m.a);
+  if (!rr.failAt && rr.trace[rr.trace.length - 1] === m.target)
+    return {ok: false, hint: "Команды верные, но записаны <b>с конца</b>. Ты "
+            + "шёл от цели к началу — теперь переверни: исполнитель "
+            + "выполняет программу слева направо."};
+  // перепутал номера команд
+  const sw = given.replace(/[12]/g, d => d === "1" ? "2" : "1");
+  const rs = runProg(m.ops, sw, m.a);
+  if (!rs.failAt && rs.trace[rs.trace.length - 1] === m.target)
+    return {ok: false, hint: "Ход верный, но <b>перепутаны номера</b>: "
+            + "команда 1 — «" + cmdText(m.ops[0]) + "», команда 2 — «"
+            + cmdText(m.ops[1]) + "»."};
+
+  if (r.failAt){
+    const op = m.ops[+given[r.failAt - 1] - 1];
+    const x = r.trace[r.trace.length - 1];
+    return {ok: false, hint: "Выполняем: " + r.trace.join(" \u2192 ") + " — и "
+            + "на шаге " + r.failAt + " команда «" + cmdText(op) + "» "
+            + "<b>невыполнима</b>: " + (op[0] === "div"
+               ? x + " не делится на " + op[1] + " нацело"
+               : "получилось бы не натуральное число") + "."};
+  }
+  return {ok: false, hint: "Выполняем: " + r.trace.join(" \u2192 ")
+          + ". Вышло <b>" + got + "</b>, а нужно " + m.target + "."};
+}
+
+
+/* ============================================ условие картинкой
+   Условие рисуется на canvas, а не выводится тегами: с картинки нельзя
+   выделить текст и отправить его в нейросеть — только прочитать и решить
+   самому. Команды и числа «из … в …» набраны полужирным, как в
+   вариантах.
+
+   Рисование живёт здесь, а не в html, потому что страниц с условиями
+   несколько: тренажёр, ДЗ, проверочная.
+============================================================ */
+const COND_W = 680;
+const COND_FONT = ['17px "Segoe UI", system-ui, sans-serif',
+                   '700 17px "Segoe UI", system-ui, sans-serif',
+                   'italic 16px "Segoe UI", system-ui, sans-serif'];
+const COND_LINE = 26;
+
+function tokens(segs){
+  const out = [];
+  segs.forEach(s => {
+    String(s.t).split(/(\s+)/).forEach(w => {
+      if (w !== "") out.push({t: w, b: s.b});
+    });
+  });
+  return out;
+}
+
+function layout(ctx, segs, fonts, maxWidth){
+  const lines = [];
+  let cur = [], w = 0;
+  tokens(segs).forEach(tok => {
+    ctx.font = fonts[tok.b];
+    const tw = ctx.measureText(tok.t).width;
+    if (cur.length && w + tw > maxWidth && !/^\s+$/.test(tok.t)){
+      lines.push(cur);
+      cur = [];
+      w = 0;
+    }
+    if (!cur.length && /^\s+$/.test(tok.t)) return;   // пробел в начале
+    cur.push(tok);
+    w += tw;
+  });
+  if (cur.length) lines.push(cur);
+  return lines;
+}
+
+function drawLine(ctx, line, fonts, x, y){
+  line.forEach(tok => {
+    ctx.font = fonts[tok.b];
+    ctx.fillText(tok.t, x, y);
+    x += ctx.measureText(tok.t).width;
+  });
+}
+
+function renderCondition(t){
+  const m = document.createElement("canvas").getContext("2d");
+  const width = COND_W;
+
+  // блоки приводим к одному виду: строки сегментов с отступом
+  const plan = [];
+  let H = 0;
+  t.blocks.forEach(b => {
+    if (b.k === "cmds"){
+      plan.push({x: 28, lines: b.lines.map(l => [{t: l, b: 1}]), gap: 8});
+      H += b.lines.length * COND_LINE + 8;
+      return;
+    }
+    const segs = b.i ? b.segs.map(s => ({t: s.t, b: 2})) : b.segs;
+    const lines = layout(m, segs, COND_FONT, width);
+    plan.push({x: 0, lines: lines, gap: 8});
+    H += lines.length * COND_LINE + 8;
+  });
+
+  const dpr = Math.max(1, window.devicePixelRatio || 1);
+  const canvas = document.createElement("canvas");
+  canvas.width = width * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width = width + "px";
+  canvas.setAttribute("role", "img");
+  canvas.setAttribute("aria-label", conditionText(t));
+
+  const ctx = canvas.getContext("2d");
+  ctx.scale(dpr, dpr);
+  ctx.textBaseline = "top";
+  ctx.fillStyle = "#1b1b1f";
+
+  let y = 0;
+  plan.forEach(b => {
+    b.lines.forEach(line => {
+      drawLine(ctx, line, COND_FONT, b.x, y);
+      y += COND_LINE;
+    });
+    y += b.gap;
+  });
+  return canvas;
+}
+
+// Текст условия для программы чтения с экрана: картинка картинкой, но
+// незрячий ученик должен получить то же самое.
+function conditionText(t){
+  return t.plain;
+}
+
+/* ==== /БАЗА ==== */
+
+/* ------------------------------------------------------------------
+   Слайды-примеры собираются тем же генератором, что и тренажёр: значит,
+   на доске разбирается ровно та задача, какая потом достанется ученику.
+   Кнопка «Другой пример» перебрасывает числа — можно разобрать два-три
+   подряд, не уходя со слайда.
+------------------------------------------------------------------ */
+
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
+                          .replace(/>/g, "&gt;");
+
+// Условие на слайде — обычным html: с проектора не копируют. Команды и
+// «из числа … числа …» полужирным, как в вариантах.
+const segsHtml = segs => segs.map(s =>
+    s.b ? `<b>${esc(s.t)}</b>` : esc(s.t)).join("");
+
+function condition(t){
+  return t.blocks.map(b => b.k === "cmds"
+      ? `<div class="cmds">${b.lines.map(l => `<div>${esc(l)}</div>`).join("")}</div>`
+      : `<p${b.i ? ' class="ex"' : ""}>${segsHtml(b.segs)}</p>`).join("");
+}
+
+function buildExample(el){
+  const id = +el.dataset.type;
+  const t = makeTask(id);
+  const steps = t.steps.map((s, i) =>
+      `<div class="step" hidden><span class="cap">шаг ${i + 1}</span>
+         ${esc(s)}</div>`).join("");
+
+  el.innerHTML =
+    `<p class="eyebrow">разбираем вместе</p>
+     <h2>Пример: ${esc(t.name)}</h2>
+     <div class="exwrap">
+       <div class="task">${condition(t)}
+         <div class="ask">${esc(t.tail)}</div></div>
+       <div class="steps">
+         <div class="step hint" hidden><span class="cap">о чём задача</span>
+           ${esc(t.rule)}</div>
+         ${steps}
+         <div class="step answer" hidden><span class="cap">ответ</span>
+           ${esc(t.answer)}</div>
+       </div>
+     </div>`;
+  el.dataset.answer = t.answer;
+}
+
+/* ------------------------------------------------------------------
+   Управление колодой: стрелки листают слайды, пробел раскрывает
+   очередной шаг разбора и только потом уходит дальше.
+------------------------------------------------------------------ */
+
+const slides = [...document.querySelectorAll(".slide")];
+let cur = 0;
+let shown = 0;
+
+const isExample = i => slides[i].hasAttribute("data-ex");
+const stepsOf = i => [...slides[i].querySelectorAll(".steps > .step")];
+
+function show(i){
+  slides[cur].classList.remove("on");
+  cur = Math.max(0, Math.min(slides.length - 1, i));
+  slides[cur].classList.add("on");
+  if (isExample(cur) && !slides[cur].dataset.answer) buildExample(slides[cur]);
+  shown = stepsOf(cur).filter(el => !el.hidden).length;
+  document.getElementById("stage").scrollTop = 0;
+  sync();
+}
+
+function sync(){
+  const total = stepsOf(cur).length;
+  const ex = isExample(cur);
+  document.getElementById("count").textContent =
+      `${cur + 1} / ${slides.length}`;
+  document.getElementById("prev").disabled = cur === 0;
+  document.getElementById("next").disabled = cur === slides.length - 1;
+
+  const stepBtn = document.getElementById("step");
+  stepBtn.hidden = total === 0;
+  document.getElementById("reroll").hidden = !ex;
+  if (total){
+    stepBtn.disabled = shown >= total;
+    stepBtn.textContent =
+        shown === 0 ? (ex ? "Показать разбор" : "Раскрыть")
+      : shown >= total ? (ex ? "Разобрано" : "Всё открыто")
+      : `Дальше (${shown}/${total})`;
+  }
+}
+
+function nextStep(){
+  const steps = stepsOf(cur);
+  if (shown >= steps.length) return false;
+  steps[shown].hidden = false;
+  steps[shown].scrollIntoView({block: "nearest", behavior: "smooth"});
+  shown++;
+  sync();
+  return true;
+}
+
+document.getElementById("prev").addEventListener("click", () => show(cur - 1));
+document.getElementById("next").addEventListener("click", () => show(cur + 1));
+document.getElementById("step").addEventListener("click", nextStep);
+document.getElementById("reroll").addEventListener("click", () => {
+  buildExample(slides[cur]); shown = 0; sync();
+});
+
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowRight" || e.key === "PageDown"){ show(cur + 1); }
+  else if (e.key === "ArrowLeft" || e.key === "PageUp"){ show(cur - 1); }
+  else if (e.key === " " || e.key === "Enter"){
+    // пробел ведёт урок: шаг за шагом, потом на следующий слайд
+    if (!nextStep()) show(cur + 1);
+  } else return;
+  e.preventDefault();
+});
+
+show(0);
+
+/* ---- размер шрифта на проекторе ----
+   Zoom только на области слайда: zoom на body растягивает 100vh, и панель
+   уезжает за экран (проверено 17.09.2026). Шаг запоминается в
+   localStorage и общий для всех презентаций: один раз подобрала на
+   проекторе — дальше везде так. ZOOM_BASE — стартовый масштаб этой колоды:
+   у колод с базовым кеглем 20px он выше, чем у 24px. */
+const ZOOM_BASE = 1.1;
+const ZOOM_KEY = "slides-zoom-step";
+let zoomStep = 0;
+try { zoomStep = Math.max(-3, Math.min(6, parseInt(localStorage.getItem(ZOOM_KEY), 10) || 0)); }
+catch (e) {}
+function applyZoom(){
+  const z = Math.round(ZOOM_BASE * Math.pow(1.1, zoomStep) * 100) / 100;
+  document.getElementById("stage").style.zoom = z;
+  document.getElementById("zoomVal").textContent = Math.round(z * 100) + "%";
+}
+function setZoom(d){
+  zoomStep = Math.max(-3, Math.min(6, zoomStep + d));
+  try { localStorage.setItem(ZOOM_KEY, String(zoomStep)); } catch (e) {}
+  applyZoom();
+}
+document.getElementById("zoomIn").addEventListener("click", () => setZoom(1));
+document.getElementById("zoomOut").addEventListener("click", () => setZoom(-1));
+document.addEventListener("keydown", e => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key === "+" || e.key === "=") setZoom(1);
+  else if (e.key === "-" || e.key === "_") setZoom(-1);
+  else return;
+  e.preventDefault();
+});
+applyZoom();
+</script>
+</body>
+</html>
