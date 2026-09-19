@@ -186,6 +186,34 @@ table.roads.compact td,table.roads.compact th{width:46px;height:36px}
 .zoom button{padding:8px 10px;font-size:15px;min-width:36px;line-height:1}
 .zoom .z{color:var(--muted);font-size:15px;min-width:46px;text-align:center;
          font-variant-numeric:tabular-nums}
+
+/* ---- слайд-пример в две колонки ---- */
+/* Условие слева и на месте, шаги разбора справа. Иначе на пятом шаге
+   условие уже уехало за край, а без него шаг не прочитать. Правится в
+   lessons/9/two_columns.py, не здесь. */
+.exwrap{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);
+        gap:28px;align-items:start}
+.exwrap .task{position:sticky;top:0;font-size:19px;line-height:1.4;
+              padding:10px 18px;margin:0;min-width:0}
+.exwrap .task p{margin:5px 0}
+.exwrap .task .ask{margin-top:8px}
+/* колонка узкая: таблицы и длинные цепочки обязаны в неё влезать */
+.exwrap .task table{font-size:.85em;max-width:100%}
+.exwrap .task table.codetable{font-size:15px}
+.exwrap .task table.codetable td{padding:4px 6px;min-width:0}
+.exwrap .task table.codetable td.c{font-size:14px;letter-spacing:0}
+.exwrap .task table.roads{font-size:18px;margin:6px 0}
+.exwrap .task table.roads td,.exwrap .task table.roads th{width:42px;height:29px}
+.exwrap .task .chain,.exwrap .task .chains,.exwrap .task .expr{
+        overflow-wrap:anywhere;font-size:.95em}
+/* условие не помещается в экран целиком — закрепление снимает
+   fitExamples(): такое условие прокручивается вместе с шагами */
+.exwrap .task.tall{position:static}
+.exwrap .step{padding:10px 18px;font-size:21px}
+.exwrap .steps{gap:10px}
+@media (max-width:1000px){ .exwrap{grid-template-columns:1fr}
+                           .exwrap .task{position:static} }
+/* ---- /слайд-пример в две колонки ---- */
 </style>
 </head>
 <body>
@@ -200,7 +228,7 @@ table.roads.compact td,table.roads.compact th{width:46px;height:36px}
        между пунктами — и надо найти длину самого короткого пути из одного
        пункта в другой.</p>
     <div class="side">
-      <table class="roads"><tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th></tr>
+      <table class="roads compact"><tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th></tr>
 <tr><th>A</th><td class="self"></td><td>2</td><td>3</td><td></td><td></td><td>16</td></tr>
 <tr><th>B</th><td>2</td><td class="self"></td><td></td><td>5</td><td></td><td></td></tr>
 <tr><th>C</th><td>3</td><td></td><td class="self"></td><td>3</td><td></td><td></td></tr>
@@ -211,9 +239,9 @@ table.roads.compact td,table.roads.compact th{width:46px;height:36px}
          Передвигаться можно только по дорогам, указанным в таблице. Каждый
          пункт можно посетить только один раз.</p>
     </div>
-    <p class="note">Задание стоит 1 балл и решается за три-четыре минуты.
-       Формул тут нет — нужны порядок и аккуратное сложение. Балл теряют
-       на спешке: «и так видно, какой путь короче». Не видно.</p>
+    <p class="note">1 балл, три-четыре минуты. Формул тут нет — нужны порядок и
+       аккуратное сложение. Балл теряют на спешке: «и так видно, какой путь
+       короче». Не видно.</p>
   </section>
 
   <!-- 2 ------------------------------------------------------------- -->
@@ -406,19 +434,16 @@ table.roads.compact td,table.roads.compact th{width:46px;height:36px}
     <h2>Пять шагов — и не наоборот</h2>
     <ol class="vsteps">
       <li><div class="txt"><b>Прочитать вопрос до конца.</b>
-          <small>Откуда, куда — и нет ли слов «проходящего через
-                 пункт».</small></div></li>
+          <small>Откуда, куда — и нет ли «через пункт».</small></div></li>
       <li><div class="txt"><b>Выписать дороги списком.</b>
-          <small>Половина таблицы выше закрашенных клеток. Пустая клетка —
-                 дороги нет.</small></div></li>
+          <small>Половина таблицы выше закрашенных клеток.</small></div></li>
       <li><div class="txt"><b>Построить дерево от начального пункта.</b>
-          <small>Ветка по каждой дороге, у каждого пункта — сумма от
-                 начала. Назад не возвращаться.</small></div></li>
+          <small>Ветка по каждой дороге, суммы от начала, назад не
+                 возвращаться.</small></div></li>
       <li><div class="txt"><b>Если есть «через пункт» — вычеркнуть лишние
-          ветки.</b>
-          <small>Годятся только пути, где этот пункт есть.</small></div></li>
+          ветки.</b></div></li>
       <li><div class="txt"><b>Выбрать наименьшую сумму.</b>
-          <small>И записать только число: без «км», без точки.</small></div></li>
+          <small>В ответ — только число.</small></div></li>
     </ol>
   </section>
 
@@ -1012,6 +1037,7 @@ function buildExample(el){
   el.innerHTML =
     `<p class="eyebrow">разбираем вместе</p>
      <h2>Пример: ${esc(t.name)}</h2>
+     <div class="exwrap">
      <div class="task">${condition(t)}
        <div class="ask">${esc(t.tail)}</div></div>
      <div class="steps">
@@ -1020,7 +1046,11 @@ function buildExample(el){
        ${steps}
        <div class="step answer" hidden><span class="cap">ответ</span>
          ${esc(t.answer)}</div>
+     </div>
      </div>`;
+  // условие выше экрана закреплять нельзя — см. fitExamples() в конце файла;
+  // через таймер: к этому моменту слайд показан и масштаб применён
+  setTimeout(() => { if (typeof fitExamples === "function") fitExamples(); }, 0);
   el.dataset.answer = t.answer;
 }
 
@@ -1126,6 +1156,35 @@ document.addEventListener("keydown", e => {
   e.preventDefault();
 });
 applyZoom();
+
+/* ==== ДВЕ КОЛОНКИ: вставлено two_columns.py, руками не править ==== */
+/* Закреплять можно только условие, которое помещается в экран целиком.
+   Меряем видимые прямоугольники (на области слайда стоит zoom, и
+   clientHeight с ним не дружит) и вычитаем внутренние отступы области.
+   Проверка повторяется при смене шрифта и размера окна. */
+function fitExamples(){
+  const stage = document.getElementById("stage");
+  if (!stage) return;
+  const sr = stage.getBoundingClientRect();
+  const cs = getComputedStyle(stage);
+  const k = stage.offsetHeight ? sr.height / stage.offsetHeight : 1;
+  const room = sr.height
+             - (parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom)) * k - 8;
+  document.querySelectorAll(".slide.on .exwrap .task").forEach(tk => {
+    tk.classList.remove("tall");
+    if (tk.getBoundingClientRect().height > room) tk.classList.add("tall");
+  });
+}
+window.addEventListener("resize", fitExamples);
+["zoomIn", "zoomOut"].forEach(id => {
+  const b = document.getElementById(id);
+  if (b) b.addEventListener("click", () => setTimeout(fitExamples, 0));
+});
+document.addEventListener("keydown", e => {
+  if ("+=-_".indexOf(e.key) >= 0) setTimeout(fitExamples, 0);
+});
+setTimeout(fitExamples, 0);
+/* ==== /ДВЕ КОЛОНКИ ==== */
 </script>
 </body>
 </html>
