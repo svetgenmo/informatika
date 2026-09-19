@@ -1,0 +1,877 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LZW и сжатие с потерями — обзорный практикум</title>
+<meta name="description" content="Обзорный практикум 11 класса (углублённый) к третьей паре: кодирование и декодирование LZW, объём после сжатия, уменьшение глубины цвета, идеи JPEG и MP3.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E11%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{margin:0;padding:20px 16px 60px;font:17px/1.55 "Segoe UI",system-ui,sans-serif}
+.wrap{max-width:820px;margin:0 auto}
+h1{font-size:23px;margin:0 0 4px}
+h2{font-size:18px;margin:0 0 10px}
+.sub{color:var(--muted);font-size:15px;margin:0 0 18px}
+code{font-family:Consolas,"Cascadia Mono",monospace;background:var(--card);
+     border:1px solid var(--line);border-radius:5px;padding:1px 6px;
+     font-size:15px;letter-spacing:.04em}
+.intro{border:1px solid var(--line);border-radius:12px;background:var(--card);
+       padding:14px 18px;margin-bottom:18px}
+.intro dl{margin:0}
+.intro dt{font-weight:700;margin-top:10px}
+.intro dt:first-child{margin-top:0}
+.intro dd{margin:2px 0 0}
+.progress{border:2px solid var(--accent);border-radius:12px;padding:12px 16px;
+          background:#fff;margin-bottom:18px}
+.ptop{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.ptop h2{margin:0}
+.sp{flex:1 1 auto}
+.score{display:flex;align-items:baseline;gap:10px;color:var(--muted);font-size:15px}
+.score b{font:700 34px/1 "Segoe UI",system-ui,sans-serif;color:var(--ink);
+         min-width:40px;text-align:center;border:2px solid var(--line);
+         border-radius:8px;padding:2px 8px}
+.m5 b{color:var(--ok);border-color:var(--ok-line)}
+.m4 b{color:var(--accent);border-color:#a9c6e8}
+.m3 b{color:#8a5a00;border-color:var(--hi-line)}
+.types{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);border-radius:20px;padding:4px 12px;
+      font-size:14px;color:var(--muted);background:var(--card)}
+.chip.done{border-color:var(--ok-line);background:var(--ok-bg);color:var(--ok);
+           font-weight:600}
+.chip.miss{border-color:var(--err-line);background:var(--err-bg);color:var(--err)}
+.chip.cur{border-color:var(--accent);color:var(--accent);font-weight:600}
+.card{border:1px solid var(--line);border-radius:12px;padding:16px 18px;
+      background:#fff;margin-bottom:14px}
+.card.ok{border-color:var(--ok-line);background:var(--ok-bg)}
+.card.err{border-color:var(--err-line);background:var(--err-bg)}
+.tag{font-size:13px;color:var(--muted);margin:0 0 6px}
+.q{font-size:17px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+input[type=text]{font:16px/1 Consolas,monospace;padding:10px 12px;border-radius:8px;
+                 border:1px solid var(--line);width:100%;max-width:340px}
+button{font:600 15px/1 inherit;padding:11px 16px;border-radius:9px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);color:var(--muted)}
+.verdict{margin-top:10px;font-size:15.5px;font-weight:600}
+.verdict.ok{color:var(--ok)}
+.verdict.err{color:var(--err)}
+.why{margin-top:8px;font-size:15.5px;color:var(--ink)}
+.note{border:1px solid var(--hi-line);background:var(--hi-bg);border-radius:10px;
+      padding:11px 15px;margin:12px 0;font-size:15.5px}
+.code{font:700 26px/1.2 Consolas,monospace;letter-spacing:.06em;
+      background:var(--card);border:2px dashed var(--accent);border-radius:12px;
+      padding:16px;text-align:center;margin:12px 0;user-select:all}
+.stats{color:var(--muted);font-size:14px}
+label{display:block;font-size:14px;color:var(--muted);margin-bottom:3px}
+.fields{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0}
+.fields div{flex:1 1 180px}
+.fields input{max-width:none}
+sup,sub{font-size:12px}
+h3{font-size:16.5px;margin:16px 0 6px;color:var(--accent)}
+details.help{margin-top:26px;border:1px solid var(--line);border-radius:12px;
+        padding:12px 18px;background:var(--card)}
+details.help summary{cursor:pointer;font-weight:600;font-size:17px;
+        color:var(--accent)}
+details.help p{margin:6px 0}
+details.help ol,details.help ul{margin:6px 0;padding-left:22px}
+details.help li{margin:4px 0}
+details.help table{border-collapse:collapse;margin:8px 0;font-size:15px}
+details.help th,details.help td{border:1px solid var(--line);
+        padding:4px 10px;text-align:center;background:#fff}
+details.help th{background:#fff;color:var(--muted);font-weight:600}
+table.gm{border-collapse:collapse;margin:10px 0;font:15px/1.2 Consolas,"Cascadia Mono",monospace}
+table.gm th,table.gm td{border:1px solid var(--line);min-width:34px;height:30px;
+        text-align:center;padding:0 4px;background:#fff}
+table.gm th{background:var(--card);color:var(--muted);font-weight:600}
+table.gm td.d{background:#e4e7ef}
+.adj{display:block;margin:8px 0}
+.adj code{display:inline-block;margin:0 8px 6px 0}
+details.help pre{font-family:Consolas,"Cascadia Mono",monospace;
+        background:#1e2430;color:#e7ecf5;padding:10px 12px;border-radius:9px;
+        font-size:14.5px;overflow-x:auto}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Алгоритм LZW и сжатие с потерями</h1>
+<p class="sub">11 класс, углублённый уровень. Обзорный практикум к третьей паре:
+шесть задач по содержанию темы.</p>
+
+<div class="intro">
+  <dl>
+    <dt>Что нужно сделать</dt>
+    <dd>Шесть задач — по одной на каждый вопрос темы, и все сразу на
+        странице: решай в любом порядке. Ответил верно — вопрос закрыт.
+        Ошибся — сразу видно, как это решается, а вопрос остаётся
+        открытым: кнопка «Новые числа» даёт ту же задачу с другими данными,
+        и её можно сдать ещё раз. Сколько закрыл, столько и наработал.
+        Времени нужно около пятнадцати минут: LZW удобнее
+        расписывать на черновике таблицей.</dd>
+    <dt>Отметка и добор</dt>
+    <dd>Закрыто 6 из 6 — «5», 5 — «4», 3 или 4 — «3». Кнопка
+        <b>«Получить код»</b> внизу страницы появляется, как только закрыто
+        три вопроса: можно забрать код сразу, а можно дорешать оставшиеся и
+        получить код получше — решать самому, до какой отметки добирать.</dd>
+    <dt>Ответ — целое число</dt>
+    <dd>Без единиц измерения и без пробелов: <code>34</code>, а не
+        <code>34 бита</code>. На КЕГЭ ответ читает машина, и здесь так же.</dd>
+    <dt>Как сдать</dt>
+    <dd>В конце появится код работы и кнопка <b>«Сдать работу»</b>: впишешь
+        фамилию и класс, кнопка сама откроет форму с уже вписанным кодом.
+        Переписывать код руками не надо — на этом чаще всего и ошибаются.</dd>
+    <dt>Не успел на уроке</dt>
+    <dd>Открой эту же страницу дома и пройди целиком: вариант будет другой,
+        а сдаётся всё так же — одним кодом.</dd>
+  </dl>
+</div>
+
+<div class="progress">
+  <div class="ptop">
+    <h2>Вопросы темы</h2>
+    <span class="sp"></span>
+    <div class="score" id="scorebox">
+      <span>наработано на</span><b id="mark">—</b>
+    </div>
+  </div>
+  <div class="types" id="types"></div>
+  <p class="stats" id="stats"></p>
+</div>
+
+<div id="area"></div>
+<div id="bottom"></div>
+
+<details class="help">
+  <summary>Подсказка: LZW и сжатие с потерями</summary>
+  <h3>Словарное сжатие: алгоритм LZW</h3>
+  <p>Идея: повторяющиеся <b>фразы</b> заменяются номерами из словаря.
+     Словарь не передаётся — кодер и декодер строят его одинаково по ходу
+     работы. В начале в словаре только отдельные символы алфавита.</p>
+  <ol>
+    <li>взять с текущего места <b>самую длинную фразу</b>, которая уже есть
+        в словаре;</li>
+    <li>выдать её код;</li>
+    <li>занести в словарь новую фразу: <b>эта фраза + следующий символ</b>;</li>
+    <li>продолжить с символа, на котором остановились.</li>
+  </ol>
+  <p>Пример, словарь <code>А = 1, Б = 2</code>, сообщение <code>АБАБААБ</code>:</p>
+  <table>
+    <tr><th>фраза</th><th>код</th><th>в словарь</th></tr>
+    <tr><td>А</td><td>1</td><td>3 = АБ</td></tr>
+    <tr><td>Б</td><td>2</td><td>4 = БА</td></tr>
+    <tr><td>АБ</td><td>3</td><td>5 = АБА</td></tr>
+    <tr><td>А</td><td>1</td><td>6 = АА</td></tr>
+    <tr><td>АБ</td><td>3</td><td>—</td></tr>
+  </table>
+  <p>Выход <code>1 2 3 1 3</code>: пять кодов вместо семи символов. Каждый
+     код, кроме последнего, добавляет в словарь одну фразу.</p>
+
+  <h3>Декодирование LZW</h3>
+  <p>Читать коды по одному и выписывать фразы. После каждой фразы, начиная
+     со второй, добавлять в словарь <b>предыдущую фразу + первую букву
+     текущей</b> — получится тот же словарь, что был у кодера.</p>
+  <p>Коду из b бит хватает на 2<sup>b</sup> фраз: словарь из N фраз требует
+     кодов длиной ⌈log<sub>2</sub>N⌉ бит.</p>
+
+  <h3>Сжатие с потерями</h3>
+  <p>Без потерь (RLE, Хаффман, LZW, ZIP, PNG, FLAC) данные восстанавливаются
+     бит в бит. С потерями (JPEG, MP3, AAC, MPEG-4) отбрасывается то, что
+     человек почти не замечает; назад это не вернуть. Годится для фото,
+     звука и видео, но не для текста и программ.</p>
+  <ul>
+    <li><b>глубина цвета</b>: i бит на пиксель — 2<sup>i</sup> цветов; объём
+        = ширина · высота · i. Уменьшили глубину — потеряли оттенки;</li>
+    <li><b>JPEG</b>: яркость хранится для каждого пикселя, цветность — одна
+        на квадрат 2 × 2; изображение делится на блоки 8 × 8; коэффициенты
+        блока <b>квантуются</b> — делятся на шаг и округляются (здесь и
+        теряется информация), затем сжимаются без потерь;</li>
+    <li><b>MP3</b>: отбрасываются звуки, которые ухо не различает (тихие
+        рядом с громкими). Размер задаёт <b>битрейт</b>: объём = битрейт ·
+        время, 128 Кбит/с = 16 Кбайт/с.</li>
+  </ul>
+</details>
+
+</div>
+
+<script>
+/* ==== ЗАДАЧИ: вставлено gen.py, руками не править ==== */
+/* Обзорный тест-практикум к третьей паре 11 класса (углублённый уровень).
+   Содержание ФГОС, уроки 5–6 официального плана: алгоритм LZW и словарные
+   методы сжатия; сжатие с потерями — уменьшение глубины кодирования цвета,
+   основные идеи JPEG и MP3. В столбце «Задание ЕГЭ» у урока 6 стоит 7.
+
+   Единственный источник задач. В practice.html вписывается скриптом
+   gen.py между маркерами — руками страницу не править.
+
+   Ответ везде целое число: тест-практикум приучает к формату КЕГЭ, где
+   ответ сверяет машина. */
+
+const T_TYPES = [
+  "LZW: кодирование",
+  "LZW: декодирование",
+  "объём после LZW",
+  "глубина цвета",
+  "идеи JPEG",
+  "MP3 и форматы"
+];
+
+function tRng(seed) {
+  let s = seed >>> 0;
+  return function () {
+    s ^= s << 13; s >>>= 0;
+    s ^= s >> 17;
+    s ^= s << 5;  s >>>= 0;
+    return s / 4294967296;
+  };
+}
+
+function tRand(rng, a, b) { return a + Math.floor(rng() * (b - a + 1)); }
+function tPick(rng, arr) { return arr[tRand(rng, 0, arr.length - 1)]; }
+
+function tPl(n, one, few, many) {
+  const h = n % 100, t = n % 10;
+  if (h >= 11 && h <= 14) return many;
+  if (t === 1) return one;
+  if (t >= 2 && t <= 4) return few;
+  return many;
+}
+
+/* -------------------------------------------------------------- механика */
+
+const Z_ABC = ["А", "Б", "В"];
+
+/* LZW: начальный словарь — буквы алфавита с кодами 1, 2, …; новые фразы
+   получают следующие номера. Возвращает коды и словарь по порядку. */
+function zEncode(text, k) {
+  const dict = {};
+  const order = [];
+  for (let i = 0; i < k; i++) { dict[Z_ABC[i]] = i + 1; order.push(Z_ABC[i]); }
+  const codes = [];
+  let w = "";
+  for (const c of text) {
+    if (dict[w + c]) { w += c; continue; }
+    codes.push(dict[w]);
+    order.push(w + c);
+    dict[w + c] = order.length;
+    w = c;
+  }
+  codes.push(dict[w]);
+  return { codes: codes, order: order };
+}
+
+/* Декодирование «как в тетради»: код, которого в словаре ещё нет,
+   считается неудачей — такой случай в обзорный практикум не берём. */
+function zDecode(codes, k) {
+  const order = Z_ABC.slice(0, k);
+  const parts = [];
+  let prev = "";
+  for (const code of codes) {
+    if (code > order.length) return null;
+    const cur = order[code - 1];
+    if (prev) order.push(prev + cur[0]);
+    parts.push(cur);
+    prev = cur;
+  }
+  return parts;
+}
+
+/* Строка с повторами: короткий мотив, повторённый несколько раз, с одной
+   случайной заменой — чтобы словарь успел пригодиться. Все буквы алфавита
+   обязаны встретиться: словарь с лишней буквой сбивает с толку, а строка
+   из одной буквы — не задача. */
+function zText(rng, k, len) {
+  for (;;) {
+    const m = tRand(rng, 2, 3);
+    let motif = "";
+    for (let i = 0; i < m; i++) motif += Z_ABC[tRand(rng, 0, k - 1)];
+    let s = "";
+    while (s.length < len) s += motif;
+    s = s.slice(0, len).split("");
+    const p = tRand(rng, 2, len - 1);
+    s[p] = Z_ABC[tRand(rng, 0, k - 1)];
+    s = s.join("");
+    let all = true;
+    for (let i = 0; i < k; i++) if (s.split(Z_ABC[i]).length < 3) all = false;
+    if (all) return s;
+  }
+}
+
+function zDictLead(k) {
+  const items = [];
+  for (let i = 0; i < k; i++) items.push(Z_ABC[i] + " = " + (i + 1));
+  return "Начальный словарь: <code>" + items.join(", ") + "</code>; новые " +
+    "фразы получают номера " + (k + 1) + ", " + (k + 2) + ", … по порядку. ";
+}
+
+function zDictShow(order, k) {
+  const items = [];
+  for (let i = k; i < order.length; i++) items.push((i + 1) + " = " + order[i]);
+  return items.join(", ");
+}
+
+/* ---------------------------------------------------------------- задачи */
+
+function tTask(type, rng) {
+  if (type === 0) return tLzwEncode(rng);
+  if (type === 1) return tLzwDecode(rng);
+  if (type === 2) return tLzwVolume(rng);
+  if (type === 3) return tColorDepth(rng);
+  if (type === 4) return tJpeg(rng);
+  return tMp3(rng);
+}
+
+/* 0. LZW, кодирование: число кодов, размер словаря или последний код. */
+function tLzwEncode(rng) {
+  const kind = tPick(rng, ["codes", "dict", "last"]);
+  let k, text, r;
+  for (let n = 0; n < 300; n++) {
+    k = tRand(rng, 2, 3);
+    text = zText(rng, k, tRand(rng, 9, 12));
+    r = zEncode(text, k);
+    /* Сжатие должно состояться, а последний код — быть фразой из словаря,
+       иначе «последний код» читается из последней буквы строки. */
+    if (r.codes.length > text.length - 3) continue;
+    if (kind === "last" && r.codes[r.codes.length - 1] <= k) continue;
+    break;
+  }
+  const lead = "Сообщение <code>" + text + "</code> кодируют алгоритмом LZW. " +
+    zDictLead(k);
+  const trace = "Выход: <code>" + r.codes.join(" ") + "</code>. В словарь " +
+    "добавлены: " + zDictShow(r.order, k) + ". ";
+  if (kind === "codes") return {
+    type: 0, kind: kind, answer: String(r.codes.length),
+    question: lead + "Сколько кодов будет в выходной последовательности?",
+    explain: "На каждом шаге берём самую длинную фразу, которая уже есть в " +
+      "словаре, выдаём её код и заносим в словарь эту фразу плюс следующий " +
+      "символ. " + trace + "Кодов " + r.codes.length + " вместо " +
+      text.length + " символов."
+  };
+  if (kind === "dict") return {
+    type: 0, kind: kind, answer: String(r.order.length),
+    question: lead + "Сколько фраз окажется в словаре после кодирования всего " +
+      "сообщения (вместе с начальными)?",
+    explain: "Каждый выданный код, кроме последнего, добавляет в словарь одну " +
+      "новую фразу. " + trace + "Кодов " + r.codes.length + ", значит новых фраз " +
+      (r.codes.length - 1) + ", а всего " + k + " + " + (r.codes.length - 1) +
+      " = " + r.order.length + "."
+  };
+  return {
+    type: 0, kind: kind, answer: String(r.codes[r.codes.length - 1]),
+    question: lead + "Какой код окажется <b>последним</b> в выходной " +
+      "последовательности?",
+    explain: "Кодируем до конца, каждый раз выбирая самую длинную фразу из " +
+      "словаря. " + trace + "Последний код — " + r.codes[r.codes.length - 1] +
+      ", это фраза «" + r.order[r.codes[r.codes.length - 1] - 1] + "»."
+  };
+}
+
+/* 1. LZW, декодирование: длина сообщения или сколько раз встречается буква. */
+function tLzwDecode(rng) {
+  const kind = rng() < 0.5 ? "length" : "letter";
+  let k, text, r, parts, letter, cnt;
+  for (let n = 0; n < 400; n++) {
+    k = tRand(rng, 2, 3);
+    text = zText(rng, k, tRand(rng, 9, 13));
+    r = zEncode(text, k);
+    parts = zDecode(r.codes, k);
+    if (!parts || parts.join("") !== text) continue;
+    if (r.codes.length > text.length - 3) continue;
+    letter = Z_ABC[tRand(rng, 0, k - 1)];
+    cnt = text.split(letter).length - 1;
+    /* Ответ не должен совпадать с числом кодов буквы в самой записи —
+       иначе «посчитал коды, не раскрывая фраз» тоже сходится. */
+    const naive = r.codes.filter(function (c) { return Z_ABC[c - 1] === letter; }).length;
+    if (kind === "letter" && (cnt < 2 || cnt === naive)) continue;
+    break;
+  }
+  const lead = "Сообщение сжато алгоритмом LZW, получена последовательность " +
+    "кодов <code>" + r.codes.join(" ") + "</code>. " + zDictLead(k);
+  const trace = "Фразы по порядку: " + parts.join(" | ") + ". Сообщение: <code>" +
+    text + "</code>. ";
+  const how = "Декодер строит тот же словарь: после каждой фразы, начиная со " +
+    "второй, он добавляет «предыдущая фраза + первая буква текущей». ";
+  if (kind === "length") return {
+    type: 1, kind: kind, answer: String(text.length),
+    question: lead + "Сколько <b>символов</b> в исходном сообщении?",
+    explain: how + trace + "В нём " + text.length + " " +
+      tPl(text.length, "символ", "символа", "символов") + "."
+  };
+  return {
+    type: 1, kind: kind, answer: String(cnt),
+    question: lead + "Сколько раз в исходном сообщении встречается буква <b>" +
+      letter + "</b>?",
+    explain: how + trace + "Буква " + letter + " встречается " + cnt + " " +
+      tPl(cnt, "раз", "раза", "раз") + "."
+  };
+}
+
+/* 2. Объём после LZW: экономия в битах или длина кода по размеру словаря. */
+function tLzwVolume(rng) {
+  if (rng() < 0.5) {
+    const n = tRand(rng, 4, 18) * 50;
+    const b = tRand(rng, 9, 12);
+    const kk = Math.floor(n * tRand(rng, 30, 60) / 100);
+    const ans = 8 * n - kk * b;
+    return {
+      type: 2, kind: "saved", answer: String(ans),
+      question: "Текст из <b>" + n + "</b> символов записан в кодировке, где " +
+        "каждый символ занимает <b>8</b> бит. Алгоритм LZW превратил его в " +
+        "последовательность из <b>" + kk + "</b> кодов, каждый код занимает <b>" +
+        b + "</b> бит. На сколько <b>бит</b> сжатое сообщение короче исходного?",
+      explain: "Исходное сообщение: " + n + " · 8 = " + (8 * n) + " бит. Сжатое: " +
+        kk + " · " + b + " = " + (kk * b) + " бит. Разница " + (8 * n) + " − " +
+        (kk * b) + " = " + ans + " бит. Код LZW длиннее одного символа, но " +
+        "кодов намного меньше, чем символов: один код заменяет целую фразу."
+    };
+  }
+  let d;
+  do { d = tRand(rng, 300, 5000); } while ((d & (d - 1)) === 0);
+  let b = 0;
+  while ((1 << b) < d) b++;
+  return {
+    type: 2, kind: "codebits", answer: String(b),
+    question: "К концу кодирования в словаре LZW оказалось <b>" + d + "</b> " +
+      tPl(d, "фраза", "фразы", "фраз") + ". Все коды имеют одинаковую длину, и " +
+      "у каждой фразы свой код. Какова наименьшая возможная длина кода в битах?",
+    explain: "Кодом из b бит можно пронумеровать 2<sup>b</sup> фраз. 2<sup>" +
+      (b - 1) + "</sup> = " + (1 << (b - 1)) + " — мало, 2<sup>" + b + "</sup> = " +
+      (1 << b) + " ≥ " + d + " — хватает. Ответ " + b + "."
+  };
+}
+
+/* 3. Уменьшение глубины кодирования цвета. */
+function tColorDepth(rng) {
+  const kind = tPick(rng, ["saveKb", "palette", "colors"]);
+  if (kind === "colors") {
+    const i1 = tRand(rng, 8, 16);
+    const i2 = i1 - tRand(rng, 2, 6);
+    return {
+      type: 3, kind: kind, answer: String(1 << (i1 - i2)),
+      question: "Чтобы уменьшить файл, глубину кодирования цвета понизили с <b>" +
+        i1 + "</b> до <b>" + i2 + "</b> бит на пиксель. Во сколько раз " +
+        "уменьшилось наибольшее возможное число цветов в изображении?",
+      explain: "При глубине i бит доступно 2<sup>i</sup> цветов. Было 2<sup>" + i1 +
+        "</sup>, стало 2<sup>" + i2 + "</sup>; отношение 2<sup>" + i1 + " − " + i2 +
+        "</sup> = 2<sup>" + (i1 - i2) + "</sup> = " + (1 << (i1 - i2)) +
+        ". Потерянные оттенки назад не вернуть — это сжатие с потерями."
+    };
+  }
+  const w = 128 * tRand(rng, 2, 8), h = 128 * tRand(rng, 2, 8);
+  const pair = tPick(rng, [[24, 8], [24, 16], [16, 8], [8, 4], [16, 4]]);
+  const ans = w * h * (pair[0] - pair[1]) / 8 / 1024;
+  const tail = "Экономия на пикселе " + pair[0] + " − " + pair[1] + " = " +
+    (pair[0] - pair[1]) + " бит. Всего " + w + " · " + h + " · " +
+    (pair[0] - pair[1]) + " бит = " + (w * h * (pair[0] - pair[1]) / 8) +
+    " байт = " + ans + " Кбайт.";
+  if (kind === "saveKb") return {
+    type: 3, kind: kind, answer: String(ans),
+    question: "Растровое изображение размером <b>" + w + "</b> × <b>" + h +
+      "</b> пикселей хранилось с глубиной цвета <b>" + pair[0] + "</b> бит на " +
+      "пиксель. Глубину уменьшили до <b>" + pair[1] + "</b> бит. На сколько " +
+      "<b>Кбайт</b> уменьшился объём изображения? Заголовок файла и сжатие не " +
+      "учитывать.",
+    explain: tail
+  };
+  return {
+    type: 3, kind: kind, answer: String(ans),
+    question: "Растровое изображение размером <b>" + w + "</b> × <b>" + h +
+      "</b> пикселей использовало палитру из <b>" + Math.pow(2, pair[0]) +
+      "</b> цветов. Палитру сократили до <b>" + Math.pow(2, pair[1]) +
+      "</b> цветов, и каждый пиксель стали кодировать наименьшим возможным " +
+      "числом бит. На сколько <b>Кбайт</b> уменьшился объём изображения? " +
+      "Заголовок файла и сжатие не учитывать.",
+    explain: Math.pow(2, pair[0]) + " = 2<sup>" + pair[0] + "</sup> цветов — это " +
+      pair[0] + " бит на пиксель, " + Math.pow(2, pair[1]) + " = 2<sup>" + pair[1] +
+      "</sup> — " + pair[1] + " бит. " + tail
+  };
+}
+
+/* 4. Идеи JPEG: блоки 8×8, прореживание цветности, квантование. */
+function tJpeg(rng) {
+  const kind = tPick(rng, ["blocks", "subsample", "quant"]);
+  if (kind === "blocks") {
+    const w = 8 * tRand(rng, 20, 160), h = 8 * tRand(rng, 20, 120);
+    return {
+      type: 4, kind: kind, answer: String(w * h / 64),
+      question: "Алгоритм JPEG обрабатывает изображение квадратными блоками " +
+        "<b>8</b> × <b>8</b> пикселей. На сколько блоков будет разбито изображение " +
+        "размером <b>" + w + "</b> × <b>" + h + "</b> пикселей?",
+      explain: "По ширине " + w + " : 8 = " + (w / 8) + " блоков, по высоте " + h +
+        " : 8 = " + (h / 8) + ". Всего " + (w / 8) + " · " + (h / 8) + " = " +
+        (w * h / 64) + "."
+    };
+  }
+  if (kind === "subsample") {
+    const w = 16 * tRand(rng, 2, 20), h = 16 * tRand(rng, 2, 20);
+    const ans = w * h + 2 * (w / 2) * (h / 2);
+    return {
+      type: 4, kind: kind, answer: String(ans),
+      question: "Перед сжатием JPEG переводит изображение в яркость Y и две " +
+        "цветовые составляющие Cb и Cr. Яркость хранится для каждого пикселя, а " +
+        "Cb и Cr — по одному значению на квадрат <b>2</b> × <b>2</b> пикселя: к цвету " +
+        "глаз менее чувствителен. Сколько чисел всего будет храниться для " +
+        "изображения <b>" + w + "</b> × <b>" + h + "</b> пикселей?",
+      explain: "Яркость: " + w + " · " + h + " = " + (w * h) + " чисел. Квадратов " +
+        "2 × 2: " + (w / 2) + " · " + (h / 2) + " = " + (w * h / 4) + ", на каждый " +
+        "по два числа (Cb и Cr) — ещё " + (w * h / 2) + ". Всего " + ans +
+        " — вдвое меньше, чем " + (3 * w * h) + " без прореживания."
+    };
+  }
+  let c, q;
+  do {
+    q = tPick(rng, [10, 12, 16, 20, 24, 40]);
+    c = tRand(rng, 3 * q, 12 * q);
+  } while (c % q === 0 || (2 * (c % q)) === q);
+  const lvl = Math.round(c / q);
+  return {
+    type: 4, kind: kind, answer: String(lvl * q),
+    question: "При квантовании JPEG делит коэффициент на шаг квантования и " +
+      "округляет до ближайшего целого; при восстановлении результат умножается " +
+      "на тот же шаг. Коэффициент равен <b>" + c + "</b>, шаг квантования <b>" + q +
+      "</b>. Какое значение получится после восстановления?",
+    explain: c + " : " + q + " ≈ " + (c / q).toFixed(2).replace(".", ",") +
+      ", округляем до " + lvl + ". Восстановление: " + lvl + " · " + q + " = " +
+      (lvl * q) + " вместо " + c + ". Именно здесь JPEG теряет информацию: " +
+      "разницу в " + Math.abs(lvl * q - c) + " назад не вернуть."
+  };
+}
+
+/* 5. MP3 и форматы: битрейт и что сжимает с потерями. */
+const Z_LOSSY = ["JPEG", "MP3", "MPEG-4", "AAC"];
+const Z_LOSSLESS = ["PNG", "ZIP", "FLAC", "RLE", "LZW", "код Хаффмана", "RAR", "7z"];
+
+function tMp3(rng) {
+  const kind = tPick(rng, ["size", "time", "lossy"]);
+  if (kind === "lossy") {
+    const nl = tRand(rng, 1, 4);
+    const a = Z_LOSSY.slice(), b = Z_LOSSLESS.slice(), list = [];
+    for (let i = 0; i < nl; i++) list.push(a.splice(tRand(rng, 0, a.length - 1), 1)[0]);
+    for (let i = nl; i < 6; i++) list.push(b.splice(tRand(rng, 0, b.length - 1), 1)[0]);
+    for (let j = list.length - 1; j > 0; j--) {
+      const t = tRand(rng, 0, j);
+      const tmp = list[j]; list[j] = list[t]; list[t] = tmp;
+    }
+    const hit = list.filter(function (x) { return Z_LOSSY.indexOf(x) >= 0; });
+    return {
+      type: 5, kind: kind, answer: String(nl),
+      question: "Перечислены форматы и алгоритмы сжатия: <code>" +
+        list.join("; ") + "</code>. Сколько из них сжимают данные <b>с " +
+        "потерями</b>, то есть не позволяют восстановить исходные данные точно?",
+      explain: "С потерями сжимают то, что рассчитано на глаз и ухо: JPEG " +
+        "(фото), MP3 и AAC (звук), MPEG-4 (видео). Архиваторы (ZIP, RAR, 7z), " +
+        "алгоритмы RLE, LZW и Хаффмана, форматы PNG и FLAC восстанавливают данные " +
+        "бит в бит. В списке с потерями: " + hit.join(", ") + " — " + nl + "."
+    };
+  }
+  const br = tPick(rng, [64, 128, 192, 256, 320]);
+  const t = tRand(rng, 3, 30) * 10;
+  const size = br / 8 * t;
+  if (kind === "size") return {
+    type: 5, kind: kind, answer: String(size),
+    question: "Музыкальный фрагмент длительностью <b>" + t + "</b> секунд сжат в " +
+      "формат MP3 с постоянным битрейтом <b>" + br + "</b> Кбит/с (1 Кбит = 1024 " +
+      "бит). Сколько <b>Кбайт</b> занимает звуковой поток этого файла?",
+    explain: "Битрейт — сколько бит уходит на секунду звучания. " + br +
+      " Кбит/с = " + br + " : 8 = " + (br / 8) + " Кбайт/с. За " + t + " с: " +
+      (br / 8) + " · " + t + " = " + size + " Кбайт. От частоты дискретизации и " +
+      "разрядности исходной записи размер MP3 уже не зависит."
+  };
+  return {
+    type: 5, kind: kind, answer: String(t),
+    question: "Звуковой поток файла MP3 занимает <b>" + size + "</b> Кбайт. " +
+      "Фрагмент сжат с постоянным битрейтом <b>" + br + "</b> Кбит/с (1 Кбит = " +
+      "1024 бит). Сколько <b>секунд</b> длится фрагмент?",
+    explain: br + " Кбит/с = " + (br / 8) + " Кбайт/с. Длительность: " + size +
+      " : " + (br / 8) + " = " + t + " с."
+  };
+}
+
+/* ------------------------------------------------------------- сборка */
+
+function tMake(seed) {
+  const rng = tRng(seed || 1);
+  const order = [0, 1, 2, 3, 4, 5];
+  for (let j = order.length - 1; j > 0; j--) {
+    const t = tRand(rng, 0, j);
+    const tmp = order[j]; order[j] = order[t]; order[t] = tmp;
+  }
+  return order.map(function (type) { return tTask(type, rng); });
+}
+
+function tCheck(task, raw) {
+  const s = String(raw === undefined || raw === null ? "" : raw)
+    .replace(/\s+/g, "");
+  if (!/^\d+$/.test(s)) return false;
+  return String(Number(s)) === task.answer;
+}
+/* ==== /ЗАДАЧИ ==== */
+
+/* Форма сдачи ДЗ — одна на все темы. Ссылку разносит set_form_link.py. */
+const FORM = "https://docs.google.com/forms/d/e/1FAIpQLSfQyhaxcnzn4ZaKSe_ZMsluw7qRQnrw_80H6SfrnYB5EThUIA/viewform?usp=pp_url&entry.853601231=ФАМИЛИЯ&entry.1091635917=КЛАСС&entry.487188307=КОД";
+
+const ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+const EPOCH = Date.UTC(2026, 0, 1);
+const PREFIX = "LZ";
+const SCALE = [[6, 5], [5, 4], [3, 3]];
+
+const bin = (v, w) => v.toString(2).padStart(w, "0");
+
+/* Семибитными кусками строки: в нагрузке 33 бита, а побитовые операции в JS
+   32-битные — старший бит молча потерялся бы. */
+function checksum(bitstr){
+  let cs = 0x5B;
+  for (let i = 0; i < bitstr.length; i += 7)
+    cs ^= parseInt(bitstr.substr(i, 7).padEnd(7, "0"), 2);
+  return cs & 0x7F;
+}
+
+function makeCode(st){
+  const day = Math.max(0, Math.min(2047, Math.floor(
+      (Date.now() - EPOCH) / 86400000)));
+  const payload = bin(day, 11) + bin(Math.min(15, st.typesDone), 4) +
+                  bin(Math.min(15, st.cleanTypes), 4) +
+                  bin(Math.min(127, st.solved), 7) +
+                  bin(Math.min(127, st.wrong), 7);
+  const bitstr = payload + bin(checksum(payload), 7);
+  let out = "";
+  for (let i = 0; i < 40; i += 5)
+    out += ALPHABET[parseInt(bitstr.substr(i, 5), 2)];
+  return PREFIX + "-" + out.slice(0, 4) + "-" + out.slice(4);
+}
+
+/* ---------------------------------------------------------- состояние
+   Все вопросы темы лежат на странице сразу — решать можно в любом
+   порядке, объём виден с первого взгляда. Вопрос закрывается одним верным
+   ответом и больше не спрашивается. Ошибся — разбор сразу, а вопрос
+   остаётся открытым: кнопка «Новые числа» на той же карточке даёт задачу с
+   другими данными, и её можно сдать ещё раз. Код выдаётся, когда закрыто
+   хотя бы MIN_TO_FINISH; после кода карточки запираются.
+   До 17.09.2026 вопросы шли по одному, раундами; Света попросила
+   показывать все сразу: не видно объёма и нельзя выбрать порядок. */
+const T_COUNT = T_TYPES.length;
+const MIN_TO_FINISH = 3;
+
+let st;
+
+function esc(s){ return String(s).replace(/[&<>]/g, c =>
+  ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+
+function markFor(n){
+  for (const [need, m] of SCALE) if (n >= need) return m;
+  return null;
+}
+
+function wordQ(n){
+  const a = n % 100, b = a % 10;
+  if (a > 4 && a < 21) return "вопросов";
+  if (b === 1) return "вопрос";
+  if (b > 1 && b < 5) return "вопроса";
+  return "вопросов";
+}
+
+function newRng(){ return tRng((Date.now() ^ (Math.random() * 1e9)) >>> 0); }
+
+function freshState(){
+  const s = {
+    closed: Array(T_COUNT).fill(false),
+    clean:  Array(T_COUNT).fill(true),
+    tried:  Array(T_COUNT).fill(false),
+    tasks:  Array(T_COUNT).fill(null),
+    solved: 0, wrong: 0, code: null
+  };
+  for (let i = 0; i < T_COUNT; i++) s.tasks[i] = tTask(i, newRng());
+  Object.defineProperty(s, "typesDone",
+    {get(){ return s.closed.filter(Boolean).length; }});
+  Object.defineProperty(s, "cleanTypes",
+    {get(){ return s.closed.filter((d, i) => d && s.clean[i]).length; }});
+  return s;
+}
+
+function paint(){
+  const box = document.getElementById("types");
+  box.innerHTML = "";
+  for (let i = 0; i < T_COUNT; i++) {
+    const el = document.createElement("span");
+    el.className = "chip" + (st.closed[i] ? " done" : st.tried[i] ? " miss" : "");
+    el.textContent = (i + 1) + ". " + T_TYPES[i];
+    box.appendChild(el);
+  }
+  const done = st.typesDone;
+  const m = markFor(done);
+  const sb = document.getElementById("scorebox");
+  sb.className = "score" + (m ? " m" + m : "");
+  document.getElementById("mark").textContent = m ? m : "—";
+  document.getElementById("stats").textContent =
+    "Закрыто: " + done + " из " + T_COUNT + ". Решено задач: " + st.solved +
+    ", ошибок: " + st.wrong + ".";
+  renderBottom();
+}
+
+function cardHtml(i){
+  const t = st.tasks[i];
+  return '<div class="card" id="task-' + i + '">' +
+      '<p class="tag">' + (i + 1) + ' &middot; ' + T_TYPES[i] + '</p>' +
+      '<div class="q">' + t.question + '</div>' +
+      '<div class="row">' +
+        '<input type="text" id="ans-' + i + '" autocomplete="off" spellcheck="false" ' +
+               'inputmode="numeric" placeholder="целое число"' + '>' +
+        '<button class="primary" id="go-' + i + '">Ответить</button>' +
+      '</div>' +
+      '<div class="verdict" id="v-' + i + '"></div>' +
+    '</div>';
+}
+
+function bindCard(i){
+  document.getElementById("ans-" + i).addEventListener("keydown", function(e){
+    if (e.key === "Enter") judge(i);
+  });
+  document.getElementById("go-" + i).addEventListener("click", function(){ judge(i); });
+}
+
+function renderAll(){
+  let html = "";
+  for (let i = 0; i < T_COUNT; i++) html += cardHtml(i);
+  document.getElementById("area").innerHTML = html;
+  for (let i = 0; i < T_COUNT; i++) bindCard(i);
+}
+
+function renderCard(i){
+  document.getElementById("task-" + i).outerHTML = cardHtml(i);
+  bindCard(i);
+}
+
+function judge(i){
+  if (st.code) return;
+  const t = st.tasks[i];
+  const raw = document.getElementById("ans-" + i).value;
+  const ok = tCheck(t, raw);
+  st.tried[i] = true;
+  if (ok) { st.closed[i] = true; st.solved++; }
+  else { st.wrong++; st.clean[i] = false; }
+
+  const card = document.getElementById("task-" + i);
+  card.className = "card " + (ok ? "ok" : "err");
+  document.getElementById("ans-" + i).disabled = true;
+  document.getElementById("go-" + i).disabled = true;
+  const v = document.getElementById("v-" + i);
+  v.className = "verdict " + (ok ? "ok" : "err");
+  v.innerHTML = ok
+    ? "Правильно — вопрос закрыт."
+    : "Ошибка. Твой ответ: <code>" + esc(raw) + "</code>, верный: <code>" +
+      t.answer + "</code>." +  "" +
+      " Вопрос остался открытым: возьми ту же задачу с другими данными.";
+  card.insertAdjacentHTML("beforeend",
+    '<div class="why">' + t.explain + '</div>' +
+    (ok ? '' : '<div class="row"><button class="primary" id="re-' + i +
+               '">Новые числа</button></div>'));
+  if (!ok) document.getElementById("re-" + i).addEventListener("click", function(){
+    st.tasks[i] = tTask(i, newRng());
+    st.tried[i] = false;
+    renderCard(i);
+    document.getElementById("ans-" + i).focus();
+    paint();
+  });
+  paint();
+}
+
+function renderBottom(){
+  const box = document.getElementById("bottom");
+  if (st.code) return;
+  const done = st.typesDone, open = T_COUNT - done;
+  if (done < MIN_TO_FINISH) {
+    box.innerHTML = '<p class="stats">Код работы появится, когда будет закрыто ' +
+      'хотя бы ' + MIN_TO_FINISH + ' ' + wordQ(MIN_TO_FINISH) + ' (сейчас ' +
+      done + ').</p>';
+    return;
+  }
+  const m = markFor(done);
+  const up = SCALE.filter(s => s[0] > done).pop();
+  let msg;
+  if (up) {
+    msg = "Наработано на <b>" + m + "</b> (закрыто " + done + " из " + T_COUNT +
+      "). Можно забрать код сейчас, а можно дорешать ещё " + open + " " +
+      wordQ(open) + " и дойти до <b>" + up[1] + "</b>.";
+  } else {
+    msg = "Все " + T_COUNT + " " + wordQ(T_COUNT) + " закрыты — наработано на <b>" +
+      m + "</b>.";
+  }
+  box.innerHTML =
+    '<div class="card">' +
+      '<p>' + msg + '</p>' +
+      '<div class="row"><button class="primary" id="stop">Получить код' +
+        (open > 0 ? ' сейчас' : '') + '</button></div>' +
+    '</div>';
+  document.getElementById("stop").addEventListener("click", finish);
+}
+
+function finish(){
+  const code = makeCode(st);
+  st.code = code;
+  document.querySelectorAll("#area input, #area button").forEach(function(el){
+    el.disabled = true;
+  });
+  const m = markFor(st.typesDone);
+  const open = [];
+  for (let i = 0; i < T_COUNT; i++) if (!st.closed[i]) open.push(T_TYPES[i]);
+  document.getElementById("bottom").innerHTML =
+    '<div class="card">' +
+      '<h2>Работа завершена</h2>' +
+      '<p>Закрыто <b>' + st.typesDone + '</b> из ' + T_COUNT +
+        (m ? ', это отметка <b>' + m + '</b>' : '') + '.' +
+        (open.length ? ' Не закрыто: ' + open.join(", ") + '.' : '') +
+      '</p>' +
+      '<p>Код работы — его и надо сдать:</p>' +
+      '<div class="code">' + code + '</div>' +
+      '<div class="note">Код хранит дату, число закрытых вопросов, число ' +
+        'решённых и неверных задач. Переписывать его руками не нужно: впиши ' +
+        'фамилию и класс, и кнопка откроет форму с уже подставленным кодом.</div>' +
+      '<div class="fields">' +
+        '<div><label for="fam">Фамилия и имя</label>' +
+          '<input type="text" id="fam" autocomplete="off"></div>' +
+        '<div><label for="kls">Класс</label>' +
+          '<input type="text" id="kls" autocomplete="off" value="11"></div>' +
+      '</div>' +
+      '<div class="row">' +
+        '<button id="send" class="primary">Сдать работу</button>' +
+        '<button id="again">Начать заново</button>' +
+      '</div>' +
+      '<p class="stats">«Начать заново» откроет все ' + T_COUNT + ' вопросов с ' +
+        'нуля — для дополнительной тренировки. Сдавать нужно тот код, который ' +
+        'получен сейчас.</p>' +
+    '</div>';
+  document.getElementById("bottom").scrollIntoView({behavior: "smooth", block: "start"});
+  document.getElementById("send").addEventListener("click", function(){
+    const fam = document.getElementById("fam").value.trim();
+    if (!fam) { document.getElementById("fam").focus(); return; }
+    const kls = document.getElementById("kls").value.trim() || "11";
+    window.open(FORM.replace("ФАМИЛИЯ", encodeURIComponent(fam))
+                    .replace("КЛАСС", encodeURIComponent(kls))
+                    .replace("КОД", encodeURIComponent(code)), "_blank");
+  });
+  document.getElementById("again").addEventListener("click", resetAll);
+  paint();
+}
+
+function resetAll(){
+  st = freshState();
+  renderAll();
+  paint();
+}
+
+resetAll();
+</script>
+<p class="ai-mark" style="margin:34px auto 0;max-width:860px;padding-top:12px;border-top:1px solid #d9dce6;color:#5c6070;font:13px/1.5 "Segoe UI",system-ui,sans-serif">Материалы подготовлены с использованием технологий искусственного интеллекта.</p>
+</body>
+</html>

@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Задание 4 ЕГЭ: условие Фано — презентация</title>
+<meta name="description" content="Презентация к разбору задания 4 ЕГЭ в 11 классе (углублённый): неравномерный код и условие Фано, дерево кода и свободные ветви, три формы задания по замеру 14 задач, разбор демоверсий 2026 и 2027, ловушка с буквой вне слова.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E11%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ink)}
+body{font:20px/1.5 "Segoe UI",system-ui,sans-serif}
+.deck{height:100vh;display:flex;flex-direction:column}
+.stage{flex:1 1 auto;overflow-y:auto;padding:34px 56px 12px}
+.slide{display:none;max-width:1100px;margin:0 auto}
+.slide.on{display:block}
+
+h1{font-size:48px;line-height:1.1;margin:0 0 18px;text-wrap:balance}
+h2{font-size:34px;line-height:1.15;margin:0 0 18px;text-wrap:balance}
+.lead{font-size:23px;color:var(--muted);margin:0 0 24px}
+p{margin:0 0 14px}
+ul{margin:0 0 14px;padding-left:28px}
+li{margin:8px 0}
+code{font-family:Consolas,"Cascadia Mono",monospace;background:var(--card);
+     border:1px solid var(--line);border-radius:6px;padding:1px 7px;font-size:.92em}
+pre{font-family:Consolas,"Cascadia Mono",monospace;background:#1e2430;color:#e7ecf5;
+    padding:16px 20px;border-radius:12px;font-size:20px;line-height:1.45;
+    overflow-x:auto;margin:10px 0}
+pre code{background:none;border:0;padding:0;color:inherit;font-size:inherit}
+pre .c{color:#8fa6c4}
+pre .out{color:#9dd4b4}
+pre .hl{color:#ffd479}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;align-items:start}
+.box{border:1px solid var(--line);border-radius:14px;padding:16px 20px;background:#fff}
+.box h3{margin:0 0 8px;font-size:22px}
+.good{border-color:var(--ok-line);background:var(--ok-bg)}
+.bad{border-color:var(--err-line);background:var(--err-bg)}
+.warn{border-color:var(--hi-line);background:var(--hi-bg)}
+.big{font-size:25px}
+table{border-collapse:collapse;font-size:19px;margin:10px 0}
+th,td{border:1px solid var(--line);padding:7px 14px;text-align:left}
+th{background:var(--card)}
+table.mini th,table.mini td{padding:6px 12px}
+.key{color:var(--accent);font-weight:700}
+.step[hidden]{display:none}
+.tag{display:inline-block;background:var(--accent);color:#fff;border-radius:20px;
+     padding:3px 14px;font-size:16px;font-weight:700;margin-bottom:12px}
+.tag.gray{background:var(--muted)}
+.bar{flex:0 0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+     border-top:1px solid var(--line);background:var(--card);padding:12px 24px}
+.bar .spacer{flex:1 1 auto}
+.count{color:var(--muted);font-size:17px;font-variant-numeric:tabular-nums}
+.keys{color:var(--muted);font-size:15px}
+.keys kbd{font:600 13px/1 Consolas,monospace;border:1px solid var(--line);
+          border-bottom-width:2px;border-radius:5px;padding:2px 6px;background:#fff}
+button{font:600 17px/1 inherit;padding:11px 18px;border-radius:10px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);color:var(--muted)}
+
+/* ---- размер шрифта на проекторе: A− / A+ ---- */
+.zoom{display:inline-flex;align-items:center;gap:3px;margin-left:8px}
+.zoom button{padding:8px 10px;font-size:15px;min-width:36px;line-height:1}
+.zoom .z{color:var(--muted);font-size:15px;min-width:46px;text-align:center;
+         font-variant-numeric:tabular-nums}
+svg.ftree{display:block;width:100%;max-width:100%;height:auto;max-height:56vh;margin:6px auto}
+/* колонка с деревом шире: на глубине 4 у листьев шестнадцать мест */
+.two:has(svg.ftree){grid-template-columns:2fr 3fr}
+.two.eq{grid-template-columns:1fr 1fr}
+ol{margin:0 0 14px;padding-left:28px}
+</style>
+</head>
+<body>
+<div class="deck">
+<div class="stage" id="stage">
+
+<section class="slide on">
+  <h1>Задание 4:<br>условие Фано</h1>
+  <p class="lead">Неравномерный двоичный код: у частых букв слова короче.<br>
+  Решаем <b>деревом</b> — в черновике, за две-три минуты.</p>
+  <p>Базовый уровень, один балл. Ответ — одно число или одно кодовое слово.</p>
+</section>
+
+<section class="slide">
+  <span class="tag">зачем условие</span>
+  <h2>Коротко — хорошо, но можно не расшифровать</h2>
+  <p class="big">А – <code>0</code>, Б – <code>01</code>, В – <code>10</code>. Пришло
+     сообщение <code>010</code>. Что это?</p>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="two">
+        <div class="box bad"><h3>Два прочтения</h3>
+          <p><code>0 | 10</code> — это <b>АВ</b><br><code>01 | 0</code> — это <b>БА</b></p>
+          <p>Код не годится: получатель не поймёт, что прислали.</p></div>
+        <div>
+<!-- ==== ДЕРЕВО:fano-bad: вставлено gen.py, руками не править ==== -->
+<svg class="ftree" viewBox="0 0 360 156" width="360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="дерево кода"><line x1="180" y1="18" x2="97" y2="66" stroke="#8c93a6" stroke-width="1.6"/><text x="131.5" y="40" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">0</text><line x1="97" y1="66" x2="138.5" y2="114" stroke="#8c93a6" stroke-width="1.6"/><text x="124.75" y="88" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">1</text><line x1="180" y1="18" x2="263" y2="66" stroke="#8c93a6" stroke-width="1.6"/><text x="228.5" y="40" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">1</text><line x1="263" y1="66" x2="221.5" y2="114" stroke="#8c93a6" stroke-width="1.6"/><text x="235.25" y="88" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">0</text><circle cx="180" cy="18" r="4" fill="#8c93a6"/><rect x="82" y="54" width="30" height="24" rx="6" fill="#eef0f5" stroke="#1b1b1f" stroke-width="1.5"/><text x="97" y="71" font-size="14" font-weight="700" fill="#1b1b1f" text-anchor="middle" font-family="Segoe UI,sans-serif">А</text><text x="97" y="93" font-size="11" fill="#1b1b1f" text-anchor="middle" font-family="Consolas,monospace">0</text><rect x="123.5" y="102" width="30" height="24" rx="6" fill="#eef0f5" stroke="#1b1b1f" stroke-width="1.5"/><text x="138.5" y="119" font-size="14" font-weight="700" fill="#1b1b1f" text-anchor="middle" font-family="Segoe UI,sans-serif">Б</text><text x="138.5" y="141" font-size="11" fill="#1b1b1f" text-anchor="middle" font-family="Consolas,monospace">01</text><circle cx="263" cy="66" r="4" fill="#8c93a6"/><rect x="206.5" y="102" width="30" height="24" rx="6" fill="#eef0f5" stroke="#1b1b1f" stroke-width="1.5"/><text x="221.5" y="119" font-size="14" font-weight="700" fill="#1b1b1f" text-anchor="middle" font-family="Segoe UI,sans-serif">В</text><text x="221.5" y="141" font-size="11" fill="#1b1b1f" text-anchor="middle" font-family="Consolas,monospace">10</text></svg>
+<!-- ==== /ДЕРЕВО ==== -->
+        </div>
+      </div>
+    </div>
+    <div class="step" hidden>
+      <p class="big">Беда в том, что <code>0</code> (А) — <b>начало</b> <code>01</code> (Б):
+         на дереве А сидит на пути к Б.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">определение</span>
+  <h2>Условие Фано</h2>
+  <p class="big">Никакое кодовое слово не является <b>началом</b> другого
+     кодового слова.</p>
+  <div class="steps">
+    <div class="step" hidden>
+      <p>Тогда расшифровка однозначна: читаем слева и отрезаем слово, как только
+         оно совпало с кодом какой-то буквы, — другой буквы с таким началом нет.</p>
+    </div>
+    <div class="step" hidden>
+      <div class="box warn"><p>На ЕГЭ это примечание печатают прямо в условии.
+         Условие <b>обратное</b> Фано (ни одно слово не является концом другого)
+         в 14 разобранных задачах 2025–2027 не встречалось.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">инструмент</span>
+  <h2>Дерево кода</h2>
+  <div class="two">
+    <div>
+      <ul class="big">
+        <li>корень наверху; <b>0 — влево, 1 — вправо</b>;</li>
+        <li>кодовое слово — путь от корня;</li>
+        <li>Фано: <b>каждая буква — лист</b>, ниже неё ничего не растёт.</li>
+      </ul>
+      <div class="steps">
+        <div class="step" hidden>
+          <p><b>Свободная ветвь</b> — узел, куда не легло ни одно слово и через
+             который не идёт путь к слову (пунктир). Новые буквы садятся
+             <b>только туда</b>.</p>
+        </div>
+      </div>
+    </div>
+    <div>
+<!-- ==== ДЕРЕВО: вставлено gen.py, руками не править ==== -->
+<svg class="ftree" viewBox="0 0 368 218" width="368" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="дерево кода"><line x1="184" y1="18" x2="99" y2="66" stroke="#8c93a6" stroke-width="1.6"/><text x="134.5" y="40" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">0</text><line x1="99" y1="66" x2="56.5" y2="114" stroke="#8c93a6" stroke-width="1.6"/><text x="70.75" y="88" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">0</text><line x1="99" y1="66" x2="141.5" y2="114" stroke="#8c93a6" stroke-width="1.6"/><text x="127.25" y="88" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">1</text><line x1="141.5" y1="114" x2="120.25" y2="162" stroke="#8c93a6" stroke-width="1.6"/><text x="123.875" y="136" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">0</text><line x1="184" y1="18" x2="269" y2="66" stroke="#8c93a6" stroke-width="1.6"/><text x="233.5" y="40" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">1</text><line x1="269" y1="66" x2="311.5" y2="114" stroke="#8c93a6" stroke-width="1.6"/><text x="297.25" y="88" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">1</text><line x1="311.5" y1="114" x2="332.75" y2="162" stroke="#8c93a6" stroke-width="1.6"/><text x="329.125" y="136" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">1</text><line x1="269" y1="66" x2="226.5" y2="114" stroke="#2c8a57" stroke-width="1.6" stroke-dasharray="5 4"/><text x="240.75" y="88" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">0</text><line x1="141.5" y1="114" x2="162.75" y2="162" stroke="#2c8a57" stroke-width="1.6" stroke-dasharray="5 4"/><text x="159.125" y="136" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">1</text><line x1="311.5" y1="114" x2="290.25" y2="162" stroke="#2c8a57" stroke-width="1.6" stroke-dasharray="5 4"/><text x="293.875" y="136" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">0</text><circle cx="184" cy="18" r="4" fill="#8c93a6"/><circle cx="99" cy="66" r="4" fill="#8c93a6"/><rect x="41.5" y="102" width="30" height="24" rx="6" fill="#eef0f5" stroke="#1b1b1f" stroke-width="1.5"/><text x="56.5" y="119" font-size="14" font-weight="700" fill="#1b1b1f" text-anchor="middle" font-family="Segoe UI,sans-serif">Б</text><text x="56.5" y="141" font-size="11" fill="#1b1b1f" text-anchor="middle" font-family="Consolas,monospace">00</text><circle cx="141.5" cy="114" r="4" fill="#8c93a6"/><rect x="105.25" y="150" width="30" height="24" rx="6" fill="#eef0f5" stroke="#1b1b1f" stroke-width="1.5"/><text x="120.25" y="167" font-size="14" font-weight="700" fill="#1b1b1f" text-anchor="middle" font-family="Segoe UI,sans-serif">Н</text><text x="120.25" y="189" font-size="11" fill="#1b1b1f" text-anchor="middle" font-family="Consolas,monospace">010</text><circle cx="269" cy="66" r="4" fill="#8c93a6"/><circle cx="311.5" cy="114" r="4" fill="#8c93a6"/><rect x="317.75" y="150" width="30" height="24" rx="6" fill="#eef0f5" stroke="#1b1b1f" stroke-width="1.5"/><text x="332.75" y="167" font-size="14" font-weight="700" fill="#1b1b1f" text-anchor="middle" font-family="Segoe UI,sans-serif">Л</text><text x="332.75" y="202" font-size="11" fill="#1b1b1f" text-anchor="middle" font-family="Consolas,monospace">111</text><rect x="211.5" y="102" width="30" height="24" rx="6" fill="#e8f5ee" stroke="#2c8a57" stroke-dasharray="4 3" stroke-width="1.5"/><text x="226.5" y="119" font-size="14" font-weight="700" fill="#2c8a57" text-anchor="middle" font-family="Segoe UI,sans-serif">·</text><text x="226.5" y="141" font-size="11" fill="#2c8a57" text-anchor="middle" font-family="Consolas,monospace">10</text><rect x="147.75" y="150" width="30" height="24" rx="6" fill="#e8f5ee" stroke="#2c8a57" stroke-dasharray="4 3" stroke-width="1.5"/><text x="162.75" y="167" font-size="14" font-weight="700" fill="#2c8a57" text-anchor="middle" font-family="Segoe UI,sans-serif">·</text><text x="162.75" y="202" font-size="11" fill="#2c8a57" text-anchor="middle" font-family="Consolas,monospace">011</text><rect x="275.25" y="150" width="30" height="24" rx="6" fill="#e8f5ee" stroke="#2c8a57" stroke-dasharray="4 3" stroke-width="1.5"/><text x="290.25" y="167" font-size="14" font-weight="700" fill="#2c8a57" text-anchor="middle" font-family="Segoe UI,sans-serif">·</text><text x="290.25" y="189" font-size="11" fill="#2c8a57" text-anchor="middle" font-family="Consolas,monospace">110</text></svg>
+<!-- ==== /ДЕРЕВО ==== -->
+      <p class="count">Б – 00, Н – 010, Л – 111 (демоверсия 2027)</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">главный приём</span>
+  <h2>Ветку можно делить</h2>
+  <div class="two">
+    <div>
+      <p class="big">Свободная ветка длины <i>d</i> — это:</p>
+      <ul class="big">
+        <li>одно слово длины <i>d</i>,</li>
+        <li>или два длины <i>d</i>+1,</li>
+        <li>или четыре длины <i>d</i>+2…</li>
+      </ul>
+      <div class="steps">
+        <div class="step" hidden>
+          <p>Каждое деление удлиняет слова на один знак. Поэтому делить надо
+             <b>короткие</b> ветки, а <b>короткие слова — частым буквам</b>.</p>
+        </div>
+      </div>
+    </div>
+    <div>
+<!-- ==== ДЕРЕВО:split: вставлено gen.py, руками не править ==== -->
+<svg class="ftree" viewBox="0 0 736 252" width="736" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="дерево кода"><line x1="368" y1="18" x2="191" y2="66" stroke="#8c93a6" stroke-width="1.6"/><text x="272.5" y="40" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">0</text><line x1="368" y1="18" x2="545" y2="66" stroke="#8c93a6" stroke-width="1.6"/><text x="463.5" y="40" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">1</text><line x1="545" y1="66" x2="456.5" y2="114" stroke="#8c93a6" stroke-width="1.6"/><text x="493.75" y="88" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">0</text><line x1="545" y1="66" x2="633.5" y2="114" stroke="#8c93a6" stroke-width="1.6"/><text x="596.25" y="88" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">1</text><line x1="633.5" y1="114" x2="589.25" y2="162" stroke="#8c93a6" stroke-width="1.6"/><text x="604.375" y="136" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">0</text><line x1="633.5" y1="114" x2="677.75" y2="162" stroke="#8c93a6" stroke-width="1.6"/><text x="662.625" y="136" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">1</text><line x1="677.75" y1="162" x2="655.625" y2="210" stroke="#8c93a6" stroke-width="1.6"/><text x="659.6875" y="184" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">0</text><line x1="677.75" y1="162" x2="699.875" y2="210" stroke="#8c93a6" stroke-width="1.6"/><text x="695.8125" y="184" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">1</text><circle cx="368" cy="18" r="4" fill="#8c93a6"/><rect x="176" y="54" width="30" height="24" rx="6" fill="#eef0f5" stroke="#1b1b1f" stroke-width="1.5"/><text x="191" y="71" font-size="14" font-weight="700" fill="#1b1b1f" text-anchor="middle" font-family="Segoe UI,sans-serif">А</text><text x="191" y="93" font-size="11" fill="#1b1b1f" text-anchor="middle" font-family="Consolas,monospace">0</text><circle cx="545" cy="66" r="4" fill="#8c93a6"/><rect x="441.5" y="102" width="30" height="24" rx="6" fill="#eef0f5" stroke="#1b1b1f" stroke-width="1.5"/><text x="456.5" y="119" font-size="14" font-weight="700" fill="#1b1b1f" text-anchor="middle" font-family="Segoe UI,sans-serif">Б</text><text x="456.5" y="141" font-size="11" fill="#1b1b1f" text-anchor="middle" font-family="Consolas,monospace">10</text><circle cx="633.5" cy="114" r="4" fill="#8c93a6"/><rect x="574.25" y="150" width="30" height="24" rx="6" fill="#e6effa" stroke="#1f5fa8" stroke-width="1.5"/><text x="589.25" y="167" font-size="14" font-weight="700" fill="#1f5fa8" text-anchor="middle" font-family="Segoe UI,sans-serif">В</text><text x="589.25" y="189" font-size="11" fill="#1f5fa8" text-anchor="middle" font-family="Consolas,monospace">110</text><circle cx="677.75" cy="162" r="4" fill="#8c93a6"/><rect x="640.625" y="198" width="30" height="24" rx="6" fill="#e6effa" stroke="#1f5fa8" stroke-width="1.5"/><text x="655.625" y="215" font-size="14" font-weight="700" fill="#1f5fa8" text-anchor="middle" font-family="Segoe UI,sans-serif">Г</text><text x="655.625" y="237" font-size="11" fill="#1f5fa8" text-anchor="middle" font-family="Consolas,monospace">1110</text><rect x="684.875" y="198" width="30" height="24" rx="6" fill="#e6effa" stroke="#1f5fa8" stroke-width="1.5"/><text x="699.875" y="215" font-size="14" font-weight="700" fill="#1f5fa8" text-anchor="middle" font-family="Segoe UI,sans-serif">Д</text><text x="699.875" y="237" font-size="11" fill="#1f5fa8" text-anchor="middle" font-family="Consolas,monospace">1111</text></svg>
+<!-- ==== /ДЕРЕВО ==== -->
+      <p class="count">свободная ветка <code>11</code> поделена на три буквы: 110, 1110, 1111</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">замер</span>
+  <h2>Какие бывают задания 4</h2>
+  <p>Разобраны 14 задач — демоверсии 2026 и 2027, волны, резервы, пересдачи,
+     ЕГКР и апробации 2025–2026 годов.</p>
+  <table>
+    <tr><th>вопрос</th><th>задач</th><th>что считаем</th></tr>
+    <tr><td>длина закодированного <b>слова</b></td><td>9</td>
+        <td>сумма «сколько раз × длина» по буквам слова</td></tr>
+    <tr><td><b>сумма длин</b> слов оставшихся букв</td><td>3</td>
+        <td>то же, каждая буква по разу</td></tr>
+    <tr><td><b>кратчайшее</b> кодовое слово для буквы</td><td>2</td>
+        <td>самый высокий свободный узел, левый</td></tr>
+  </table>
+  <div class="steps">
+    <div class="step" hidden>
+      <p class="big">Все три решаются одним деревом.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">демоверсия 2027</span>
+  <h2>КОЛОБОК</h2>
+  <p>Буквы: Б, К, Л, О, Н. Известно: Б – 00, Н – 010, Л – 111. Для К и О слова
+     неизвестны. Сколько двоичных знаков нужно для слова КОЛОБОК, если оно
+     закодировано минимально возможным количеством знаков?</p>
+  <div class="two">
+    <div class="steps">
+      <div class="step" hidden><p><b>1.</b> Дерево: свободные ветви <code>011</code>,
+        <code>10</code>, <code>110</code>.</p></div>
+      <div class="step" hidden><p><b>2.</b> Частоты в слове: О — 3 раза, К — 2.
+        Буква Н в слове не встречается, но код у неё уже есть.</p></div>
+      <div class="step" hidden><p><b>3.</b> Ветвей хватает, делить не надо. Самое
+        короткое — частой: О → <code>10</code>, К → <code>011</code>.</p></div>
+      <div class="step" hidden><p><b>4.</b> К 2·3 + О 3·2 + Л 1·3 + Б 1·2 =
+        <b class="key">17</b></p></div>
+    </div>
+    <div class="steps">
+      <div class="step" hidden>
+<!-- ==== ДЕРЕВО:demo-answer: вставлено gen.py, руками не править ==== -->
+<svg class="ftree" viewBox="0 0 368 218" width="368" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="дерево кода"><line x1="184" y1="18" x2="99" y2="66" stroke="#8c93a6" stroke-width="1.6"/><text x="134.5" y="40" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">0</text><line x1="99" y1="66" x2="56.5" y2="114" stroke="#8c93a6" stroke-width="1.6"/><text x="70.75" y="88" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">0</text><line x1="99" y1="66" x2="141.5" y2="114" stroke="#8c93a6" stroke-width="1.6"/><text x="127.25" y="88" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">1</text><line x1="141.5" y1="114" x2="120.25" y2="162" stroke="#8c93a6" stroke-width="1.6"/><text x="123.875" y="136" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">0</text><line x1="184" y1="18" x2="269" y2="66" stroke="#8c93a6" stroke-width="1.6"/><text x="233.5" y="40" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">1</text><line x1="269" y1="66" x2="311.5" y2="114" stroke="#8c93a6" stroke-width="1.6"/><text x="297.25" y="88" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">1</text><line x1="311.5" y1="114" x2="332.75" y2="162" stroke="#8c93a6" stroke-width="1.6"/><text x="329.125" y="136" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">1</text><line x1="269" y1="66" x2="226.5" y2="114" stroke="#8c93a6" stroke-width="1.6"/><text x="240.75" y="88" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">0</text><line x1="141.5" y1="114" x2="162.75" y2="162" stroke="#8c93a6" stroke-width="1.6"/><text x="159.125" y="136" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">1</text><line x1="311.5" y1="114" x2="290.25" y2="162" stroke="#2c8a57" stroke-width="1.6" stroke-dasharray="5 4"/><text x="293.875" y="136" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">0</text><circle cx="184" cy="18" r="4" fill="#8c93a6"/><circle cx="99" cy="66" r="4" fill="#8c93a6"/><rect x="41.5" y="102" width="30" height="24" rx="6" fill="#eef0f5" stroke="#1b1b1f" stroke-width="1.5"/><text x="56.5" y="119" font-size="14" font-weight="700" fill="#1b1b1f" text-anchor="middle" font-family="Segoe UI,sans-serif">Б</text><text x="56.5" y="141" font-size="11" fill="#1b1b1f" text-anchor="middle" font-family="Consolas,monospace">00</text><circle cx="141.5" cy="114" r="4" fill="#8c93a6"/><rect x="105.25" y="150" width="30" height="24" rx="6" fill="#eef0f5" stroke="#1b1b1f" stroke-width="1.5"/><text x="120.25" y="167" font-size="14" font-weight="700" fill="#1b1b1f" text-anchor="middle" font-family="Segoe UI,sans-serif">Н</text><text x="120.25" y="189" font-size="11" fill="#1b1b1f" text-anchor="middle" font-family="Consolas,monospace">010</text><circle cx="269" cy="66" r="4" fill="#8c93a6"/><circle cx="311.5" cy="114" r="4" fill="#8c93a6"/><rect x="317.75" y="150" width="30" height="24" rx="6" fill="#eef0f5" stroke="#1b1b1f" stroke-width="1.5"/><text x="332.75" y="167" font-size="14" font-weight="700" fill="#1b1b1f" text-anchor="middle" font-family="Segoe UI,sans-serif">Л</text><text x="332.75" y="202" font-size="11" fill="#1b1b1f" text-anchor="middle" font-family="Consolas,monospace">111</text><rect x="211.5" y="102" width="30" height="24" rx="6" fill="#e6effa" stroke="#1f5fa8" stroke-width="1.5"/><text x="226.5" y="119" font-size="14" font-weight="700" fill="#1f5fa8" text-anchor="middle" font-family="Segoe UI,sans-serif">О</text><text x="226.5" y="141" font-size="11" fill="#1f5fa8" text-anchor="middle" font-family="Consolas,monospace">10</text><rect x="147.75" y="150" width="30" height="24" rx="6" fill="#e6effa" stroke="#1f5fa8" stroke-width="1.5"/><text x="162.75" y="167" font-size="14" font-weight="700" fill="#1f5fa8" text-anchor="middle" font-family="Segoe UI,sans-serif">К</text><text x="162.75" y="202" font-size="11" fill="#1f5fa8" text-anchor="middle" font-family="Consolas,monospace">011</text><rect x="275.25" y="150" width="30" height="24" rx="6" fill="#e8f5ee" stroke="#2c8a57" stroke-dasharray="4 3" stroke-width="1.5"/><text x="290.25" y="167" font-size="14" font-weight="700" fill="#2c8a57" text-anchor="middle" font-family="Segoe UI,sans-serif">·</text><text x="290.25" y="189" font-size="11" fill="#2c8a57" text-anchor="middle" font-family="Consolas,monospace">110</text></svg>
+<!-- ==== /ДЕРЕВО ==== -->
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">основная волна 2026</span>
+  <h2>Букв больше, чем ветвей: КОРИДОР</h2>
+  <p>Н – 00, К – 01. Для Д, И, О, Р слова неизвестны. Свободна одна ветка —
+     <code>1</code>, а букв четыре: делим. Частоты: О — 2, Р — 2, Д — 1, И — 1.</p>
+  <div class="two eq">
+    <div class="steps">
+      <div class="step" hidden>
+<!-- ==== ДЕРЕВО:koridor-a: вставлено gen.py, руками не править ==== -->
+<svg class="ftree" viewBox="0 0 368 218" width="368" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="дерево кода"><line x1="184" y1="18" x2="99" y2="66" stroke="#8c93a6" stroke-width="1.6"/><text x="134.5" y="40" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">0</text><line x1="99" y1="66" x2="56.5" y2="114" stroke="#8c93a6" stroke-width="1.6"/><text x="70.75" y="88" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">0</text><line x1="99" y1="66" x2="141.5" y2="114" stroke="#8c93a6" stroke-width="1.6"/><text x="127.25" y="88" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">1</text><line x1="184" y1="18" x2="269" y2="66" stroke="#8c93a6" stroke-width="1.6"/><text x="233.5" y="40" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">1</text><line x1="269" y1="66" x2="226.5" y2="114" stroke="#8c93a6" stroke-width="1.6"/><text x="240.75" y="88" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">0</text><line x1="226.5" y1="114" x2="205.25" y2="162" stroke="#8c93a6" stroke-width="1.6"/><text x="208.875" y="136" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">0</text><line x1="226.5" y1="114" x2="247.75" y2="162" stroke="#8c93a6" stroke-width="1.6"/><text x="244.125" y="136" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">1</text><line x1="269" y1="66" x2="311.5" y2="114" stroke="#8c93a6" stroke-width="1.6"/><text x="297.25" y="88" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">1</text><line x1="311.5" y1="114" x2="290.25" y2="162" stroke="#8c93a6" stroke-width="1.6"/><text x="293.875" y="136" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">0</text><line x1="311.5" y1="114" x2="332.75" y2="162" stroke="#8c93a6" stroke-width="1.6"/><text x="329.125" y="136" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">1</text><circle cx="184" cy="18" r="4" fill="#8c93a6"/><circle cx="99" cy="66" r="4" fill="#8c93a6"/><rect x="41.5" y="102" width="30" height="24" rx="6" fill="#eef0f5" stroke="#1b1b1f" stroke-width="1.5"/><text x="56.5" y="119" font-size="14" font-weight="700" fill="#1b1b1f" text-anchor="middle" font-family="Segoe UI,sans-serif">Н</text><text x="56.5" y="141" font-size="11" fill="#1b1b1f" text-anchor="middle" font-family="Consolas,monospace">00</text><rect x="126.5" y="102" width="30" height="24" rx="6" fill="#eef0f5" stroke="#1b1b1f" stroke-width="1.5"/><text x="141.5" y="119" font-size="14" font-weight="700" fill="#1b1b1f" text-anchor="middle" font-family="Segoe UI,sans-serif">К</text><text x="141.5" y="141" font-size="11" fill="#1b1b1f" text-anchor="middle" font-family="Consolas,monospace">01</text><circle cx="269" cy="66" r="4" fill="#8c93a6"/><circle cx="226.5" cy="114" r="4" fill="#8c93a6"/><rect x="190.25" y="150" width="30" height="24" rx="6" fill="#e6effa" stroke="#1f5fa8" stroke-width="1.5"/><text x="205.25" y="167" font-size="14" font-weight="700" fill="#1f5fa8" text-anchor="middle" font-family="Segoe UI,sans-serif">О</text><text x="205.25" y="189" font-size="11" fill="#1f5fa8" text-anchor="middle" font-family="Consolas,monospace">100</text><rect x="232.75" y="150" width="30" height="24" rx="6" fill="#e6effa" stroke="#1f5fa8" stroke-width="1.5"/><text x="247.75" y="167" font-size="14" font-weight="700" fill="#1f5fa8" text-anchor="middle" font-family="Segoe UI,sans-serif">Р</text><text x="247.75" y="202" font-size="11" fill="#1f5fa8" text-anchor="middle" font-family="Consolas,monospace">101</text><circle cx="311.5" cy="114" r="4" fill="#8c93a6"/><rect x="275.25" y="150" width="30" height="24" rx="6" fill="#e6effa" stroke="#1f5fa8" stroke-width="1.5"/><text x="290.25" y="167" font-size="14" font-weight="700" fill="#1f5fa8" text-anchor="middle" font-family="Segoe UI,sans-serif">Д</text><text x="290.25" y="189" font-size="11" fill="#1f5fa8" text-anchor="middle" font-family="Consolas,monospace">110</text><rect x="317.75" y="150" width="30" height="24" rx="6" fill="#e6effa" stroke="#1f5fa8" stroke-width="1.5"/><text x="332.75" y="167" font-size="14" font-weight="700" fill="#1f5fa8" text-anchor="middle" font-family="Segoe UI,sans-serif">И</text><text x="332.75" y="202" font-size="11" fill="#1f5fa8" text-anchor="middle" font-family="Consolas,monospace">111</text></svg>
+<!-- ==== /ДЕРЕВО ==== -->
+        <p>поровну: О 2·3 + Р 2·3 + Д 3 + И 3 = <b>18</b></p>
+      </div>
+    </div>
+    <div class="steps">
+      <div class="step" hidden>
+<!-- ==== ДЕРЕВО:koridor-b: вставлено gen.py, руками не править ==== -->
+<svg class="ftree" viewBox="0 0 736 252" width="736" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="дерево кода"><line x1="368" y1="18" x2="191" y2="66" stroke="#8c93a6" stroke-width="1.6"/><text x="272.5" y="40" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">0</text><line x1="191" y1="66" x2="102.5" y2="114" stroke="#8c93a6" stroke-width="1.6"/><text x="139.75" y="88" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">0</text><line x1="191" y1="66" x2="279.5" y2="114" stroke="#8c93a6" stroke-width="1.6"/><text x="242.25" y="88" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">1</text><line x1="368" y1="18" x2="545" y2="66" stroke="#8c93a6" stroke-width="1.6"/><text x="463.5" y="40" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">1</text><line x1="545" y1="66" x2="456.5" y2="114" stroke="#8c93a6" stroke-width="1.6"/><text x="493.75" y="88" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">0</text><line x1="545" y1="66" x2="633.5" y2="114" stroke="#8c93a6" stroke-width="1.6"/><text x="596.25" y="88" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">1</text><line x1="633.5" y1="114" x2="589.25" y2="162" stroke="#8c93a6" stroke-width="1.6"/><text x="604.375" y="136" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">0</text><line x1="633.5" y1="114" x2="677.75" y2="162" stroke="#8c93a6" stroke-width="1.6"/><text x="662.625" y="136" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">1</text><line x1="677.75" y1="162" x2="655.625" y2="210" stroke="#8c93a6" stroke-width="1.6"/><text x="659.6875" y="184" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">0</text><line x1="677.75" y1="162" x2="699.875" y2="210" stroke="#8c93a6" stroke-width="1.6"/><text x="695.8125" y="184" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">1</text><circle cx="368" cy="18" r="4" fill="#8c93a6"/><circle cx="191" cy="66" r="4" fill="#8c93a6"/><rect x="87.5" y="102" width="30" height="24" rx="6" fill="#eef0f5" stroke="#1b1b1f" stroke-width="1.5"/><text x="102.5" y="119" font-size="14" font-weight="700" fill="#1b1b1f" text-anchor="middle" font-family="Segoe UI,sans-serif">Н</text><text x="102.5" y="141" font-size="11" fill="#1b1b1f" text-anchor="middle" font-family="Consolas,monospace">00</text><rect x="264.5" y="102" width="30" height="24" rx="6" fill="#eef0f5" stroke="#1b1b1f" stroke-width="1.5"/><text x="279.5" y="119" font-size="14" font-weight="700" fill="#1b1b1f" text-anchor="middle" font-family="Segoe UI,sans-serif">К</text><text x="279.5" y="141" font-size="11" fill="#1b1b1f" text-anchor="middle" font-family="Consolas,monospace">01</text><circle cx="545" cy="66" r="4" fill="#8c93a6"/><rect x="441.5" y="102" width="30" height="24" rx="6" fill="#e6effa" stroke="#1f5fa8" stroke-width="1.5"/><text x="456.5" y="119" font-size="14" font-weight="700" fill="#1f5fa8" text-anchor="middle" font-family="Segoe UI,sans-serif">О</text><text x="456.5" y="141" font-size="11" fill="#1f5fa8" text-anchor="middle" font-family="Consolas,monospace">10</text><circle cx="633.5" cy="114" r="4" fill="#8c93a6"/><rect x="574.25" y="150" width="30" height="24" rx="6" fill="#e6effa" stroke="#1f5fa8" stroke-width="1.5"/><text x="589.25" y="167" font-size="14" font-weight="700" fill="#1f5fa8" text-anchor="middle" font-family="Segoe UI,sans-serif">Р</text><text x="589.25" y="189" font-size="11" fill="#1f5fa8" text-anchor="middle" font-family="Consolas,monospace">110</text><circle cx="677.75" cy="162" r="4" fill="#8c93a6"/><rect x="640.625" y="198" width="30" height="24" rx="6" fill="#e6effa" stroke="#1f5fa8" stroke-width="1.5"/><text x="655.625" y="215" font-size="14" font-weight="700" fill="#1f5fa8" text-anchor="middle" font-family="Segoe UI,sans-serif">Д</text><text x="655.625" y="237" font-size="11" fill="#1f5fa8" text-anchor="middle" font-family="Consolas,monospace">1110</text><rect x="684.875" y="198" width="30" height="24" rx="6" fill="#e6effa" stroke="#1f5fa8" stroke-width="1.5"/><text x="699.875" y="215" font-size="14" font-weight="700" fill="#1f5fa8" text-anchor="middle" font-family="Segoe UI,sans-serif">И</text><text x="699.875" y="237" font-size="11" fill="#1f5fa8" text-anchor="middle" font-family="Consolas,monospace">1111</text></svg>
+<!-- ==== /ДЕРЕВО ==== -->
+        <p>лесенкой: О 2·2 + Р 2·3 + Д 4 + И 4 = <b>18</b></p>
+      </div>
+    </div>
+  </div>
+  <div class="steps">
+    <div class="step" hidden>
+      <p class="big">Способов поделить ветку несколько — <b>сравни два-три</b> и
+         возьми меньший. Здесь поровну. Плюс К 1·2: ответ <b class="key">20</b>.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">ловушка</span>
+  <h2>Буква, которой нет в слове: ТАРАНТАС</h2>
+  <p>Буквы А, Н, Р, С, Т, Я. Известно: С – 00, Р – 010, Н – 11. Для А, Т, Я
+     слова неизвестны. Свободны <code>10</code> и <code>011</code>.</p>
+  <div class="two">
+    <div class="steps">
+      <div class="step" hidden>
+        <div class="box bad"><h3>Забыли Я</h3>
+          <p>А → 10, Т → 011: 3·2 + 2·3 = 12, плюс С, Р, Н — 7. Ответ 19.
+             <b>Неверно:</b> для Я места не осталось.</p></div>
+      </div>
+      <div class="step" hidden>
+        <div class="box good"><h3>Я тоже нужен лист</h3>
+          <p>А → 10, ветку 011 делим: Т → 0110, Я → 0111. 3·2 + 2·4 = 14,
+             плюс 7 — <b class="key">21</b>.</p></div>
+      </div>
+    </div>
+    <div class="steps">
+      <div class="step" hidden>
+<!-- ==== ДЕРЕВО:tarantas: вставлено gen.py, руками не править ==== -->
+<svg class="ftree" viewBox="0 0 736 252" width="736" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="дерево кода"><line x1="368" y1="18" x2="191" y2="66" stroke="#8c93a6" stroke-width="1.6"/><text x="272.5" y="40" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">0</text><line x1="191" y1="66" x2="102.5" y2="114" stroke="#8c93a6" stroke-width="1.6"/><text x="139.75" y="88" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">0</text><line x1="191" y1="66" x2="279.5" y2="114" stroke="#8c93a6" stroke-width="1.6"/><text x="242.25" y="88" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">1</text><line x1="279.5" y1="114" x2="235.25" y2="162" stroke="#8c93a6" stroke-width="1.6"/><text x="250.375" y="136" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">0</text><line x1="368" y1="18" x2="545" y2="66" stroke="#8c93a6" stroke-width="1.6"/><text x="463.5" y="40" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">1</text><line x1="545" y1="66" x2="633.5" y2="114" stroke="#8c93a6" stroke-width="1.6"/><text x="596.25" y="88" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">1</text><line x1="545" y1="66" x2="456.5" y2="114" stroke="#8c93a6" stroke-width="1.6"/><text x="493.75" y="88" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">0</text><line x1="279.5" y1="114" x2="323.75" y2="162" stroke="#8c93a6" stroke-width="1.6"/><text x="308.625" y="136" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">1</text><line x1="323.75" y1="162" x2="301.625" y2="210" stroke="#8c93a6" stroke-width="1.6"/><text x="305.6875" y="184" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">0</text><line x1="323.75" y1="162" x2="345.875" y2="210" stroke="#8c93a6" stroke-width="1.6"/><text x="341.8125" y="184" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">1</text><circle cx="368" cy="18" r="4" fill="#8c93a6"/><circle cx="191" cy="66" r="4" fill="#8c93a6"/><rect x="87.5" y="102" width="30" height="24" rx="6" fill="#eef0f5" stroke="#1b1b1f" stroke-width="1.5"/><text x="102.5" y="119" font-size="14" font-weight="700" fill="#1b1b1f" text-anchor="middle" font-family="Segoe UI,sans-serif">С</text><text x="102.5" y="141" font-size="11" fill="#1b1b1f" text-anchor="middle" font-family="Consolas,monospace">00</text><circle cx="279.5" cy="114" r="4" fill="#8c93a6"/><rect x="220.25" y="150" width="30" height="24" rx="6" fill="#eef0f5" stroke="#1b1b1f" stroke-width="1.5"/><text x="235.25" y="167" font-size="14" font-weight="700" fill="#1b1b1f" text-anchor="middle" font-family="Segoe UI,sans-serif">Р</text><text x="235.25" y="189" font-size="11" fill="#1b1b1f" text-anchor="middle" font-family="Consolas,monospace">010</text><circle cx="545" cy="66" r="4" fill="#8c93a6"/><rect x="618.5" y="102" width="30" height="24" rx="6" fill="#eef0f5" stroke="#1b1b1f" stroke-width="1.5"/><text x="633.5" y="119" font-size="14" font-weight="700" fill="#1b1b1f" text-anchor="middle" font-family="Segoe UI,sans-serif">Н</text><text x="633.5" y="141" font-size="11" fill="#1b1b1f" text-anchor="middle" font-family="Consolas,monospace">11</text><rect x="441.5" y="102" width="30" height="24" rx="6" fill="#e6effa" stroke="#1f5fa8" stroke-width="1.5"/><text x="456.5" y="119" font-size="14" font-weight="700" fill="#1f5fa8" text-anchor="middle" font-family="Segoe UI,sans-serif">А</text><text x="456.5" y="141" font-size="11" fill="#1f5fa8" text-anchor="middle" font-family="Consolas,monospace">10</text><circle cx="323.75" cy="162" r="4" fill="#8c93a6"/><rect x="286.625" y="198" width="30" height="24" rx="6" fill="#e6effa" stroke="#1f5fa8" stroke-width="1.5"/><text x="301.625" y="215" font-size="14" font-weight="700" fill="#1f5fa8" text-anchor="middle" font-family="Segoe UI,sans-serif">Т</text><text x="301.625" y="237" font-size="11" fill="#1f5fa8" text-anchor="middle" font-family="Consolas,monospace">0110</text><rect x="330.875" y="198" width="30" height="24" rx="6" fill="#e6effa" stroke="#1f5fa8" stroke-width="1.5"/><text x="345.875" y="215" font-size="14" font-weight="700" fill="#1f5fa8" text-anchor="middle" font-family="Segoe UI,sans-serif">Я</text><text x="345.875" y="237" font-size="11" fill="#1f5fa8" text-anchor="middle" font-family="Consolas,monospace">0111</text></svg>
+<!-- ==== /ДЕРЕВО ==== -->
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">демоверсия 2026</span>
+  <h2>Сумма длин оставшихся букв</h2>
+  <p>Восемь букв А–З. Известно: Е – 10, Ж – 010, З – 011, Д – 11. Какое
+     наименьшее количество двоичных знаков нужно для четырёх оставшихся букв
+     А, Б, В, Г?</p>
+  <div class="two">
+    <div class="steps">
+      <div class="step" hidden><p>Свободна одна ветка — <code>00</code>. Четыре
+        буквы в одну ветку длины 2: делим дважды, 4 слова длины 4.</p></div>
+      <div class="step" hidden><p class="big">4 + 4 + 4 + 4 = <b class="key">16</b></p>
+        <p>Здесь все буквы «по разу» — частоты нет, остаётся только делить
+           экономно.</p></div>
+    </div>
+    <div class="steps">
+      <div class="step" hidden>
+<!-- ==== ДЕРЕВО:demo2026: вставлено gen.py, руками не править ==== -->
+<svg class="ftree" viewBox="0 0 736 252" width="736" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="дерево кода"><line x1="368" y1="18" x2="545" y2="66" stroke="#8c93a6" stroke-width="1.6"/><text x="463.5" y="40" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">1</text><line x1="545" y1="66" x2="456.5" y2="114" stroke="#8c93a6" stroke-width="1.6"/><text x="493.75" y="88" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">0</text><line x1="368" y1="18" x2="191" y2="66" stroke="#8c93a6" stroke-width="1.6"/><text x="272.5" y="40" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">0</text><line x1="191" y1="66" x2="279.5" y2="114" stroke="#8c93a6" stroke-width="1.6"/><text x="242.25" y="88" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">1</text><line x1="279.5" y1="114" x2="235.25" y2="162" stroke="#8c93a6" stroke-width="1.6"/><text x="250.375" y="136" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">0</text><line x1="279.5" y1="114" x2="323.75" y2="162" stroke="#8c93a6" stroke-width="1.6"/><text x="308.625" y="136" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">1</text><line x1="545" y1="66" x2="633.5" y2="114" stroke="#8c93a6" stroke-width="1.6"/><text x="596.25" y="88" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">1</text><line x1="191" y1="66" x2="102.5" y2="114" stroke="#8c93a6" stroke-width="1.6"/><text x="139.75" y="88" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">0</text><line x1="102.5" y1="114" x2="58.25" y2="162" stroke="#8c93a6" stroke-width="1.6"/><text x="73.375" y="136" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">0</text><line x1="58.25" y1="162" x2="36.125" y2="210" stroke="#8c93a6" stroke-width="1.6"/><text x="40.1875" y="184" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">0</text><line x1="58.25" y1="162" x2="80.375" y2="210" stroke="#8c93a6" stroke-width="1.6"/><text x="76.3125" y="184" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">1</text><line x1="102.5" y1="114" x2="146.75" y2="162" stroke="#8c93a6" stroke-width="1.6"/><text x="131.625" y="136" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">1</text><line x1="146.75" y1="162" x2="124.625" y2="210" stroke="#8c93a6" stroke-width="1.6"/><text x="128.6875" y="184" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">0</text><line x1="146.75" y1="162" x2="168.875" y2="210" stroke="#8c93a6" stroke-width="1.6"/><text x="164.8125" y="184" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">1</text><circle cx="368" cy="18" r="4" fill="#8c93a6"/><circle cx="545" cy="66" r="4" fill="#8c93a6"/><rect x="441.5" y="102" width="30" height="24" rx="6" fill="#eef0f5" stroke="#1b1b1f" stroke-width="1.5"/><text x="456.5" y="119" font-size="14" font-weight="700" fill="#1b1b1f" text-anchor="middle" font-family="Segoe UI,sans-serif">Е</text><text x="456.5" y="141" font-size="11" fill="#1b1b1f" text-anchor="middle" font-family="Consolas,monospace">10</text><circle cx="191" cy="66" r="4" fill="#8c93a6"/><circle cx="279.5" cy="114" r="4" fill="#8c93a6"/><rect x="220.25" y="150" width="30" height="24" rx="6" fill="#eef0f5" stroke="#1b1b1f" stroke-width="1.5"/><text x="235.25" y="167" font-size="14" font-weight="700" fill="#1b1b1f" text-anchor="middle" font-family="Segoe UI,sans-serif">Ж</text><text x="235.25" y="189" font-size="11" fill="#1b1b1f" text-anchor="middle" font-family="Consolas,monospace">010</text><rect x="308.75" y="150" width="30" height="24" rx="6" fill="#eef0f5" stroke="#1b1b1f" stroke-width="1.5"/><text x="323.75" y="167" font-size="14" font-weight="700" fill="#1b1b1f" text-anchor="middle" font-family="Segoe UI,sans-serif">З</text><text x="323.75" y="189" font-size="11" fill="#1b1b1f" text-anchor="middle" font-family="Consolas,monospace">011</text><rect x="618.5" y="102" width="30" height="24" rx="6" fill="#eef0f5" stroke="#1b1b1f" stroke-width="1.5"/><text x="633.5" y="119" font-size="14" font-weight="700" fill="#1b1b1f" text-anchor="middle" font-family="Segoe UI,sans-serif">Д</text><text x="633.5" y="141" font-size="11" fill="#1b1b1f" text-anchor="middle" font-family="Consolas,monospace">11</text><circle cx="102.5" cy="114" r="4" fill="#8c93a6"/><circle cx="58.25" cy="162" r="4" fill="#8c93a6"/><rect x="21.125" y="198" width="30" height="24" rx="6" fill="#e6effa" stroke="#1f5fa8" stroke-width="1.5"/><text x="36.125" y="215" font-size="14" font-weight="700" fill="#1f5fa8" text-anchor="middle" font-family="Segoe UI,sans-serif">А</text><text x="36.125" y="237" font-size="11" fill="#1f5fa8" text-anchor="middle" font-family="Consolas,monospace">0000</text><rect x="65.375" y="198" width="30" height="24" rx="6" fill="#e6effa" stroke="#1f5fa8" stroke-width="1.5"/><text x="80.375" y="215" font-size="14" font-weight="700" fill="#1f5fa8" text-anchor="middle" font-family="Segoe UI,sans-serif">Б</text><text x="80.375" y="237" font-size="11" fill="#1f5fa8" text-anchor="middle" font-family="Consolas,monospace">0001</text><circle cx="146.75" cy="162" r="4" fill="#8c93a6"/><rect x="109.625" y="198" width="30" height="24" rx="6" fill="#e6effa" stroke="#1f5fa8" stroke-width="1.5"/><text x="124.625" y="215" font-size="14" font-weight="700" fill="#1f5fa8" text-anchor="middle" font-family="Segoe UI,sans-serif">В</text><text x="124.625" y="237" font-size="11" fill="#1f5fa8" text-anchor="middle" font-family="Consolas,monospace">0010</text><rect x="153.875" y="198" width="30" height="24" rx="6" fill="#e6effa" stroke="#1f5fa8" stroke-width="1.5"/><text x="168.875" y="215" font-size="14" font-weight="700" fill="#1f5fa8" text-anchor="middle" font-family="Segoe UI,sans-serif">Г</text><text x="168.875" y="237" font-size="11" fill="#1f5fa8" text-anchor="middle" font-family="Consolas,monospace">0011</text></svg>
+<!-- ==== /ДЕРЕВО ==== -->
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">досрочная волна 2026</span>
+  <h2>Кратчайшее слово для буквы</h2>
+  <p>Десять букв, девять слов известны, у Л слова нет. «Укажите кратчайшее
+     кодовое слово для буквы Л… Если таких кодов несколько, укажите код с
+     наименьшим числовым значением».</p>
+  <div class="two">
+    <div class="steps">
+      <div class="step" hidden><p>Строим дерево по девяти словам. Свободной
+        оказывается ровно одна ветка — <code>1100</code>.</p></div>
+      <div class="step" hidden><p>Кратчайшее — <b>самый высокий</b> свободный
+        узел. Если их несколько на одной глубине — <b>левый</b>: у него меньше
+        значение.</p><p class="big">Ответ: <b class="key">1100</b></p></div>
+    </div>
+    <div class="steps">
+      <div class="step" hidden>
+<!-- ==== ДЕРЕВО:c-type: вставлено gen.py, руками не править ==== -->
+<svg class="ftree" viewBox="0 0 736 252" width="736" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="дерево кода"><line x1="368" y1="18" x2="191" y2="66" stroke="#8c93a6" stroke-width="1.6"/><text x="272.5" y="40" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">0</text><line x1="191" y1="66" x2="279.5" y2="114" stroke="#8c93a6" stroke-width="1.6"/><text x="242.25" y="88" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">1</text><line x1="368" y1="18" x2="545" y2="66" stroke="#8c93a6" stroke-width="1.6"/><text x="463.5" y="40" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">1</text><line x1="545" y1="66" x2="456.5" y2="114" stroke="#8c93a6" stroke-width="1.6"/><text x="493.75" y="88" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">0</text><line x1="456.5" y1="114" x2="412.25" y2="162" stroke="#8c93a6" stroke-width="1.6"/><text x="427.375" y="136" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">0</text><line x1="412.25" y1="162" x2="434.375" y2="210" stroke="#8c93a6" stroke-width="1.6"/><text x="430.3125" y="184" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">1</text><line x1="191" y1="66" x2="102.5" y2="114" stroke="#8c93a6" stroke-width="1.6"/><text x="139.75" y="88" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">0</text><line x1="102.5" y1="114" x2="146.75" y2="162" stroke="#8c93a6" stroke-width="1.6"/><text x="131.625" y="136" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">1</text><line x1="102.5" y1="114" x2="58.25" y2="162" stroke="#8c93a6" stroke-width="1.6"/><text x="73.375" y="136" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">0</text><line x1="456.5" y1="114" x2="500.75" y2="162" stroke="#8c93a6" stroke-width="1.6"/><text x="485.625" y="136" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">1</text><line x1="500.75" y1="162" x2="522.875" y2="210" stroke="#8c93a6" stroke-width="1.6"/><text x="518.8125" y="184" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">1</text><line x1="412.25" y1="162" x2="390.125" y2="210" stroke="#8c93a6" stroke-width="1.6"/><text x="394.1875" y="184" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">0</text><line x1="500.75" y1="162" x2="478.625" y2="210" stroke="#8c93a6" stroke-width="1.6"/><text x="482.6875" y="184" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">0</text><line x1="545" y1="66" x2="633.5" y2="114" stroke="#8c93a6" stroke-width="1.6"/><text x="596.25" y="88" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">1</text><line x1="633.5" y1="114" x2="589.25" y2="162" stroke="#8c93a6" stroke-width="1.6"/><text x="604.375" y="136" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">0</text><line x1="589.25" y1="162" x2="611.375" y2="210" stroke="#8c93a6" stroke-width="1.6"/><text x="607.3125" y="184" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">1</text><line x1="633.5" y1="114" x2="677.75" y2="162" stroke="#8c93a6" stroke-width="1.6"/><text x="662.625" y="136" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">1</text><line x1="589.25" y1="162" x2="567.125" y2="210" stroke="#8c93a6" stroke-width="1.6"/><text x="571.1875" y="184" font-size="12" fill="#5c6070" text-anchor="middle" font-family="Consolas,monospace">0</text><circle cx="368" cy="18" r="4" fill="#8c93a6"/><circle cx="191" cy="66" r="4" fill="#8c93a6"/><rect x="264.5" y="102" width="30" height="24" rx="6" fill="#eef0f5" stroke="#1b1b1f" stroke-width="1.5"/><text x="279.5" y="119" font-size="14" font-weight="700" fill="#1b1b1f" text-anchor="middle" font-family="Segoe UI,sans-serif">А</text><circle cx="545" cy="66" r="4" fill="#8c93a6"/><circle cx="456.5" cy="114" r="4" fill="#8c93a6"/><circle cx="412.25" cy="162" r="4" fill="#8c93a6"/><rect x="419.375" y="198" width="30" height="24" rx="6" fill="#eef0f5" stroke="#1b1b1f" stroke-width="1.5"/><text x="434.375" y="215" font-size="14" font-weight="700" fill="#1b1b1f" text-anchor="middle" font-family="Segoe UI,sans-serif">Б</text><circle cx="102.5" cy="114" r="4" fill="#8c93a6"/><rect x="131.75" y="150" width="30" height="24" rx="6" fill="#eef0f5" stroke="#1b1b1f" stroke-width="1.5"/><text x="146.75" y="167" font-size="14" font-weight="700" fill="#1b1b1f" text-anchor="middle" font-family="Segoe UI,sans-serif">Е</text><rect x="43.25" y="150" width="30" height="24" rx="6" fill="#eef0f5" stroke="#1b1b1f" stroke-width="1.5"/><text x="58.25" y="167" font-size="14" font-weight="700" fill="#1b1b1f" text-anchor="middle" font-family="Segoe UI,sans-serif">И</text><circle cx="500.75" cy="162" r="4" fill="#8c93a6"/><rect x="507.875" y="198" width="30" height="24" rx="6" fill="#eef0f5" stroke="#1b1b1f" stroke-width="1.5"/><text x="522.875" y="215" font-size="14" font-weight="700" fill="#1b1b1f" text-anchor="middle" font-family="Segoe UI,sans-serif">К</text><rect x="375.125" y="198" width="30" height="24" rx="6" fill="#eef0f5" stroke="#1b1b1f" stroke-width="1.5"/><text x="390.125" y="215" font-size="14" font-weight="700" fill="#1b1b1f" text-anchor="middle" font-family="Segoe UI,sans-serif">Р</text><rect x="463.625" y="198" width="30" height="24" rx="6" fill="#eef0f5" stroke="#1b1b1f" stroke-width="1.5"/><text x="478.625" y="215" font-size="14" font-weight="700" fill="#1b1b1f" text-anchor="middle" font-family="Segoe UI,sans-serif">С</text><circle cx="633.5" cy="114" r="4" fill="#8c93a6"/><circle cx="589.25" cy="162" r="4" fill="#8c93a6"/><rect x="596.375" y="198" width="30" height="24" rx="6" fill="#eef0f5" stroke="#1b1b1f" stroke-width="1.5"/><text x="611.375" y="215" font-size="14" font-weight="700" fill="#1b1b1f" text-anchor="middle" font-family="Segoe UI,sans-serif">Т</text><rect x="662.75" y="150" width="30" height="24" rx="6" fill="#eef0f5" stroke="#1b1b1f" stroke-width="1.5"/><text x="677.75" y="167" font-size="14" font-weight="700" fill="#1b1b1f" text-anchor="middle" font-family="Segoe UI,sans-serif">У</text><rect x="552.125" y="198" width="30" height="24" rx="6" fill="#e6effa" stroke="#1f5fa8" stroke-width="1.5"/><text x="567.125" y="215" font-size="14" font-weight="700" fill="#1f5fa8" text-anchor="middle" font-family="Segoe UI,sans-serif">Л</text></svg>
+<!-- ==== /ДЕРЕВО ==== -->
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">итог</span>
+  <h2>Четыре шага и три ловушки</h2>
+  <div class="two">
+    <div class="box good"><h3>Шаги</h3>
+      <ol>
+        <li>Дерево известных слов, свободные ветви.</li>
+        <li>Частоты неизвестных букв в слове.</li>
+        <li>Делим короткие ветки; короткое — частым.</li>
+        <li>Сумма «раз × длина» по всем буквам слова.</li>
+      </ol></div>
+    <div class="box warn"><h3>Ловушки</h3>
+      <ul>
+        <li>буква из набора, которой нет в слове, — ей тоже нужен лист;</li>
+        <li>короткие слова по алфавиту, а не по частоте;</li>
+        <li>забыли прибавить буквы с известными кодами.</li>
+      </ul></div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">дальше</span>
+  <h2>Практикум, домашняя, проверочная</h2>
+  <ul class="big">
+    <li><b>Практикум</b> — 14 задач: по две на семь типов. Три типа про само
+        дерево, четыре — задание 4 в форме ЕГЭ. Тип засчитан, когда решены обе
+        его задачи.</li>
+    <li><b>Домашняя</b> — семь типов по задаче, код работы и снимок черновика
+        с деревьями.</li>
+    <li><b>Проверочная</b> — шесть задач в форме ЕГЭ, без подсказок.</li>
+  </ul>
+</section>
+
+</div>
+
+<div class="bar">
+  <button id="prev">← Назад</button>
+  <button id="step" class="primary">Раскрыть</button>
+  <button id="next">Вперёд →</button>
+  <span class="count" id="count"></span>
+  <span class="zoom" title="Размер шрифта на экране: клавиши + и −"><button id="zoomOut" title="Мельче (клавиша −)">A−</button><span class="z" id="zoomVal"></span><button id="zoomIn" title="Крупнее (клавиша +)">A+</button></span>
+  <div class="spacer"></div>
+  <span class="ai-mark" style="color:#5c6070;font-size:13px">Материалы подготовлены с использованием технологий искусственного интеллекта.</span>
+  <span class="keys"><kbd>Пробел</kbd> раскрыть и дальше ·
+    <kbd>←</kbd> <kbd>→</kbd> слайды</span>
+</div>
+</div>
+
+<script>
+const slides = [...document.querySelectorAll(".slide")];
+let cur = 0, shown = 0;
+
+const stepsOf = i => [...slides[i].querySelectorAll(".steps > .step")];
+
+function show(i){
+  slides[cur].classList.remove("on");
+  cur = Math.max(0, Math.min(slides.length - 1, i));
+  slides[cur].classList.add("on");
+  shown = stepsOf(cur).filter(el => !el.hidden).length;
+  document.getElementById("stage").scrollTop = 0;
+  sync();
+}
+
+function sync(){
+  const total = stepsOf(cur).length;
+  document.getElementById("count").textContent = `${cur + 1} / ${slides.length}`;
+  document.getElementById("prev").disabled = cur === 0;
+  document.getElementById("next").disabled = cur === slides.length - 1;
+  const b = document.getElementById("step");
+  b.hidden = total === 0;
+  if (total){
+    b.disabled = shown >= total;
+    b.textContent = shown >= total ? "Всё открыто"
+                  : shown === 0 ? "Раскрыть" : `Дальше (${shown}/${total})`;
+  }
+}
+
+function nextStep(){
+  const steps = stepsOf(cur);
+  if (shown >= steps.length) return false;
+  steps[shown].hidden = false;
+  steps[shown].scrollIntoView({block: "nearest", behavior: "smooth"});
+  shown++;
+  sync();
+  return true;
+}
+
+document.getElementById("prev").addEventListener("click", () => show(cur - 1));
+document.getElementById("next").addEventListener("click", () => show(cur + 1));
+document.getElementById("step").addEventListener("click", nextStep);
+
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowRight" || e.key === "PageDown"){ show(cur + 1); }
+  else if (e.key === "ArrowLeft" || e.key === "PageUp"){ show(cur - 1); }
+  else if (e.key === " " || e.key === "Enter"){
+    if (!nextStep()) show(cur + 1);
+  } else return;
+  e.preventDefault();
+});
+
+show(0);
+
+/* ---- размер шрифта на проекторе ----
+   Zoom только на области слайда: zoom на body растягивает 100vh, и панель
+   уезжает за экран (проверено 17.09.2026). Шаг запоминается в
+   localStorage и общий для всех презентаций: один раз подобрала на
+   проекторе — дальше везде так. ZOOM_BASE — стартовый масштаб этой колоды:
+   у колод с базовым кеглем 20px он выше, чем у 24px. */
+const ZOOM_BASE = 1.2;
+const ZOOM_KEY = "slides-zoom-step";
+let zoomStep = 0;
+try { zoomStep = Math.max(-3, Math.min(6, parseInt(localStorage.getItem(ZOOM_KEY), 10) || 0)); }
+catch (e) {}
+function applyZoom(){
+  const z = Math.round(ZOOM_BASE * Math.pow(1.1, zoomStep) * 100) / 100;
+  document.getElementById("stage").style.zoom = z;
+  document.getElementById("zoomVal").textContent = Math.round(z * 100) + "%";
+}
+function setZoom(d){
+  zoomStep = Math.max(-3, Math.min(6, zoomStep + d));
+  try { localStorage.setItem(ZOOM_KEY, String(zoomStep)); } catch (e) {}
+  applyZoom();
+}
+document.getElementById("zoomIn").addEventListener("click", () => setZoom(1));
+document.getElementById("zoomOut").addEventListener("click", () => setZoom(-1));
+document.addEventListener("keydown", e => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key === "+" || e.key === "=") setZoom(1);
+  else if (e.key === "-" || e.key === "_") setZoom(-1);
+  else return;
+  e.preventDefault();
+});
+applyZoom();
+</script>
+</body>
+</html>
