@@ -1,0 +1,758 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Скорость передачи данных — обзорный практикум</title>
+<meta name="description" content="Обзорный практикум 11 класса (углублённый) к четвёртой паре: время и объём передачи, передача со сжатием, ретрансляция через промежуточный узел, пропорции, изображение и звук по каналу.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E11%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{margin:0;padding:20px 16px 60px;font:17px/1.55 "Segoe UI",system-ui,sans-serif}
+.wrap{max-width:820px;margin:0 auto}
+h1{font-size:23px;margin:0 0 4px}
+h2{font-size:18px;margin:0 0 10px}
+.sub{color:var(--muted);font-size:15px;margin:0 0 18px}
+code{font-family:Consolas,"Cascadia Mono",monospace;background:var(--card);
+     border:1px solid var(--line);border-radius:5px;padding:1px 6px;
+     font-size:15px;letter-spacing:.04em}
+.intro{border:1px solid var(--line);border-radius:12px;background:var(--card);
+       padding:14px 18px;margin-bottom:18px}
+.intro dl{margin:0}
+.intro dt{font-weight:700;margin-top:10px}
+.intro dt:first-child{margin-top:0}
+.intro dd{margin:2px 0 0}
+.progress{border:2px solid var(--accent);border-radius:12px;padding:12px 16px;
+          background:#fff;margin-bottom:18px}
+.ptop{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.ptop h2{margin:0}
+.sp{flex:1 1 auto}
+.score{display:flex;align-items:baseline;gap:10px;color:var(--muted);font-size:15px}
+.score b{font:700 34px/1 "Segoe UI",system-ui,sans-serif;color:var(--ink);
+         min-width:40px;text-align:center;border:2px solid var(--line);
+         border-radius:8px;padding:2px 8px}
+.m5 b{color:var(--ok);border-color:var(--ok-line)}
+.m4 b{color:var(--accent);border-color:#a9c6e8}
+.m3 b{color:#8a5a00;border-color:var(--hi-line)}
+.types{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);border-radius:20px;padding:4px 12px;
+      font-size:14px;color:var(--muted);background:var(--card)}
+.chip.done{border-color:var(--ok-line);background:var(--ok-bg);color:var(--ok);
+           font-weight:600}
+.chip.miss{border-color:var(--err-line);background:var(--err-bg);color:var(--err)}
+.chip.cur{border-color:var(--accent);color:var(--accent);font-weight:600}
+.card{border:1px solid var(--line);border-radius:12px;padding:16px 18px;
+      background:#fff;margin-bottom:14px}
+.card.ok{border-color:var(--ok-line);background:var(--ok-bg)}
+.card.err{border-color:var(--err-line);background:var(--err-bg)}
+.tag{font-size:13px;color:var(--muted);margin:0 0 6px}
+.q{font-size:17px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+input[type=text]{font:16px/1 Consolas,monospace;padding:10px 12px;border-radius:8px;
+                 border:1px solid var(--line);width:100%;max-width:340px}
+button{font:600 15px/1 inherit;padding:11px 16px;border-radius:9px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);color:var(--muted)}
+.verdict{margin-top:10px;font-size:15.5px;font-weight:600}
+.verdict.ok{color:var(--ok)}
+.verdict.err{color:var(--err)}
+.why{margin-top:8px;font-size:15.5px;color:var(--ink)}
+.note{border:1px solid var(--hi-line);background:var(--hi-bg);border-radius:10px;
+      padding:11px 15px;margin:12px 0;font-size:15.5px}
+.code{font:700 26px/1.2 Consolas,monospace;letter-spacing:.06em;
+      background:var(--card);border:2px dashed var(--accent);border-radius:12px;
+      padding:16px;text-align:center;margin:12px 0;user-select:all}
+.stats{color:var(--muted);font-size:14px}
+label{display:block;font-size:14px;color:var(--muted);margin-bottom:3px}
+.fields{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0}
+.fields div{flex:1 1 180px}
+.fields input{max-width:none}
+sup,sub{font-size:12px}
+h3{font-size:16.5px;margin:16px 0 6px;color:var(--accent)}
+details.help{margin-top:26px;border:1px solid var(--line);border-radius:12px;
+        padding:12px 18px;background:var(--card)}
+details.help summary{cursor:pointer;font-weight:600;font-size:17px;
+        color:var(--accent)}
+details.help p{margin:6px 0}
+details.help ol,details.help ul{margin:6px 0;padding-left:22px}
+details.help li{margin:4px 0}
+details.help table{border-collapse:collapse;margin:8px 0;font-size:15px}
+details.help th,details.help td{border:1px solid var(--line);
+        padding:4px 10px;text-align:center;background:#fff}
+details.help th{background:#fff;color:var(--muted);font-weight:600}
+table.gm{border-collapse:collapse;margin:10px 0;font:15px/1.2 Consolas,"Cascadia Mono",monospace}
+table.gm th,table.gm td{border:1px solid var(--line);min-width:34px;height:30px;
+        text-align:center;padding:0 4px;background:#fff}
+table.gm th{background:var(--card);color:var(--muted);font-weight:600}
+table.gm td.d{background:#e4e7ef}
+.adj{display:block;margin:8px 0}
+.adj code{display:inline-block;margin:0 8px 6px 0}
+details.help pre{font-family:Consolas,"Cascadia Mono",monospace;
+        background:#1e2430;color:#e7ecf5;padding:10px 12px;border-radius:9px;
+        font-size:14.5px;overflow-x:auto}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Скорость передачи данных</h1>
+<p class="sub">11 класс, углублённый уровень. Обзорный практикум к четвёртой паре:
+шесть задач по содержанию темы.</p>
+
+<div class="intro">
+  <dl>
+    <dt>Что нужно сделать</dt>
+    <dd>Шесть задач — по одной на каждый вопрос темы, и все сразу на
+        странице: решай в любом порядке. Ответил верно — вопрос закрыт.
+        Ошибся — сразу видно, как это решается, а вопрос остаётся
+        открытым: кнопка «Новые числа» даёт ту же задачу с другими данными,
+        и её можно сдать ещё раз. Сколько закрыл, столько и наработал.
+        Времени нужно около пятнадцати минут: считать удобнее
+        в степенях двойки на черновике.</dd>
+    <dt>Отметка и добор</dt>
+    <dd>Закрыто 6 из 6 — «5», 5 — «4», 3 или 4 — «3». Кнопка
+        <b>«Получить код»</b> внизу страницы появляется, как только закрыто
+        три вопроса: можно забрать код сразу, а можно дорешать оставшиеся и
+        получить код получше — решать самому, до какой отметки добирать.</dd>
+    <dt>Ответ — целое число</dt>
+    <dd>Без единиц измерения и без пробелов: <code>34</code>, а не
+        <code>34 с</code>. На КЕГЭ ответ читает машина, и здесь так же.</dd>
+    <dt>Как сдать</dt>
+    <dd>В конце появится код работы и кнопка <b>«Сдать работу»</b>: впишешь
+        фамилию и класс, кнопка сама откроет форму с уже вписанным кодом.
+        Переписывать код руками не надо — на этом чаще всего и ошибаются.</dd>
+    <dt>Не успел на уроке</dt>
+    <dd>Открой эту же страницу дома и пройди целиком: вариант будет другой,
+        а сдаётся всё так же — одним кодом.</dd>
+  </dl>
+</div>
+
+<div class="progress">
+  <div class="ptop">
+    <h2>Вопросы темы</h2>
+    <span class="sp"></span>
+    <div class="score" id="scorebox">
+      <span>наработано на</span><b id="mark">—</b>
+    </div>
+  </div>
+  <div class="types" id="types"></div>
+  <p class="stats" id="stats"></p>
+</div>
+
+<div id="area"></div>
+<div id="bottom"></div>
+
+<details class="help">
+  <summary>Подсказка: скорость передачи данных</summary>
+  <h3>Главная формула</h3>
+  <p><b>объём = скорость · время</b>, I = v · t. Отсюда t = I : v и
+     v = I : t. Скорость канала (пропускная способность) измеряется в
+     <b>битах</b> в секунду, а объём файла обычно дан в байтах, килобайтах
+     или мегабайтах — перед делением всё приводится к битам.</p>
+
+  <h3>Единицы и степени двойки</h3>
+  <table>
+    <tr><th>единица</th><th>в битах</th></tr>
+    <tr><td>1 байт</td><td>8 = 2<sup>3</sup></td></tr>
+    <tr><td>1 Кбайт</td><td>1024 · 8 = 2<sup>13</sup></td></tr>
+    <tr><td>1 Мбайт</td><td>1024 · 1024 · 8 = 2<sup>23</sup></td></tr>
+  </table>
+  <p>Скорости в задачах — часто тоже степени двойки, например
+     2<sup>17</sup> = 131 072 бит/с. Делить степени удобнее, чем числа:
+     4 Мбайт при 2<sup>19</sup> бит/с — это 2<sup>2</sup> · 2<sup>23</sup> :
+     2<sup>19</sup> = 2<sup>6</sup> = 64 с. Минуты переводить в секунды.</p>
+
+  <h3>Сжать и передать или передать так</h3>
+  <p>Способ со сжатием: <b>время сжатия + время передачи архива + время
+     распаковки</b>. Архив в 25 % объёма передаётся за 25 % времени. На
+     медленном канале сжатие выгодно, на быстром — может проиграть.</p>
+
+  <h3>Передача через промежуточный узел</h3>
+  <ul>
+    <li>узел ждёт данные <b>целиком</b> — времена двух участков
+        складываются;</li>
+    <li>узел начинает передачу, получив первые S Кбайт, и первый канал
+        быстрее второго — узел не простаивает: <b>задержка (S по быстрому
+        каналу) + весь объём по медленному каналу</b>.</li>
+  </ul>
+
+  <h3>Пропорция</h3>
+  <p>При одной скорости объём пропорционален времени: вдвое больше
+     времени — вдвое больше данных. Переводить в биты не нужно, если
+     ответ просят в тех же единицах, что даны.</p>
+
+  <h3>Изображение и звук</h3>
+  <p>Изображение: ширина · высота · глубина цвета (бит). Звук: частота ·
+     разрешение · число каналов · время (стерео — 2 канала). Оба объёма
+     получаются сразу в битах — делить на скорость можно без перевода.</p>
+</details>
+
+</div>
+
+<script>
+/* ==== ЗАДАЧИ: вставлено gen.py, руками не править ==== */
+/* Обзорный тест-практикум к четвёртой паре 11 класса (углублённый уровень).
+   Содержание ФГОС, уроки 7–8 официального плана: скорость передачи данных,
+   зависимость времени передачи от информационного объёма и характеристик
+   канала связи; резервный практикум по расчёту скорости и времени.
+   В столбце «Задание ЕГЭ» плана у этих уроков привязки нет.
+
+   Единственный источник задач. В practice.html вписывается скриптом
+   gen.py между маркерами — руками страницу не править.
+
+   Ответ везде целое число: тест-практикум приучает к формату КЕГЭ, где
+   ответ сверяет машина. Все числа подобраны так, чтобы деление было
+   нацело: задача про единицы и степени двойки, а не про калькулятор. */
+
+const T_TYPES = [
+  "время передачи",
+  "объём данных",
+  "передача со сжатием",
+  "ретрансляция",
+  "пропорция",
+  "изображение и звук"
+];
+
+function tRng(seed) {
+  let s = seed >>> 0;
+  return function () {
+    s ^= s << 13; s >>>= 0;
+    s ^= s >> 17;
+    s ^= s << 5;  s >>>= 0;
+    return s / 4294967296;
+  };
+}
+
+function tRand(rng, a, b) { return a + Math.floor(rng() * (b - a + 1)); }
+function tPick(rng, arr) { return arr[tRand(rng, 0, arr.length - 1)]; }
+
+function tPl(n, one, few, many) {
+  const h = n % 100, t = n % 10;
+  if (h >= 11 && h <= 14) return many;
+  if (t === 1) return one;
+  if (t >= 2 && t <= 4) return few;
+  return many;
+}
+
+/* -------------------------------------------------------------- механика */
+
+/* Объём: круглое число мегабайт показываем мегабайтами, иначе килобайтами.
+   Число всегда в <b>, единица — сразу за ним: так его читает и пересчёт. */
+function vShow(kb) {
+  return kb % 1024 === 0 ? "<b>" + (kb / 1024) + "</b> Мбайт"
+                         : "<b>" + kb + "</b> Кбайт";
+}
+
+function vPow(n) {
+  let k = 0;
+  while ((1 << k) < n) k++;
+  return (1 << k) === n ? "2<sup>" + k + "</sup>" : String(n);
+}
+
+/* ---------------------------------------------------------------- задачи */
+
+function tTask(type, rng) {
+  if (type === 0) return tTime(rng);
+  if (type === 1) return tVolume(rng);
+  if (type === 2) return tArchive(rng);
+  if (type === 3) return tRelay(rng);
+  if (type === 4) return tProportion(rng);
+  return tMedia(rng);
+}
+
+/* 0. Время передачи файла. */
+function tTime(rng) {
+  const k = tRand(rng, 14, 20);
+  const t = tRand(rng, 5, 120);
+  const kb = t * (1 << (k - 13));
+  const q = 1 << k;
+  return {
+    type: 0, answer: String(t),
+    question: "Файл размером " + vShow(kb) + " передаётся через соединение со " +
+      "скоростью <b>" + q + "</b> бит/с. Сколько <b>секунд</b> займёт передача?",
+    explain: "Время = объём : скорость, но в одних единицах. " +
+      (kb % 1024 === 0 ? (kb / 1024) + " Мбайт = " + kb + " Кбайт. " : "") +
+      "Объём в битах: " + kb + " Кбайт · 2<sup>13</sup> (в килобайте 1024 · 8 = 2<sup>13</sup> бит). " +
+      "Скорость " + q + " = 2<sup>" + k + "</sup> бит/с. Время: " + kb +
+      " · 2<sup>13</sup> : 2<sup>" + k + "</sup> = " + kb + " : " +
+      (1 << (k - 13)) + " = " + t + " с."
+  };
+}
+
+/* 1. Объём переданного за время; время бывает в минутах. */
+function tVolume(rng) {
+  const c = tPick(rng, [1, 3, 5]);
+  const k = tRand(rng, 13, 18);
+  const q = c * (1 << k);
+  const kind = rng() < 0.5 ? "sec" : "min";
+  const t = kind === "sec" ? tRand(rng, 8, 240) : 60 * tRand(rng, 1, 8);
+  const ans = c * t * (1 << (k - 13));
+  return {
+    type: 1, kind: kind, answer: String(ans),
+    question: "Скорость передачи данных через соединение равна <b>" + q +
+      "</b> бит/с. Передача файла заняла <b>" +
+      (kind === "sec" ? t + "</b> " + tPl(t, "секунду", "секунды", "секунд")
+                      : (t / 60) + "</b> " + tPl(t / 60, "минуту", "минуты", "минут")) +
+      ". Определите размер файла в <b>Кбайт</b>.",
+    explain: (kind === "min" ? "Сначала минуты в секунды: " + (t / 60) +
+        " · 60 = " + t + " с. " : "") +
+      "Объём = скорость · время = " + q + " · " + t + " бит. В килобайте " +
+      "2<sup>13</sup> = 8192 бит: " + q + " : 8192 = " + (q / 8192) +
+      " Кбайт/с, за " + t + " с — " + (q / 8192) + " · " + t + " = " + ans + " Кбайт."
+  };
+}
+
+/* 2. Сжать и передать или передать как есть: разница в секундах. Бывает,
+   что сжатие проигрывает, — оба исхода обязаны выпадать. */
+function tArchive(rng) {
+  let k, tb, mb, p, t1, t2, ta;
+  for (;;) {
+    k = tRand(rng, 20, 22);
+    const mult = 1 << (23 - k);
+    tb = Math.max(mult, 4) * tRand(rng, 4, 20);
+    mb = tb / mult;
+    p = tPick(rng, [25, 50, 75]);
+    t1 = tRand(rng, 5, 24);
+    t2 = tRand(rng, 1, 8);
+    ta = t1 + t2 + tb * p / 100;
+    if (ta !== tb) break;
+  }
+  const q = 1 << k;
+  const diff = Math.abs(ta - tb);
+  return {
+    type: 2, kind: ta < tb ? "afast" : "bfast", answer: String(diff),
+    question: "Документ объёмом <b>" + mb + "</b> Мбайт можно передать с одного " +
+      "компьютера на другой двумя способами. Способ А: сжать архиватором, " +
+      "передать архив по каналу связи, распаковать. Способ Б: передать без " +
+      "сжатия. Скорость передачи <b>" + q + "</b> бит/с; объём сжатого документа " +
+      "равен <b>" + p + "</b>% исходного; на сжатие уходит <b>" + t1 +
+      "</b> с, на распаковку <b>" + t2 + "</b> с. На сколько <b>секунд</b> один " +
+      "способ быстрее другого?",
+    explain: "Способ Б: " + mb + " Мбайт = " + mb + " · 2<sup>23</sup> бит, скорость 2<sup>" +
+      k + "</sup> бит/с, время " + tb + " с. Способ А: архив передаётся " + p +
+      "% этого времени — " + (tb * p / 100) + " с, плюс сжатие и распаковка: " +
+      t1 + " + " + (tb * p / 100) + " + " + t2 + " = " + ta + " с. Быстрее способ " +
+      (ta < tb ? "А" : "Б") + ", разница " + diff + " с." +
+      (ta < tb ? "" : " Сжатие окупается не всегда: на быстром канале время " +
+        "архиватора больше выигрыша.")
+  };
+}
+
+/* 3. Ретрансляция: быстрый канал, потом медленный. С буфером промежуточный
+   узел начинает передачу, получив первые S Кбайт; без буфера ждёт всё. */
+function tRelay(rng) {
+  const kind = rng() < 0.6 ? "buffer" : "full";
+  let k1, k2, mb, s, t2;
+  for (;;) {
+    k1 = tRand(rng, 18, 20);
+    k2 = tRand(rng, 13, 16);
+    mb = tPick(rng, [1, 2, 4, 8]);
+    s = tPick(rng, [256, 512, 1024]);
+    t2 = mb * (1 << (23 - k2));
+    if (t2 <= 2048 && s < mb * 1024) break;
+  }
+  const q1 = 1 << k1, q2 = 1 << k2;
+  const delay = s * 8192 / q1;
+  const t1 = mb * (1 << (23 - k1));
+  const lead = "Данные объёмом <b>" + mb + "</b> Мбайт передаются из пункта А в " +
+    "пункт Б по каналу со скоростью <b>" + q1 + "</b> бит/с, а затем из пункта Б " +
+    "в пункт В по каналу со скоростью <b>" + q2 + "</b> бит/с. ";
+  if (kind === "buffer") return {
+    type: 3, kind: kind, answer: String(delay + t2),
+    question: lead + "Пункт Б начинает передавать данные дальше, как только " +
+      "получит первые <b>" + s + "</b> Кбайт, не дожидаясь конца приёма. Сколько " +
+      "<b>секунд</b> пройдёт от начала передачи из А до полного получения данных " +
+      "в пункте В?",
+    explain: "Канал А–Б быстрее, чем Б–В, поэтому после старта пункт Б никогда " +
+      "не простаивает: данные приходят быстрее, чем уходят. Задержка перед " +
+      "стартом: " + s + " Кбайт · 2<sup>13</sup> : 2<sup>" + k1 + "</sup> = " + delay +
+      " с. Передача всего объёма по медленному каналу: " + mb +
+      " · 2<sup>23</sup> : 2<sup>" + k2 + "</sup> = " + t2 + " с. Всего " + delay +
+      " + " + t2 + " = " + (delay + t2) + " с."
+  };
+  return {
+    type: 3, kind: kind, answer: String(t1 + t2),
+    question: lead + "Пункт Б начинает передачу дальше только после того, как " +
+      "получит данные <b>целиком</b>. Сколько <b>секунд</b> пройдёт от начала " +
+      "передачи из А до полного получения данных в пункте В?",
+    explain: "Два участка проходятся по очереди, времена складываются. А–Б: " + mb +
+      " · 2<sup>23</sup> : 2<sup>" + k1 + "</sup> = " + t1 + " с. Б–В: " + mb +
+      " · 2<sup>23</sup> : 2<sup>" + k2 + "</sup> = " + t2 + " с. Всего " + (t1 + t2) + " с."
+  };
+}
+
+/* 4. Пропорция: скорость можно не вычислять. */
+function tProportion(rng) {
+  const v = tRand(rng, 8, 64);
+  const t1 = tRand(rng, 10, 60);
+  if (rng() < 0.5) {
+    let t2;
+    do { t2 = tRand(rng, 10, 90); } while (t2 === t1);
+    return {
+      type: 4, kind: "same", answer: String(v * t2),
+      question: "Файл размером <b>" + (v * t1) + "</b> Кбайт передаётся через " +
+        "некоторое соединение за <b>" + t1 + "</b> " +
+        tPl(t1, "секунду", "секунды", "секунд") + ". Сколько <b>Кбайт</b> можно " +
+        "передать через это же соединение за <b>" + t2 + "</b> " +
+        tPl(t2, "секунду", "секунды", "секунд") + "?",
+      explain: "Скорость одна и та же, значит объём пропорционален времени. За " +
+        "секунду проходит " + (v * t1) + " : " + t1 + " = " + v + " Кбайт, за " + t2 +
+        " с — " + v + " · " + t2 + " = " + (v * t2) + " Кбайт. Переводить в биты " +
+        "не понадобилось."
+    };
+  }
+  const r = tRand(rng, 2, 4);
+  let t;
+  do { t = tRand(rng, 10, 90); } while (t === t1);
+  return {
+    type: 4, kind: "faster", answer: String(t),
+    question: "Файл размером <b>" + (v * t1) + "</b> Кбайт передаётся через " +
+      "некоторое соединение за <b>" + t1 + "</b> " +
+      tPl(t1, "секунду", "секунды", "секунд") + ". За сколько <b>секунд</b> можно " +
+      "передать через другое соединение, скорость которого в <b>" + r + "</b> " +
+      tPl(r, "раз", "раза", "раз") + " выше, файл размером <b>" + (v * r * t) +
+      "</b> Кбайт?",
+    explain: "Скорость первого соединения: " + (v * t1) + " : " + t1 + " = " + v +
+      " Кбайт/с. Второе в " + r + " " + tPl(r, "раз", "раза", "раз") + " быстрее: " +
+      (v * r) + " Кбайт/с. Время: " + (v * r * t) + " : " + (v * r) + " = " + t + " с."
+  };
+}
+
+/* 5. Изображение или звук по каналу: сначала объём, потом время. */
+function tMedia(rng) {
+  if (rng() < 0.5) {
+    let w, h, i, k, t;
+    for (;;) {
+      w = 1 << tRand(rng, 8, 11);
+      h = 1 << tRand(rng, 8, 11);
+      i = tPick(rng, [4, 8, 16, 24, 32]);
+      k = tRand(rng, 15, 22);
+      t = w * h * i / (1 << k);
+      if (Number.isInteger(t) && t >= 4 && t <= 2048) break;
+    }
+    return {
+      type: 5, kind: "image", answer: String(t),
+      question: "Растровое изображение размером <b>" + w + "</b> × <b>" + h +
+        "</b> пикселей с глубиной цвета <b>" + i + "</b> бит на пиксель передают " +
+        "без сжатия по каналу со скоростью <b>" + (1 << k) + "</b> бит/с. Сколько " +
+        "<b>секунд</b> займёт передача?",
+      explain: "Объём: " + vPow(w) + " · " + vPow(h) + " · " + i + " бит. Скорость 2<sup>" +
+        k + "</sup> бит/с. Время: " + w + " · " + h + " · " + i + " : " + (1 << k) +
+        " = " + t + " с. Объём уже в битах — переводить в байты незачем."
+    };
+  }
+  let f, i, ch, dur, q, t;
+  for (;;) {
+    f = tPick(rng, [8000, 16000, 32000, 48000]);
+    i = tPick(rng, [8, 16, 24]);
+    ch = tRand(rng, 1, 2);
+    dur = 5 * tRand(rng, 2, 24);
+    q = tPick(rng, [32000, 64000, 128000, 256000, 512000]);
+    t = f * i * ch * dur / q;
+    if (Number.isInteger(t) && t >= 4 && t <= 3000 && t !== dur) break;
+  }
+  return {
+    type: 5, kind: "sound", answer: String(t),
+    question: "Звук записан в формате " + (ch === 1 ? "моно" : "стерео") +
+      " с частотой дискретизации <b>" + f + "</b> Гц и разрешением <b>" + i +
+      "</b> бит, запись длится <b>" + dur + "</b> секунд. Её передают без сжатия " +
+      "по каналу со скоростью <b>" + q + "</b> бит/с. Сколько <b>секунд</b> займёт " +
+      "передача?",
+    explain: "Объём записи: частота · разрешение" +
+      (ch === 2 ? " · 2 канала (стерео)" : "") + " · время = " + f + " · " + i +
+      (ch === 2 ? " · 2" : "") + " · " + dur + " = " + (f * i * ch * dur) +
+      " бит. Время передачи: " + (f * i * ch * dur) + " : " + q + " = " + t +
+      " с. Удобнее сокращать до умножения: " + f + " · " + i + (ch === 2 ? " · 2" : "") +
+      " = " + (f * i * ch) + " бит на секунду записи против " + q +
+      " бит/с у канала."
+  };
+}
+
+/* ------------------------------------------------------------- сборка */
+
+function tMake(seed) {
+  const rng = tRng(seed || 1);
+  const order = [0, 1, 2, 3, 4, 5];
+  for (let j = order.length - 1; j > 0; j--) {
+    const t = tRand(rng, 0, j);
+    const tmp = order[j]; order[j] = order[t]; order[t] = tmp;
+  }
+  return order.map(function (type) { return tTask(type, rng); });
+}
+
+function tCheck(task, raw) {
+  const s = String(raw === undefined || raw === null ? "" : raw)
+    .replace(/\s+/g, "");
+  if (!/^\d+$/.test(s)) return false;
+  return String(Number(s)) === task.answer;
+}
+/* ==== /ЗАДАЧИ ==== */
+
+/* Форма сдачи ДЗ — одна на все темы. Ссылку разносит set_form_link.py. */
+const FORM = "https://docs.google.com/forms/d/e/1FAIpQLSfQyhaxcnzn4ZaKSe_ZMsluw7qRQnrw_80H6SfrnYB5EThUIA/viewform?usp=pp_url&entry.853601231=ФАМИЛИЯ&entry.1091635917=КЛАСС&entry.487188307=КОД";
+
+const ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+const EPOCH = Date.UTC(2026, 0, 1);
+const PREFIX = "SP";
+const SCALE = [[6, 5], [5, 4], [3, 3]];
+
+const bin = (v, w) => v.toString(2).padStart(w, "0");
+
+/* Семибитными кусками строки: в нагрузке 33 бита, а побитовые операции в JS
+   32-битные — старший бит молча потерялся бы. */
+function checksum(bitstr){
+  let cs = 0x5B;
+  for (let i = 0; i < bitstr.length; i += 7)
+    cs ^= parseInt(bitstr.substr(i, 7).padEnd(7, "0"), 2);
+  return cs & 0x7F;
+}
+
+function makeCode(st){
+  const day = Math.max(0, Math.min(2047, Math.floor(
+      (Date.now() - EPOCH) / 86400000)));
+  const payload = bin(day, 11) + bin(Math.min(15, st.typesDone), 4) +
+                  bin(Math.min(15, st.cleanTypes), 4) +
+                  bin(Math.min(127, st.solved), 7) +
+                  bin(Math.min(127, st.wrong), 7);
+  const bitstr = payload + bin(checksum(payload), 7);
+  let out = "";
+  for (let i = 0; i < 40; i += 5)
+    out += ALPHABET[parseInt(bitstr.substr(i, 5), 2)];
+  return PREFIX + "-" + out.slice(0, 4) + "-" + out.slice(4);
+}
+
+/* ---------------------------------------------------------- состояние
+   Все вопросы темы лежат на странице сразу — решать можно в любом
+   порядке, объём виден с первого взгляда. Вопрос закрывается одним верным
+   ответом и больше не спрашивается. Ошибся — разбор сразу, а вопрос
+   остаётся открытым: кнопка «Новые числа» на той же карточке даёт задачу с
+   другими данными, и её можно сдать ещё раз. Код выдаётся, когда закрыто
+   хотя бы MIN_TO_FINISH; после кода карточки запираются.
+   До 17.09.2026 вопросы шли по одному, раундами; Света попросила
+   показывать все сразу: не видно объёма и нельзя выбрать порядок. */
+const T_COUNT = T_TYPES.length;
+const MIN_TO_FINISH = 3;
+
+let st;
+
+function esc(s){ return String(s).replace(/[&<>]/g, c =>
+  ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+
+function markFor(n){
+  for (const [need, m] of SCALE) if (n >= need) return m;
+  return null;
+}
+
+function wordQ(n){
+  const a = n % 100, b = a % 10;
+  if (a > 4 && a < 21) return "вопросов";
+  if (b === 1) return "вопрос";
+  if (b > 1 && b < 5) return "вопроса";
+  return "вопросов";
+}
+
+function newRng(){ return tRng((Date.now() ^ (Math.random() * 1e9)) >>> 0); }
+
+function freshState(){
+  const s = {
+    closed: Array(T_COUNT).fill(false),
+    clean:  Array(T_COUNT).fill(true),
+    tried:  Array(T_COUNT).fill(false),
+    tasks:  Array(T_COUNT).fill(null),
+    solved: 0, wrong: 0, code: null
+  };
+  for (let i = 0; i < T_COUNT; i++) s.tasks[i] = tTask(i, newRng());
+  Object.defineProperty(s, "typesDone",
+    {get(){ return s.closed.filter(Boolean).length; }});
+  Object.defineProperty(s, "cleanTypes",
+    {get(){ return s.closed.filter((d, i) => d && s.clean[i]).length; }});
+  return s;
+}
+
+function paint(){
+  const box = document.getElementById("types");
+  box.innerHTML = "";
+  for (let i = 0; i < T_COUNT; i++) {
+    const el = document.createElement("span");
+    el.className = "chip" + (st.closed[i] ? " done" : st.tried[i] ? " miss" : "");
+    el.textContent = (i + 1) + ". " + T_TYPES[i];
+    box.appendChild(el);
+  }
+  const done = st.typesDone;
+  const m = markFor(done);
+  const sb = document.getElementById("scorebox");
+  sb.className = "score" + (m ? " m" + m : "");
+  document.getElementById("mark").textContent = m ? m : "—";
+  document.getElementById("stats").textContent =
+    "Закрыто: " + done + " из " + T_COUNT + ". Решено задач: " + st.solved +
+    ", ошибок: " + st.wrong + ".";
+  renderBottom();
+}
+
+function cardHtml(i){
+  const t = st.tasks[i];
+  return '<div class="card" id="task-' + i + '">' +
+      '<p class="tag">' + (i + 1) + ' &middot; ' + T_TYPES[i] + '</p>' +
+      '<div class="q">' + t.question + '</div>' +
+      '<div class="row">' +
+        '<input type="text" id="ans-' + i + '" autocomplete="off" spellcheck="false" ' +
+               'inputmode="numeric" placeholder="целое число"' + '>' +
+        '<button class="primary" id="go-' + i + '">Ответить</button>' +
+      '</div>' +
+      '<div class="verdict" id="v-' + i + '"></div>' +
+    '</div>';
+}
+
+function bindCard(i){
+  document.getElementById("ans-" + i).addEventListener("keydown", function(e){
+    if (e.key === "Enter") judge(i);
+  });
+  document.getElementById("go-" + i).addEventListener("click", function(){ judge(i); });
+}
+
+function renderAll(){
+  let html = "";
+  for (let i = 0; i < T_COUNT; i++) html += cardHtml(i);
+  document.getElementById("area").innerHTML = html;
+  for (let i = 0; i < T_COUNT; i++) bindCard(i);
+}
+
+function renderCard(i){
+  document.getElementById("task-" + i).outerHTML = cardHtml(i);
+  bindCard(i);
+}
+
+function judge(i){
+  if (st.code) return;
+  const t = st.tasks[i];
+  const raw = document.getElementById("ans-" + i).value;
+  const ok = tCheck(t, raw);
+  st.tried[i] = true;
+  if (ok) { st.closed[i] = true; st.solved++; }
+  else { st.wrong++; st.clean[i] = false; }
+
+  const card = document.getElementById("task-" + i);
+  card.className = "card " + (ok ? "ok" : "err");
+  document.getElementById("ans-" + i).disabled = true;
+  document.getElementById("go-" + i).disabled = true;
+  const v = document.getElementById("v-" + i);
+  v.className = "verdict " + (ok ? "ok" : "err");
+  v.innerHTML = ok
+    ? "Правильно — вопрос закрыт."
+    : "Ошибка. Твой ответ: <code>" + esc(raw) + "</code>, верный: <code>" +
+      t.answer + "</code>." +  "" +
+      " Вопрос остался открытым: возьми ту же задачу с другими данными.";
+  card.insertAdjacentHTML("beforeend",
+    '<div class="why">' + t.explain + '</div>' +
+    (ok ? '' : '<div class="row"><button class="primary" id="re-' + i +
+               '">Новые числа</button></div>'));
+  if (!ok) document.getElementById("re-" + i).addEventListener("click", function(){
+    st.tasks[i] = tTask(i, newRng());
+    st.tried[i] = false;
+    renderCard(i);
+    document.getElementById("ans-" + i).focus();
+    paint();
+  });
+  paint();
+}
+
+function renderBottom(){
+  const box = document.getElementById("bottom");
+  if (st.code) return;
+  const done = st.typesDone, open = T_COUNT - done;
+  if (done < MIN_TO_FINISH) {
+    box.innerHTML = '<p class="stats">Код работы появится, когда будет закрыто ' +
+      'хотя бы ' + MIN_TO_FINISH + ' ' + wordQ(MIN_TO_FINISH) + ' (сейчас ' +
+      done + ').</p>';
+    return;
+  }
+  const m = markFor(done);
+  const up = SCALE.filter(s => s[0] > done).pop();
+  let msg;
+  if (up) {
+    msg = "Наработано на <b>" + m + "</b> (закрыто " + done + " из " + T_COUNT +
+      "). Можно забрать код сейчас, а можно дорешать ещё " + open + " " +
+      wordQ(open) + " и дойти до <b>" + up[1] + "</b>.";
+  } else {
+    msg = "Все " + T_COUNT + " " + wordQ(T_COUNT) + " закрыты — наработано на <b>" +
+      m + "</b>.";
+  }
+  box.innerHTML =
+    '<div class="card">' +
+      '<p>' + msg + '</p>' +
+      '<div class="row"><button class="primary" id="stop">Получить код' +
+        (open > 0 ? ' сейчас' : '') + '</button></div>' +
+    '</div>';
+  document.getElementById("stop").addEventListener("click", finish);
+}
+
+function finish(){
+  const code = makeCode(st);
+  st.code = code;
+  document.querySelectorAll("#area input, #area button").forEach(function(el){
+    el.disabled = true;
+  });
+  const m = markFor(st.typesDone);
+  const open = [];
+  for (let i = 0; i < T_COUNT; i++) if (!st.closed[i]) open.push(T_TYPES[i]);
+  document.getElementById("bottom").innerHTML =
+    '<div class="card">' +
+      '<h2>Работа завершена</h2>' +
+      '<p>Закрыто <b>' + st.typesDone + '</b> из ' + T_COUNT +
+        (m ? ', это отметка <b>' + m + '</b>' : '') + '.' +
+        (open.length ? ' Не закрыто: ' + open.join(", ") + '.' : '') +
+      '</p>' +
+      '<p>Код работы — его и надо сдать:</p>' +
+      '<div class="code">' + code + '</div>' +
+      '<div class="note">Код хранит дату, число закрытых вопросов, число ' +
+        'решённых и неверных задач. Переписывать его руками не нужно: впиши ' +
+        'фамилию и класс, и кнопка откроет форму с уже подставленным кодом.</div>' +
+      '<div class="fields">' +
+        '<div><label for="fam">Фамилия и имя</label>' +
+          '<input type="text" id="fam" autocomplete="off"></div>' +
+        '<div><label for="kls">Класс</label>' +
+          '<input type="text" id="kls" autocomplete="off" value="11"></div>' +
+      '</div>' +
+      '<div class="row">' +
+        '<button id="send" class="primary">Сдать работу</button>' +
+        '<button id="again">Начать заново</button>' +
+      '</div>' +
+      '<p class="stats">«Начать заново» откроет все ' + T_COUNT + ' вопросов с ' +
+        'нуля — для дополнительной тренировки. Сдавать нужно тот код, который ' +
+        'получен сейчас.</p>' +
+    '</div>';
+  document.getElementById("bottom").scrollIntoView({behavior: "smooth", block: "start"});
+  document.getElementById("send").addEventListener("click", function(){
+    const fam = document.getElementById("fam").value.trim();
+    if (!fam) { document.getElementById("fam").focus(); return; }
+    const kls = document.getElementById("kls").value.trim() || "11";
+    window.open(FORM.replace("ФАМИЛИЯ", encodeURIComponent(fam))
+                    .replace("КЛАСС", encodeURIComponent(kls))
+                    .replace("КОД", encodeURIComponent(code)), "_blank");
+  });
+  document.getElementById("again").addEventListener("click", resetAll);
+  paint();
+}
+
+function resetAll(){
+  st = freshState();
+  renderAll();
+  paint();
+}
+
+resetAll();
+</script>
+<p class="ai-mark" style="margin:34px auto 0;max-width:860px;padding-top:12px;border-top:1px solid #d9dce6;color:#5c6070;font:13px/1.5 "Segoe UI",system-ui,sans-serif">Материалы подготовлены с использованием технологий искусственного интеллекта.</p>
+</body>
+</html>

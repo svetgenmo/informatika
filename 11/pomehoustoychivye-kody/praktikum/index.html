@@ -1,0 +1,825 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Помехоустойчивые коды — обзорный практикум</title>
+<meta name="description" content="Обзорный практикум 11 класса (углублённый) к пятой паре: бит чётности, расстояние Хэмминга, сколько ошибок код обнаруживает и исправляет, код с повторением, код Хэмминга (7,4).">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E11%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{margin:0;padding:20px 16px 60px;font:17px/1.55 "Segoe UI",system-ui,sans-serif}
+.wrap{max-width:820px;margin:0 auto}
+h1{font-size:23px;margin:0 0 4px}
+h2{font-size:18px;margin:0 0 10px}
+.sub{color:var(--muted);font-size:15px;margin:0 0 18px}
+code{font-family:Consolas,"Cascadia Mono",monospace;background:var(--card);
+     border:1px solid var(--line);border-radius:5px;padding:1px 6px;
+     font-size:15px;letter-spacing:.04em}
+.intro{border:1px solid var(--line);border-radius:12px;background:var(--card);
+       padding:14px 18px;margin-bottom:18px}
+.intro dl{margin:0}
+.intro dt{font-weight:700;margin-top:10px}
+.intro dt:first-child{margin-top:0}
+.intro dd{margin:2px 0 0}
+.progress{border:2px solid var(--accent);border-radius:12px;padding:12px 16px;
+          background:#fff;margin-bottom:18px}
+.ptop{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.ptop h2{margin:0}
+.sp{flex:1 1 auto}
+.score{display:flex;align-items:baseline;gap:10px;color:var(--muted);font-size:15px}
+.score b{font:700 34px/1 "Segoe UI",system-ui,sans-serif;color:var(--ink);
+         min-width:40px;text-align:center;border:2px solid var(--line);
+         border-radius:8px;padding:2px 8px}
+.m5 b{color:var(--ok);border-color:var(--ok-line)}
+.m4 b{color:var(--accent);border-color:#a9c6e8}
+.m3 b{color:#8a5a00;border-color:var(--hi-line)}
+.types{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);border-radius:20px;padding:4px 12px;
+      font-size:14px;color:var(--muted);background:var(--card)}
+.chip.done{border-color:var(--ok-line);background:var(--ok-bg);color:var(--ok);
+           font-weight:600}
+.chip.miss{border-color:var(--err-line);background:var(--err-bg);color:var(--err)}
+.chip.cur{border-color:var(--accent);color:var(--accent);font-weight:600}
+.card{border:1px solid var(--line);border-radius:12px;padding:16px 18px;
+      background:#fff;margin-bottom:14px}
+.card.ok{border-color:var(--ok-line);background:var(--ok-bg)}
+.card.err{border-color:var(--err-line);background:var(--err-bg)}
+.tag{font-size:13px;color:var(--muted);margin:0 0 6px}
+.q{font-size:17px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+input[type=text]{font:16px/1 Consolas,monospace;padding:10px 12px;border-radius:8px;
+                 border:1px solid var(--line);width:100%;max-width:340px}
+button{font:600 15px/1 inherit;padding:11px 16px;border-radius:9px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);color:var(--muted)}
+.verdict{margin-top:10px;font-size:15.5px;font-weight:600}
+.verdict.ok{color:var(--ok)}
+.verdict.err{color:var(--err)}
+.why{margin-top:8px;font-size:15.5px;color:var(--ink)}
+.note{border:1px solid var(--hi-line);background:var(--hi-bg);border-radius:10px;
+      padding:11px 15px;margin:12px 0;font-size:15.5px}
+.code{font:700 26px/1.2 Consolas,monospace;letter-spacing:.06em;
+      background:var(--card);border:2px dashed var(--accent);border-radius:12px;
+      padding:16px;text-align:center;margin:12px 0;user-select:all}
+.stats{color:var(--muted);font-size:14px}
+label{display:block;font-size:14px;color:var(--muted);margin-bottom:3px}
+.fields{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0}
+.fields div{flex:1 1 180px}
+.fields input{max-width:none}
+sup,sub{font-size:12px}
+h3{font-size:16.5px;margin:16px 0 6px;color:var(--accent)}
+details.help{margin-top:26px;border:1px solid var(--line);border-radius:12px;
+        padding:12px 18px;background:var(--card)}
+details.help summary{cursor:pointer;font-weight:600;font-size:17px;
+        color:var(--accent)}
+details.help p{margin:6px 0}
+details.help ol,details.help ul{margin:6px 0;padding-left:22px}
+details.help li{margin:4px 0}
+details.help table{border-collapse:collapse;margin:8px 0;font-size:15px}
+details.help th,details.help td{border:1px solid var(--line);
+        padding:4px 10px;text-align:center;background:#fff}
+details.help th{background:#fff;color:var(--muted);font-weight:600}
+table.gm{border-collapse:collapse;margin:10px 0;font:15px/1.2 Consolas,"Cascadia Mono",monospace}
+table.gm th,table.gm td{border:1px solid var(--line);min-width:34px;height:30px;
+        text-align:center;padding:0 4px;background:#fff}
+table.gm th{background:var(--card);color:var(--muted);font-weight:600}
+table.gm td.d{background:#e4e7ef}
+.adj{display:block;margin:8px 0}
+.adj code{display:inline-block;margin:0 8px 6px 0}
+details.help pre{font-family:Consolas,"Cascadia Mono",monospace;
+        background:#1e2430;color:#e7ecf5;padding:10px 12px;border-radius:9px;
+        font-size:14.5px;overflow-x:auto}
+.bits{display:block;margin:8px 0}
+.bits code{display:inline-block;margin:0 8px 6px 0;letter-spacing:.12em}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Помехоустойчивые коды: бит чётности, расстояние Хэмминга, код Хэмминга</h1>
+<p class="sub">11 класс, углублённый уровень. Обзорный практикум к пятой паре:
+шесть задач по содержанию темы.</p>
+
+<div class="intro">
+  <dl>
+    <dt>Что нужно сделать</dt>
+    <dd>Шесть задач — по одной на каждый вопрос темы, и все сразу на
+        странице: решай в любом порядке. Ответил верно — вопрос закрыт.
+        Ошибся — сразу видно, как это решается, а вопрос остаётся
+        открытым: кнопка «Новые числа» даёт ту же задачу с другими данными,
+        и её можно сдать ещё раз. Сколько закрыл, столько и наработал.
+        Времени нужно около пятнадцати минут: код Хэмминга
+        удобнее расписывать на черновике по позициям.</dd>
+    <dt>Отметка и добор</dt>
+    <dd>Закрыто 6 из 6 — «5», 5 — «4», 3 или 4 — «3». Кнопка
+        <b>«Получить код»</b> внизу страницы появляется, как только закрыто
+        три вопроса: можно забрать код сразу, а можно дорешать оставшиеся и
+        получить код получше — решать самому, до какой отметки добирать.</dd>
+    <dt>Ответ — целое число или двоичное слово</dt>
+    <dd>Число — без единиц измерения: <code>3</code>, а не <code>3 ошибки</code>.
+        Двоичное слово — все биты подряд, вместе с нулями в начале:
+        <code>0110100</code>. На КЕГЭ ответ читает машина, и здесь так же.</dd>
+    <dt>Как сдать</dt>
+    <dd>В конце появится код работы и кнопка <b>«Сдать работу»</b>: впишешь
+        фамилию и класс, кнопка сама откроет форму с уже вписанным кодом.
+        Переписывать код руками не надо — на этом чаще всего и ошибаются.</dd>
+    <dt>Не успел на уроке</dt>
+    <dd>Открой эту же страницу дома и пройди целиком: вариант будет другой,
+        а сдаётся всё так же — одним кодом.</dd>
+  </dl>
+</div>
+
+<div class="progress">
+  <div class="ptop">
+    <h2>Вопросы темы</h2>
+    <span class="sp"></span>
+    <div class="score" id="scorebox">
+      <span>наработано на</span><b id="mark">—</b>
+    </div>
+  </div>
+  <div class="types" id="types"></div>
+  <p class="stats" id="stats"></p>
+</div>
+
+<div id="area"></div>
+<div id="bottom"></div>
+
+<details class="help">
+  <summary>Подсказка: помехоустойчивые коды</summary>
+  <h3>Зачем нужны помехоустойчивые коды</h3>
+  <p>При передаче биты искажаются: помехи в линии, слабый сигнал, сбои
+     оборудования. Защита — <b>избыточность</b>: к данным добавляют
+     лишние биты, по которым приёмник ошибку <b>обнаруживает</b> (и просит
+     повторить) или сразу <b>исправляет</b>.</p>
+
+  <h3>Бит чётности</h3>
+  <p>К блоку дописывают один бит так, чтобы единиц стало чётное число.
+     Пришёл блок с нечётным числом единиц — ошибка. Ловит одну ошибку (и
+     любое нечётное их число), но не показывает где; две ошибки не видит.</p>
+
+  <h3>Расстояние Хэмминга</h3>
+  <p>Число позиций, в которых два слова одинаковой длины различаются:
+     между <code>10110</code> и <code>11100</code> оно равно 2.
+     <b>Кодовое расстояние d</b> — наименьшее расстояние между парами
+     кодовых слов.</p>
+  <table>
+    <tr><th>код с расстоянием d</th><th>сколько ошибок</th></tr>
+    <tr><td>обнаруживает</td><td>d − 1</td></tr>
+    <tr><td>исправляет</td><td>(d − 1) : 2 нацело</td></tr>
+    <tr><td>чтобы исправлять t ошибок</td><td>нужно d ≥ 2t + 1</td></tr>
+  </table>
+
+  <h3>Код с повторением</h3>
+  <p>Каждый бит передаётся три раза: 1 → <code>111</code>, 0 →
+     <code>000</code>. Приёмник решает <b>по большинству</b>:
+     <code>101</code> — это 1. Здесь d = 3: одна ошибка в тройке
+     исправляется. Цена — сообщение втрое длиннее.</p>
+
+  <h3>Код Хэмминга (7,4)</h3>
+  <p>Четыре информационных бита и три контрольных, исправляет одну ошибку.
+     Позиции считаются с 1 слева направо; контрольные биты стоят на
+     степенях двойки.</p>
+  <table>
+    <tr><th>позиция</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th></tr>
+    <tr><td>что стоит</td><td>к1</td><td>к2</td><td>д1</td><td>к4</td><td>д2</td><td>д3</td><td>д4</td></tr>
+  </table>
+  <ul>
+    <li>к1 делает чётным число единиц на позициях <b>1, 3, 5, 7</b>;</li>
+    <li>к2 — на позициях <b>2, 3, 6, 7</b>;</li>
+    <li>к4 — на позициях <b>4, 5, 6, 7</b>.</li>
+  </ul>
+  <p><b>Поиск ошибки:</b> проверить три группы принятого слова. Номера
+     контрольных битов, у которых чётность нарушена, сложить — получится
+     <b>номер искажённой позиции</b> (сбой в группах 1 и 4 — ошибка в бите
+     5). Этот бит инвертировать. Для m информационных битов нужно r
+     контрольных: 2<sup>r</sup> ≥ m + r + 1.</p>
+</details>
+
+</div>
+
+<script>
+/* ==== ЗАДАЧИ: вставлено gen.py, руками не править ==== */
+/* Обзорный тест-практикум к пятой паре 11 класса (углублённый уровень).
+   Содержание ФГОС, уроки 9–10 официального плана: помехоустойчивые коды —
+   причины ошибок при передаче, коды, обнаруживающие и исправляющие ошибки,
+   расстояние Хэмминга, кодирование с повторением битов, коды Хэмминга.
+   В столбце «Задание ЕГЭ» плана у этих уроков привязки нет.
+
+   Единственный источник задач. В practice.html вписывается скриптом
+   gen.py между маркерами — руками страницу не править.
+
+   Ответ — целое число или двоичное слово (у задачи тогда стоит bits: true
+   и ответ сверяется знак в знак, с ведущими нулями). */
+
+const T_TYPES = [
+  "бит чётности",
+  "расстояние Хэмминга",
+  "возможности кода",
+  "код с повторением",
+  "код Хэмминга: кодирование",
+  "код Хэмминга: поиск ошибки"
+];
+
+function tRng(seed) {
+  let s = seed >>> 0;
+  return function () {
+    s ^= s << 13; s >>>= 0;
+    s ^= s >> 17;
+    s ^= s << 5;  s >>>= 0;
+    return s / 4294967296;
+  };
+}
+
+function tRand(rng, a, b) { return a + Math.floor(rng() * (b - a + 1)); }
+function tPick(rng, arr) { return arr[tRand(rng, 0, arr.length - 1)]; }
+
+function tPl(n, one, few, many) {
+  const h = n % 100, t = n % 10;
+  if (h >= 11 && h <= 14) return many;
+  if (t === 1) return one;
+  if (t >= 2 && t <= 4) return few;
+  return many;
+}
+
+/* -------------------------------------------------------------- механика */
+
+function hWord(rng, len) {
+  let s = "";
+  for (let i = 0; i < len; i++) s += rng() < 0.5 ? "0" : "1";
+  return s;
+}
+
+function hOnes(s) { return s.split("1").length - 1; }
+
+function hDist(a, b) {
+  let d = 0;
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) d++;
+  return d;
+}
+
+function hFlip(s, pos) {
+  return s.slice(0, pos) + (s[pos] === "0" ? "1" : "0") + s.slice(pos + 1);
+}
+
+function hList(words) {
+  return '<span class="bits">' + words.map(function (w) {
+    return "<code>" + w + "</code>";
+  }).join(" ") + "</span>";
+}
+
+/* Код Хэмминга (7,4): позиции 1, 2, 4 — контрольные, 3, 5, 6, 7 —
+   информационные. Бит 1 следит за позициями 1, 3, 5, 7; бит 2 — за
+   2, 3, 6, 7; бит 4 — за 4, 5, 6, 7. В каждой группе чётное число единиц. */
+function hEncode(data) {
+  const d = data.split("").map(Number);
+  const p1 = d[0] ^ d[1] ^ d[3];
+  const p2 = d[0] ^ d[2] ^ d[3];
+  const p4 = d[1] ^ d[2] ^ d[3];
+  return "" + p1 + p2 + d[0] + p4 + d[1] + d[2] + d[3];
+}
+
+const H_RULE = "Код Хэмминга (7,4): позиции нумеруются слева направо с 1; " +
+  "информационные биты стоят на позициях 3, 5, 6, 7, контрольные — на " +
+  "позициях 1, 2, 4. Бит 1 контролирует позиции 1, 3, 5, 7; бит 2 — позиции " +
+  "2, 3, 6, 7; бит 4 — позиции 4, 5, 6, 7: в каждой группе число единиц " +
+  "должно быть чётным. ";
+
+/* ---------------------------------------------------------------- задачи */
+
+function tTask(type, rng) {
+  if (type === 0) return tParity(rng);
+  if (type === 1) return tDistance(rng);
+  if (type === 2) return tPower(rng);
+  if (type === 3) return tRepeat(rng);
+  if (type === 4) return tHamEncode(rng);
+  return tHamFix(rng);
+}
+
+/* 0. Бит чётности: сколько приписанных битов равны 1 или сколько слов
+   пришло с обнаруженной ошибкой. */
+function tParity(rng) {
+  const n = tRand(rng, 5, 6);
+  if (rng() < 0.5) {
+    let words, ones;
+    do {
+      words = [];
+      for (let i = 0; i < n; i++) words.push(hWord(rng, 7));
+      ones = words.filter(function (w) { return hOnes(w) % 2 === 1; }).length;
+    } while (ones < 1 || ones > n - 1);
+    return {
+      type: 0, kind: "append", answer: String(ones),
+      question: "Сообщение разбито на блоки по 7 бит: " + hList(words) +
+        "К каждому блоку дописывают <b>бит чётности</b> — такой, чтобы число " +
+        "единиц в блоке из 8 бит стало чётным. Сколько дописанных битов будут " +
+        "равны <b>1</b>?",
+      explain: "Единица дописывается там, где единиц нечётное число. Единиц в " +
+        "блоках: " + words.map(hOnes).join(", ") + ". Нечётных значений — " +
+        ones + "."
+    };
+  }
+  let words, bad;
+  do {
+    words = [];
+    for (let i = 0; i < n; i++) {
+      let w = hWord(rng, 7);
+      w += hOnes(w) % 2 ? "1" : "0";
+      if (rng() < 0.45) w = hFlip(w, tRand(rng, 0, 7));
+      words.push(w);
+    }
+    bad = words.filter(function (w) { return hOnes(w) % 2 === 1; }).length;
+  } while (bad < 1 || bad > n - 1);
+  return {
+    type: 0, kind: "detect", answer: String(bad),
+    question: "Данные передавались блоками по 8 бит: семь информационных и " +
+      "<b>бит чётности</b>, дополняющий число единиц до чётного. Приняты блоки: " +
+      hList(words) + "В скольких блоках приёмник обнаружит ошибку?",
+    explain: "В правильном блоке число единиц чётное. Единиц в принятых блоках: " +
+      words.map(hOnes).join(", ") + ". Нечётных значений — " + bad +
+      ". Бит чётности ловит одиночную ошибку, но не говорит, где она, и " +
+      "пропускает двойную."
+  };
+}
+
+/* 1. Расстояние Хэмминга: между двумя словами или наименьшее по коду. */
+function tDistance(rng) {
+  if (rng() < 0.5) {
+    const len = tRand(rng, 8, 10);
+    let a, b, d;
+    do {
+      a = hWord(rng, len); b = hWord(rng, len); d = hDist(a, b);
+    } while (d < 2 || d > len - 2);
+    return {
+      type: 1, kind: "pair", answer: String(d),
+      question: "Найдите расстояние Хэмминга между двоичными словами " +
+        hList([a, b]),
+      explain: "Расстояние Хэмминга — число позиций, в которых слова различаются. " +
+        "Сравниваем бит за битом: различий " + d + "."
+    };
+  }
+  const len = tRand(rng, 6, 7);
+  let words, dmin, pairs;
+  for (;;) {
+    words = [];
+    while (words.length < 4) {
+      const w = hWord(rng, len);
+      if (words.indexOf(w) < 0) words.push(w);
+    }
+    pairs = [];
+    for (let i = 0; i < 4; i++)
+      for (let j = i + 1; j < 4; j++) pairs.push(hDist(words[i], words[j]));
+    dmin = Math.min.apply(null, pairs);
+    /* Наименьшее не должно стоять у первой же пары: иначе считать
+       остальные пять незачем. */
+    if (dmin >= 2 && pairs[0] !== dmin) break;
+  }
+  return {
+    type: 1, kind: "min", answer: String(dmin),
+    question: "Код состоит из четырёх кодовых слов: " + hList(words) +
+      "Найдите <b>кодовое расстояние</b> — наименьшее из расстояний Хэмминга " +
+      "между парами слов.",
+    explain: "Пар шесть: 1–2, 1–3, 1–4, 2–3, 2–4, 3–4. Расстояния: " +
+      pairs.join(", ") + ". Наименьшее — " + dmin + "."
+  };
+}
+
+/* 2. Что умеет код с кодовым расстоянием d; сколько контрольных битов
+   нужно коду Хэмминга. */
+function tPower(rng) {
+  const kind = tPick(rng, ["detect", "correct", "need", "rbits"]);
+  if (kind === "detect") {
+    const d = tRand(rng, 3, 9);
+    return {
+      type: 2, kind: kind, answer: String(d - 1),
+      question: "Кодовое расстояние некоторого кода равно <b>" + d + "</b>. " +
+        "Какое наибольшее число ошибок в одном слове такой код гарантированно " +
+        "<b>обнаруживает</b>?",
+      explain: "Чтобы одно кодовое слово превратилось в другое, нужно исказить " +
+        "не меньше d битов. Значит, любые d − 1 ошибок дают слово, которого в " +
+        "коде нет, и приёмник это заметит: " + d + " − 1 = " + (d - 1) + "."
+    };
+  }
+  if (kind === "correct") {
+    const d = tRand(rng, 3, 9);
+    const c = Math.floor((d - 1) / 2);
+    return {
+      type: 2, kind: kind, answer: String(c),
+      question: "Кодовое расстояние некоторого кода равно <b>" + d + "</b>. " +
+        "Какое наибольшее число ошибок в одном слове такой код гарантированно " +
+        "<b>исправляет</b>?",
+      explain: "Исправить — значит найти ближайшее кодовое слово. Оно однозначно, " +
+        "пока ошибок меньше половины расстояния: (d − 1) : 2 с отбрасыванием " +
+        "дробной части. (" + d + " − 1) : 2 = " + c + (d % 2 ? "" : " (остаток отброшен)") + "."
+    };
+  }
+  if (kind === "need") {
+    const e = tRand(rng, 2, 6);
+    return {
+      type: 2, kind: kind, answer: String(2 * e + 1),
+      question: "Код должен гарантированно <b>исправлять</b> до <b>" + e + "</b> " +
+        "ошибок в одном слове. Каким наименьшим должно быть его кодовое " +
+        "расстояние?",
+      explain: "Чтобы исправлять t ошибок, слова должны отстоять друг от друга " +
+        "не меньше чем на 2t + 1: искажённое слово остаётся ближе к своему, чем " +
+        "к любому чужому. 2 · " + e + " + 1 = " + (2 * e + 1) + "."
+    };
+  }
+  const m = tRand(rng, 5, 60);
+  let r = 1;
+  while ((1 << r) < m + r + 1) r++;
+  return {
+    type: 2, kind: kind, answer: String(r),
+    question: "Код Хэмминга исправляет одну ошибку, если число контрольных " +
+      "битов r удовлетворяет условию 2<sup>r</sup> ≥ m + r + 1, где m — число " +
+      "информационных битов. Сколько контрольных битов нужно, чтобы защитить " +
+      "блок из <b>" + m + "</b> информационных битов?",
+    explain: "Контрольные биты должны назвать номер любой из m + r позиций или " +
+      "сообщить, что ошибки нет. При r = " + (r - 1) + ": 2<sup>" + (r - 1) + "</sup> = " +
+      (1 << (r - 1)) + " &lt; " + m + " + " + (r - 1) + " + 1 = " + (m + r) +
+      " — мало. При r = " + r + ": 2<sup>" + r + "</sup> = " + (1 << r) + " ≥ " +
+      (m + r + 1) + " — хватает."
+  };
+}
+
+/* 3. Код с утроением: восстановить сообщение или сосчитать искажённые
+   тройки. В тройке искажён не больше чем один бит. */
+function tRepeat(rng) {
+  const kind = rng() < 0.6 ? "decode" : "errors";
+  const len = tRand(rng, 4, 6);
+  let msg, triples, hits;
+  do {
+    msg = hWord(rng, len);
+    hits = 0;
+    triples = msg.split("").map(function (b) {
+      let t = b + b + b;
+      if (rng() < 0.45) { t = hFlip(t, tRand(rng, 0, 2)); hits++; }
+      return t;
+    });
+  } while (hits < 2 || hits > len - 1 || hOnes(msg) === 0 || hOnes(msg) === len);
+  const lead = "Сообщение передавали кодом с утроением: каждый бит повторён " +
+    "три раза подряд. Известно, что в каждой тройке искажено не больше одного " +
+    "бита. Принято: " + hList(triples);
+  if (kind === "decode") return {
+    type: 3, kind: kind, bits: true, answer: msg,
+    question: lead + "Восстановите исходное сообщение. В ответе запишите его " +
+      "биты подряд, без пробелов.",
+    explain: "В каждой тройке побеждает большинство: две или три единицы — " +
+      "передавалась 1, иначе 0. По тройкам: " + msg.split("").join(", ") +
+      ". Сообщение: " + msg + "."
+  };
+  return {
+    type: 3, kind: kind, answer: String(hits),
+    question: lead + "Сколько троек пришло <b>с искажением</b>?",
+    explain: "Неискажённая тройка — 000 или 111. Остальные пришли с ошибкой: " +
+      triples.filter(function (t) { return t !== "000" && t !== "111"; }).join(", ") +
+      " — их " + hits + ". Каждую из них код исправляет по большинству."
+  };
+}
+
+/* 4. Код Хэмминга (7,4): собрать кодовое слово. */
+function tHamEncode(rng) {
+  let data;
+  do { data = hWord(rng, 4); } while (hOnes(data) === 0);
+  const word = hEncode(data);
+  return {
+    type: 4, bits: true, answer: word,
+    question: H_RULE + "Закодируйте информационные биты " + hList([data]) +
+      "В ответе запишите все семь битов кодового слова подряд.",
+    explain: "Расставляем данные " + data + " на позиции 3, 5, 6, 7: <code>_ _ " +
+      data[0] + " _ " + data[1] + " " + data[2] + " " + data[3] + "</code>. Бит 1 " +
+      "дополняет до чётности позиции 3, 5, 7 (" + data[0] + ", " + data[1] + ", " +
+      data[3] + ") — он равен " + word[0] + ". Бит 2 — позиции 3, 6, 7 (" + data[0] +
+      ", " + data[2] + ", " + data[3] + ") — " + word[1] + ". Бит 4 — позиции 5, 6, 7 (" +
+      data[1] + ", " + data[2] + ", " + data[3] + ") — " + word[3] + ". Слово: " + word + "."
+  };
+}
+
+/* 5. Код Хэмминга (7,4): найти позицию одиночной ошибки или данные. */
+function tHamFix(rng) {
+  const kind = rng() < 0.5 ? "pos" : "data";
+  let data;
+  do { data = hWord(rng, 4); } while (hOnes(data) === 0);
+  const word = hEncode(data);
+  /* Когда просят данные, ошибка обязана сидеть в информационном бите:
+     иначе данные читаются прямо из принятого слова, без всякой проверки. */
+  const pos = kind === "data" ? tPick(rng, [3, 5, 6, 7]) : tRand(rng, 1, 7);
+  const got = hFlip(word, pos - 1);
+  const g = got.split("").map(Number);
+  const s1 = g[0] ^ g[2] ^ g[4] ^ g[6];
+  const s2 = g[1] ^ g[2] ^ g[5] ^ g[6];
+  const s4 = g[3] ^ g[4] ^ g[5] ^ g[6];
+  const how = "Проверяем три группы принятого слова " + got + ". Позиции 1, 3, 5, 7: " +
+    (s1 ? "нечётно — сбой" : "чётно") + ". Позиции 2, 3, 6, 7: " +
+    (s2 ? "нечётно — сбой" : "чётно") + ". Позиции 4, 5, 6, 7: " +
+    (s4 ? "нечётно — сбой" : "чётно") + ". Номер ошибочной позиции — сумма номеров " +
+    "сбойных контрольных битов: " +
+    (s1 + s2 + s4 > 1
+      ? [s1 ? 1 : 0, s2 ? 2 : 0, s4 ? 4 : 0].filter(Boolean).join(" + ") + " = " + pos
+      : "сбой один, так что это сама позиция " + pos) + ". ";
+  const lead = H_RULE + "Принято слово " + hList([got]) + "Известно, что при " +
+    "передаче исказился ровно один бит. ";
+  if (kind === "pos") return {
+    type: 5, kind: kind, answer: String(pos),
+    question: lead + "Определите <b>номер позиции</b>, в которой произошла ошибка.",
+    explain: how
+  };
+  return {
+    type: 5, kind: kind, bits: true, answer: data,
+    question: lead + "Какие четыре <b>информационных</b> бита были отправлены? В " +
+      "ответе запишите их подряд, без пробелов.",
+    explain: how + "Исправляем бит " + pos + ": " + word + ". Информационные биты — " +
+      "на позициях 3, 5, 6, 7: " + data + "."
+  };
+}
+
+/* ------------------------------------------------------------- сборка */
+
+function tMake(seed) {
+  const rng = tRng(seed || 1);
+  const order = [0, 1, 2, 3, 4, 5];
+  for (let j = order.length - 1; j > 0; j--) {
+    const t = tRand(rng, 0, j);
+    const tmp = order[j]; order[j] = order[t]; order[t] = tmp;
+  }
+  return order.map(function (type) { return tTask(type, rng); });
+}
+
+/* Двоичное слово сверяется знак в знак: ведущие нули — часть ответа.
+   Пробелы между группами битов прощаем, как и в числе. */
+function tCheck(task, raw) {
+  const s = String(raw === undefined || raw === null ? "" : raw)
+    .replace(/\s+/g, "");
+  if (!/^\d+$/.test(s)) return false;
+  if (task.bits) return s === task.answer;
+  return String(Number(s)) === task.answer;
+}
+/* ==== /ЗАДАЧИ ==== */
+
+/* Форма сдачи ДЗ — одна на все темы. Ссылку разносит set_form_link.py. */
+const FORM = "https://docs.google.com/forms/d/e/1FAIpQLSfQyhaxcnzn4ZaKSe_ZMsluw7qRQnrw_80H6SfrnYB5EThUIA/viewform?usp=pp_url&entry.853601231=ФАМИЛИЯ&entry.1091635917=КЛАСС&entry.487188307=КОД";
+
+const ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+const EPOCH = Date.UTC(2026, 0, 1);
+const PREFIX = "HM";
+const SCALE = [[6, 5], [5, 4], [3, 3]];
+
+const bin = (v, w) => v.toString(2).padStart(w, "0");
+
+/* Семибитными кусками строки: в нагрузке 33 бита, а побитовые операции в JS
+   32-битные — старший бит молча потерялся бы. */
+function checksum(bitstr){
+  let cs = 0x5B;
+  for (let i = 0; i < bitstr.length; i += 7)
+    cs ^= parseInt(bitstr.substr(i, 7).padEnd(7, "0"), 2);
+  return cs & 0x7F;
+}
+
+function makeCode(st){
+  const day = Math.max(0, Math.min(2047, Math.floor(
+      (Date.now() - EPOCH) / 86400000)));
+  const payload = bin(day, 11) + bin(Math.min(15, st.typesDone), 4) +
+                  bin(Math.min(15, st.cleanTypes), 4) +
+                  bin(Math.min(127, st.solved), 7) +
+                  bin(Math.min(127, st.wrong), 7);
+  const bitstr = payload + bin(checksum(payload), 7);
+  let out = "";
+  for (let i = 0; i < 40; i += 5)
+    out += ALPHABET[parseInt(bitstr.substr(i, 5), 2)];
+  return PREFIX + "-" + out.slice(0, 4) + "-" + out.slice(4);
+}
+
+/* ---------------------------------------------------------- состояние
+   Все вопросы темы лежат на странице сразу — решать можно в любом
+   порядке, объём виден с первого взгляда. Вопрос закрывается одним верным
+   ответом и больше не спрашивается. Ошибся — разбор сразу, а вопрос
+   остаётся открытым: кнопка «Новые числа» на той же карточке даёт задачу с
+   другими данными, и её можно сдать ещё раз. Код выдаётся, когда закрыто
+   хотя бы MIN_TO_FINISH; после кода карточки запираются.
+   До 17.09.2026 вопросы шли по одному, раундами; Света попросила
+   показывать все сразу: не видно объёма и нельзя выбрать порядок. */
+const T_COUNT = T_TYPES.length;
+const MIN_TO_FINISH = 3;
+
+let st;
+
+function esc(s){ return String(s).replace(/[&<>]/g, c =>
+  ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+
+function markFor(n){
+  for (const [need, m] of SCALE) if (n >= need) return m;
+  return null;
+}
+
+function wordQ(n){
+  const a = n % 100, b = a % 10;
+  if (a > 4 && a < 21) return "вопросов";
+  if (b === 1) return "вопрос";
+  if (b > 1 && b < 5) return "вопроса";
+  return "вопросов";
+}
+
+function newRng(){ return tRng((Date.now() ^ (Math.random() * 1e9)) >>> 0); }
+
+function freshState(){
+  const s = {
+    closed: Array(T_COUNT).fill(false),
+    clean:  Array(T_COUNT).fill(true),
+    tried:  Array(T_COUNT).fill(false),
+    tasks:  Array(T_COUNT).fill(null),
+    solved: 0, wrong: 0, code: null
+  };
+  for (let i = 0; i < T_COUNT; i++) s.tasks[i] = tTask(i, newRng());
+  Object.defineProperty(s, "typesDone",
+    {get(){ return s.closed.filter(Boolean).length; }});
+  Object.defineProperty(s, "cleanTypes",
+    {get(){ return s.closed.filter((d, i) => d && s.clean[i]).length; }});
+  return s;
+}
+
+function paint(){
+  const box = document.getElementById("types");
+  box.innerHTML = "";
+  for (let i = 0; i < T_COUNT; i++) {
+    const el = document.createElement("span");
+    el.className = "chip" + (st.closed[i] ? " done" : st.tried[i] ? " miss" : "");
+    el.textContent = (i + 1) + ". " + T_TYPES[i];
+    box.appendChild(el);
+  }
+  const done = st.typesDone;
+  const m = markFor(done);
+  const sb = document.getElementById("scorebox");
+  sb.className = "score" + (m ? " m" + m : "");
+  document.getElementById("mark").textContent = m ? m : "—";
+  document.getElementById("stats").textContent =
+    "Закрыто: " + done + " из " + T_COUNT + ". Решено задач: " + st.solved +
+    ", ошибок: " + st.wrong + ".";
+  renderBottom();
+}
+
+function cardHtml(i){
+  const t = st.tasks[i];
+  return '<div class="card" id="task-' + i + '">' +
+      '<p class="tag">' + (i + 1) + ' &middot; ' + T_TYPES[i] + '</p>' +
+      '<div class="q">' + t.question + '</div>' +
+      '<div class="row">' +
+        '<input type="text" id="ans-' + i + '" autocomplete="off" spellcheck="false" ' +
+               'inputmode="numeric" placeholder="' + (t.bits ? 'двоичное слово' : 'целое число') + '"' + '>' +
+        '<button class="primary" id="go-' + i + '">Ответить</button>' +
+      '</div>' +
+      '<div class="verdict" id="v-' + i + '"></div>' +
+    '</div>';
+}
+
+function bindCard(i){
+  document.getElementById("ans-" + i).addEventListener("keydown", function(e){
+    if (e.key === "Enter") judge(i);
+  });
+  document.getElementById("go-" + i).addEventListener("click", function(){ judge(i); });
+}
+
+function renderAll(){
+  let html = "";
+  for (let i = 0; i < T_COUNT; i++) html += cardHtml(i);
+  document.getElementById("area").innerHTML = html;
+  for (let i = 0; i < T_COUNT; i++) bindCard(i);
+}
+
+function renderCard(i){
+  document.getElementById("task-" + i).outerHTML = cardHtml(i);
+  bindCard(i);
+}
+
+function judge(i){
+  if (st.code) return;
+  const t = st.tasks[i];
+  const raw = document.getElementById("ans-" + i).value;
+  const ok = tCheck(t, raw);
+  st.tried[i] = true;
+  if (ok) { st.closed[i] = true; st.solved++; }
+  else { st.wrong++; st.clean[i] = false; }
+
+  const card = document.getElementById("task-" + i);
+  card.className = "card " + (ok ? "ok" : "err");
+  document.getElementById("ans-" + i).disabled = true;
+  document.getElementById("go-" + i).disabled = true;
+  const v = document.getElementById("v-" + i);
+  v.className = "verdict " + (ok ? "ok" : "err");
+  v.innerHTML = ok
+    ? "Правильно — вопрос закрыт."
+    : "Ошибка. Твой ответ: <code>" + esc(raw) + "</code>, верный: <code>" +
+      t.answer + "</code>." +  "" +
+      " Вопрос остался открытым: возьми ту же задачу с другими данными.";
+  card.insertAdjacentHTML("beforeend",
+    '<div class="why">' + t.explain + '</div>' +
+    (ok ? '' : '<div class="row"><button class="primary" id="re-' + i +
+               '">Новые числа</button></div>'));
+  if (!ok) document.getElementById("re-" + i).addEventListener("click", function(){
+    st.tasks[i] = tTask(i, newRng());
+    st.tried[i] = false;
+    renderCard(i);
+    document.getElementById("ans-" + i).focus();
+    paint();
+  });
+  paint();
+}
+
+function renderBottom(){
+  const box = document.getElementById("bottom");
+  if (st.code) return;
+  const done = st.typesDone, open = T_COUNT - done;
+  if (done < MIN_TO_FINISH) {
+    box.innerHTML = '<p class="stats">Код работы появится, когда будет закрыто ' +
+      'хотя бы ' + MIN_TO_FINISH + ' ' + wordQ(MIN_TO_FINISH) + ' (сейчас ' +
+      done + ').</p>';
+    return;
+  }
+  const m = markFor(done);
+  const up = SCALE.filter(s => s[0] > done).pop();
+  let msg;
+  if (up) {
+    msg = "Наработано на <b>" + m + "</b> (закрыто " + done + " из " + T_COUNT +
+      "). Можно забрать код сейчас, а можно дорешать ещё " + open + " " +
+      wordQ(open) + " и дойти до <b>" + up[1] + "</b>.";
+  } else {
+    msg = "Все " + T_COUNT + " " + wordQ(T_COUNT) + " закрыты — наработано на <b>" +
+      m + "</b>.";
+  }
+  box.innerHTML =
+    '<div class="card">' +
+      '<p>' + msg + '</p>' +
+      '<div class="row"><button class="primary" id="stop">Получить код' +
+        (open > 0 ? ' сейчас' : '') + '</button></div>' +
+    '</div>';
+  document.getElementById("stop").addEventListener("click", finish);
+}
+
+function finish(){
+  const code = makeCode(st);
+  st.code = code;
+  document.querySelectorAll("#area input, #area button").forEach(function(el){
+    el.disabled = true;
+  });
+  const m = markFor(st.typesDone);
+  const open = [];
+  for (let i = 0; i < T_COUNT; i++) if (!st.closed[i]) open.push(T_TYPES[i]);
+  document.getElementById("bottom").innerHTML =
+    '<div class="card">' +
+      '<h2>Работа завершена</h2>' +
+      '<p>Закрыто <b>' + st.typesDone + '</b> из ' + T_COUNT +
+        (m ? ', это отметка <b>' + m + '</b>' : '') + '.' +
+        (open.length ? ' Не закрыто: ' + open.join(", ") + '.' : '') +
+      '</p>' +
+      '<p>Код работы — его и надо сдать:</p>' +
+      '<div class="code">' + code + '</div>' +
+      '<div class="note">Код хранит дату, число закрытых вопросов, число ' +
+        'решённых и неверных задач. Переписывать его руками не нужно: впиши ' +
+        'фамилию и класс, и кнопка откроет форму с уже подставленным кодом.</div>' +
+      '<div class="fields">' +
+        '<div><label for="fam">Фамилия и имя</label>' +
+          '<input type="text" id="fam" autocomplete="off"></div>' +
+        '<div><label for="kls">Класс</label>' +
+          '<input type="text" id="kls" autocomplete="off" value="11"></div>' +
+      '</div>' +
+      '<div class="row">' +
+        '<button id="send" class="primary">Сдать работу</button>' +
+        '<button id="again">Начать заново</button>' +
+      '</div>' +
+      '<p class="stats">«Начать заново» откроет все ' + T_COUNT + ' вопросов с ' +
+        'нуля — для дополнительной тренировки. Сдавать нужно тот код, который ' +
+        'получен сейчас.</p>' +
+    '</div>';
+  document.getElementById("bottom").scrollIntoView({behavior: "smooth", block: "start"});
+  document.getElementById("send").addEventListener("click", function(){
+    const fam = document.getElementById("fam").value.trim();
+    if (!fam) { document.getElementById("fam").focus(); return; }
+    const kls = document.getElementById("kls").value.trim() || "11";
+    window.open(FORM.replace("ФАМИЛИЯ", encodeURIComponent(fam))
+                    .replace("КЛАСС", encodeURIComponent(kls))
+                    .replace("КОД", encodeURIComponent(code)), "_blank");
+  });
+  document.getElementById("again").addEventListener("click", resetAll);
+  paint();
+}
+
+function resetAll(){
+  st = freshState();
+  renderAll();
+  paint();
+}
+
+resetAll();
+</script>
+<p class="ai-mark" style="margin:34px auto 0;max-width:860px;padding-top:12px;border-top:1px solid #d9dce6;color:#5c6070;font:13px/1.5 "Segoe UI",system-ui,sans-serif">Материалы подготовлены с использованием технологий искусственного интеллекта.</p>
+</body>
+</html>
