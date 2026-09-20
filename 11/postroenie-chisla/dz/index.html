@@ -1,0 +1,1006 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Задание 5 ЕГЭ: алгоритм достраивает число — домашняя работа</title>
+<meta name="description" content="Домашняя работа 11 класса (углублённый) по заданию 5 ЕГЭ: шесть типов вопроса по одной задаче на тип, все сразу на странице; ошибка — та же форма вопроса с новыми числами; в конце код работы и снимок черновика с таблицей перебора.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E11%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{margin:0;padding:20px 16px 60px;font:17px/1.55 "Segoe UI",system-ui,sans-serif}
+.wrap{max-width:860px;margin:0 auto}
+h1{font-size:23px;margin:0 0 4px}
+h2{font-size:18px;margin:0 0 10px}
+h3{font-size:16px;margin:18px 0 6px}
+.sub{color:var(--muted);font-size:15px;margin:0 0 18px}
+code{font-family:Consolas,"Cascadia Mono",monospace;background:var(--card);
+     border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:15px}
+.intro{border:1px solid var(--line);border-radius:12px;background:var(--card);
+       padding:14px 18px;margin-bottom:18px}
+.intro dl{margin:0}
+.intro dt{font-weight:700;margin-top:10px}
+.intro dt:first-child{margin-top:0}
+.intro dd{margin:2px 0 0}
+details{margin-top:12px}
+summary{cursor:pointer;font-weight:600;color:var(--accent)}
+.progress{position:sticky;top:0;z-index:5;border:2px solid var(--accent);border-radius:12px;padding:10px 16px;
+          background:#fff;margin-bottom:18px}
+.ptop{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.ptop h2{margin:0}
+.sp{flex:1 1 auto}
+.score{display:flex;align-items:baseline;gap:10px;color:var(--muted);font-size:15px}
+.score b{font:700 34px/1 "Segoe UI",system-ui,sans-serif;color:var(--ink);
+         min-width:40px;text-align:center;border:2px solid var(--line);
+         border-radius:8px;padding:2px 8px}
+.m5 b{color:var(--ok);border-color:var(--ok-line)}
+.m4 b{color:var(--accent);border-color:#a9c6e8}
+.m3 b{color:#8a5a00;border-color:var(--hi-line)}
+.types{display:flex;flex-wrap:wrap;gap:8px}
+.chip{cursor:pointer;border:1px solid var(--line);border-radius:20px;padding:4px 12px;
+      font-size:14px;color:var(--muted);background:var(--card)}
+.chip.done{border-color:var(--ok-line);background:var(--ok-bg);color:var(--ok);
+           font-weight:600}
+.card{border:1px solid var(--line);border-radius:12px;padding:16px 18px;
+      background:#fff;margin-bottom:14px}
+.card.ok{border-color:var(--ok-line);background:var(--ok-bg)}
+.card.err{border-color:var(--err-line);background:var(--err-bg)}
+.tag{font-size:13px;color:var(--muted);margin:0 0 6px}
+.q{font-size:17px}
+.fnote{font-size:14px;color:var(--muted);margin:10px 0 0}
+.bits{font:700 17px/1.4 Consolas,monospace;letter-spacing:.06em;word-break:break-all}
+table.codes{border-collapse:collapse;margin:12px 0;font:16px/1.2 Consolas,monospace}
+table.codes th,table.codes td{border:1px solid #9aa0b0;padding:6px 12px;text-align:center;
+                              min-width:44px}
+table.codes th{background:var(--card);font-family:"Segoe UI",system-ui,sans-serif}
+svg.ftree{display:block;max-width:100%;height:auto;margin:10px 0}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+input[type=text]{font:16px/1 Consolas,monospace;padding:10px 12px;border-radius:8px;
+                 border:1px solid var(--line);width:100%;max-width:300px}
+button{font:600 15px/1 inherit;padding:11px 16px;border-radius:9px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);color:var(--muted)}
+.verdict{margin-top:10px;font-size:15.5px;font-weight:600}
+.verdict.ok{color:var(--ok)}
+.verdict.err{color:var(--err)}
+.why{margin-top:8px;font-size:15.5px;font-weight:400}
+.verdict details.why{margin-top:6px;font-weight:400}
+.verdict details.why summary{font-size:15px}
+.note{border:1px solid var(--hi-line);background:var(--hi-bg);border-radius:10px;
+      padding:11px 15px;margin:12px 0;font-size:15.5px}
+.stats{color:var(--muted);font-size:14px}
+.code{font:700 26px/1.2 Consolas,monospace;letter-spacing:.06em;
+      background:var(--card);border:2px solid var(--accent);border-radius:10px;
+      padding:12px 16px;margin:10px 0;text-align:center;color:var(--accent)}
+.fields{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px}
+.fields label{display:block;font-size:14px;color:var(--muted);margin-bottom:4px}
+.mailbox{border-top:1px solid var(--line);margin-top:18px;padding-top:12px}
+.sample{font:15px/1.5 Consolas,monospace;background:#fff;border:1px dashed var(--line);
+        border-radius:8px;padding:8px 12px;margin:8px 0}
+.ai-mark{margin:34px auto 0;max-width:860px;padding-top:12px;
+         border-top:1px solid var(--line);color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Домашняя работа: задание 5 ЕГЭ</h1>
+<p class="sub">11 класс, углублённый уровень. Алгоритм достраивает запись
+числа: шесть форм вопроса, решаются перебором.</p>
+
+<div class="intro">
+  <dl>
+    <dt>Как устроено</dt>
+    <dd>Шесть типов задач — <b>все на экране сразу</b>, решай в любом порядке.
+        Тип закрывает <b>один верный ответ</b>. Ошибся — разбор с таблицей
+        перебора на экране, и кнопка «Новые числа» даст задачу того же типа:
+        применить разбор надо по горячему. Задачи не кончаются.</dd>
+    <dt>Чем решать</dt>
+    <dd>Таблицей перебора — так это делают на экзамене. Веди её в черновике:
+        <i>N</i>, запись, ветка, что получилось, <i>R</i>. Можно и программой,
+        но пример из условия всё равно проверь руками.</dd>
+    <dt>Как сдать</dt>
+    <dd><b>Два шага.</b> Закроешь хотя бы четыре типа — появится
+        <b>код работы</b> и кнопка «Сдать работу»: впишешь фамилию и класс,
+        форма откроется с уже подставленным кодом. Следом кнопка
+        <b>«Отправить черновик»</b> откроет письмо на
+        <a href="mailto:krevskayas+hw@gmail.com">krevskayas+hw@gmail.com</a>
+        — приложи к нему снимки своего черновика.</dd>
+    <dt>Что на снимках</dt>
+    <dd>Не ответы, а <b>таблицы перебора</b> — хотя бы по задачам, где
+        спрашивают <i>N</i>: видно, какие числа перебраны и где прошла
+        граница. Число можно получить и не владея приёмом — таблица
+        показывает, что владеешь. Годится скриншот или фотография листа.
+        <b>Код без снимков не засчитывается.</b>
+        <div class="sample">N=9 → 1001 → ветка б → 1100100 → R=100<br>
+        N=10 → 1010 → ветка а → 11101011 → R=235<br>
+        наименьшее R больше 95 — это 100</div></dd>
+    <dt>Учти</dt>
+    <dd>В начале следующего занятия будет проверочная — шесть задач в форме
+        ЕГЭ, без подсказок. Так что задача не «получить код», а научиться.</dd>
+  </dl>
+  <details>
+    <summary>Напоминание: таблица перебора и четыре шага</summary>
+<!-- ==== ПРИМЕР: вставлено gen.py, руками не править ==== -->
+<table class="trace"><tr><th><i>N</i></th><th>запись</th><th>ветка</th><th>стало</th><th><i>R</i></th></tr><tr><td>4</td><td><code>100</code></td><td>а</td><td><code>1110011</code></td><td><b>115</b></td></tr><tr><td>5</td><td><code>101</code></td><td>б</td><td><code>110100</code></td><td><b>52</b></td></tr><tr><td>6</td><td><code>110</code></td><td>а</td><td><code>1111011</code></td><td><b>123</b></td></tr><tr><td>7</td><td><code>111</code></td><td>б</td><td><code>111100</code></td><td><b>60</b></td></tr><tr><td>8</td><td><code>1000</code></td><td>а</td><td><code>11100011</code></td><td><b>227</b></td></tr><tr class="hit"><td>9</td><td><code>1001</code></td><td>б</td><td><code>1100100</code></td><td><b>100</b></td></tr><tr><td>10</td><td><code>1010</code></td><td>а</td><td><code>11101011</code></td><td><b>235</b></td></tr><tr><td>11</td><td><code>1011</code></td><td>б</td><td><code>1101100</code></td><td><b>108</b></td></tr></table>
+<!-- ==== /ПРИМЕР ==== -->
+    <p class="stats">Демоверсия 2027: чётное <i>N</i> обкладывается единицами
+       (ветка а), нечётное получает 1 слева и 00 справа (ветка б). Зелёная
+       строка — ответ на вопрос «наименьшее <i>R</i>, превышающее 95».</p>
+    <ol>
+      <li>Выписываем признак и обе ветки своими словами.</li>
+      <li>Проверяем себя на примере из условия: получается ли их число.
+          Не получается — правило прочитано неверно, дальше идти нельзя.</li>
+      <li>Гоним <i>N</i> подряд и заполняем таблицу. Соседние <i>N</i> уходят
+          в разные ветки, поэтому <i>R</i> скачет: первое подходящее значение
+          ещё не ответ, надо посмотреть и соседние.</li>
+      <li>Отвечаем на тот вопрос, который задан: <i>N</i> или <i>R</i>.
+          Это самая частая потеря балла на номере.</li>
+    </ol>
+  </details>
+</div>
+
+<div class="progress" id="panel">
+  <div class="ptop">
+    <h2>Типы задач</h2>
+    <span class="sp"></span>
+    <div class="score" id="scorebox">
+      <span>наработано на</span><b id="mark">—</b>
+    </div>
+  </div>
+  <div class="types" id="types"></div>
+  <p class="stats" id="stats"></p>
+</div>
+
+<div id="area"></div>
+
+<div class="row" style="margin:6px 0 22px">
+  <button class="primary" id="total">Закончить и получить код</button>
+</div>
+<div id="result"></div>
+
+</div>
+
+<script>
+/* ==== ЗАДАЧИ: вставлено gen.py, руками не править ==== */
+/* Задание 5 ЕГЭ: алгоритм достраивает запись числа. Метод — перебор.
+
+   ЕДИНСТВЕННЫЙ ИСТОЧНИК ЗАДАЧ для практикума, домашней работы, проверочной
+   и примеров на слайдах. В html вписывается скриптом gen.py --sync между
+   маркерами — руками страницы не править.
+
+   Метод: на вход идёт натуральное N, алгоритм смотрит на его запись в
+   двоичной или троичной системе, по некоторому признаку выбирает одну из
+   двух веток и достраивает запись. Получается R. Спрашивают крайнее
+   значение (наименьшее или наибольшее) N или R при ограничении.
+   Решается перебором: гоняем N подряд, считаем R, отбираем подходящие.
+
+   Замер по 13 задачам из списка Светы (ege-queue, пара 8): демоверсии 2027
+   и 2026, основные волны и резерв 2026, пересдача, ЕГКР, апробации,
+   открытый вариант. Все 13 ключей и 17 примеров из условий пересчитаны
+   моделью правил — сошлись (сверка лежит в gen.py, список MEASURED).
+   Что из замера взято:
+
+     система счисления  двоичная 9 задач из 13, троичная 4 — берём обе,
+                        двоичную чаще (веса 3:2)
+     признак ветвления  чётность самого N — 5 задач; чётность суммы цифр
+                        записи — 2; делимость N на 3 — 6. Все три в деле
+     действие ветки     дописать фиксированные цифры слева и/или справа
+                        (7 задач); дописать цифру справа, а два левых
+                        разряда заменить (2); дописать последние k цифр
+                        самой записи (4); сосчитать число — остаток от
+                        деления или сумму цифр, умножить, перевести в ту же
+                        систему и дописать в конец (6). Ветки в одной
+                        задаче бывают разных семейств: в замере так в 8
+                        задачах из 13
+     вопрос             наименьшее R больше порога — 5 задач (в 2 из них
+                        ещё и «нечётное»); наибольшее R не больше порога —
+                        1; наименьшее N, дающее R ≥ порога — 4; наибольшее
+                        N, дающее R ≤ порога — 2 (в 1 «нечётное N»);
+                        наибольшее N с R, ближайшим к порогу — 1
+     ответы             от 8 до 567; пороги от 16 до 1130
+
+   Шесть типов — ровно те формы вопроса, что дал замер (dont-merge-types:
+   редкие не выброшены, похожие не слиты):
+     0 «наименьшее R»       наименьшее R больше порога
+     1 «наибольшее R»       наибольшее R не больше порога
+     2 «наименьшее N»       наименьшее N, после обработки дающее R ≥ порога
+     3 «наибольшее N»       наибольшее N, после обработки дающее R ≤ порога
+     4 «нечётное»           наименьшее нечётное R больше порога
+     5 «ближайшее»          наибольшее N, у которого R ближе всего к порогу
+
+   Единственность ответа (single-answer-guarantee) встроена в отбор: у типов
+   0–4 крайнее значение единственно по построению, но задача берётся только
+   если оно вообще есть в рабочем диапазоне и достигается не на первом же
+   N (иначе перебор не нужен). У типа 5 ближайшее расстояние обязано
+   достигаться ровно на одном R, иначе задача отбрасывается: два R на
+   равном расстоянии от порога дали бы два ответа.
+
+   Ответ всюду — целое число в десятичной записи (answer-format-strict:
+   сверка знак в знак, ведущие нули не прощаются). */
+
+const F_TYPES = [
+  'наименьшее R',
+  'наибольшее R',
+  'наименьшее N',
+  'наибольшее N',
+  'нечётное',
+  'ближайшее'
+];
+
+/* ----------------------------------------------------------- случайность */
+
+function tRng(seed) {
+  let s = (seed >>> 0) || 1;
+  return function () {
+    s ^= s << 13; s >>>= 0;
+    s ^= s >> 17;
+    s ^= s << 5;  s >>>= 0;
+    return s / 4294967296;
+  };
+}
+
+function tRand(rng, a, b) { return a + Math.floor(rng() * (b - a + 1)); }
+function tPick(rng, arr) { return arr[tRand(rng, 0, arr.length - 1)]; }
+
+function tShuffle(rng, arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = tRand(rng, 0, i);
+    const t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+function tPl(n, one, few, many) {
+  const h = n % 100, t = n % 10;
+  if (h >= 11 && h <= 14) return many;
+  if (t === 1) return one;
+  if (t >= 2 && t <= 4) return few;
+  return many;
+}
+
+/* ------------------------------------------------- запись числа и разбор */
+
+function fRec(n, base) {
+  let s = '';
+  let x = n;
+  while (x > 0) { s = String(x % base) + s; x = Math.floor(x / base); }
+  return s || '0';
+}
+
+function fVal(s, base) {
+  let v = 0;
+  for (const c of s) v = v * base + (c.charCodeAt(0) - 48);
+  return v;
+}
+
+function fDigitSum(s) {
+  let v = 0;
+  for (const c of s) v += c.charCodeAt(0) - 48;
+  return v;
+}
+
+/* ------------------------------------------------------------- правила */
+
+/* Действие ветки. Семейства — из замера, по одному объекту на семейство:
+     wrap     дописать слева left и справа right (любая часть может быть '')
+     repl     дописать справа tail, затем ДВА ЛЕВЫХ разряда заменить на head
+     last     дописать k последних цифр самой записи
+     calc     взять остаток от деления N на 3 или сумму цифр записи,
+              умножить на mult, перевести в ту же систему и дописать в конец */
+function fAct(a, n, base) {
+  const s = fRec(n, base);
+  if (a.kind === 'wrap') return a.left + s + a.right;
+  if (a.kind === 'repl') { const t = s + a.tail; return a.head + t.slice(2); }
+  if (a.kind === 'last') return s + s.slice(-a.k);
+  const src = a.src === 'rem' ? n % 3 : fDigitSum(s);
+  return s + fRec(src * a.mult, base);
+}
+
+function fCond(rule, n) {
+  if (rule.cond === 'parity') return n % 2 === 0;
+  if (rule.cond === 'digitsum') return fDigitSum(fRec(n, rule.base)) % 2 === 0;
+  return n % 3 === 0;
+}
+
+/* Запись числа R по правилу — и сама строка, и число: строка нужна разбору. */
+function fBuildRec(rule, n) {
+  const yes = fCond(rule, n);
+  return fAct(yes ? rule.a : rule.b, n, rule.base);
+}
+
+function fBuild(rule, n) {
+  return fVal(fBuildRec(rule, n), rule.base);
+}
+
+/* Правило действует не на всяком N: 'repl' заменяет два левых разряда, и у
+   однозначной записи их нет. Отсюда нижняя граница перебора — у остальных
+   семейств это 1, у 'repl' — первое число с двумя разрядами. */
+function fMinN(rule) {
+  const need = (rule.a.kind === 'repl' || rule.b.kind === 'repl') ? 2
+             : Math.max(rule.a.kind === 'last' ? rule.a.k : 1,
+                        rule.b.kind === 'last' ? rule.b.k : 1);
+  let n = 1;
+  while (fRec(n, rule.base).length < need) n++;
+  return n;
+}
+
+/* Описание правила по-русски — идёт прямо в условие задачи. */
+function fSay(a, base) {
+  const sys = base === 2 ? 'двоичную' : 'троичную';
+  if (a.kind === 'wrap') {
+    const L = a.left, R = a.right;
+    if (L && R) return 'слева к этой записи дописывается <code>' + L +
+      '</code>, а справа — <code>' + R + '</code>';
+    if (L) return 'слева к этой записи дописывается <code>' + L + '</code>';
+    return 'справа к этой записи дописывается <code>' + R + '</code>';
+  }
+  if (a.kind === 'repl')
+    return 'справа к этой записи дописывается <code>' + a.tail +
+      '</code>, а затем два левых разряда заменяются на <code>' + a.head + '</code>';
+  if (a.kind === 'last')
+    return 'справа к этой записи дописываются её ' +
+      (a.k === 2 ? 'две последние цифры' : 'три последние цифры');
+  const what = a.src === 'rem'
+    ? 'остаток от деления числа <i>N</i> на 3'
+    : 'сумма цифр этой записи';
+  return what + ' умножается на ' + a.mult + ', переводится в ' + sys +
+    ' систему счисления и дописывается в конец записи';
+}
+
+function fCondSay(rule) {
+  if (rule.cond === 'parity') return ['число <i>N</i> чётное', 'число <i>N</i> нечётное'];
+  if (rule.cond === 'digitsum')
+    return ['сумма цифр этой записи чётная', 'сумма цифр этой записи нечётная'];
+  return ['число <i>N</i> делится на 3', 'число <i>N</i> на 3 не делится'];
+}
+
+/* Набор действий по семействам. Числа — из замера: приписываемые куски
+   короткие (1–2 знака), множители у 'calc' 2, 3 и 5, k у 'last' — 3 в
+   двоичной системе и 2 в троичной. */
+function fActs(rng, base, cond) {
+  const d = base === 2 ? ['1', '10', '11'] : ['1', '2', '10', '21', '02'];
+  const out = [
+    {kind: 'wrap', left: tPick(rng, d), right: ''},
+    {kind: 'wrap', left: '', right: tPick(rng, d)},
+    {kind: 'wrap', left: tPick(rng, d), right: tPick(rng, d)},
+    {kind: 'last', k: base === 2 ? 3 : 2}
+  ];
+  /* 'repl' в замере встречается только в двоичной системе и только с
+     признаком «сумма цифр»: пара «дописать 0 / дописать 1» вместе с
+     заменой двух левых разрядов. Так и оставляем — на троичную запись
+     этого семейства в замере нет (exam-realism). */
+  if (cond === 'digitsum' && base === 2) {
+    out.push({kind: 'repl', tail: '0', head: '10'});
+    out.push({kind: 'repl', tail: '1', head: '11'});
+  }
+  /* остаток от деления на 3 — только там, где сама ветка про делимость */
+  if (cond === 'div3') out.push({kind: 'calc', src: 'rem', mult: tPick(rng, [3, 5])});
+  out.push({kind: 'calc', src: 'sum', mult: tPick(rng, [2, 3])});
+  return out;
+}
+
+function fSameAct(a, b) {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
+function fRule(rng) {
+  const base = rng() < 0.6 ? 2 : 3;
+  const cond = tPick(rng, ['parity', 'parity', 'digitsum', 'div3', 'div3']);
+  for (let tries = 0; tries < 60; tries++) {
+    const acts = fActs(rng, base, cond);
+    const a = tPick(rng, acts);
+    const b = tPick(rng, acts);
+    if (fSameAct(a, b)) continue;
+    /* «Остаток от деления N на 3» имеет смысл только на ветке, где N на 3
+       НЕ делится: на другой он всегда ноль, и ветка вырождается в приписку
+       одного нуля. В замере это семейство и стоит только там. */
+    if (a.kind === 'calc' && a.src === 'rem') continue;
+    /* пара 'repl' идёт только целиком: 0 с заменой на 10, 1 — на 11 */
+    if ((a.kind === 'repl') !== (b.kind === 'repl')) continue;
+    if (a.kind === 'repl' && a.tail === b.tail) continue;
+    const rule = {base: base, cond: cond, a: a, b: b};
+    /* обе ветки должны реально встречаться на рабочем участке */
+    let yes = 0, no = 0;
+    for (let n = fMinN(rule); n < fMinN(rule) + 40; n++) (fCond(rule, n) ? yes++ : no++);
+    if (yes < 8 || no < 8) continue;
+    return rule;
+  }
+  return {base: 2, cond: 'parity',
+          a: {kind: 'wrap', left: '11', right: '11'},
+          b: {kind: 'wrap', left: '1', right: '00'}};
+}
+
+/* ------------------------------------------------------------- перебор */
+
+/* Рабочий диапазон. R растёт вместе с N: любая ветка дописывает хотя бы один
+   разряд, поэтому R >= base*N всегда. Значит для порога T всякое N > T даёт
+   R >= 2T, и для вопросов про крайнее значение хватает перебора до LIM,
+   лишь бы LIM с запасом перекрывал T. Запас проверяется в gen.py --selftest
+   отдельно: там перебор идёт вдвое дальше и ответ обязан не измениться. */
+function fScan(rule, lim) {
+  const out = [];
+  for (let n = fMinN(rule); n <= lim; n++) out.push([n, fBuild(rule, n)]);
+  return out;
+}
+
+const F_LIM = 4000;
+
+/* Примеры «для затравки» в условии: два числа, по одному на каждую ветку —
+   так же, как это делают на экзамене. */
+function fExamples(rule) {
+  const out = [];
+  for (const want of [true, false]) {
+    for (let n = fMinN(rule); n < fMinN(rule) + 60; n++) {
+      if (fCond(rule, n) !== want) continue;
+      const rec = fRec(n, rule.base), res = fBuildRec(rule, n);
+      if (rec.length < 2 || rec.length > 4) continue;
+      out.push({n: n, rec: rec, res: res, r: fVal(res, rule.base)});
+      break;
+    }
+  }
+  return out;
+}
+
+/* ---------------------------------------------------- сборка задачи */
+
+const F_SYS = {2: 'двоичная', 3: 'троичная'};
+const F_SYSI = {2: 'двоичной', 3: 'троичной'};
+
+function fStem(rule) {
+  const [ca, cb] = fCondSay(rule);
+  const ex = fExamples(rule);
+  const sys = F_SYS[rule.base], sysI = F_SYSI[rule.base];
+  let s = '<p>На вход алгоритма подаётся натуральное число <i>N</i>. ' +
+    'Алгоритм строит по нему новое число <i>R</i> так:</p><ol class="alg">' +
+    '<li>Строится ' + sys + ' запись числа <i>N</i>.</li>' +
+    '<li>Далее эта запись обрабатывается по правилу:' +
+    '<ul><li>а) если ' + ca + ', то ' + fSay(rule.a, rule.base) + ';</li>' +
+    '<li>б) если ' + cb + ', то ' + fSay(rule.b, rule.base) + '.</li></ul>' +
+    'Полученная таким образом запись является ' + sysI +
+    ' записью искомого числа <i>R</i>.</li>' +
+    '<li>Результат переводится в десятичную систему и выводится на экран.</li></ol>';
+  if (ex.length === 2)
+    s += '<p class="ex">Например, для числа ' + ex[0].n + ' = ' + ex[0].rec +
+      '<sub>' + rule.base + '</sub> результатом будет ' + ex[0].res + '<sub>' +
+      rule.base + '</sub> = ' + ex[0].r + ', а для числа ' + ex[1].n + ' = ' +
+      ex[1].rec + '<sub>' + rule.base + '</sub> — число ' + ex[1].res +
+      '<sub>' + rule.base + '</sub> = ' + ex[1].r + '.</p>';
+  return s;
+}
+
+/* Разбор: таблица нескольких N вокруг ответа — видно, как считалось. */
+function fTable(rule, rows, markN, markR) {
+  let s = '<table class="trace"><tr><th><i>N</i></th><th>запись</th>' +
+    '<th>ветка</th><th>стало</th><th><i>R</i></th></tr>';
+  for (const n of rows) {
+    const yes = fCond(rule, n);
+    const hit = (markN !== null && n === markN) || (markR !== null && fBuild(rule, n) === markR);
+    s += '<tr' + (hit ? ' class="hit"' : '') + '><td>' + n + '</td><td><code>' +
+      fRec(n, rule.base) + '</code></td><td>' + (yes ? 'а' : 'б') + '</td><td><code>' +
+      fBuildRec(rule, n) + '</code></td><td><b>' + fBuild(rule, n) + '</b></td></tr>';
+  }
+  return s + '</table>';
+}
+
+function fRows(rule, centre) {
+  const lo = Math.max(fMinN(rule), centre - 3);
+  const out = [];
+  for (let n = lo; n <= centre + 3; n++) out.push(n);
+  return out;
+}
+
+function fMake(type, rng) {
+  for (let tries = 0; tries < 400; tries++) {
+    const rule = fRule(rng);
+    const pairs = fScan(rule, F_LIM);
+    const t = fCompose(type, rule, pairs, rng);
+    /* part — что именно спрашивают. Все шесть типов здесь в форме ЕГЭ, так
+       что «теория / экзамен» делить нечего; полезнее напоминать, какое из
+       двух чисел идёт в ответ: на этом номере чаще всего и теряют балл. */
+    if (t) { t.type = type; t.part = (t.meta.kind === 'minR' || t.meta.kind === 'maxR') ? 'R' : 'N'; return t; }
+  }
+  /* до сюда не доходит: fRule всегда возвращает рабочее правило, а пороги
+     подбираются из самих посчитанных R */
+  throw new Error('не собралась задача типа ' + type);
+}
+
+function fCompose(type, rule, pairs, rng) {
+  const vals = pairs.map(p => p[1]);
+  const small = pairs.filter(p => p[0] <= 60);
+  if (small.length < 20) return null;
+  const pool = small.map(p => p[1]).filter(v => v >= 12 && v <= 2500);
+  if (pool.length < 10) return null;
+  /* Порог берём рядом с живыми R — тогда он заведомо в рабочей области, —
+     но НЕ равным ни одному R. Совпадение вырождает вопрос: «наибольшее R,
+     не превышающее T» дало бы в ответ сам порог, а «ближайшее к T» —
+     точное попадание вместо ближайшего. В замере пороги (95, 113, 190,
+     520) тоже мимо достижимых значений. */
+  const reach = new Set(vals);
+  let T = tPick(rng, pool) + tPick(rng, [-1, 1]) * tRand(rng, 1, 9);
+  if (T < 10 || reach.has(T)) return null;
+  const meta = {base: rule.base, rule: rule, T: T};
+
+  if (type === 0 || type === 4) {
+    const odd = type === 4;
+    const good = pairs.filter(p => p[1] > T && (!odd || p[1] % 2 === 1));
+    if (!good.length) return null;
+    let best = good[0];
+    for (const p of good) if (p[1] < best[1]) best = p;
+    /* ответ не должен лежать на самом первом N — иначе перебор не нужен */
+    if (best[0] <= fMinN(rule) + 1) return null;
+    /* единственность: наименьшее R одно, но проверим, что оно не совпало с
+       порогом и что до него есть отброшенные кандидаты */
+    if (!pairs.some(p => p[1] <= T)) return null;
+    const rows = fRows(rule, best[0]);
+    return {
+      question: fStem(rule) + '<p class="ask">Укажите <b>наименьшее' +
+        (odd ? ' нечётное' : '') + '</b> число <i>R</i>, превышающее ' + T +
+        ', которое может быть результатом работы этого алгоритма. ' +
+        'В ответе запишите число в десятичной системе счисления.</p>',
+      answer: String(best[1]),
+      form: 'num',
+      explain: '<p>Гоним <i>N</i> подряд и смотрим, какие <i>R</i> получаются. ' +
+        'Нужно наименьшее' + (odd ? ' нечётное' : '') + ' из тех, что больше ' +
+        T + ': это <b>' + best[1] + '</b> при <i>N</i> = ' + best[0] + '.</p>' +
+        fTable(rule, rows, best[0], null),
+      meta: Object.assign(meta, {want: best[1], atN: best[0], odd: odd, kind: 'minR'})
+    };
+  }
+
+  if (type === 1) {
+    const good = pairs.filter(p => p[1] <= T);
+    if (!good.length) return null;
+    let best = good[0];
+    for (const p of good) if (p[1] > best[1]) best = p;
+    if (best[0] <= fMinN(rule) + 1) return null;
+    if (!pairs.some(p => p[1] > T)) return null;
+    const rows = fRows(rule, best[0]);
+    return {
+      question: fStem(rule) + '<p class="ask">Укажите <b>наибольшее</b> число ' +
+        '<i>R</i>, не превышающее ' + T + ', которое может быть результатом ' +
+        'работы этого алгоритма. В ответе запишите число в десятичной системе ' +
+        'счисления.</p>',
+      answer: String(best[1]),
+      form: 'num',
+      explain: '<p>Считаем <i>R</i> для <i>N</i> подряд. Среди тех, что не ' +
+        'больше ' + T + ', самое крупное — <b>' + best[1] + '</b> (при <i>N</i> = ' +
+        best[0] + '). Обратите внимание: <i>R</i> не растёт ровно — соседние ' +
+        '<i>N</i> уходят в разные ветки, и значения скачут. Поэтому идти надо ' +
+        'до тех пор, пока порог не перевалит даже та ветка, что даёт меньшие ' +
+        'числа.</p>' + fTable(rule, rows, best[0], null),
+      meta: Object.assign(meta, {want: best[1], atN: best[0], kind: 'maxR'})
+    };
+  }
+
+  if (type === 2) {
+    const good = pairs.filter(p => p[1] >= T);
+    if (!good.length) return null;
+    let best = good[0];
+    for (const p of good) if (p[0] < best[0]) best = p;
+    if (best[0] <= fMinN(rule) + 2) return null;
+    const rows = fRows(rule, best[0]);
+    return {
+      question: fStem(rule) + '<p class="ask">Укажите <b>наименьшее</b> число ' +
+        '<i>N</i>, после обработки которого этим алгоритмом получается число ' +
+        '<i>R</i>, <b>не меньшее</b> ' + T + '. В ответе запишите число в ' +
+        'десятичной системе счисления.</p>',
+      answer: String(best[0]),
+      form: 'num',
+      explain: '<p>Спрашивают <i>N</i>, а не <i>R</i>. Перебираем <i>N</i> по ' +
+        'возрастанию и берём первое, у которого <i>R</i> дотянул до ' + T +
+        ': это <b>' + best[0] + '</b> (даёт <i>R</i> = ' + best[1] + ').</p>' +
+        fTable(rule, rows, best[0], null),
+      meta: Object.assign(meta, {want: best[0], gotR: best[1], kind: 'minN'})
+    };
+  }
+
+  if (type === 3) {
+    const good = pairs.filter(p => p[1] <= T);
+    if (!good.length) return null;
+    let best = good[0];
+    for (const p of good) if (p[0] > best[0]) best = p;
+    if (best[0] <= fMinN(rule) + 2) return null;
+    /* дальше по N значение обязано уйти за порог и больше не возвращаться —
+       иначе «наибольшее N» упрётся в границу перебора, а не в задачу */
+    if (best[0] > 400) return null;
+    const rows = fRows(rule, best[0]);
+    return {
+      question: fStem(rule) + '<p class="ask">Укажите <b>наибольшее</b> число ' +
+        '<i>N</i>, после обработки которого этим алгоритмом получается число ' +
+        '<i>R</i>, <b>не превышающее</b> ' + T + '. В ответе запишите число в ' +
+        'десятичной системе счисления.</p>',
+      answer: String(best[0]),
+      form: 'num',
+      explain: '<p>Снова спрашивают <i>N</i>. Идём по <i>N</i> вверх и смотрим, ' +
+        'какие <i>R</i> ещё укладываются в ' + T + '. Значения скачут: соседние ' +
+        '<i>N</i> уходят в разные ветки, и та, что дописывает больше знаков, ' +
+        'перебирает порог раньше. Последнее <i>N</i>, у которого <i>R</i> всё ещё ' +
+        'в пределах порога, — <b>' + best[0] + '</b> (даёт <i>R</i> = ' + best[1] +
+        '); дальше порог перевален уже в обеих ветках.</p>' +
+        fTable(rule, rows, best[0], null),
+      meta: Object.assign(meta, {want: best[0], gotR: best[1], kind: 'maxN'})
+    };
+  }
+
+  /* тип 5: ближайшее к порогу. Единственность проверяется прямо здесь. */
+  let dmin = Infinity;
+  for (const p of pairs) dmin = Math.min(dmin, Math.abs(p[1] - T));
+  const hits = pairs.filter(p => Math.abs(p[1] - T) === dmin);
+  const rset = new Set(hits.map(p => p[1]));
+  if (rset.size !== 1) return null;           /* два R на равном расстоянии */
+  if (dmin === 0) return null;                /* точное попадание — не про «ближайшее» */
+  let best = hits[0];
+  for (const p of hits) if (p[0] > best[0]) best = p;
+  if (best[0] <= fMinN(rule) + 2) return null;
+  const rows = fRows(rule, best[0]);
+  return {
+    question: fStem(rule) + '<p class="ask">Укажите <b>наибольшее</b> число ' +
+      '<i>N</i>, после обработки которого этим алгоритмом получается число ' +
+      '<i>R</i>, <b>ближайшее к</b> ' + T + '. В ответе запишите число в ' +
+      'десятичной системе счисления.</p>',
+    answer: String(best[0]),
+    form: 'num',
+    explain: '<p>Ближе всего к ' + T + ' оказывается <i>R</i> = ' + best[1] +
+      ' — на ' + dmin + ' в сторону. Такое <i>R</i> даёт несколько <i>N</i>' +
+      (hits.length > 1 ? ' (' + hits.map(p => p[0]).join(', ') + ')' : '') +
+      ', спрашивают наибольшее: <b>' + best[0] + '</b>.</p>' +
+      fTable(rule, rows, best[0], null),
+    meta: Object.assign(meta, {want: best[0], gotR: best[1], dist: dmin, kind: 'near'})
+  };
+}
+
+/* ------------------------------------------------------------ состав работ */
+
+/* Практикум: 12 задач — два круга по шести типам, типы в круге перемешаны
+   (trainer-twelve-tasks). Тип освоен, когда закрыты обе его задачи.
+   Домашняя: по одной задаче на тип. Проверочная: шесть задач, все шесть
+   форм вопроса по разу, без подсказок; пять верных — «5». */
+const F_WORKS = {
+  practice: {rounds: 2, types: [0, 1, 2, 3, 4, 5], max: 6, scale: [[6, 5], [5, 4], [4, 3]]},
+  homework: {plan: [0, 1, 2, 3, 4, 5], max: 6, scale: [[6, 5], [5, 4], [4, 3]]},
+  test:     {plan: [0, 1, 2, 3, 4, 5], max: 6, scale: [[5, 5], [4, 4], [3, 3]]}
+};
+
+function fWork(rng, w) {
+  w = w || F_WORKS.practice;
+  let plan = w.plan;
+  if (!plan) {
+    plan = [];
+    for (let r = 0; r < w.rounds; r++) plan = plan.concat(tShuffle(rng, w.types.slice()));
+  }
+  return plan.map(type => fMake(type, rng));
+}
+
+/* Практикум: балл за тип, у которого закрыты ВСЕ его задачи. В домашней и
+   проверочной задач одного типа по одной — обычное «сколько верных». */
+function fPoints(ok, tasks, w) {
+  w = w || F_WORKS.practice;
+  if (!w.rounds) return ok.filter(Boolean).length;
+  let pts = 0;
+  for (const type of w.types) {
+    const idx = tasks.map((t, i) => t.type === type ? i : -1).filter(i => i >= 0);
+    if (idx.length && idx.every(i => ok[i])) pts++;
+  }
+  return pts;
+}
+
+function fMark(points, w) {
+  w = w || F_WORKS.practice;
+  for (const [need, m] of w.scale) if (points >= need) return m;
+  return 2;
+}
+
+/* Набор по одной задаче каждого типа — для самопроверки и образцов. */
+function fSet(seed) {
+  const rng = tRng(seed || 1);
+  return [0, 1, 2, 3, 4, 5].map(type => fMake(type, rng));
+}
+
+/* Ответ сверяется знак в знак (answer-format-strict), но ошибка всегда
+   названа: что не так с записью или что, похоже, сделано не так. */
+function fVerdict(task, raw) {
+  const s = String(raw === undefined || raw === null ? '' : raw).trim();
+  if (!s) return {ok: false, why: 'ответ пустой'};
+  const m = task.meta;
+  if (/[01]{5,}/.test(s) && s !== task.answer && !/^\d{1,4}$/.test(s))
+    return {ok: false, why: 'ответ записывается в десятичной системе, а это похоже на запись по основанию ' + m.base};
+  if (!/^\d+$/.test(s)) return {ok: false, why: 'ответ — целое число, без пояснений и знаков'};
+  if (s !== String(Number(s))) return {ok: false, why: 'число записывается без ведущих нулей'};
+  if (s === task.answer) return {ok: true, why: ''};
+  /* Подсказки по отпечаткам типичных ошибок (answer-fingerprints). */
+  const v = Number(s);
+  if (m.kind === 'minN' || m.kind === 'maxN' || m.kind === 'near') {
+    if (v === m.gotR) return {ok: false, why: 'это <i>R</i>, а спрашивают <i>N</i>'};
+  }
+  if (m.kind === 'minR' || m.kind === 'maxR') {
+    if (v === m.atN) return {ok: false, why: 'это <i>N</i>, а спрашивают <i>R</i>'};
+  }
+  if (v === m.T) return {ok: false, why: 'это сам порог из условия, а не результат алгоритма'};
+  if (m.kind === 'minR' && m.odd && v < Number(task.answer) && v > m.T)
+    return {ok: false, why: 'такое <i>R</i> получается, но оно чётное — нужно нечётное'};
+  if ((m.kind === 'minR' || m.kind === 'minN') && v < Number(task.answer))
+    return {ok: false, why: 'мало: проверь, дотягивает ли твоё значение до порога'};
+  if ((m.kind === 'maxR' || m.kind === 'maxN') && v > Number(task.answer))
+    return {ok: false, why: 'много: при таком значении порог уже перейдён'};
+  return {ok: false, why: ''};
+}
+/* ==== /ЗАДАЧИ ==== */
+
+/* Форма сдачи ДЗ — одна на все темы. Ссылку разносит set_form_link.py. */
+const FORM = "https://docs.google.com/forms/d/e/1FAIpQLSfQyhaxcnzn4ZaKSe_ZMsluw7qRQnrw_80H6SfrnYB5EThUIA/viewform?usp=pp_url&entry.853601231=ФАМИЛИЯ&entry.1710148519=КЛАСС&entry.1481440380=КОД";
+
+const ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+const EPOCH = Date.UTC(2026, 0, 1);
+const PREFIX = "PC";
+/* Один верный ответ закрывает тип: шесть задач на всю работу
+   (trainer-twelve-tasks — в домашней по одной на тип). Меняешь число —
+   поправь и тексты наверху: «Как устроено» написано словами. Шкала обязана
+   совпадать с scale в check_homework.py. */
+const NEED_STREAK = 1;
+const MIN_TYPES = 4;       // ниже этого код не выдаётся
+const SCALE = [[6, 5], [5, 4], [4, 3]];
+
+const bin = (v, w) => v.toString(2).padStart(w, "0");
+
+/* Семибитными кусками строки: в нагрузке 33 бита, а побитовые операции в JS
+   32-битные — старший бит молча потерялся бы. */
+function checksum(bitstr){
+  let cs = 0x5B;
+  for (let i = 0; i < bitstr.length; i += 7)
+    cs ^= parseInt(bitstr.substr(i, 7).padEnd(7, "0"), 2);
+  return cs & 0x7F;
+}
+
+function makeCode(st){
+  const day = Math.max(0, Math.min(2047, Math.floor(
+      (Date.now() - EPOCH) / 86400000)));
+  const payload = bin(day, 11) + bin(Math.min(15, st.typesDone), 4) +
+                  bin(Math.min(15, st.cleanTypes), 4) +
+                  bin(Math.min(127, st.solved), 7) +
+                  bin(Math.min(127, st.wrong), 7);
+  const bitstr = payload + bin(checksum(payload), 7);
+  let out = "";
+  for (let i = 0; i < 40; i += 5)
+    out += ALPHABET[parseInt(bitstr.substr(i, 5), 2)];
+  return PREFIX + "-" + out.slice(0, 4) + "-" + out.slice(4);
+}
+
+/* ---------------------------------------------------------- состояние */
+const N = F_TYPES.length;
+const rng = tRng((Date.now() ^ (Math.random() * 1e9)) >>> 0);
+const st = {
+  tasks: [], done: Array(N).fill(false), clean: Array(N).fill(true),
+  tries: Array(N).fill(1), answered: Array(N).fill(false),
+  solved: 0, wrong: 0
+};
+Object.defineProperty(st, "typesDone",
+  {get(){ return st.done.filter(Boolean).length; }});
+Object.defineProperty(st, "cleanTypes",
+  {get(){ return st.done.filter((d, i) => d && st.clean[i]).length; }});
+
+function markFor(n){
+  for (const [need, m] of SCALE) if (n >= need) return m;
+  return null;
+}
+
+function esc(s){ return String(s).replace(/[&<>]/g, c =>
+  ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+
+function placeholder(t){
+  return t.form === "bits" ? "нули и единицы" : t.form === "word" ? "буквы подряд"
+       : t.form === "digits" ? "номера подряд" : "число";
+}
+
+function paint(){
+  const box = document.getElementById("types");
+  box.innerHTML = "";
+  F_TYPES.forEach(function(name, i){
+    const c = document.createElement("span");
+    c.className = "chip" + (st.done[i] ? " done" : "");
+    c.textContent = (i + 1) + " " + name + (st.done[i] ? " ✓" : "");
+    c.title = "перейти к задаче " + (i + 1);
+    c.addEventListener("click", function(){
+      document.getElementById("t" + i).scrollIntoView({behavior: "smooth", block: "start"});
+    });
+    box.appendChild(c);
+  });
+  const m = markFor(st.typesDone);
+  const sb = document.getElementById("scorebox");
+  sb.className = "score" + (m ? " m" + m : "");
+  document.getElementById("mark").textContent = m || "—";
+  document.getElementById("stats").textContent =
+    "закрыто типов: " + st.typesDone + " из " + N +
+    " · решено задач: " + st.solved + " · ошибок: " + st.wrong +
+    (st.typesDone < MIN_TYPES
+      ? " · до кода работы осталось закрыть " + (MIN_TYPES - st.typesDone) : "");
+}
+
+function renderTask(i){
+  const t = st.tasks[i];
+  const card = document.getElementById("t" + i);
+  card.className = "card";
+  card.innerHTML =
+    '<p class="tag">Задача ' + (i + 1) + ' — ' + F_TYPES[t.type] +
+      (st.tries[i] > 1 ? ' · попытка ' + st.tries[i] : '') + '</p>' +
+    '<div class="q">' + t.question + '</div>' +
+    '<div class="row">' +
+      '<input type="text" id="a' + i + '" autocomplete="off" spellcheck="false" ' +
+             'placeholder="' + placeholder(t) + '">' +
+      '<button class="primary" id="go' + i + '">Проверить</button>' +
+    '</div>' +
+    '<div class="verdict" id="v' + i + '"></div>';
+  document.getElementById("a" + i).addEventListener("keydown", function(e){
+    if (e.key === "Enter") judge(i);
+  });
+  document.getElementById("go" + i).addEventListener("click", function(){ judge(i); });
+}
+
+function judge(i){
+  if (st.answered[i]) return;
+  const raw = document.getElementById("a" + i).value;
+  if (!raw.trim()) return;
+  const t = st.tasks[i];
+  const res = fVerdict(t, raw);
+  st.answered[i] = true;
+  const card = document.getElementById("t" + i);
+  const go = document.getElementById("go" + i);
+  const v = document.getElementById("v" + i);
+  document.getElementById("a" + i).disabled = true;
+  if (res.ok){
+    st.solved++;
+    st.done[i] = true;
+    card.className = "card ok";
+    go.disabled = true;
+    v.className = "verdict ok";
+    v.innerHTML = "Верно. Тип закрыт." +
+      '<details class="why"><summary>как это решалось</summary>' + t.explain + '</details>';
+  } else {
+    st.wrong++;
+    st.clean[i] = false;
+    card.className = "card err";
+    v.className = "verdict err";
+    v.innerHTML = "Пока нет" + (res.why ? " — " + res.why : "") +
+      ". Верный ответ: <code>" + t.answer + "</code>." +
+      '<div class="why">' + t.explain + '</div>';
+    go.textContent = "Новые числа";
+    go.onclick = function(){
+      st.tasks[i] = fMake(t.type, rng);
+      st.tries[i]++;
+      st.answered[i] = false;
+      renderTask(i);
+      document.getElementById("a" + i).focus();
+      paint();
+    };
+  }
+  paint();
+}
+
+/* ----------------------------------------------------- письмо с файлом
+   Код говорит, сколько типов закрыто, но не показывает, КАК решали.
+   Поэтому рядом с формой второй канал — обычное письмо со снимками
+   черновика. Почта, а не форма: Google Форма берёт файлы только у того,
+   кто вошёл в аккаунт, а письму аккаунт не нужен.
+------------------------------------------------------------------ */
+var MAIL = "krevskayas+hw@gmail.com";
+
+var MAILBOX =
+  '<div class="mailbox">' +
+    '<h3>Осталось прислать черновик</h3>' +
+    '<p>Деревья, а не ответы: известные слова, свободные ветви, куда сели ' +
+       'новые буквы, и строка подсчёта. Двух-трёх снимков по разным типам ' +
+       'хватит; фотография листа тоже годится.</p>' +
+    '<div class="row"><button id="mailbtn">Отправить черновик</button></div>' +
+    '<p class="stats" id="mailnote">Кнопка откроет письмо на <b>' + MAIL +
+       '</b> с уже вписанной темой — останется приложить снимки и нажать ' +
+       '«Отправить». Входить никуда не нужно, письмо годится и с телефона.</p>' +
+  '</div>';
+
+function wireMail(code){
+  var btn = document.getElementById("mailbtn");
+  if (!btn) return;
+  var note = document.getElementById("mailnote");
+  btn.addEventListener("click", function(){
+    var famEl = document.getElementById("fam");
+    var klsEl = document.getElementById("kls");
+    var f = famEl ? famEl.value.trim() : "";
+    var k = (klsEl ? klsEl.value.trim() : "") || "11";
+    if (!f){
+      note.textContent = "Сначала впиши фамилию — она уйдёт в тему письма, "
+                       + "иначе непонятно, чья это работа.";
+      if (famEl) famEl.focus();
+      return;
+    }
+    var subject = "ДЗ " + f + " " + k + " " + code;
+    var body = ["Прикрепи снимки черновика — писать здесь ничего не нужно.",
+                "", "Фамилия: " + f, "Класс: " + k, "Код работы: " + code];
+    window.location.href = "mailto:" + MAIL
+      + "?subject=" + encodeURIComponent(subject)
+      + "&body=" + encodeURIComponent(body.join("\r\n"));
+    note.textContent = "Письмо открылось в почтовой программе: приложи снимки "
+      + "и нажми «Отправить». Ничего не открылось — напиши сам(а) на "
+      + MAIL + ", тема письма: " + subject;
+  });
+}
+
+/* Итог рисуется внизу, задачи остаются на экране: закрыл ещё тип — нажми
+   «Закончить» снова, код пересчитается. Фамилию и класс не теряем. */
+function finish(){
+  const m = markFor(st.typesDone);
+  const code = st.typesDone >= MIN_TYPES ? makeCode(st) : null;
+  const famOld = document.getElementById("fam");
+  const klsOld = document.getElementById("kls");
+  const fam = famOld ? famOld.value : "";
+  const kls = klsOld ? klsOld.value : "11";
+  const box = document.getElementById("result");
+  box.innerHTML =
+    '<div class="card">' +
+      '<h2>Итог</h2>' +
+      '<p>Закрыто типов: <b>' + st.typesDone + '</b> из ' + N +
+        '. Решено задач: ' + st.solved + ', ошибок: ' + st.wrong + '.' +
+        (m ? ' Наработано на <b>' + m + '</b>.' : '') + '</p>' +
+      (code
+        ? '<p>Твой код работы:</p><div class="code">' + code + '</div>' +
+          '<div class="note">Код хранит дату, число закрытых типов и число ' +
+            'ошибок. Впиши фамилию и класс — кнопка откроет форму с уже ' +
+            'подставленным кодом.' +
+            (st.typesDone < N ? ' Закроешь ещё тип — нажми «Закончить» снова, ' +
+              'код обновится.' : '') + '</div>' +
+          '<div class="fields">' +
+            '<div><label for="fam">Фамилия и имя</label>' +
+              '<input type="text" id="fam" autocomplete="off"></div>' +
+            '<div><label for="kls">Класс</label>' +
+              '<input type="text" id="kls" autocomplete="off"></div>' +
+          '</div>' +
+          '<div class="row"><button id="send" class="primary">Сдать работу</button></div>' +
+          MAILBOX
+        : '<div class="note">Закрыто меньше ' + MIN_TYPES +
+          ' типов — кода работы нет. Закрой ещё хотя бы ' +
+          (MIN_TYPES - st.typesDone) + ' выше, и нажми «Закончить» снова.</div>') +
+    '</div>';
+  const famEl = document.getElementById("fam");
+  if (famEl){ famEl.value = fam; document.getElementById("kls").value = kls || "11"; }
+  const send = document.getElementById("send");
+  if (send) send.addEventListener("click", function(){
+    const f = document.getElementById("fam").value.trim();
+    if (!f) { document.getElementById("fam").focus(); return; }
+    const k = document.getElementById("kls").value.trim() || "11";
+    window.open(FORM.replace("ФАМИЛИЯ", encodeURIComponent(f))
+                    .replace("КЛАСС", encodeURIComponent(k))
+                    .replace("КОД", encodeURIComponent(code)), "_blank");
+  });
+  wireMail(code);
+  box.scrollIntoView({behavior: "smooth", block: "start"});
+  paint();
+}
+
+/* Старт: по задаче каждого типа, все сразу. */
+(function start(){
+  const area = document.getElementById("area");
+  for (let i = 0; i < N; i++){
+    st.tasks.push(fMake(i, rng));
+    const d = document.createElement("div");
+    d.className = "card";
+    d.id = "t" + i;
+    area.appendChild(d);
+    renderTask(i);
+  }
+  document.getElementById("total").addEventListener("click", finish);
+  paint();
+})();
+</script>
+<p class="ai-mark">Материалы подготовлены с использованием технологий искусственного интеллекта.</p>
+</body>
+</html>

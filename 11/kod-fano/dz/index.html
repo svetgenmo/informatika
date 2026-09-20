@@ -857,14 +857,17 @@ function fMake(type, rng) {
 }
 
 /* Состав работ.
-   Практикум: два круга по всем семи типам, в каждом круге типы
+   Практикум: 12 задач — два круга по шести типам, в каждом круге типы
    перемешаны (trainer-twelve-tasks: по две задачи на тип). Тип освоен,
    когда закрыты обе его задачи; отметка — по освоенным типам.
+   Типа 1 «расшифровка» в практикуме нет (Света 20.09: «оставь в
+   практикуме 12») — задание 4 расшифровки не спрашивает; в домашней
+   работе тип остался, там по одной задаче на тип.
    Домашняя: по одной задаче на тип, тип закрывает один верный ответ.
    Проверочная: шесть задач только в форме ЕГЭ, без теории и подсказок;
    состав по замеру — «длина слова» чаще прочих. Пять верных — «5». */
 const F_WORKS = {
-  practice: {rounds: 2, max: 7, scale: [[7, 5], [6, 4], [5, 3]]},
+  practice: {rounds: 2, types: [0, 2, 3, 4, 5, 6], max: 6, scale: [[6, 5], [5, 4], [4, 3]]},
   homework: {plan: [0, 1, 2, 3, 4, 5, 6], max: 7, scale: [[7, 5], [6, 4], [5, 3]]},
   test:     {plan: [3, 4, 4, 5, 5, 6], max: 6, scale: [[5, 5], [4, 4], [3, 3]]}
 };
@@ -874,7 +877,7 @@ function fWork(rng, w) {
   let plan = w.plan;
   if (!plan) {
     plan = [];
-    for (let r = 0; r < w.rounds; r++) plan = plan.concat(tShuffle(rng, [0, 1, 2, 3, 4, 5, 6]));
+    for (let r = 0; r < w.rounds; r++) plan = plan.concat(tShuffle(rng, w.types.slice()));
   }
   return plan.map(type => fMake(type, rng));
 }
@@ -886,7 +889,7 @@ function fPoints(ok, tasks, w) {
   w = w || F_WORKS.practice;
   if (!w.rounds) return ok.filter(Boolean).length;
   let pts = 0;
-  for (let type = 0; type < F_TYPES.length; type++) {
+  for (const type of w.types) {
     const idx = tasks.map((t, i) => t.type === type ? i : -1).filter(i => i >= 0);
     if (idx.length && idx.every(i => ok[i])) pts++;
   }
