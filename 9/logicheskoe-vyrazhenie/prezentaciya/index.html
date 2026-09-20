@@ -672,20 +672,22 @@ function questionSegs(t){
   const rng = t.rng, v = t.variantWords;
   const out = [];
   if (t.ask === "count"){
-    out.push(S_(v.verb + " количество " + rng.many[v.wordIdx]
-                + (t.cap ? ", " + capWords(t.cap) + "," : "")
-                + ", для которых "));
-    out.push(S_(t.pol ? "истинно " : "ложно ", t.pol ? 0 : 1));
-    out.push(S_(v.noun + ":"));
+    out.push(S_("Ниже записано " + v.noun + ". " + v.verb + ", сколько "
+                + "есть " + rng.many[v.wordIdx]
+                + (t.cap ? ", " + capWords(t.cap) : "")
+                + ", при которых оно "));
+    out.push(S_(t.pol ? "истинно" : "ложно", t.pol ? 0 : 1));
+    out.push(S_(":"));
     return out;
   }
   const which = t.ask === "min" ? "наименьшее "
               : t.ask === "max" ? "наибольшее " : "";
-  out.push(S_(v.verb + " " + which + rng.one[v.wordIdx]
+  out.push(S_("Ниже записано " + v.noun + ". " + v.verb + " " + which
+              + rng.one[v.wordIdx]
               + (t.cap ? ", " + capWords(t.cap) : "")
-              + ", для которого "));
-  out.push(S_(t.pol ? "истинно " : "ложно ", t.pol ? 0 : 1));
-  out.push(S_(v.noun + ":"));
+              + ", при котором оно "));
+  out.push(S_(t.pol ? "истинно" : "ложно", t.pol ? 0 : 1));
+  out.push(S_(":"));
   return out;
 }
 
@@ -1119,9 +1121,9 @@ function tryMake(type){
     if (+ans === edge || Math.abs(+ans - edge) > 12) return null;
   }
 
-  // «Напишите натуральное число x, для которого ложно…» — форма из
-  // 18.10.2022: слова «наименьшее» нет, потому что подходит ровно одно
-  // число. Ставим её только тогда, когда это правда так.
+  // Форма без края (работа от 18.10.2022): слова «наименьшее» в вопросе
+  // нет вовсе, потому что подходит ровно одно число. Ставим её только
+  // тогда, когда это правда так.
   let asked = ask;
   if (ask !== "count" && sol.count === 1 && maybe(0.4)) asked = "any";
 
@@ -1150,7 +1152,7 @@ function tryMake(type){
   t.inSet = (sol.S && sol.S.length <= 200) ? sol.S : [];
   t.blocks = [{k: "p", segs: questionSegs(t)},
               {k: "expr", segs: exprSegs(t.tree, true)}];
-  t.tail = "Запишите найденное число в ответ.";
+  t.tail = "Запишите в ответе одно число.";
   t.plain = segsText(t.blocks[0].segs) + " " + segsText(t.blocks[1].segs);
   t.meta = {range: rng.id, tree: tree, pol: pol, ask: ask, cap: cap,
             count: sol.count, first: sol.first, last: sol.last};
