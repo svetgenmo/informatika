@@ -24,11 +24,11 @@
   - [Восьмеричная система счисления](https://svetgenmo.github.io/informatika/8/vosmerichnaya-sistema/) — Триады 2↔8, арифметика и сравнение чисел
   - [Шестнадцатеричная система счисления](https://svetgenmo.github.io/informatika/8/shestnadcaterichnaya-sistema/) — Тетрады 2↔16, арифметика с ответом в десятичной
 - **9 класс** — https://svetgenmo.github.io/informatika/9/
-  - [Информационный объём текста](https://svetgenmo.github.io/informatika/9/obem-teksta/) — Задание 1 ОГЭ по вариантам Статграда: вычеркнутое слово
-  - [Кодирование и декодирование информации](https://svetgenmo.github.io/informatika/9/kodirovanie-dekodirovanie/) — Задание 2 ОГЭ по вариантам Статграда и демо 2027: кодовая таблица и разбор цепочки
-  - [Значение логического выражения](https://svetgenmo.github.io/informatika/9/logicheskoe-vyrazhenie/) — Задание 3 ОГЭ по вариантам Статграда и демо 2027: И, ИЛИ, НЕ на числовой прямой и свойства числа
-  - [Кратчайший путь по таблице](https://svetgenmo.github.io/informatika/9/kratchajshij-put/) — Задание 4 ОГЭ по вариантам Статграда и демо 2027: таблица дорог, дерево путей, условие «через пункт»
-  - [Исполнитель с командами](https://svetgenmo.github.io/informatika/9/ispolnitel-s-komandami/) — Задание 5 ОГЭ по вариантам Статграда и демо 2027: составить программу из двух команд или найти число b
+  - [Информационный объём текста](https://svetgenmo.github.io/informatika/9/obem-teksta/) — Задание 1 ОГЭ: вычеркнутое слово
+  - [Кодирование и декодирование информации](https://svetgenmo.github.io/informatika/9/kodirovanie-dekodirovanie/) — Задание 2 ОГЭ и демоверсия 2027: кодовая таблица и разбор цепочки
+  - [Значение логического выражения](https://svetgenmo.github.io/informatika/9/logicheskoe-vyrazhenie/) — Задание 3 ОГЭ и демоверсия 2027: И, ИЛИ, НЕ на числовой прямой и свойства числа
+  - [Кратчайший путь по таблице](https://svetgenmo.github.io/informatika/9/kratchajshij-put/) — Задание 4 ОГЭ и демоверсия 2027: таблица дорог, дерево путей, условие «через пункт»
+  - [Исполнитель с командами](https://svetgenmo.github.io/informatika/9/ispolnitel-s-komandami/) — Задание 5 ОГЭ и демоверсия 2027: составить программу из двух команд или найти число b
   - *Практикумы по программе*
     - [Глобальная сеть Интернет: IP-адреса и большие данные](https://svetgenmo.github.io/informatika/9/globalnaya-set-internet/) — Обзорный практикум по программе ФГОС, урок без доступа в интернет
     - [Информационная безопасность](https://svetgenmo.github.io/informatika/9/informacionnaya-bezopasnost/) — Обзорный практикум по программе ФГОС: угрозы, аутентификация, личные данные, фишинг, кибербуллинг

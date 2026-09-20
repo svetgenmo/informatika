@@ -372,7 +372,7 @@ function lMath(node, parent) {
   let paren;
   if (np < pp) paren = true;
   else if (np === pp) paren = !(node.op === 'and' || node.op === 'or');
-  /* Импликацию внутри эквивалентности ФИПИ берёт в скобки, хотя по
+  /* Импликацию внутри эквивалентности официальные варианты берут в скобки, хотя по
      приоритетам можно и без них: (x → y) ≡ (z → w). Делаем так же. */
   else paren = !!node.paren || (node.op === 'impl' && parent === 'eq');
   return paren ? '(' + s + ')' : s;
@@ -477,7 +477,7 @@ function lFormula(rng, names, strong) {
     }
     let nodes = leaves.map(nm => rng() < 0.3
       ? {op: 'not', a: {op: 'v', name: nm}}
-      : {op: 'v', name: nm});
+    : {op: 'v', name: nm});
     const ops = ['and', 'or', 'impl', 'impl', 'eq', 'eq'];
     while (nodes.length > 1) {
       const i = tRand(rng, 0, nodes.length - 2);
@@ -557,7 +557,7 @@ function lFamilyB(rng, names) {
   const n = names.length;
   if (rng() < 0.15 && n === 4) {
     /* ¬(a ∨ b) ∧ ¬c ∨ ¬(d ∨ e) ∧ f — де Морган и ∧ над ∨ без скобок
-       (авторская задача 16368, на волнах ФИПИ такого не было). */
+       (авторская задача 16368, на экзаменационных волнах такого не было). */
     const term = () => {
       const v = tShuffle(rng, names).slice(0, 3);
       return {op: 'and',
@@ -828,7 +828,7 @@ function lType1(rng) {
   p.forEach((nm, i) => { env[nm] = row[i]; });
   const reads = rng() < 0.5
     ? names.map(nm => nm + " = row[p.index('" + nm + "')]")
-    : [names.join(', ') + " = [row[p.index(v)] for v in '" + names.join('') + "']"];
+  : [names.join(', ') + " = [row[p.index(v)] for v in '" + names.join('') + "']"];
   const head = "p = '" + p.join('') + "'\nrow = (" + row.join(', ') + ', ' +
                fres + ')\n' + reads.join('\n');
   const places = names.map(nm => '<code>p.index(\'' + nm + '\')</code> = ' +
@@ -1103,7 +1103,7 @@ function lHolesTask(z, table, holes, loose) {
           ? 'Без этого отброса подошло бы ' + loose.length + ' расстановок (' +
             loose.join(', ') + ') — условие «неповторяющиеся строки» здесь ' +
             'работает наравне с самой функцией. '
-          : '') +
+        : '') +
         'Верный ответ — <b>' + z.answer + '</b>.',
       meta: {vars: z.names, py: lPy(z.f, true), math: lMath(z.f), table: table,
              res: z.res, holes: holes, want: z.answer, loose: loose.length,
@@ -1317,7 +1317,7 @@ function judge(i){
   vb.className = "verdict " + (v.ok ? "ok" : "err");
   vb.innerHTML = (v.ok
     ? "Верно."
-    : "Пока нет" + (v.why ? " — " + v.why : "") +
+  : "Пока нет" + (v.why ? " — " + v.why : "") +
       ". Твой ответ: <code>" + esc(raw.trim()) + "</code>, верный: <code>" +
       t.answer + "</code>. Возьми задачу этого типа с новыми числами.") +
     '<div class="why">' + t.explain + '</div>' +

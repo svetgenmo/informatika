@@ -292,9 +292,8 @@ code{font:600 15px/1.4 Consolas,"Courier New",monospace;background:#fff;
      экзаменационной программе, и сверяет его машина — знак в знак.</p>
 
   <h3>Откуда эти задачи</h3>
-  <p>Они собраны <b>по типу тренировочных работ СтатГрада</b> и по
-     мотивам демоверсий ФИПИ: форма задания и способ решения те же,
-     а условия написаны заново, своими словами.</p>
+  <p><b>Задачи авторские, составлены в форме задания 2 ОГЭ по
+     информатике.</b> Форма задания и способ решения — как на экзамене. Шифры разные — нули и единицы, точки и тире, «@&nbsp;~&nbsp;+», номера букв в алфавите, — но работа во всех одна и та же.</p>
 </details>
 
 </div>
@@ -600,7 +599,7 @@ const encode = (word, table) =>
 
 const showChain = (msg, table, cipher) => cipher.join === ""
   ? msg
-  : msg.split("").join(cipher.join);
+: msg.split("").join(cipher.join);
 
 /* Порядок кусков условия у сюжетов разный, и придумывать его на месте
    в каждой странице — верный способ развести три файла. Поэтому задача
@@ -610,10 +609,10 @@ const showChain = (msg, table, cipher) => cipher.join === ""
 const P = t => ({k: "p", t: t});
 const blocksDecode = (st, chainText) => st.chainFirst
   ? [P(st.intro), {k: "chain", t: chainText}, P(st.mid), {k: "table"}]
-  : [P(st.intro), {k: "table"}, {k: "chain", t: chainText}];
+: [P(st.intro), {k: "table"}, {k: "chain", t: chainText}];
 
 /* ------------------------------------------------- сюжеты и вопросы
-   Сюжеты и вопросы — по типу тренировочных работ СтатГрада и демо ФИПИ,
+   Сюжеты и вопросы — по типу тренировочных вариантов ОГЭ и демоверсий,
    но написаны своими словами (задача lawyer, 20.09.2026): форма задания
    та же, текст наш. Разница между сюжетами чисто словесная, поэтому
    сюжет выпадает случайно внутри типа. А вот вопрос обязан
@@ -667,7 +666,7 @@ function story(cipher, lets){
 function makeDecode(t){
   const norepeat = t.uniq === "norepeat";
 
-  // Оговорка «буквы в нём не повторяются» во ВСЕХ вариантах Статграда
+  // Оговорка «буквы в нём не повторяются» во ВСЕХ разобранных вариантах
   // идёт только со шпионским сюжетом. Приделывать её к радиограмме
   // значит сочинить формулировку, которой на экзамене нет.
   const pool = norepeat ? CIPHERS.filter(c => c.story === "spy") : CIPHERS;
@@ -700,7 +699,7 @@ function makeDecode(t){
       lets = FILLER.slice(from, from + size);
       const n = randInt(4, norepeat ? Math.min(6, size) : 6);
       word = norepeat ? sample(lets, n).join("")
-                      : Array.from({length: n}, () => pick(lets)).join("");
+                    : Array.from({length: n}, () => pick(lets)).join("");
     }
     if (!lets || !word) continue;
 
@@ -736,7 +735,7 @@ function makeDecode(t){
     const num = t.ask === "num";
     const st = story(cipher, lets);
     const ask = norepeat ? (num ? st.askNumNR : st.askWordNR)
-                         : (num ? st.askNum : st.askWord);
+                       : (num ? st.askNum : st.askWord);
 
     const split = word.split("").map(L => table.find(e => e.L === L).c);
     const shown = s => showChain(s, table, cipher);
@@ -747,10 +746,10 @@ function makeDecode(t){
           "с начала цепочки начинаются сразу два кода — «" +
           trap.instead.c + "» (буква " + trap.instead.L + ") и «" +
           trap.taken.c + "» (буква " + trap.taken.L + ")."
-        : "Разбираем цепочку слева направо. Первым идёт код «" + split[0] +
+      : "Разбираем цепочку слева направо. Первым идёт код «" + split[0] +
           "» — это буква " + word[0] + ".",
       (trap.at === 0 ? "Второй вариант не годится: если взять «"
-                     : "Развилка: с остатка «" + shown(msg.slice(trap.at)) +
+                   : "Развилка: с остатка «" + shown(msg.slice(trap.at)) +
                        "» начинается ещё и код «" + trap.taken.c +
                        "» (буква " + trap.taken.L + "). Но если взять «") +
         trap.taken.c + "», дальше остаётся «" + shown(trap.rest) +
@@ -763,7 +762,7 @@ function makeDecode(t){
                  clash.L + " встречается дважды — условие это запрещает.");
     steps.push(num
       ? "Это " + letters(word.length) + " — их и записываем в ответ."
-      : "Читаем буквы подряд: " + word + ".");
+    : "Читаем буквы подряд: " + word + ".");
 
     return {
       type: t.id, key: t.key, name: t.name, rule: t.rule, ask: t.ask,
@@ -846,7 +845,7 @@ function makePick(t){
       ? who.n + " заменяет в русских словах каждую букву её номером в " +
         "алфавите и пишет номера подряд, без пробелов. Номера взяты из " +
         "таблицы."
-      : who.n + " записывает русские слова кодом: вместо каждой буквы " +
+    : who.n + " записывает русские слова кодом: вместо каждой буквы " +
         "ставит её код из таблицы.";
 
     const mid = "Такую запись не всегда удаётся прочитать однозначно: " +
@@ -858,7 +857,7 @@ function makePick(t){
       const p = parseAll(s, table, {limit: 4});
       return s + " — " + (p.length === 1
         ? "разбор один: " + p[0] + ". Это она."
-        : "разборов несколько: " + p.slice(0, 3).join(", ") +
+      : "разборов несколько: " + p.slice(0, 3).join(", ") +
           (p.length > 3 ? " и другие" : "") + ". Не она.");
     });
     steps.unshift("Каждую цепочку надо разобрать ДО КОНЦА всеми " +
@@ -948,7 +947,7 @@ function makeRepeat(t){
           ".",
         rep.length === 1
           ? "Дважды встречается только буква " + rep[0] + "."
-          : "Больше одного раза встречаются " + rep.join(" и ") + "."
+        : "Больше одного раза встречаются " + rep.join(" и ") + "."
       ],
       meta: {kind: "even", msg: msg, word: word, width: W, rep: rep.join(""),
              table: table.map(e => ({L: e.L, c: e.c})), cipher: "even"}
@@ -963,8 +962,8 @@ function makeTask(typeId){
   const t = TYPES[typeId];
   for (let k = 0; k < 30; k++){
     const task = t.uniq === "pick" ? makePick(t)
-               : t.uniq === "even" ? makeRepeat(t)
-               : makeDecode(t);
+             : t.uniq === "even" ? makeRepeat(t)
+             : makeDecode(t);
     if (task) return task;
   }
   throw new Error("не удалось собрать задачу типа " + t.key);
@@ -1002,7 +1001,7 @@ function verdict(t, raw){
     const sortLetters = s => s.split("").sort((a, b) =>
         a.localeCompare(b, "ru")).join("");
     if (sortLetters(norm(given)) === sortLetters(t.answer))
-      return {ok: true, hint: null};    // порядок любой: ключ ФИПИ «АБ; БА»
+      return {ok: true, hint: null};    // порядок любой: официальный ключ «АБ; БА»
     if (/\d/.test(given))
       return {ok: false, hint: "Ответ здесь — <b>буквы</b>, а не их " +
               "количество: выпиши сами буквы."};
@@ -1038,7 +1037,7 @@ function verdict(t, raw){
     return {ok: false, hint: alien.length === 1
       ? "Буквы " + alien[0] + " в кодовой таблице нет — в сообщении её " +
         "быть не может."
-      : "Букв " + alien.join(", ") + " в кодовой таблице нет — в " +
+    : "Букв " + alien.join(", ") + " в кодовой таблице нет — в " +
         "сообщении их быть не может."};
   if (given.length !== t.answer.length)
     return {ok: false, hint: "Букв получилось " + given.length + ", а " +
@@ -1227,9 +1226,9 @@ function renderCondition(t){
 function conditionText(t){
   return t.blocks.map(b =>
       b.k === "p" ? b.t
-    : b.k === "chain" ? "Цепочка: " + b.t
-    : b.k === "chains" ? "Цепочки: " + t.chains.join("; ")
-    : "Кодовая таблица: " + t.table.map(e => e.L + " — " + e.c).join(", ")
+  : b.k === "chain" ? "Цепочка: " + b.t
+  : b.k === "chains" ? "Цепочки: " + t.chains.join("; ")
+  : "Кодовая таблица: " + t.table.map(e => e.L + " — " + e.c).join(", ")
   ).join(" ") + " " + t.tail;
 }
 
@@ -1418,7 +1417,7 @@ function codeTable(tbl){
     for (let g = 0; g < groups; g++){
       const e = tbl[g * rows + r];
       tr += e ? `<td>${esc(e.L)}</td><td class="c">${esc(e.c)}</td>`
-              : "<td></td><td></td>";
+            : "<td></td><td></td>";
     }
     html += `<tr>${tr}</tr>`;
   }
@@ -1432,11 +1431,11 @@ function codeTable(tbl){
 function condition(t){
   return t.blocks.map(b =>
       b.k === "p" ? `<p>${esc(b.t)}</p>`
-    : b.k === "chain" ? `<div class="chain">${esc(b.t)}</div>`
-    : b.k === "chains"
+  : b.k === "chain" ? `<div class="chain">${esc(b.t)}</div>`
+  : b.k === "chains"
         ? `<div class="chains">${t.chains.map(c => `<div>${esc(c)}</div>`)
                                          .join("")}</div>`
-    : codeTable(t.table)).join("");
+  : codeTable(t.table)).join("");
 }
 
 const HOWTO = {
@@ -1473,7 +1472,7 @@ function renderTypes(){
   btn.disabled = done < MIN_TO_FINISH || st.locked;
   btn.textContent = done >= MIN_TO_FINISH
       ? `Закончить и получить код (на ${mark})`
-      : "Закончить и получить код";
+    : "Закончить и получить код";
 
   const up = SCALE.filter(s => s[0] > done).pop();
   const kinds = n => {
@@ -1612,7 +1611,7 @@ function renderFinish(){
   // Остановиться можно на любой ступени, поэтому «дальше» — не подачка,
   // а обычный ход: закрыл ещё один тип, забрал код получше.
   const more = !up ? ""
-    : `<div class="row"><button id="back">Вернуться к задачам — до ${up[1]}</button>
+  : `<div class="row"><button id="back">Вернуться к задачам — до ${up[1]}</button>
        <span class="stats">закроешь ещё ${up[0] - done} — получишь новый
              код, получше; сдавать надо будет его</span></div>`;
 
@@ -1620,7 +1619,7 @@ function renderFinish(){
   box.innerHTML = `
     <div class="finish">
       <h2>${all ? "Готово — закрыты все шесть типов"
-                : `Готово — наработано на ${mark}`}</h2>
+              : `Готово — наработано на ${mark}`}</h2>
       <p class="stats">Закрыто типов: <b>${done}</b> из
          ${TYPES_TOTAL} &middot; решено задач: <b>${st.solved}</b> &middot;
          ошибок: <b>${st.wrong}</b> &middot;
