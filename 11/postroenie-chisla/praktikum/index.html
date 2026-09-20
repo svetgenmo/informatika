@@ -193,6 +193,10 @@ table.steps th{background:var(--card)}
       <img class="frz-i" width="20" height="19" alt="код" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACkAAAAnCAIAAAAdCPbRAAABmklEQVR42mO8eecZwwABJoaBAywQSlZalJ62Pn76eoD9PWr3qN2jdg8muz99+hQXG7t3794BsLu2pub48eOZGRlTp0z5//8/Xe1uam62trH5////hAkT8nJzv3//Tj+7+fn5586dm5yczMDAsGPHjrDQ0KdPntAvrTEzM1dUVvb29rKzs9+4cSMwMPDkyZN0Ted+/v4rVq6UlJR8//59fFzc4sWL6ZrHdHR01m/YYGJq+vfv36bGxuqqqt+/f9MvfwsLCy9evDgyKoqBgWHVqlUx0dGvX7+mX9nCxMTEx8dHUbuFPPDx48eiwsJDhw4xMDCEhoY2NjWxsrLSw+7bt29npKc/evSImZm5qro6Li6OTv7euWNHWVnZt2/fBAUFJ02ebGFhQY8w//fv38QJE6ZPn/7//38NDY0ZM2ZIy8jQI74/f/5cVFh44MABBgYGdw+P7u5uTk5OStvIxNclBw4cYGRkzMvLy87JYWRkpEL7nEjQ2NT09u3bhMREZ2dnyutQRkifaLRvMGr3qN2jdg+3MQ9IQTOC/A0AQ6qWA/8Y6BcAAAAASUVORK5CYII=">, разные знаки;</li>
     <li>в ответ идёт <b>десятичное</b> число, а не полученная запись.</li>
   </ul>
+  <h3>Откуда эти задачи</h3>
+  <p><b>Задачи авторские, составлены в форме задания 5 ЕГЭ по
+     информатике.</b> Форма задания и способ решения — как на экзамене,
+     а условия написаны своими словами. Правило алгоритма и порог каждый раз новые.</p>
 </details>
 
 </div>
@@ -612,20 +616,20 @@ function fExamples(rule) {
 
 const F_SYS = {2: 'двоичная', 3: 'троичная'};
 const F_SYSI = {2: 'двоичной', 3: 'троичной'};
+const F_SYSP = {2: 'двоичной', 3: 'троичной'};
 
 function fStem(rule) {
   const [ca, cb] = fCondSay(rule);
   const ex = fExamples(rule);
   const sys = F_SYS[rule.base], sysI = F_SYSI[rule.base];
-  let s = '<p>На вход алгоритма подаётся натуральное число <i>N</i>. ' +
-    'Алгоритм строит по нему новое число <i>R</i> так:</p><ol class="alg">' +
-    '<li>Строится ' + sys + ' запись числа <i>N</i>.</li>' +
-    '<li>Далее эта запись обрабатывается по правилу:' +
+  let s = '<p>Алгоритму дают натуральное число <i>N</i>, и он делает ' +
+    'из него другое число <i>R</i>. Работает он так:</p><ol class="alg">' +
+    '<li>Число <i>N</i> записывают в ' + F_SYSP[rule.base] + ' системе.</li>' +
+    '<li>С этой записью поступают по правилу:' +
     '<ul><li>а) если ' + ca + ', то ' + fSay(rule.a, rule.base) + ';</li>' +
     '<li>б) если ' + cb + ', то ' + fSay(rule.b, rule.base) + '.</li></ul>' +
-    'Полученная таким образом запись является ' + sysI +
-    ' записью искомого числа <i>R</i>.</li>' +
-    '<li>Результат переводится в десятичную систему и выводится на экран.</li></ol>';
+    'Что получилось, и есть ' + sysI + ' запись числа <i>R</i>.</li>' +
+    '<li>Его переводят в десятичную систему и печатают.</li></ol>';
   if (ex.length === 2)
     s += '<p class="ex">Например, для числа ' + ex[0].n + ' = ' + ex[0].rec +
       '<sub>' + rule.base + '</sub> результатом будет ' + ex[0].res + '<sub>' +
@@ -744,17 +748,16 @@ function fCompose(type, rule, pairs, rng) {
     'видно по первым пяти столбцам:</p>' + fTable(rule, rows, atN, null);
 
   const ASK = {
-    minR: 'Укажите <b>наименьшее' + (odd ? ' нечётное' : '') + '</b> число ' +
-      '<i>R</i>, превышающее ' + T + ', которое может быть результатом работы ' +
-      'этого алгоритма.',
-    maxR: 'Укажите <b>наибольшее</b> число <i>R</i>, не превышающее ' + T +
-      ', которое может быть результатом работы этого алгоритма.',
-    minN: 'Укажите <b>наименьшее</b> число <i>N</i>, после обработки которого ' +
-      'этим алгоритмом получается число <i>R</i>, <b>не меньшее</b> ' + T + '.',
-    maxN: 'Укажите <b>наибольшее</b> число <i>N</i>, после обработки которого ' +
-      'этим алгоритмом получается число <i>R</i>, <b>не превышающее</b> ' + T + '.',
-    near: 'Укажите <b>наибольшее</b> число <i>N</i>, после обработки которого ' +
-      'этим алгоритмом получается число <i>R</i>, <b>ближайшее к</b> ' + T + '.'
+    minR: 'Какое <b>самое маленькое' + (odd ? ' нечётное' : '') + '</b> ' +
+      'число <i>R</i> больше ' + T + ' умеет выдавать этот алгоритм?',
+    maxR: 'Какое <b>самое большое</b> число <i>R</i>, не превышающее ' + T +
+      ', умеет выдавать этот алгоритм?',
+    minN: 'Найдите <b>самое маленькое</b> число <i>N</i>, из которого этот ' +
+      'алгоритм делает <i>R</i>, <b>не меньшее</b> ' + T + '.',
+    maxN: 'Найдите <b>самое большое</b> число <i>N</i>, из которого этот ' +
+      'алгоритм делает <i>R</i>, <b>не превышающее</b> ' + T + '.',
+    near: 'Найдите <b>самое большое</b> число <i>N</i>, из которого этот ' +
+      'алгоритм делает <i>R</i>, <b>ближайшее к</b> ' + T + '.'
   };
 
   const WHY = {
@@ -788,7 +791,7 @@ function fCompose(type, rule, pairs, rng) {
 
   return {
     question: fStem(rule) + '<p class="ask">' + ASK[kind] +
-      ' В ответе запишите число в десятичной системе счисления.</p>',
+      ' В ответе — число в десятичной системе счисления.</p>',
     answer: String(want),
     form: 'num',
     code: code,
