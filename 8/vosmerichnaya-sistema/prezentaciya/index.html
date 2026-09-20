@@ -1030,16 +1030,20 @@ var TASKS = (function (NS) {
 
 const {toBase, randInt, num} = NS;
 
-const TAIL_OCT = "Ответ запишите в восьмеричной системе счисления. " +
-                 "Основание системы писать не нужно.";
+const TAIL_OCT = "Ответ тоже запишите в восьмеричной системе, " +
+                 "без основания.";
 
-// две формы условия из замера: с индексами и словами
+/* Две формы условия — по замеру: с индексами у чисел и словами.
+   Текст свой (задача lawyer, 20.09.2026), форма задания прежняя. */
+const RESULT = {"+": "сумму", "−": "разность",
+                "×": "произведение", "÷": "частное"};
+
 function opQuestion(rnd, verb, a, b, sign) {
   const A = toBase(a, 8), B = toBase(b, 8);
   return rnd() < 0.5
-    ? `Выполните ${verb}: ${num(A, 8)} ${sign} ${num(B, 8)}. ${TAIL_OCT}`
-    : `Выполните ${verb} чисел, представленных в восьмеричной системе ` +
-      `счисления: <b>${A}</b> ${sign} <b>${B}</b>. ${TAIL_OCT}`;
+    ? `Посчитайте: ${num(A, 8)} ${sign} ${num(B, 8)}. ${TAIL_OCT}`
+    : `Перед вами два числа в восьмеричной системе счисления: ` +
+      `<b>${A}</b> и <b>${B}</b>. Найдите их ${RESULT[sign]}. ${TAIL_OCT}`;
 }
 
 const TYPES = [
@@ -1050,8 +1054,8 @@ const TYPES = [
       const src = toBase(n, 8);
       const s = NS.expandSolution(src, 8);
       return {
-        q: `Переведите восьмеричное число ${num(src, 8)} в десятичную ` +
-           `систему счисления.`,
+        q: `Запишите восьмеричное число ${num(src, 8)} в десятичной ` +
+           `системе счисления.`,
         answer: s.answer, answerBase: 10, solution: s.html,
         meta: {kind: "toDec", base: 8, n}
       };
@@ -1063,10 +1067,8 @@ const TYPES = [
       const n = randInt(rnd, 90, 500);
       const s = NS.divideSolution(n, 8);
       return {
-        q: `Переведите число <b>${n}</b> из десятичной системы счисления ` +
-           `в восьмеричную систему счисления. В ответе укажите ` +
-           `восьмеричное число. Основание системы счисления указывать ` +
-           `не нужно.`,
+        q: `Запишите число <b>${n}</b> в восьмеричной системе ` +
+           `счисления. В ответе — только само число, без основания.`,
         answer: s.answer, answerBase: 8, solution: s.html,
         meta: {kind: "fromDec", base: 8, n}
       };
@@ -1080,8 +1082,8 @@ const TYPES = [
       const bin = toBase(n, 2);
       const s = NS.groupsToBaseSolution(bin, 8);
       return {
-        q: `Переведите двоичное число ${num(bin, 2)} в восьмеричную ` +
-           `систему счисления. Основание системы писать не нужно.`,
+        q: `Запишите двоичное число ${num(bin, 2)} в восьмеричной ` +
+           `системе счисления, без основания.`,
         answer: s.answer, answerBase: 8, solution: s.html,
         meta: {kind: "binToBase", base: 8, n}
       };
@@ -1094,8 +1096,8 @@ const TYPES = [
       const oct = toBase(n, 8);
       const s = NS.groupsToBinSolution(oct, 8);
       return {
-        q: `Переведите восьмеричное число ${num(oct, 8)} в двоичную ` +
-           `систему счисления. Основание системы писать не нужно.`,
+        q: `Запишите восьмеричное число ${num(oct, 8)} в двоичной ` +
+           `системе счисления, без основания.`,
         answer: s.answer, answerBase: 2, solution: s.html,
         meta: {kind: "baseToBin", base: 8, n}
       };
