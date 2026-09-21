@@ -1,0 +1,1100 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Домашняя работа — веб-страница и веб-сервер</title>
+<meta name="description" content="Домашняя работа по информатике, 11 класс, базовый уровень, урок 2: веб-страница и веб-сервер. Задания с проверкой сразу, код работы и сдача формой.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E2%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{margin:0;padding:20px 16px 60px;
+     font:17px/1.5 "Segoe UI",system-ui,sans-serif}
+.wrap{max-width:820px;margin:0 auto}
+h1{font-size:22px;margin:0 0 4px}
+.sub{color:var(--muted);font-size:15px;margin:0 0 18px}
+
+button{font:600 15px/1 inherit;padding:11px 16px;border-radius:9px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);
+       cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);
+                color:var(--muted);background:#fff}
+button:focus-visible{outline:3px solid #a9c6e8;outline-offset:2px}
+
+/* ---- как устроено ---- */
+.howto{border:1px solid var(--line);border-radius:12px;padding:4px 18px 12px;
+       background:var(--card);margin-bottom:20px}
+.howto dt{font-weight:700;margin-top:12px}
+.howto dd{margin:4px 0 0;color:var(--muted)}
+.howto dd b{color:var(--ink)}
+table.steps{border-collapse:collapse;margin:8px 0 6px;font-size:15px}
+table.steps td,table.steps th{border:1px solid var(--line);padding:4px 10px}
+table.steps th{background:#fff;color:var(--muted);font-size:14px;
+               font-weight:600}
+table.steps td.m{font-weight:700;text-align:center;color:var(--accent)}
+
+/* ---- прогресс по заданиям ---- */
+.progress{border:2px solid var(--accent);border-radius:12px;
+          padding:12px 18px;background:var(--card);margin-bottom:20px}
+.ptop{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.ptop h2{font-size:16px;margin:0;color:var(--muted);font-weight:600}
+.sp{flex:1 1 auto}
+.score{display:flex;align-items:baseline;gap:8px}
+.score span{color:var(--muted);font-size:14px}
+.score b{font:700 30px/1 "Segoe UI",system-ui,sans-serif;min-width:38px;
+         text-align:center;border-radius:8px;padding:2px 8px;background:#fff;
+         border:2px solid var(--line)}
+.m5{color:var(--ok);border-color:var(--ok-line)!important}
+.m4{color:var(--accent);border-color:#a9c6e8!important}
+.m3{color:#8a5a00;border-color:#e6c98a!important}
+.m2{color:var(--err);border-color:var(--err-line)!important}
+.types{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.type{display:flex;align-items:center;gap:8px;border:1px solid var(--line);
+      border-radius:20px;padding:4px 12px;background:#fff;font-size:14px}
+.type.done{border-color:var(--ok-line);background:var(--ok-bg);
+           color:var(--ok);font-weight:600}
+.type .first{font-weight:400;font-size:12px}
+.need{margin:12px 0 0;font-size:15px;color:var(--muted)}
+
+/* ---- карточка задания ---- */
+.card{border:1px solid var(--line);border-radius:12px;padding:16px 20px;
+      background:#fff;margin-bottom:14px}
+.card.ok{border-color:var(--ok-line);background:var(--ok-bg)}
+.card.locked{opacity:.75}
+.kicker{font-size:12px;font-weight:600;color:var(--muted);
+        text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px}
+.question ol{margin:8px 0;padding-left:26px}
+.question li{margin:4px 0}
+.question .url{font:600 17px/1.4 Consolas,"Courier New",monospace;
+     background:var(--card);border:1px solid var(--line);border-radius:8px;
+     padding:8px 12px;margin:10px 0;word-break:break-all}
+.codebox{margin:10px 0 0;user-select:none;overflow-x:auto}
+.howans{color:var(--muted);font-size:14px;margin-top:10px}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:12px}
+input[type=text]{font:700 19px/1 Consolas,"Courier New",monospace;
+     padding:11px 14px;width:200px;letter-spacing:1px;
+     border:2px solid var(--line);border-radius:9px;background:#fff;
+     color:var(--ink)}
+input[type=text]:focus{outline:none;border-color:var(--accent)}
+input[type=text]:disabled{background:#f1f2f6;color:var(--muted)}
+.verdict{margin-top:14px;padding:10px 14px;border-radius:9px;font-weight:600}
+.verdict.ok{background:var(--ok-bg);border:1px solid var(--ok-line);
+            color:var(--ok)}
+.verdict.err{background:var(--err-bg);border:1px solid var(--err-line);
+             color:var(--err)}
+.solution{margin-top:12px;border-left:4px solid var(--line);
+          padding:2px 0 2px 14px;color:var(--muted);font-size:15px}
+.solution .cap{display:block;font-size:12px;font-weight:600;
+               text-transform:uppercase;letter-spacing:.04em}
+.solution b{color:var(--ink)}
+
+/* ---- финиш ---- */
+.finish{border:2px solid var(--ok-line);border-radius:12px;padding:16px 20px;
+        background:var(--ok-bg)}
+.finish h2{margin:0 0 6px;font-size:20px;color:var(--ok)}
+.stats{color:var(--muted);font-size:15px;margin:6px 0}
+.code{font:700 30px/1.2 Consolas,"Courier New",monospace;letter-spacing:2px;
+      background:#fff;border:2px dashed var(--ok-line);border-radius:10px;
+      padding:14px 18px;margin:14px 0;text-align:center;user-select:all}
+.send{margin-top:14px;display:flex;gap:12px;align-items:flex-end;
+      flex-wrap:wrap}
+.send label{font-size:14px;color:var(--muted);display:flex;
+            flex-direction:column;gap:4px}
+.send input{font:600 16px/1 inherit;padding:10px 12px;width:200px;
+            border:2px solid var(--line);border-radius:9px;background:#fff;
+            letter-spacing:0}
+.send .note{flex:1 1 100%;margin:2px 0 0}
+
+details{margin-top:26px;border:1px solid var(--line);border-radius:12px;
+        padding:12px 18px;background:var(--card)}
+details summary{cursor:pointer;font-weight:600;font-size:17px}
+details h3{font-size:16px;margin:18px 0 6px}
+details p{margin:6px 0}
+details ul,details ol{margin:6px 0;padding-left:24px}
+details table{border-collapse:collapse;margin:6px 0;font-size:15px}
+details td,details th{border:1px solid var(--line);padding:5px 10px;
+                      text-align:left}
+details th{background:#fff;color:var(--muted);font-size:14px}
+code{font:600 15px/1.4 Consolas,"Courier New",monospace;background:#fff;
+     border:1px solid var(--line);border-radius:4px;padding:1px 5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Домашняя работа — веб-страница и веб-сервер</h1>
+<p class="sub">Урок 2. На уроке страницу писали — дома её читают. Шесть заданий: код ответа сервера, счёт запросов браузера, чтение разметки, поиск ошибки в теге, статическая страница или динамическая, к чему применится стиль.</p>
+
+<div class="howto">
+  <dl>
+    <dt>Как устроено</dt>
+    <dd>Все шесть заданий лежат на странице сразу — решай в любом порядке.
+        Задание считается <b>закрытым</b>, когда ответишь на него верно.
+        Ошибся — сразу увидишь разбор, а на той же карточке появится кнопка
+        <b>«Новая задача»</b>: такое же задание с другими данными.</dd>
+
+    <dt>Сколько решать</dt>
+    <dd><b>Сколько хочешь — на какую оценку наработаешь, такую и
+        получишь.</b>
+        <table class="steps">
+          <tr><th>закрыто заданий</th><th>оценка</th></tr>
+          <tr><td>4 из 6</td><td class="m">3</td></tr>
+          <tr><td>5 из 6</td><td class="m">4</td></tr>
+          <tr><td>6 из 6</td><td class="m">5</td></tr>
+        </table>
+        Оценку даёт <b>первая попытка</b> по каждому заданию. Задания,
+        закрытые со второго раза и дальше, поднимают её <b>не больше чем на
+        один балл</b>: подбирать ответ перебором бессмысленно. Хочешь выше —
+        кнопка <b>«Начать заново»</b> внизу: новые задачи и новая первая
+        попытка. Засчитывается лучшая из сданных работ.</dd>
+
+    <dt>Что понадобится</dt>
+    <dd>Ничего, кроме внимания: код в заданиях читают глазами. Он нарисован картинкой — скопировать его нельзя, и не нужно.</dd>
+
+    <dt>Если не был на уроке</dt>
+    <dd>Сначала открой «Разбор темы» — презентацию с урока, она лежит рядом
+        с этой страницей. Короткая выжимка есть и здесь, внизу: «Подсказка».</dd>
+
+    <dt>Как сдать</dt>
+    <dd>Внизу страницы — кнопка «Закончить и получить код». Рядом с кодом
+        появится кнопка <b>«Сдать работу»</b>: впишешь фамилию и класс,
+        кнопка сама откроет форму с уже вписанным кодом. Останется нажать
+        «Отправить». Переписывать код руками не надо.</dd>
+  </dl>
+</div>
+
+<div class="progress">
+  <div class="ptop">
+    <h2>Что осталось закрыть</h2>
+    <span class="sp"></span>
+    <div class="score">
+      <span>наработано на</span><b id="mark">—</b>
+    </div>
+  </div>
+  <div class="types" id="types"></div>
+  <p class="need" id="need"></p>
+</div>
+
+<div id="main"></div>
+
+<div class="card" id="finishbar">
+  <div class="row" style="margin-top:0">
+    <button id="finish" class="primary" disabled>Закончить и получить код</button>
+    <button id="restart">Начать заново</button>
+  </div>
+  <p class="stats" id="finishnote"></p>
+</div>
+<div id="final"></div>
+
+<details>
+  <summary>Подсказка: как устроена веб-страница</summary>
+
+  <h3>Браузер и сервер разговаривают запросами</h3>
+  <p>Браузер — <b>клиент</b>: он просит. Сервер только <b>отвечает</b>,
+     сам первым ничего не присылает. Протокол этого разговора —
+     <b>HTTP</b> (у <b>HTTPS</b> то же самое, но зашифровано).
+     В ответе есть код: <code>200</code> — нашлось,
+     <code>301</code> — переехало, <code>403</code> — нельзя,
+     <code>404</code> — такого файла нет, <code>500</code> — сервер
+     сломался. Одна страница — это десятки запросов: HTML, стили,
+     шрифты, каждая картинка отдельно (видно по <b>F12 → Сеть</b>).</p>
+
+  <h3>Страница приезжает текстом</h3>
+  <p><b>HTML</b> — язык разметки, а не программа: он ничего не
+     вычисляет, он только называет части текста. <b>Тег</b> — имя
+     части в угловых скобках, почти всегда парный:
+     <code>&lt;p&gt;</code> открывает, <code>&lt;/p&gt;</code>
+     закрывает. Исходный текст любой страницы —
+     <b>Ctrl + U</b>.</p>
+  <table>
+    <tr><th>тег</th><th>что означает</th></tr>
+    <tr><td><code>h1</code>, <code>h2</code></td><td>заголовки</td></tr>
+    <tr><td><code>p</code></td><td>абзац</td></tr>
+    <tr><td><code>img</code></td><td>картинка (одиночный)</td></tr>
+    <tr><td><code>ul</code> / <code>li</code></td><td>список и пункт</td></tr>
+    <tr><td><code>a href</code></td><td>ссылка</td></tr>
+    <tr><td><code>table</code> / <code>tr</code> / <code>td</code></td>
+        <td>таблица, строка, ячейка</td></tr>
+  </table>
+
+  <h3>Оформление отдельно от содержания</h3>
+  <p><b>CSS</b> отвечает за вид: <code>body { background: #eef3fb;
+     font-family: Georgia; }</code>. Один файл стилей оформляет хоть
+     тысячу страниц, а тот же HTML сам подстраивается под телефон и
+     принтер — потому что в нём написано, <i>что</i> это, а не
+     <i>как это нарисовать</i>.</p>
+
+  <h3>Статическая страница и динамическая</h3>
+  <p><b>Статическая</b> лежит на сервере готовым файлом, и всем
+     приходит одна и та же. <b>Динамическая</b> собирается в момент
+     запроса — каждому своё. Собирают в двух местах: <b>на сервере</b>
+     (программа лезет в базу данных и склеивает HTML) или
+     <b>в браузере</b> (программа на <b>JavaScript</b> дорисовывает
+     страницу уже у вас). Кнопка, которая считает дни до Нового года,
+     — это уже второе.</p>
+
+  <h3>Где живёт сайт</h3>
+  <p><b>Хостинг</b> — место под файлы на сервере, который включён
+     всегда и имеет постоянный публичный IP. <b>Домен</b> покупается
+     отдельно и привязывается к этому адресу через DNS: сайт может
+     переехать, не меняя имени. <b>Облачный диск</b> устроен так же —
+     файл лежит на чужом сервере, а вам дают доступ и ссылку.
+     Отсюда правило: то, что жалко потерять, должно лежать минимум в
+     двух местах, и хотя бы одно из них — ваше собственное.</p>
+
+  <h3>Сколько запросов делает браузер</h3>
+  <p>Один запрос — сама страница, и ещё по одному на <b>каждый внешний
+     файл</b>, названный в её коде: файл стилей
+     (<code>&lt;link rel="stylesheet" href=…&gt;</code>), скрипт
+     (<code>&lt;script src=…&gt;</code>), каждая картинка
+     (<code>&lt;img src=…&gt;</code>). Стили, записанные прямо внутри
+     <code>&lt;style&gt;</code>, уже приехали вместе со страницей. Ссылка
+     <code>&lt;a href=…&gt;</code> — это только адрес: запрос по ней
+     уйдёт, когда на неё нажмут.</p>
+
+  <h3>Как читать правило CSS</h3>
+  <p><code>p { color: red; }</code> — слева <b>селектор</b>: к каким
+     элементам применить; в фигурных скобках — <b>что</b> с ними сделать.
+     Это правило покрасит все абзацы <code>&lt;p&gt;</code> на странице,
+     и только их.</p>
+</details>
+
+</div>
+
+<script>
+"use strict";
+
+/* ==== FRZ: вставлено freeze.py, руками не править ==== */
+/* Код задачи — картинкой, прямо в браузере.
+   Вставляется freeze.py --sync между маркерами FRZ. Руками в html не править.
+
+   Тренажёр, ДЗ и проверочная рисуют код каждой задачи сами при открытии, и
+   заморозить его при выкладке нельзя — его ещё нет. Поэтому страница
+   рисует код на canvas и вставляет <img>: скопировать мышкой и запустить в
+   IDLE не выйдет — задача снова про чтение (Света, 14.09.2026).
+
+   Стиль тот же, что у блоков <pre>: Consolas 15px, тёмный фон, комментарий
+   после # серо-голубой. Рисуем в двойном размере — чётко на любом экране. */
+function frz(code) {
+  var S = 2, SIZE = 15, LEAD = 22, PX = 14, PY = 12;
+  var lines = String(code).replace(/\r/g, '').split('\n');
+  var c = document.createElement('canvas'), g = c.getContext('2d');
+  var font = (SIZE * S) + 'px Consolas, "Cascadia Mono", "Courier New", monospace';
+  g.font = font;
+  var w = 0;
+  for (var i = 0; i < lines.length; i++) w = Math.max(w, g.measureText(lines[i]).width);
+  c.width = Math.ceil(w) + 2 * PX * S;
+  c.height = lines.length * LEAD * S + 2 * PY * S;
+  g.fillStyle = '#1e2430';
+  g.fillRect(0, 0, c.width, c.height);
+  g.font = font;                       /* смена размера сбрасывает шрифт */
+  g.textBaseline = 'middle';
+  for (var k = 0; k < lines.length; k++) {
+    var y = PY * S + k * LEAD * S + LEAD * S / 2;
+    var line = lines[k], at = line.indexOf('#');
+    var head = at < 0 ? line : line.slice(0, at), tail = at < 0 ? '' : line.slice(at);
+    g.fillStyle = '#e7ecf5';
+    g.fillText(head, PX * S, y);
+    if (tail) {
+      g.fillStyle = '#8fa6c4';
+      g.fillText(tail, PX * S + g.measureText(head).width, y);
+    }
+  }
+  if (!document.getElementById('frz-css')) {
+    var st = document.createElement('style');
+    st.id = 'frz-css';
+    st.textContent = 'img.frz-b{display:block;max-width:100%;height:auto;'
+                   + 'border-radius:10px;margin:8px 0}';
+    document.head.appendChild(st);
+  }
+  return '<img class="frz-b" width="' + (c.width / S) + '" height="' + (c.height / S)
+       + '" alt="код задачи — читай с экрана" src="' + c.toDataURL('image/png') + '">';
+}
+/* ==== /FRZ ==== */
+
+/* ==== ЗАДАЧИ: вставлено gen.py, руками не править ==== */
+/* Домашняя работа к теме 11 класса, базовый уровень (официальный
+   поурочный план, урок 2): «Веб-сайт. Веб-страница. Взаимодействие
+   браузера с веб-сервером. Динамические страницы. Разработка
+   интернет-приложений (сайтов). Сетевое хранение данных».
+
+   Единственный источник задач. В homework.html вписывается скриптом
+   gen.py между маркерами — руками страницу не править.
+
+   На уроке страницу ПИСАЛИ, дома её ЧИТАЮТ: написать разметку за ученика
+   может кто угодно, а прочитать чужую и сосчитать по ней — работа своя.
+   Поэтому четыре типа из шести несут поле code: страница рисует его
+   картинкой (frz), скопировать код в чат нельзя.
+
+   Ответ везде целое число. Проверка знак в знак. Каждая задача несёт
+   поле meta: gen.py --selftest пересчитывает ответ по тексту кода своей
+   арифметикой и сверяет. В коде задач нет знака «#»: frz красит всё
+   после него как комментарий Python. */
+
+const T_TYPES = [
+  "код ответа сервера",
+  "сколько запросов сделает браузер",
+  "что написано в разметке",
+  "строка с ошибкой",
+  "статическая или динамическая",
+  "к чему применится стиль"
+];
+
+function tRng(seed) {
+  let s = seed >>> 0;
+  return function () {
+    s ^= s << 13; s >>>= 0;
+    s ^= s >> 17;
+    s ^= s << 5;  s >>>= 0;
+    return s / 4294967296;
+  };
+}
+
+function tRand(rng, a, b) { return a + Math.floor(rng() * (b - a + 1)); }
+function tPick(rng, arr) { return arr[tRand(rng, 0, arr.length - 1)]; }
+function tShuffle(rng, arr) {
+  const a = arr.slice();
+  for (let j = a.length - 1; j > 0; j--) {
+    const k = tRand(rng, 0, j);
+    const tmp = a[j]; a[j] = a[k]; a[k] = tmp;
+  }
+  return a;
+}
+function tPickN(rng, pool, n) { return tShuffle(rng, pool).slice(0, n); }
+
+/* Темы страниц: чтобы код в задачах не был одним и тем же текстом. */
+const T_THEMES = [
+  {h1: "Кружки нашей школы", h2: ["Расписание", "Как записаться", "Кто ведёт"],
+   p: ["Занятия идут после шестого урока.", "Запись открыта до 1 октября.",
+       "Первое занятие бесплатное.", "Кабинет откроют в 15:00.",
+       "С собой нужна тетрадь."],
+   li: ["Шахматы", "Робототехника", "Хор", "Волейбол", "Театр", "Фотостудия"],
+   img: ["shahmaty.jpg", "robot.jpg", "hor.jpg", "zal.jpg"],
+   a: [["zapis.html", "Записаться"], ["foto.html", "Фотографии"]]},
+  {h1: "Поход в выходные", h2: ["Маршрут", "Что взять", "Сбор"],
+   p: ["Выходим в субботу утром.", "Идём двенадцать километров.",
+       "Обедаем на берегу реки.", "Возвращаемся к шести вечера.",
+       "В дождь поход переносится."],
+   li: ["Вода", "Дождевик", "Бутерброды", "Кружка", "Фонарик", "Пластырь"],
+   img: ["reka.jpg", "karta.png", "koster.jpg", "gruppa.jpg"],
+   a: [["marshrut.html", "Карта маршрута"], ["spisok.html", "Кто идёт"]]},
+  {h1: "Школьная библиотека", h2: ["Новинки", "Правила", "Часы работы"],
+   p: ["Книги выдают на две недели.", "Продлить можно один раз.",
+       "Читальный зал открыт до пяти.", "Учебники сдают в мае.",
+       "Новинки стоят у входа."],
+   li: ["Фантастика", "Словари", "Журналы", "Классика", "Справочники", "Комиксы"],
+   img: ["zal.jpg", "polka.jpg", "novinki.png", "vhod.jpg"],
+   a: [["katalog.html", "Каталог"], ["pravila.html", "Все правила"]]}
+];
+
+/* ------------------------------------------------ 0. код ответа сервера
+
+   Пять кодов из презентации. Коды перечислены в самом вопросе: 301 и 302
+   на слайде стоят вместе, и без списка у «переехало» было бы два
+   защитимых ответа. Каждая ситуация называет решающий факт буквально. */
+
+const T_CODES = {
+  200: [
+    "страница расписания лежит на сервере, и браузер запросил именно её",
+    "браузер запросил картинку с логотипом, файл на месте, доступ к нему открыт",
+    "вы открыли главную страницу сайта школы, и сервер нашёл и отдал её"
+  ],
+  301: [
+    "сайт переехал на новый адрес, и сервер отправляет браузер туда",
+    "страницу перенесли в другой раздел, и сервер сообщает браузеру её новый адрес",
+    "раздел сайта переименовали, и со старого адреса сервер посылает браузер на новый"
+  ],
+  403: [
+    "файл на сервере есть, но открывать его разрешено только учителям, а вы не вошли",
+    "папка с документами на сервере существует, но доступ к ней вам закрыт",
+    "страница на месте, но сервер отдаёт её только из школьной сети, а вы зашли из дома"
+  ],
+  404: [
+    "в адресе опечатка: файла с таким именем на сервере нет",
+    "страницу удалили с сервера, а ссылка на неё осталась на другом сайте",
+    "браузер запросил файл plan.pdf, но такого файла на сервере никогда не было"
+  ],
+  500: [
+    "программа на сервере, которая собирает страницу, завершилась с ошибкой",
+    "сервер не смог собрать страницу: у него оборвалась связь с базой данных",
+    "страница на месте, доступ открыт, но сам сервер сломался, пока готовил ответ"
+  ]
+};
+
+const T_CODE_WORDS = {
+  200: "всё нашлось, сервер отдаёт файл",
+  301: "переехало: сервер называет другой адрес",
+  403: "файл есть, но вам его нельзя",
+  404: "такого файла на сервере нет",
+  500: "сервер сам сломался"
+};
+
+function tStatus(rng) {
+  const code = tPick(rng, Object.keys(T_CODES));
+  const text = tPick(rng, T_CODES[code]);
+  return {
+    type: 0, answer: String(code),
+    meta: {code: Number(code), text: text},
+    question: "Браузер отправил серверу запрос. Ситуация: <b>" + text +
+      "</b>. Какой из кодов 200, 301, 403, 404, 500 сервер поставит в ответ? " +
+      "В ответе — сам код.",
+    explain: "Код " + code + " — «" + T_CODE_WORDS[code] + "». Остальные: " +
+      Object.keys(T_CODE_WORDS).filter(c => c !== code)
+        .map(c => c + " — " + T_CODE_WORDS[c]).join("; ") +
+      ". Код состояния сервер пишет в первой строке ответа, до самого файла."
+  };
+}
+
+/* ---------------------------------- 1. сколько запросов сделает браузер
+
+   Запрос самой страницы плюс по запросу на каждый внешний файл: стиль
+   по link, скрипт по src, каждая картинка. Две ловушки: стиль внутри
+   <style> уже приехал вместе со страницей, а ссылка <a> ничего не
+   запрашивает, пока по ней не нажали. Хотя бы одна ловушка есть всегда.
+   Значок вкладки браузер просит сам — он вынесен за скобки в условии. */
+
+function tRequests(rng) {
+  const th = tPick(rng, T_THEMES);
+  const css = rng() < 0.6 ? 1 : 0;
+  const js = rng() < 0.5 ? 1 : 0;
+  const n = tRand(rng, 1, 4);
+  let inline = rng() < 0.5 ? 1 : 0;
+  let links = tRand(rng, 0, 2);
+  if (!inline && !links) { if (rng() < 0.5) inline = 1; else links = 1; }
+  const imgs = tPickN(rng, th.img, n);
+  const lines = ["<!doctype html>", "<html>", "<head>",
+                 "  <title>" + th.h1 + "</title>"];
+  if (css) lines.push('  <link rel="stylesheet" href="style.css">');
+  if (inline) lines.push("  <style> h1 { color: navy; } </style>");
+  lines.push("</head>", "<body>", "  <h1>" + th.h1 + "</h1>");
+  lines.push("  <p>" + tPick(rng, th.p) + "</p>");
+  imgs.forEach(f => lines.push('  <img src="' + f + '" alt="">'));
+  th.a.slice(0, links).forEach(a =>
+    lines.push('  <p><a href="' + a[0] + '">' + a[1] + "</a></p>"));
+  if (js) lines.push('  <script src="knopka.js"></' + "script>");
+  lines.push("</body>", "</html>");
+  const total = 1 + css + js + n;
+  const parts = ["сама страница — 1"];
+  if (css) parts.push("файл стилей style.css — 1");
+  parts.push("картинки — " + n);
+  if (js) parts.push("скрипт knopka.js — 1");
+  const traps = [];
+  if (inline) traps.push("стиль внутри &lt;style&gt; отдельного запроса не требует — " +
+                         "он приехал вместе со страницей");
+  if (links) traps.push("ссылка &lt;a&gt; — это только адрес: запрос по ней уйдёт, " +
+                        "когда на неё нажмут");
+  return {
+    type: 1, answer: String(total),
+    code: lines.join("\n"),
+    meta: {css: css, js: js, img: n, inline: inline, links: links},
+    question: "Браузер открыл страницу с таким кодом. Все файлы лежат на " +
+      "сервере, сохранённых копий у браузера нет. Сколько запросов к серверу " +
+      "он сделает, чтобы показать страницу, — <b>считая запрос самой " +
+      "страницы</b>? Пользователь ни на что не нажимает; значок для вкладки " +
+      "не считаем.",
+    explain: "Считаем: " + parts.join(", ") + ". Всего " + total + ". " +
+      "Ловушки: " + traps.join("; ") + ". Каждый внешний файл — отдельный " +
+      "запрос: это и видно по F12 → «Сеть»."
+  };
+}
+
+/* ------------------------------------------ 2. что написано в разметке
+
+   Один фрагмент, четыре возможных вопроса. Четыре числа — пунктов,
+   строк, ячеек, ссылок — всегда попарно разные: посчитал не то — получил
+   не тот ответ, и по ошибке видно, что именно перепутано. */
+
+const T_ASKS = [
+  {key: "li",    q: "Сколько <b>пунктов</b> будет в списке?",
+   how: "Пункт списка — это <li>. Их "},
+  {key: "rows",  q: "Сколько <b>строк</b> будет в таблице?",
+   how: "Строка таблицы — это <tr>. Их "},
+  {key: "cells", q: "Сколько всего <b>ячеек</b> будет в таблице?",
+   how: "Ячейка — это <td>, считаем во всех строках. Их "},
+  {key: "links", q: "Сколько <b>ссылок</b> будет на странице?",
+   how: "Ссылка — это <a href=…>. Их "}
+];
+
+const T_ROWHEAD = ["Пн", "Вт", "Ср", "Чт", "Пт"];
+
+function tMarkup(rng) {
+  const th = tPick(rng, T_THEMES);
+  let k, r, c, links, guard = 0;
+  do {
+    k = tRand(rng, 3, 6); r = tRand(rng, 2, 5); c = tRand(rng, 2, 3);
+    links = tRand(rng, 1, 2);
+  } while (new Set([k, r, r * c, links]).size < 4 && ++guard < 200);
+  const lines = ["<h2>" + tPick(rng, th.h2) + "</h2>"];
+  th.a.slice(0, links).forEach(a =>
+    lines.push('<p><a href="' + a[0] + '">' + a[1] + "</a></p>"));
+  lines.push("<ul>");
+  tPickN(rng, th.li, k).forEach(s => lines.push("  <li>" + s + "</li>"));
+  lines.push("</ul>", "<table>");
+  for (let i = 0; i < r; i++) {
+    let row = "  <tr><td>" + T_ROWHEAD[i] + "</td>";
+    for (let j = 1; j < c; j++) row += "<td>" + tRand(rng, 1, 9) + "</td>";
+    lines.push(row + "</tr>");
+  }
+  lines.push("</table>");
+  const ask = tPick(rng, T_ASKS);
+  const val = {li: k, rows: r, cells: r * c, links: links}[ask.key];
+  return {
+    type: 2, answer: String(val),
+    code: lines.join("\n"),
+    meta: {ask: ask.key},
+    question: "Сервер прислал такой фрагмент страницы. " + ask.q,
+    explain: ask.how.replace(/</g, "&lt;") + val + "." +
+      (ask.key === "cells" ? " В таблице " + r + " строк по " + c +
+        " ячейки: " + r + " × " + c + " = " + (r * c) + "." : "") +
+      " Остальные числа фрагмента: пунктов списка " + k + ", строк таблицы " +
+      r + ", ячеек " + (r * c) + ", ссылок " + links + "."
+  };
+}
+
+/* --------------------------------------------------- 3. строка с ошибкой
+
+   Семь строк, ровно в одной тег испорчен. Порчи только такие, что
+   ошибка бесспорна: закрывающий тег от другого элемента, закрывающий
+   тег без косой черты, потерянная угловая скобка, незакрытая кавычка в
+   адресе ссылки. «Забытого» закрывающего тега и «<li>…<li>» нет нарочно:
+   у <li> и <p> стандарт разрешает закрывающий тег не писать, и такая
+   строка формально верна. */
+
+function tBroken(rng) {
+  const th = tPick(rng, T_THEMES);
+  const li = tPickN(rng, th.li, 2);
+  const a = tPick(rng, th.a);
+  const p = tPick(rng, th.p);
+  const word = p.split(" ")[0];
+  const rest = p.slice(word.length);
+  const good = [
+    "<h1>" + th.h1 + "</h1>",
+    "<p><b>" + word + "</b>" + rest + "</p>",
+    "<ul>",
+    "  <li>" + li[0] + "</li>",
+    "  <li>" + li[1] + "</li>",
+    "</ul>",
+    '<p><a href="' + a[0] + '">' + a[1] + "</a></p>"
+  ];
+  const BREAKS = [
+    {at: 0, bad: "<h1>" + th.h1 + "</h2>",
+     why: "открыт &lt;h1&gt;, а закрыт &lt;/h2&gt; — закрывать надо тот же тег, что открыт"},
+    {at: 0, bad: "<h1>" + th.h1 + "</h1",
+     why: "у закрывающего тега потеряна скобка «&gt;»"},
+    {at: 1, bad: "<p><b>" + word + "<b>" + rest + "</p>",
+     why: "жирный текст закрыт тегом &lt;b&gt; без косой черты — это не закрывающий тег, а ещё один открывающий"},
+    {at: 1, bad: "<p><b>" + word + "</b>" + rest + "</p",
+     why: "у закрывающего тега &lt;/p&gt; потеряна скобка «&gt;»"},
+    {at: 3, bad: "  <li" + li[0] + "</li>",
+     why: "у открывающего тега &lt;li&gt; потеряна скобка «&gt;»"},
+    {at: 4, bad: "  <li>" + li[1] + "</li",
+     why: "у закрывающего тега &lt;/li&gt; потеряна скобка «&gt;»"},
+    {at: 4, bad: "  <li>" + li[1] + "</il>",
+     why: "пункт открыт тегом &lt;li&gt;, а закрыт &lt;/il&gt; — такого тега нет, буквы переставлены"},
+    {at: 6, bad: '<p><a href="' + a[0] + ">" + a[1] + "</a></p>",
+     why: "у адреса в href не закрыта кавычка — браузер не знает, где адрес кончился"},
+    {at: 6, bad: '<p><a href="' + a[0] + '">' + a[1] + "<a></p>",
+     why: "ссылка закрыта тегом &lt;a&gt; без косой черты"}
+  ];
+  const br = tPick(rng, BREAKS);
+  const shown = good.slice();
+  shown[br.at] = br.bad;
+  return {
+    type: 3, answer: String(br.at + 1),
+    code: shown.map((s, i) => (i + 1) + "  " + s).join("\n"),
+    meta: {at: br.at + 1},
+    question: "В коде страницы <b>ровно одна строка с ошибкой</b> в записи " +
+      "тега. Найдите её. В ответе — номер строки.",
+    explain: "Ошибка в строке " + (br.at + 1) + ": " + br.why +
+      ". Правильно: <code>" + good[br.at].trim().replace(/</g, "&lt;") +
+      "</code>. Парный тег закрывают тем же именем с косой чертой, и у " +
+      "каждого тега две угловые скобки."
+  };
+}
+
+/* ------------------------------------ 4. статическая или динамическая
+
+   «Сколько из пяти». Каждая строка называет решающий признак буквально
+   (готовый файл, одинаковый для всех — или собирается в момент запроса,
+   считается в браузере): без него про любую страницу можно спорить —
+   историю школы тоже может собирать программа. */
+
+const T_DYNAMIC = [
+  "лента соцсети: сервер собирает её заново для каждого, кто вошёл",
+  "корзина интернет-магазина: в момент запроса сервер берёт ваши товары из базы данных",
+  "почтовый ящик: список писем сервер собирает под вошедшего человека",
+  "электронный дневник: сервер подставляет в страницу оценки того, кто вошёл",
+  "страница результатов поиска: собирается под запрос, который только что ввели",
+  "страница с кнопкой, по нажатию на которую браузер сам считает дни до Нового года",
+  "прогноз погоды, который сервер собирает в момент запроса для города посетителя"
+];
+
+const T_STATIC = [
+  "устав школы: готовый файл, который сервер отдаёт всем без изменений",
+  "история школы: страница сохранена на сервере одним файлом, у всех она одинаковая",
+  "расписание звонков: набрано в HTML от руки и выложено на сервер как есть",
+  "правила библиотеки: файл лежит на сервере готовым, сервер в нём ничего не меняет",
+  "страница из практикума без кнопки: только текст, список и таблица в одном файле",
+  "схема проезда: готовая страница с картинкой, всем посетителям приходит одно и то же"
+];
+
+function tDynamic(rng) {
+  const askDyn = rng() < 0.5;
+  const k = tRand(rng, 1, 4);
+  const dyn = tPickN(rng, T_DYNAMIC, askDyn ? k : 5 - k);
+  const stat = tPickN(rng, T_STATIC, askDyn ? 5 - k : k);
+  const items = tShuffle(rng, dyn.concat(stat));
+  const yes = askDyn ? dyn : stat;
+  return {
+    type: 4, answer: String(k),
+    meta: {askDyn: askDyn, items: items},
+    question: "Перечислены пять страниц:<ol>" +
+      items.map(s => "<li>" + s + "</li>").join("") + "</ol>Сколько из них <b>" +
+      (askDyn ? "динамические" : "статические") + "</b>?",
+    explain: (askDyn ? "Динамические" : "Статические") + " — " + k + ": " +
+      yes.map(s => s.split(":")[0]).join("; ") + ". Статическая страница " +
+      "лежит на сервере готовым файлом, и всем приходит одно и то же. " +
+      "Динамическая собирается в момент запроса — программой на сервере " +
+      "или прямо в браузере, на JavaScript."
+  };
+}
+
+/* ---------------------------------------- 5. к чему применится стиль
+
+   Два правила CSS и страница. Спрашивается про свойство: найти правило
+   с этим свойством, прочитать его селектор, сосчитать такие элементы.
+   Селекторы только у «листьев» (h2, p, li — внутри один текст), чтобы
+   не вмешивалось наследование. Числа у двух правил всегда разные: взял
+   не то правило — получил не тот ответ. */
+
+const T_PROPS = [
+  {css: "border: 2px solid green;", ask: "получат <b>рамку</b>", key: "border"},
+  {css: "background: yellow;",      ask: "получат <b>жёлтый фон</b>", key: "background"},
+  {css: "color: red;",              ask: "будут написаны <b>красным</b>", key: "color"},
+  {css: "font-style: italic;",      ask: "будут набраны <b>курсивом</b>", key: "font-style"}
+];
+
+const T_SEL_NAME = {h2: "заголовки второго уровня <h2>", p: "абзацы <p>",
+                    li: "пункты списка <li>"};
+
+function tStyle(rng) {
+  const th = tPick(rng, T_THEMES);
+  let cnt, sels, guard = 0;
+  do {
+    cnt = {h2: tRand(rng, 1, 3), p: tRand(rng, 2, 5), li: tRand(rng, 2, 5)};
+    sels = tPickN(rng, ["h2", "p", "li"], 2);
+  } while (cnt[sels[0]] === cnt[sels[1]] && ++guard < 200);
+  const props = tPickN(rng, T_PROPS, 2);
+  const lines = ["<style>",
+                 "  " + sels[0] + " { " + props[0].css + " }",
+                 "  " + sels[1] + " { " + props[1].css + " }",
+                 "</style>", "<h1>" + th.h1 + "</h1>"];
+  const ps = tPickN(rng, th.p, cnt.p);
+  let pi = 0;
+  for (let i = 0; i < cnt.h2; i++) {
+    lines.push("<h2>" + th.h2[i] + "</h2>");
+    if (pi < cnt.p) lines.push("<p>" + ps[pi++] + "</p>");
+  }
+  while (pi < cnt.p) lines.push("<p>" + ps[pi++] + "</p>");
+  lines.push("<ul>");
+  tPickN(rng, th.li, cnt.li).forEach(s => lines.push("  <li>" + s + "</li>"));
+  lines.push("</ul>");
+  const which = tRand(rng, 0, 1);
+  const sel = sels[which], prop = props[which];
+  return {
+    type: 5, answer: String(cnt[sel]),
+    code: lines.join("\n"),
+    meta: {prop: prop.key, sel: sel},
+    question: "Перед вами страница вместе с её стилями. Сколько элементов " +
+      "страницы " + prop.ask + "?",
+    explain: ("Свойство " + prop.css + " стоит в правиле с селектором " + sel +
+      " — значит, его получат все " + T_SEL_NAME[sel] + ", и только они. " +
+      "На странице их " + cnt[sel] + ". Второе правило (" + sels[1 - which] +
+      ") — про другое свойство.").replace(/</g, "&lt;") +
+      " Селектор в CSS говорит, <b>к каким</b> элементам применить " +
+      "оформление, фигурные скобки — <b>какое</b>."
+  };
+}
+
+/* ---------------------------------------------------------------- сборка */
+
+function tTask(type, rng) {
+  if (type === 0) return tStatus(rng);
+  if (type === 1) return tRequests(rng);
+  if (type === 2) return tMarkup(rng);
+  if (type === 3) return tBroken(rng);
+  if (type === 4) return tDynamic(rng);
+  return tStyle(rng);
+}
+
+function tMake(seed) {
+  const rng = tRng(seed || 1);
+  return tShuffle(rng, [0, 1, 2, 3, 4, 5]).map(function (type) {
+    return tTask(type, rng);
+  });
+}
+
+/* Ответ сверяется знак в знак: целое число без пробелов и единиц. */
+function tCheck(task, raw) {
+  const s = String(raw === undefined || raw === null ? "" : raw).replace(/\s+/g, "");
+  if (!/^\d+$/.test(s)) return false;
+  return String(Number(s)) === task.answer;
+}
+/* ==== /ЗАДАЧИ ==== */
+
+// Ступени. Домашняя работа добровольная — ученик набирает столько,
+// сколько ему нужно, и останавливается.
+const SCALE = [[6, 5], [5, 4], [4, 3]];
+const MIN_TO_FINISH = 4;                 // ниже сдавать нечего
+const TYPES_TOTAL = 6;
+function markFor(done){
+  for (const s of SCALE) if (done >= s[0]) return s[1];
+  return 2;
+}
+/* Отметку даёт первая попытка (правило Светы от 15.09.2026): в части
+   заданий ответ — номер варианта, и добор закрывается перебором. Поэтому
+   закрытое не с первого раза поднимает отметку не больше чем на балл.
+   То же считает homework.py: Topic(first_round=True). */
+function markNow(done, clean){
+  return Math.min(markFor(done), markFor(clean) + 1);
+}
+
+/* ------------------------------------------------------------ квитанция
+   Код несёт цифры работы и контрольную сумму. Ключа нигде нет — иначе
+   страницу нельзя было бы просто положить на школьную платформу. Смысл
+   кода не в том, чтобы его нельзя было подделать, а в том, что подделать
+   его дольше, чем решить.
+------------------------------------------------------------------ */
+/* Ссылку на форму ставит скрипт set_form_link.py из корня кабинета:
+   в ней зашиты номера полей формы, на глаз их не подобрать. */
+const FORM = "https://docs.google.com/forms/d/e/1FAIpQLSfQyhaxcnzn4ZaKSe_ZMsluw7qRQnrw_80H6SfrnYB5EThUIA/viewform?usp=pp_url&entry.853601231=ФАМИЛИЯ&entry.1091635917=КЛАСС&entry.487188307=КОД";
+
+const ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+const EPOCH = Date.UTC(2026, 0, 1);
+const PREFIX = "VS";
+
+const bin = (v, w) => v.toString(2).padStart(w, "0");
+
+// Считаем по семибитным частям строки, а не через parseInt всей нагрузки:
+// в ней 33 бита, а побитовые операции в JS работают с 32-битными числами
+// и старший бит молча потерялся бы.
+function checksum(bitstr){
+  let cs = 0x5B;
+  for (let i = 0; i < bitstr.length; i += 7)
+    cs ^= parseInt(bitstr.substr(i, 7).padEnd(7, "0"), 2);
+  return cs & 0x7F;
+}
+
+function makeCode(st){
+  const day = Math.max(0, Math.min(2047, Math.floor(
+      (Date.now() - EPOCH) / 86400000)));
+  const payload = bin(day, 11) + bin(Math.min(15, st.typesDone), 4) +
+                  bin(Math.min(15, st.cleanTypes), 4) +
+                  bin(Math.min(127, st.solved), 7) +
+                  bin(Math.min(127, st.wrong), 7);
+  const bitstr = payload + bin(checksum(payload), 7);
+  let out = "";
+  for (let i = 0; i < 40; i += 5)
+    out += ALPHABET[parseInt(bitstr.substr(i, 5), 2)];
+  return PREFIX + "-" + out.slice(0, 4) + "-" + out.slice(4);
+}
+
+/* --------------------------------------------------------- состояние
+   Все задания лежат на странице сразу (правило Светы от 17.09.2026):
+   виден объём, порядок ученик выбирает сам. Карточка на задание; верный
+   ответ её закрывает, ошибка показывает разбор и кнопку «Новая задача» —
+   такое же задание с другими данными на той же карточке.            */
+
+const newRng = () => typeof tRng === "function"
+    ? tRng((Math.floor(Math.random() * 4294967295) + 1) >>> 0) : null;
+const freshCard = i => ({task: tTask(i, newRng()), state: "open",
+                         given: "", draft: ""});
+
+const st = {
+  cards: T_TYPES.map((_, i) => freshCard(i)),
+  clean: T_TYPES.map(() => true),    // закрыто с первой попытки
+  solved: 0, wrong: 0,               // копятся и через «Начать заново»
+  locked: false                      // код выдан — карточки заперты
+};
+Object.defineProperty(st, "typesDone",
+  {get(){ return st.cards.filter(c => c.state === "ok").length; }});
+Object.defineProperty(st, "cleanTypes",
+  {get(){ return st.cards.filter((c, i) => c.state === "ok"
+                                           && st.clean[i]).length; }});
+
+function captureDrafts(){
+  st.cards.forEach((c, i) => {
+    const el = document.getElementById("ans" + i);
+    if (el && c.state === "open") c.draft = el.value;
+  });
+}
+
+function answer(i){
+  const c = st.cards[i];
+  if (c.state !== "open" || st.locked) return;
+  const given = document.getElementById("ans" + i).value.trim();
+  if (!given) return;                    // пустое — не считаем ответом
+  captureDrafts();
+  c.given = given;
+  if (tCheck(c.task, given)){
+    st.solved++;
+    c.state = "ok";
+  } else {
+    st.wrong++;
+    st.clean[i] = false;
+    c.state = "err";
+  }
+  render();
+}
+
+function newTask(i){
+  if (st.locked) return;
+  captureDrafts();
+  st.cards[i] = freshCard(i);
+  render();
+  const el = document.getElementById("ans" + i);
+  if (el) el.focus();
+}
+
+function restart(){
+  if (st.typesDone >= MIN_TO_FINISH && !confirm(
+      "Начать заново? Закрытые задания сбросятся, задачи будут новые. " +
+      "Если код за эту попытку нужен — сначала получи и сдай его."))
+    return;
+  st.cards = T_TYPES.map((_, i) => freshCard(i));
+  st.clean = T_TYPES.map(() => true);
+  st.locked = false;
+  document.getElementById("final").innerHTML = "";
+  render();
+  window.scrollTo({top: 0, behavior: "smooth"});
+}
+
+/* ------------------------------------------------------------- вывод */
+
+const hEsc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
+                           .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+const HOWTO = "Ответ — только цифры: без пробелов, единиц и нуля впереди.";
+
+const kinds = n => {
+  const a = n % 100, b = a % 10;
+  if (a > 4 && a < 21) return "заданий";
+  if (b === 1) return "задание";
+  if (b > 1 && b < 5) return "задания";
+  return "заданий";
+};
+
+function statusText(){
+  const done = st.typesDone, clean = st.cleanTypes;
+  if (done < MIN_TO_FINISH){
+    const left = MIN_TO_FINISH - done;
+    return `Закрой ещё <b>${left}</b> ${kinds(left)}, чтобы получить код.`;
+  }
+  const mark = markNow(done, clean);
+  const open = st.cards.filter(c => c.state !== "ok").length;
+  let text = mark === 5
+      ? "Наработано на <b>5</b>. Забирай код и сдавай."
+      : `Можно остановиться прямо сейчас — это <b>${mark}</b>.`;
+  if (mark < 5 && open)
+    text += ` Незакрытых заданий: <b>${open}</b> — закроешь, и оценка ` +
+            `может вырасти.`;
+  if (markFor(done) > mark || (mark < 5 && !open))
+    text += " С первой попытки закрыто <b>" + clean + "</b>, остальное " +
+            "поднимает оценку только на балл. Хочешь выше — «Начать заново».";
+  return text;
+}
+
+function renderTypes(){
+  document.getElementById("types").innerHTML = T_TYPES.map((name, i) => {
+    const ok = st.cards[i].state === "ok";
+    return `<div class="type${ok ? " done" : ""}">
+              <span class="nm">${i + 1}. ${hEsc(name)}</span>
+              ${ok ? `<span class="first">${st.clean[i]
+                  ? "с первой попытки" : "не с первой"}</span>` : ""}</div>`;
+  }).join("");
+
+  const done = st.typesDone;
+  const mark = markNow(done, st.cleanTypes);
+  const el = document.getElementById("mark");
+  // до первой ступени оценки ещё нет — прочерк, не двойка
+  el.textContent = done >= MIN_TO_FINISH ? mark : "—";
+  el.className = done >= MIN_TO_FINISH ? "m" + mark : "";
+
+  const btn = document.getElementById("finish");
+  btn.disabled = done < MIN_TO_FINISH || st.locked;
+  btn.textContent = done >= MIN_TO_FINISH
+      ? `Закончить и получить код (на ${mark})`
+    : "Закончить и получить код";
+
+  const text = statusText();
+  document.getElementById("need").innerHTML = text;
+  document.getElementById("finishnote").innerHTML = st.locked ? "" : text;
+}
+
+function render(){
+  renderTypes();
+  const main = document.getElementById("main");
+  main.innerHTML = "";
+
+  st.cards.forEach((c, i) => {
+    const t = c.task;
+    const card = document.createElement("div");
+    card.className = "card" + (c.state === "ok" ? " ok" : "")
+                   + (st.locked ? " locked" : "");
+
+    let tail;
+    if (c.state === "open"){
+      tail = `<div class="howans">${HOWTO}</div>
+      <div class="row">
+        <input type="text" id="ans${i}" autocomplete="off"
+               spellcheck="false" placeholder="ответ" maxlength="8"
+               inputmode="numeric" value="${hEsc(c.draft || "")}"
+               ${st.locked ? "disabled" : ""}>
+        <button class="primary" data-go="${i}"
+                ${st.locked ? "disabled" : ""}>Проверить</button>
+      </div>`;
+    } else if (c.state === "ok"){
+      tail = `<div class="row">
+        <input type="text" value="${hEsc(c.given)}" disabled></div>
+        <div class="verdict ok">Правильно — задание закрыто${st.clean[i]
+            ? " с первой попытки" : ""}</div>`;
+    } else {
+      tail = `<div class="row">
+        <input type="text" value="${hEsc(c.given)}" disabled>
+        <button class="primary" data-new="${i}"
+                ${st.locked ? "disabled" : ""}>Новая задача</button></div>
+        <div class="verdict err">Ошибка. Верный ответ: ${hEsc(t.answer)}.
+           Задание остаётся незакрытым — прочитай разбор, нажми «Новая
+           задача» и реши такое же с другими данными.</div>
+        <div class="solution"><span class="cap">разбор</span>
+           ${t.explain}</div>`;
+    }
+
+    // Код задачи — картинкой: его читают глазами, а не вставляют в чат.
+    const code = t.code && typeof frz === "function"
+        ? `<div class="codebox">${frz(t.code)}</div>` : "";
+
+    card.innerHTML = `
+      <div class="kicker">${i + 1} &middot; ${hEsc(T_TYPES[i])}</div>
+      <div class="question">${t.question}</div>
+      ${code}
+      ${tail}`;
+    main.appendChild(card);
+  });
+
+  main.querySelectorAll("button[data-go]").forEach(b =>
+    b.addEventListener("click", () => answer(+b.dataset.go)));
+  main.querySelectorAll("button[data-new]").forEach(b =>
+    b.addEventListener("click", () => newTask(+b.dataset.new)));
+  main.querySelectorAll("input[type=text]:not(:disabled)").forEach(inp =>
+    inp.addEventListener("keydown", e => {
+      if (e.key === "Enter"){ e.preventDefault(); answer(+inp.id.slice(3)); }
+    }));
+}
+
+/* Кнопка «Сдать»: фамилию и класс страница помнит между заходами, код
+   подставляет сам. Переписывать код руками не нужно — именно на
+   переписывании и брались «код не разобрался». */
+function wireSend(code){
+  const fam = document.getElementById("fam");
+  const send = document.getElementById("send");
+  if (!fam || !send) return;
+  const kls = document.getElementById("kls");
+  const note = document.getElementById("sendnote");
+  try {
+    fam.value = localStorage.getItem("hw-fam") || "";
+    kls.value = localStorage.getItem("hw-kls") || "";
+  } catch (e) {}
+  send.addEventListener("click", () => {
+    const f = fam.value.trim(), k = kls.value.trim();
+    if (!f || !k){
+      note.textContent = "Впиши фамилию и класс — иначе непонятно, "
+                       + "чья это работа.";
+      (f ? kls : fam).focus();
+      return;
+    }
+    try {
+      localStorage.setItem("hw-fam", f);
+      localStorage.setItem("hw-kls", k);
+    } catch (e) {}
+    const url = FORM.replace("ФАМИЛИЯ", encodeURIComponent(f))
+                    .replace("КЛАСС", encodeURIComponent(k))
+                    .replace("КОД", encodeURIComponent(code));
+    window.open(url, "_blank", "noopener");
+    note.textContent = "Форма открылась в новой вкладке. Не забудь нажать "
+                     + "в ней «Отправить».";
+  });
+}
+
+function renderFinish(){
+  captureDrafts();
+  st.locked = true;
+  render();
+  const done = st.typesDone, mark = markNow(done, st.cleanTypes);
+  const code = makeCode(st);
+  const open = st.cards.filter(c => c.state !== "ok").length;
+
+  const more = !open || mark === 5 ? ""
+  : `<div class="row"><button id="back">Вернуться к заданиям</button>
+       <span class="stats">этот код останется действительным; закроешь
+             остальное — получишь новый</span></div>`;
+
+  const box = document.getElementById("final");
+  box.innerHTML = `
+    <div class="finish">
+      <h2>Готово — наработано на ${mark}</h2>
+      <p class="stats">Закрыто заданий: <b>${done}</b> из
+         ${TYPES_TOTAL} &middot; из них с первой попытки:
+         <b>${st.cleanTypes}</b> &middot; решено задач: <b>${st.solved}</b>
+         &middot; ошибок: <b>${st.wrong}</b></p>
+      <div class="code">${code}</div>
+      <p class="stats">Это код твоей работы. Он у каждого свой и зависит
+         от того, сколько и как ты решал.</p>
+      ${FORM ? `<div class="send">
+        <label>Фамилия
+          <input id="fam" autocomplete="off" placeholder="как в журнале"></label>
+        <label>Класс
+          <input id="kls" autocomplete="off" placeholder="11а"
+                 style="width:110px"></label>
+        <button id="send" class="primary">Сдать работу</button>
+        <p class="stats note" id="sendnote">Кнопка откроет форму: фамилия,
+           класс и код уже будут вписаны — останется нажать
+           «Отправить».</p>
+      </div>` : `<div class="send">
+        <p class="stats note">Форму сдачи ещё не подключили — код впиши в
+           неё сам(а), ссылку даст учитель.</p>
+      </div>`}
+      ${more}
+    </div>`;
+
+  wireSend(code);
+  box.scrollIntoView({block: "start", behavior: "smooth"});
+  const back = document.getElementById("back");
+  if (back) back.addEventListener("click", () => {
+    st.locked = false;
+    box.innerHTML = "";
+    render();
+  });
+}
+
+document.getElementById("finish").addEventListener("click", () => {
+  if (st.typesDone >= MIN_TO_FINISH && !st.locked) renderFinish();
+});
+document.getElementById("restart").addEventListener("click", restart);
+
+render();
+</script>
+<p class="ai-mark" style='margin:34px auto 0;max-width:860px;padding-top:12px;border-top:1px solid #d9dce6;color:#5c6070;font:13px/1.5 "Segoe UI",system-ui,sans-serif'>Материалы подготовлены с использованием технологий искусственного интеллекта.</p>
+</body>
+</html>
