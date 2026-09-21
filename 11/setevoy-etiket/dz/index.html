@@ -1,0 +1,951 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Домашняя работа — сетевой этикет и подлинность информации</title>
+<meta name="description" content="Домашняя работа по информатике, 11 класс, базовый уровень, урок 4: сетевой этикет и подлинность информации. Задания с проверкой сразу, код работы и сдача формой.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E4%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{margin:0;padding:20px 16px 60px;
+     font:17px/1.5 "Segoe UI",system-ui,sans-serif}
+.wrap{max-width:820px;margin:0 auto}
+h1{font-size:22px;margin:0 0 4px}
+.sub{color:var(--muted);font-size:15px;margin:0 0 18px}
+
+button{font:600 15px/1 inherit;padding:11px 16px;border-radius:9px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);
+       cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);
+                color:var(--muted);background:#fff}
+button:focus-visible{outline:3px solid #a9c6e8;outline-offset:2px}
+
+/* ---- как устроено ---- */
+.howto{border:1px solid var(--line);border-radius:12px;padding:4px 18px 12px;
+       background:var(--card);margin-bottom:20px}
+.howto dt{font-weight:700;margin-top:12px}
+.howto dd{margin:4px 0 0;color:var(--muted)}
+.howto dd b{color:var(--ink)}
+table.steps{border-collapse:collapse;margin:8px 0 6px;font-size:15px}
+table.steps td,table.steps th{border:1px solid var(--line);padding:4px 10px}
+table.steps th{background:#fff;color:var(--muted);font-size:14px;
+               font-weight:600}
+table.steps td.m{font-weight:700;text-align:center;color:var(--accent)}
+
+/* ---- прогресс по заданиям ---- */
+.progress{border:2px solid var(--accent);border-radius:12px;
+          padding:12px 18px;background:var(--card);margin-bottom:20px}
+.ptop{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.ptop h2{font-size:16px;margin:0;color:var(--muted);font-weight:600}
+.sp{flex:1 1 auto}
+.score{display:flex;align-items:baseline;gap:8px}
+.score span{color:var(--muted);font-size:14px}
+.score b{font:700 30px/1 "Segoe UI",system-ui,sans-serif;min-width:38px;
+         text-align:center;border-radius:8px;padding:2px 8px;background:#fff;
+         border:2px solid var(--line)}
+.m5{color:var(--ok);border-color:var(--ok-line)!important}
+.m4{color:var(--accent);border-color:#a9c6e8!important}
+.m3{color:#8a5a00;border-color:#e6c98a!important}
+.m2{color:var(--err);border-color:var(--err-line)!important}
+.types{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.type{display:flex;align-items:center;gap:8px;border:1px solid var(--line);
+      border-radius:20px;padding:4px 12px;background:#fff;font-size:14px}
+.type.done{border-color:var(--ok-line);background:var(--ok-bg);
+           color:var(--ok);font-weight:600}
+.type .first{font-weight:400;font-size:12px}
+.need{margin:12px 0 0;font-size:15px;color:var(--muted)}
+
+/* ---- карточка задания ---- */
+.card{border:1px solid var(--line);border-radius:12px;padding:16px 20px;
+      background:#fff;margin-bottom:14px}
+.card.ok{border-color:var(--ok-line);background:var(--ok-bg)}
+.card.locked{opacity:.75}
+.kicker{font-size:12px;font-weight:600;color:var(--muted);
+        text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px}
+.question ol{margin:8px 0;padding-left:26px}
+.question li{margin:4px 0}
+.question .url{font:600 17px/1.4 Consolas,"Courier New",monospace;
+     background:var(--card);border:1px solid var(--line);border-radius:8px;
+     padding:8px 12px;margin:10px 0;word-break:break-all}
+.codebox{margin:10px 0 0;user-select:none;overflow-x:auto}
+.howans{color:var(--muted);font-size:14px;margin-top:10px}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:12px}
+input[type=text]{font:700 19px/1 Consolas,"Courier New",monospace;
+     padding:11px 14px;width:200px;letter-spacing:1px;
+     border:2px solid var(--line);border-radius:9px;background:#fff;
+     color:var(--ink)}
+input[type=text]:focus{outline:none;border-color:var(--accent)}
+input[type=text]:disabled{background:#f1f2f6;color:var(--muted)}
+.verdict{margin-top:14px;padding:10px 14px;border-radius:9px;font-weight:600}
+.verdict.ok{background:var(--ok-bg);border:1px solid var(--ok-line);
+            color:var(--ok)}
+.verdict.err{background:var(--err-bg);border:1px solid var(--err-line);
+             color:var(--err)}
+.solution{margin-top:12px;border-left:4px solid var(--line);
+          padding:2px 0 2px 14px;color:var(--muted);font-size:15px}
+.solution .cap{display:block;font-size:12px;font-weight:600;
+               text-transform:uppercase;letter-spacing:.04em}
+.solution b{color:var(--ink)}
+
+/* ---- финиш ---- */
+.finish{border:2px solid var(--ok-line);border-radius:12px;padding:16px 20px;
+        background:var(--ok-bg)}
+.finish h2{margin:0 0 6px;font-size:20px;color:var(--ok)}
+.stats{color:var(--muted);font-size:15px;margin:6px 0}
+.code{font:700 30px/1.2 Consolas,"Courier New",monospace;letter-spacing:2px;
+      background:#fff;border:2px dashed var(--ok-line);border-radius:10px;
+      padding:14px 18px;margin:14px 0;text-align:center;user-select:all}
+.send{margin-top:14px;display:flex;gap:12px;align-items:flex-end;
+      flex-wrap:wrap}
+.send label{font-size:14px;color:var(--muted);display:flex;
+            flex-direction:column;gap:4px}
+.send input{font:600 16px/1 inherit;padding:10px 12px;width:200px;
+            border:2px solid var(--line);border-radius:9px;background:#fff;
+            letter-spacing:0}
+.send .note{flex:1 1 100%;margin:2px 0 0}
+
+details{margin-top:26px;border:1px solid var(--line);border-radius:12px;
+        padding:12px 18px;background:var(--card)}
+details summary{cursor:pointer;font-weight:600;font-size:17px}
+details h3{font-size:16px;margin:18px 0 6px}
+details p{margin:6px 0}
+details ul,details ol{margin:6px 0;padding-left:24px}
+details table{border-collapse:collapse;margin:6px 0;font-size:15px}
+details td,details th{border:1px solid var(--line);padding:5px 10px;
+                      text-align:left}
+details th{background:#fff;color:var(--muted);font-size:14px}
+code{font:600 15px/1.4 Consolas,"Courier New",monospace;background:#fff;
+     border:1px solid var(--line);border-radius:4px;padding:1px 5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Домашняя работа — сетевой этикет и подлинность информации</h1>
+<p class="sub">Урок 4. Шесть заданий: сетевой этикет, что соцсеть знает о вас и без вас, признаки недостоверной публикации, настоящий владелец сайта, независимые источники новости и вывод из проверки фотографии.</p>
+
+<div class="howto">
+  <dl>
+    <dt>Как устроено</dt>
+    <dd>Все шесть заданий лежат на странице сразу — решай в любом порядке.
+        Задание считается <b>закрытым</b>, когда ответишь на него верно.
+        Ошибся — сразу увидишь разбор, а на той же карточке появится кнопка
+        <b>«Новая задача»</b>: такое же задание с другими данными.</dd>
+
+    <dt>Сколько решать</dt>
+    <dd><b>Сколько хочешь — на какую оценку наработаешь, такую и
+        получишь.</b>
+        <table class="steps">
+          <tr><th>закрыто заданий</th><th>оценка</th></tr>
+          <tr><td>4 из 6</td><td class="m">3</td></tr>
+          <tr><td>5 из 6</td><td class="m">4</td></tr>
+          <tr><td>6 из 6</td><td class="m">5</td></tr>
+        </table>
+        Оценку даёт <b>первая попытка</b> по каждому заданию. Задания,
+        закрытые со второго раза и дальше, поднимают её <b>не больше чем на
+        один балл</b>: подбирать ответ перебором бессмысленно. Хочешь выше —
+        кнопка <b>«Начать заново»</b> внизу: новые задачи и новая первая
+        попытка. Засчитывается лучшая из сданных работ.</dd>
+
+    <dt>Что понадобится</dt>
+    <dd>Ничего, кроме внимания: читать придётся медленно, каждое слово в условии работает.</dd>
+
+    <dt>Если не был на уроке</dt>
+    <dd>Сначала открой «Разбор темы» — презентацию с урока, она лежит рядом
+        с этой страницей. Короткая выжимка есть и здесь, внизу: «Подсказка».</dd>
+
+    <dt>Как сдать</dt>
+    <dd>Внизу страницы — кнопка «Закончить и получить код». Рядом с кодом
+        появится кнопка <b>«Сдать работу»</b>: впишешь фамилию и класс,
+        кнопка сама откроет форму с уже вписанным кодом. Останется нажать
+        «Отправить». Переписывать код руками не надо.</dd>
+  </dl>
+</div>
+
+<div class="progress">
+  <div class="ptop">
+    <h2>Что осталось закрыть</h2>
+    <span class="sp"></span>
+    <div class="score">
+      <span>наработано на</span><b id="mark">—</b>
+    </div>
+  </div>
+  <div class="types" id="types"></div>
+  <p class="need" id="need"></p>
+</div>
+
+<div id="main"></div>
+
+<div class="card" id="finishbar">
+  <div class="row" style="margin-top:0">
+    <button id="finish" class="primary" disabled>Закончить и получить код</button>
+    <button id="restart">Начать заново</button>
+  </div>
+  <p class="stats" id="finishnote"></p>
+</div>
+<div id="final"></div>
+
+<details>
+  <summary>Подсказка: этикет и проверка информации</summary>
+
+  <h3>Сетевой этикет</h3>
+  <p>Правила держатся на одной мысли: <b>по ту сторону экрана человек</b>, и
+     его время и личные границы стоят столько же, сколько ваши.</p>
+  <ul>
+    <li>ЗАГЛАВНЫЕ БУКВЫ целиком читаются как крик;</li>
+    <li>одна мысль — одно сообщение, а не десяток подряд;</li>
+    <li>чужую переписку не выносят из личного чата в общий без спроса;</li>
+    <li>личные дела участника не обсуждают при всех;</li>
+    <li>на вопрос отвечают по существу, а не «сам погугли»;</li>
+    <li>у письма есть тема и подпись; звонок без предупреждения поздно
+        вечером — невежливость.</li>
+  </ul>
+  <p>И главное: <b>переписка — это документ.</b> Сообщение можно сохранить,
+     переслать и показать через год.</p>
+
+  <h3>Метаданные фотографии</h3>
+  <p>Внутри файла снимка, кроме самой картинки, лежит <b>EXIF</b> — служебная
+     запись камеры: дата и время съёмки, модель телефона или фотоаппарата,
+     настройки и часто <b>координаты места</b>.</p>
+  <p>Отсюда вывод, который и надо унести: <b>вы не публиковали свой адрес, а
+     фотография его несёт.</b> Соцсети и мессенджеры обычно вырезают EXIF при
+     загрузке — но себе его сначала забирают, а файл, отправленный «как
+     документ», уходит целиком.</p>
+  <p>Проверить можно любой файл: правой кнопкой → «Свойства» → «Подробно» в
+     Windows, или страницей вроде этой. Вырезать метаданные там же: «Свойства»
+     → «Удаление свойств и личной информации».</p>
+
+  <h3>Социальная сеть: вы отдаёте больше, чем публикуете</h3>
+  <p>Сеть собирает не только написанное, но и сделанное: время входа,
+     устройство и браузер, примерное место по IP-адресу, что дочитано, а что
+     пролистано, на кого подписаны, список контактов (если разрешили доступ),
+     геометку внутри файла фотографии.</p>
+
+  <h3>Три вопроса к любой публикации</h3>
+  <ol>
+    <li><b>Кто?</b> — есть ли автор, редакция, адрес и телефон.</li>
+    <li><b>Когда?</b> — есть ли дата и не старее ли она события.</li>
+    <li><b>Откуда?</b> — есть ли первоисточник и открывается ли ссылка.</li>
+  </ol>
+
+  <h3>Кто на самом деле владелец сайта</h3>
+  <p>Доменное имя читают <b>справа налево</b>, и владельцу принадлежат
+     <b>последние две части</b>. В адресе
+     <code>ria.ru.info-portal.com</code> владелец — <code>info-portal.com</code>,
+     а <code>ria.ru</code> слева он дописал сам. У настоящего сайта имя бренда
+     стоит в самом конце.</p>
+
+  <h3>Сколько у новости источников</h3>
+  <p>Пять публикаций — ещё не пять подтверждений. <b>Независим тот, кто не
+     ссылается на другую публикацию из того же списка</b>: свой корреспондент,
+     очевидец, документ, пресс-служба. Перепечатки ничего не добавляют.
+     Поэтому «об этом пишут все» — не довод, а «первоисточник один» — довод.</p>
+
+  <h3>Обратный поиск по изображению</h3>
+  <p>Поисковику отдают не слова, а саму картинку — он находит, где ещё она
+     встречалась и с какими подписями. Правой кнопкой по картинке → «Найти
+     это изображение», или перетащить файл в поиск по картинкам.</p>
+  <p>Старая фотография под свежей подписью — самая частая подделка, и делать
+     её проще всего. Но поиск <b>не доказывает</b> ни подлинности, ни
+     подделки: он показывает историю изображения, выводы делает человек. Если
+     картинка не нашлась нигде — это не доказательство, а лишь «проверить не
+     удалось».</p>
+
+  <h3>Не верить сразу, если</h3>
+  <p>Нет автора и даты; заголовок кричит и требует срочно переслать всем;
+     вместо первоисточника «учёные доказали»; много восклицательных знаков и
+     слов заглавными; все ссылки ведут на такие же перепечатки; сайт появился
+     месяц назад и не говорит, кто его делает.</p>
+</details>
+
+</div>
+
+<script>
+"use strict";
+
+/* ==== ЗАДАЧИ: вставлено gen.py, руками не править ==== */
+/* Обзорный практикум к теме 11 класса, базовый уровень (официальный
+   поурочный план, урок 4): «Сетевой этикет. Проблема подлинности
+   полученной информации». Содержание раздела программы: социальные сети
+   как организация коллективного взаимодействия и обмена данными,
+   сетевой этикет — правила поведения в киберпространстве, проблема
+   подлинности полученной информации.
+
+   Единственный источник задач. В practice.html вписывается скриптом
+   gen.py между маркерами — руками страницу не править.
+
+   Ответ везде целое число без единиц измерения. Проверка знак в знак.
+
+   Три типа устроены как «сколько из перечисленного», три остальных —
+   разбор конкретного случая: адрес источника, цепочка перепечаток,
+   вывод из проверки фотографии. Каждая задача несёт поле meta: gen.py
+   --selftest пересчитывает ответ по тексту задачи и сверяет с meta. */
+
+const T_TYPES = [
+  "сетевой этикет",
+  "что соцсеть знает и без вас",
+  "признаки недостоверной публикации",
+  "кто на самом деле опубликовал",
+  "сколько независимых источников",
+  "проверка фотографии"
+];
+
+function tRng(seed) {
+  let s = seed >>> 0;
+  return function () {
+    s ^= s << 13; s >>>= 0;
+    s ^= s >> 17;
+    s ^= s << 5;  s >>>= 0;
+    return s / 4294967296;
+  };
+}
+
+function tRand(rng, a, b) { return a + Math.floor(rng() * (b - a + 1)); }
+function tPick(rng, arr) { return arr[tRand(rng, 0, arr.length - 1)]; }
+function tShuffle(rng, arr) {
+  const a = arr.slice();
+  for (let j = a.length - 1; j > 0; j--) {
+    const k = tRand(rng, 0, j);
+    const tmp = a[j]; a[j] = a[k]; a[k] = tmp;
+  }
+  return a;
+}
+function tPickN(rng, pool, n) { return tShuffle(rng, pool).slice(0, n); }
+
+/* --------------------------------------------- 0-2. «сколько из четырёх»
+
+   Строки внутри одной пары списков не повторяются, и ни один пример из
+   «нет»-списка не должен быть защитим как «да»: иначе счёт перестаёт
+   быть однозначным. Это проверяет gen.py. */
+
+const T_RUDE = [
+  "писать сообщение целиком ЗАГЛАВНЫМИ БУКВАМИ",
+  "выложить переписку из личного чата в общий, не спросив автора",
+  "разбивать одну мысль на десяток отдельных сообщений подряд",
+  "обсуждать в общем чате личные дела одного из участников",
+  "отвечать на вопрос одноклассника словами «сам погугли»",
+  "звонить по видеосвязи без предупреждения поздно вечером",
+  "сыпать в рабочий чат стикеры и мемы пачками"
+];
+const T_POLITE = [
+  "подписать письмо своим именем и классом",
+  "коротко назвать суть письма в теме",
+  "спросить у автора, прежде чем переслать его сообщение дальше",
+  "в общем чате отвечать на вопрос по существу",
+  "в незнакомом чате сначала прочитать закреплённое сообщение",
+  "предупредить, что отвечаешь не сразу, если занят"
+];
+
+const T_TRACKED = [
+  "в какое время суток человек обычно заходит в сеть",
+  "с какого устройства и из какого браузера он входит",
+  "примерное местоположение по IP-адресу",
+  "какие записи он дочитал до конца, а какие пролистал",
+  "список контактов из телефона, если он разрешил доступ",
+  "где снята выложенная фотография — по геометке внутри файла",
+  "на кого он подписан и чьи записи открывает чаще всего"
+];
+const T_TOLD = [
+  "название любимой книги",
+  "кличка домашнего питомца",
+  "мнение о новом фильме",
+  "как прошёл день рождения",
+  "какую музыку он слушает",
+  "кем он хочет стать после школы"
+];
+
+const T_FISHY = [
+  "у публикации нет ни автора, ни даты",
+  "заголовок кричит и требует срочно переслать всем знакомым",
+  "первоисточника нет, вместо него «учёные доказали»",
+  "в тексте много восклицательных знаков и слов заглавными",
+  "все ссылки внутри статьи ведут на такие же перепечатки",
+  "сайт зарегистрирован месяц назад, раздела «О редакции» нет"
+];
+const T_SOLID = [
+  "указаны автор, дата и должность эксперта",
+  "цифры в статье сходятся с отчётом, на который дана ссылка",
+  "редакция публикует опровержения собственных ошибок",
+  "на сайте есть адрес редакции и телефон",
+  "у материала есть ссылка на первоисточник, и она открывается"
+];
+
+const T_COUNTABLE = [
+  {type: 0, ask: "нарушает правила сетевого этикета",
+   yes: T_RUDE, no: T_POLITE,
+   why: "Сетевой этикет — это уважение к времени и к личным границам " +
+        "собеседника: не кричать, не засорять общий чат, не выносить " +
+        "чужое в публичное место, отвечать по существу."},
+  {type: 1, ask: "социальная сеть знает о человеке, даже если он сам этого " +
+                 "не публиковал",
+   yes: T_TRACKED, no: T_TOLD,
+   why: "Сеть собирает не только то, что вы написали, а то, что вы сделали: " +
+        "время входа, устройство, адрес, что дочитали, куда нажали, что " +
+        "лежит внутри файла фотографии. Вкусы и мнения она узнаёт, только " +
+        "если вы их сами написали."},
+  {type: 2, ask: "относится к признакам того, что публикации не стоит верить " +
+                 "сразу",
+   yes: T_FISHY, no: T_SOLID,
+   why: "Верить не сразу заставляют отсутствие автора, даты и " +
+        "первоисточника, давление срочностью и кольцо ссылок на " +
+        "перепечатки. Наоборот, доверия добавляет то, что можно " +
+        "проверить: автор, дата, работающая ссылка на источник, адрес " +
+        "редакции, привычка признавать свои ошибки."}
+];
+
+function tCountTask(rng, spec) {
+  const k = tRand(rng, 1, 3);
+  const yes = tPickN(rng, spec.yes, k);
+  const no = tPickN(rng, spec.no, 4 - k);
+  const items = tShuffle(rng, yes.concat(no));
+  return {
+    type: spec.type, answer: String(k),
+    meta: {items: items},
+    question: "Перечислено: <b>" + items.join("; ") + "</b>. Сколько из " +
+      "этого " + spec.ask + "?",
+    explain: spec.why + " Из перечисленного подходит: " + yes.join("; ") +
+      " — всего " + k + "."
+  };
+}
+
+/* ------------------------------------ 3. кто на самом деле опубликовал
+
+   Тот же приём, что на уроке 1 про поддельные ссылки: настоящий владелец
+   сайта — это ПОСЛЕДНИЕ ДВЕ части доменного имени, всё остальное слева
+   дописывает владелец этого домена. Правило в самом вопросе не
+   повторяется намеренно: оно разобрано на уроке 1 и лежит в подсказке,
+   а ошибка возвращает вопрос с разбором. */
+
+const T_BRAND = ["ria.ru", "tass.ru", "rbc.ru", "lenta.ru", "interfax.ru",
+                 "kommersant.ru", "vedomosti.ru", "gazeta.ru"];
+const T_FAKE = ["info-portal.com", "news-today.net", "daily-feed.org",
+                "press-now.info", "fast-news.site", "mir-novostei.top",
+                "vsya-pravda.club"];
+const T_SLUG = ["gorod-otmenil-marshrut", "shkola-remont-stadiona",
+                "festival-nauki-v-parke", "novaya-poliklinika",
+                "raspisanie-elektrichek", "konkurs-shkolnyh-proektov"];
+const T_TLD = ["ru", "com", "net", "org", "info"];
+
+function tSource(rng) {
+  const brand = tPick(rng, T_BRAND);
+  const fake = tPick(rng, T_FAKE);
+  const fakeName = fake.slice(0, fake.lastIndexOf("."));
+  const fakeTld = fake.slice(fake.lastIndexOf(".") + 1);
+  const shape = tRand(rng, 0, 2);
+  const dashed = brand.replace(".", "-");
+  const host = shape === 0 ? brand + "." + fake
+             : shape === 1 ? dashed + "." + fake
+             : "news." + dashed + "." + fake;
+  const url = "https://" + host + "/2026/09/" + tPick(rng, T_SLUG) + ".html";
+
+  const otherTld = tPick(rng, T_TLD.filter(t => t !== fakeTld));
+  const otherBrand = tPick(rng, T_BRAND.filter(b => b !== brand));
+  const opts = tShuffle(rng, [fake, brand, fakeName + "." + otherTld, otherBrand]);
+  const at = opts.indexOf(fake) + 1;
+  return {
+    type: 3, answer: String(at),
+    meta: {host: host, owner: fake, opts: opts},
+    question: "Знакомый прислал ссылку на новость: <code>" + url + "</code>. " +
+      "Какой сайт на самом деле опубликовал этот материал? Ответ — номер " +
+      "варианта.<ol>" + opts.map(o => "<li>" + o + "</li>").join("") + "</ol>",
+    explain: "Доменное имя читают справа налево, и владельцу принадлежат " +
+      "последние две части: здесь это <b>" + fake + "</b> — вариант " + at +
+      ". Всё, что слева (" + host.slice(0, host.length - fake.length - 1) +
+      "), дописал сам владелец " + fake + " — чтобы ссылка с первого " +
+      "взгляда читалась как «" + brand + "». Настоящий адрес " + brand +
+      " выглядел бы иначе: имя бренда стояло бы в самом конце."
+  };
+}
+
+/* ----------------------------------- 4. сколько независимых источников
+
+   Пять публикаций об одном событии — это ещё не пять подтверждений.
+   Независимый источник тот, кто не ссылается на другую публикацию из
+   этого же списка. Первая публикация всегда независимая: раньше неё в
+   списке ссылаться не на что. */
+
+const T_HEAD = [
+  "в городе отменили автобусный маршрут № 7",
+  "школьный стадион закроют на ремонт до декабря",
+  "в парке прошёл фестиваль науки",
+  "в районе начали строить новую поликлинику",
+  "расписание пригородных электричек изменят с октября",
+  "в библиотеке открыли бесплатные курсы для школьников"
+];
+const T_KIND = ["телеграм-канал", "новостной сайт", "газета", "блог",
+                "информагентство", "городской паблик"];
+const T_LETTER = ["А", "Б", "В", "Г", "Д", "Е"];
+const T_OWN = [
+  "свой корреспондент на месте",
+  "со ссылкой на очевидца",
+  "со ссылкой на пресс-службу городской администрации",
+  "со ссылкой на документ, который редакция публикует целиком",
+  "со ссылкой на собственный запрос в ведомство"
+];
+
+function tChain(rng) {
+  const n = tRand(rng, 4, 6);
+  const k = tRand(rng, 1, Math.min(3, n - 1));
+  // Первая публикация независима всегда: ссылаться ей в списке не на что.
+  const own = [0];
+  const rest = tShuffle(rng, [1, 2, 3, 4, 5].slice(0, n - 1).map(i => i));
+  for (let i = 0; own.length < k; i++) own.push(rest[i]);
+  const kinds = tShuffle(rng, T_KIND).slice(0, n);
+  let t = 60 * tRand(rng, 9, 16) + 5 * tRand(rng, 0, 11);
+  const items = [];
+  for (let i = 0; i < n; i++) {
+    if (i) t += 5 * tRand(rng, 1, 8);
+    const h = Math.floor(t / 60), m = t % 60;
+    const clock = (h < 10 ? "0" : "") + h + ":" + (m < 10 ? "0" : "") + m;
+    const tail = own.indexOf(i) >= 0
+      ? tPick(rng, T_OWN)
+      : "со ссылкой на «" + T_LETTER[tRand(rng, 0, i - 1)] + "»";
+    items.push("<li>" + clock + " — " + kinds[i] + " «" + T_LETTER[i] +
+               "», " + tail + "</li>");
+  }
+  const ownNames = own.slice().sort((a, b) => a - b).map(i => "«" + T_LETTER[i] + "»");
+  return {
+    type: 4, answer: String(k),
+    meta: {n: n, own: own.slice().sort((a, b) => a - b)},
+    question: "Новость: «" + tPick(rng, T_HEAD) + "». Вот как она расходилась " +
+      "по сети:<ol>" + items.join("") + "</ol>Независимым считается тот " +
+      "источник, который <b>не ссылается</b> на другую публикацию из этого " +
+      "списка. Сколько у новости независимых источников?",
+    explain: "Независимы " + ownNames.join(", ") + " — всего " + k +
+      ". Остальные пересказывают то, что уже есть в списке, и ничего не " +
+      "подтверждают: сколько бы перепечаток ни было, проверка у них одна " +
+      "и та же. Поэтому «об этом пишут все» — не довод."
+  };
+}
+
+/* ------------------------------------------- 5. проверка фотографии
+
+   Обратный поиск по изображению отвечает на один вопрос: встречалась ли
+   эта картинка раньше и с какой подписью. Из каждого ответа следует свой
+   вывод — и он ровно один; неверные варианты берутся из общего списка
+   утверждений, ложных при любом исходе поиска. */
+
+const T_PHOTO_CAPTION = [
+  "наводнение в нашем городе вчера вечером",
+  "очередь за бесплатными билетами на стадион сегодня утром",
+  "новый корпус школы, открытый на этой неделе",
+  "пробка на выезде из города в эту пятницу",
+  "снегопад, который завалил центр города в эти выходные"
+];
+const T_PHOTO_FACT = [
+  ["та же фотография встречается в сети с 2019 года, на сайте другой страны",
+   "снимок настоящий, но старый и не отсюда — к этой новости он отношения не имеет"],
+  ["то же изображение год назад иллюстрировало совсем другое событие",
+   "снимок переиспользован: подпись под ним к нему не относится"],
+  ["самая ранняя публикация снимка — за два дня до события, о котором говорит подпись",
+   "снимок сделан раньше события, значит подписью он не подтверждается"],
+  ["изображение больше нигде в сети не встречается",
+   "проверка ничего не дала: подлинность снимка надо устанавливать другим способом"]
+];
+const T_PHOTO_WRONG = [
+  "раз изображение нашлось поиском, подпись к нему верна",
+  "изображение точно нарисовано нейросетью",
+  "проверять больше нечего: фотография из сети всегда подлинная",
+  "подпись верна, потому что у публикации много просмотров",
+  "снимок можно считать подлинным, раз его прислали знакомые"
+];
+
+function tPhoto(rng) {
+  const pair = tPick(rng, T_PHOTO_FACT);
+  const opts = tShuffle(rng, [pair[1]].concat(tPickN(rng, T_PHOTO_WRONG, 3)));
+  const at = opts.indexOf(pair[1]) + 1;
+  return {
+    type: 5, answer: String(at),
+    meta: {fact: pair[0], opts: opts},
+    question: "Фотография в сообщении подписана: «" +
+      tPick(rng, T_PHOTO_CAPTION) + "». Обратный поиск по изображению " +
+      "показал: <b>" + pair[0] + "</b>. Какой вывод верен? Ответ — номер " +
+      "варианта.<ol>" + opts.map(o => "<li>" + o + "</li>").join("") + "</ol>",
+    explain: "Верен вариант " + at + ": " + pair[1] + ". Обратный поиск " +
+      "отвечает ровно на один вопрос — встречалась ли эта картинка раньше " +
+      "и с какой подписью. Он не доказывает ни подлинности, ни подделки: " +
+      "он показывает историю изображения, а выводы делаете вы."
+  };
+}
+
+/* ---------------------------------------------------------------- сборка */
+
+function tTask(type, rng) {
+  if (type <= 2) return tCountTask(rng, T_COUNTABLE[type]);
+  if (type === 3) return tSource(rng);
+  if (type === 4) return tChain(rng);
+  return tPhoto(rng);
+}
+
+function tMake(seed) {
+  const rng = tRng(seed || 1);
+  return tShuffle(rng, [0, 1, 2, 3, 4, 5]).map(function (type) {
+    return tTask(type, rng);
+  });
+}
+
+/* Ответ сверяется знак в знак: целое число без пробелов и единиц. */
+function tCheck(task, raw) {
+  const s = String(raw === undefined || raw === null ? "" : raw).replace(/\s+/g, "");
+  if (!/^\d+$/.test(s)) return false;
+  return String(Number(s)) === task.answer;
+}
+/* ==== /ЗАДАЧИ ==== */
+
+// Ступени. Домашняя работа добровольная — ученик набирает столько,
+// сколько ему нужно, и останавливается.
+const SCALE = [[6, 5], [5, 4], [4, 3]];
+const MIN_TO_FINISH = 4;                 // ниже сдавать нечего
+const TYPES_TOTAL = 6;
+function markFor(done){
+  for (const s of SCALE) if (done >= s[0]) return s[1];
+  return 2;
+}
+/* Отметку даёт первая попытка (правило Светы от 15.09.2026): в части
+   заданий ответ — номер варианта, и добор закрывается перебором. Поэтому
+   закрытое не с первого раза поднимает отметку не больше чем на балл.
+   То же считает homework.py: Topic(first_round=True). */
+function markNow(done, clean){
+  return Math.min(markFor(done), markFor(clean) + 1);
+}
+
+/* ------------------------------------------------------------ квитанция
+   Код несёт цифры работы и контрольную сумму. Ключа нигде нет — иначе
+   страницу нельзя было бы просто положить на школьную платформу. Смысл
+   кода не в том, чтобы его нельзя было подделать, а в том, что подделать
+   его дольше, чем решить.
+------------------------------------------------------------------ */
+/* Ссылку на форму ставит скрипт set_form_link.py из корня кабинета:
+   в ней зашиты номера полей формы, на глаз их не подобрать. */
+const FORM = "https://docs.google.com/forms/d/e/1FAIpQLSfQyhaxcnzn4ZaKSe_ZMsluw7qRQnrw_80H6SfrnYB5EThUIA/viewform?usp=pp_url&entry.853601231=ФАМИЛИЯ&entry.1091635917=КЛАСС&entry.487188307=КОД";
+
+const ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+const EPOCH = Date.UTC(2026, 0, 1);
+const PREFIX = "ED";
+
+const bin = (v, w) => v.toString(2).padStart(w, "0");
+
+// Считаем по семибитным частям строки, а не через parseInt всей нагрузки:
+// в ней 33 бита, а побитовые операции в JS работают с 32-битными числами
+// и старший бит молча потерялся бы.
+function checksum(bitstr){
+  let cs = 0x5B;
+  for (let i = 0; i < bitstr.length; i += 7)
+    cs ^= parseInt(bitstr.substr(i, 7).padEnd(7, "0"), 2);
+  return cs & 0x7F;
+}
+
+function makeCode(st){
+  const day = Math.max(0, Math.min(2047, Math.floor(
+      (Date.now() - EPOCH) / 86400000)));
+  const payload = bin(day, 11) + bin(Math.min(15, st.typesDone), 4) +
+                  bin(Math.min(15, st.cleanTypes), 4) +
+                  bin(Math.min(127, st.solved), 7) +
+                  bin(Math.min(127, st.wrong), 7);
+  const bitstr = payload + bin(checksum(payload), 7);
+  let out = "";
+  for (let i = 0; i < 40; i += 5)
+    out += ALPHABET[parseInt(bitstr.substr(i, 5), 2)];
+  return PREFIX + "-" + out.slice(0, 4) + "-" + out.slice(4);
+}
+
+/* --------------------------------------------------------- состояние
+   Все задания лежат на странице сразу (правило Светы от 17.09.2026):
+   виден объём, порядок ученик выбирает сам. Карточка на задание; верный
+   ответ её закрывает, ошибка показывает разбор и кнопку «Новая задача» —
+   такое же задание с другими данными на той же карточке.            */
+
+const newRng = () => typeof tRng === "function"
+    ? tRng((Math.floor(Math.random() * 4294967295) + 1) >>> 0) : null;
+const freshCard = i => ({task: tTask(i, newRng()), state: "open",
+                         given: "", draft: ""});
+
+const st = {
+  cards: T_TYPES.map((_, i) => freshCard(i)),
+  clean: T_TYPES.map(() => true),    // закрыто с первой попытки
+  solved: 0, wrong: 0,               // копятся и через «Начать заново»
+  locked: false                      // код выдан — карточки заперты
+};
+Object.defineProperty(st, "typesDone",
+  {get(){ return st.cards.filter(c => c.state === "ok").length; }});
+Object.defineProperty(st, "cleanTypes",
+  {get(){ return st.cards.filter((c, i) => c.state === "ok"
+                                           && st.clean[i]).length; }});
+
+function captureDrafts(){
+  st.cards.forEach((c, i) => {
+    const el = document.getElementById("ans" + i);
+    if (el && c.state === "open") c.draft = el.value;
+  });
+}
+
+function answer(i){
+  const c = st.cards[i];
+  if (c.state !== "open" || st.locked) return;
+  const given = document.getElementById("ans" + i).value.trim();
+  if (!given) return;                    // пустое — не считаем ответом
+  captureDrafts();
+  c.given = given;
+  if (tCheck(c.task, given)){
+    st.solved++;
+    c.state = "ok";
+  } else {
+    st.wrong++;
+    st.clean[i] = false;
+    c.state = "err";
+  }
+  render();
+}
+
+function newTask(i){
+  if (st.locked) return;
+  captureDrafts();
+  st.cards[i] = freshCard(i);
+  render();
+  const el = document.getElementById("ans" + i);
+  if (el) el.focus();
+}
+
+function restart(){
+  if (st.typesDone >= MIN_TO_FINISH && !confirm(
+      "Начать заново? Закрытые задания сбросятся, задачи будут новые. " +
+      "Если код за эту попытку нужен — сначала получи и сдай его."))
+    return;
+  st.cards = T_TYPES.map((_, i) => freshCard(i));
+  st.clean = T_TYPES.map(() => true);
+  st.locked = false;
+  document.getElementById("final").innerHTML = "";
+  render();
+  window.scrollTo({top: 0, behavior: "smooth"});
+}
+
+/* ------------------------------------------------------------- вывод */
+
+const hEsc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
+                           .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+const HOWTO = "Ответ — только цифры: без пробелов, единиц и нуля впереди.";
+
+const kinds = n => {
+  const a = n % 100, b = a % 10;
+  if (a > 4 && a < 21) return "заданий";
+  if (b === 1) return "задание";
+  if (b > 1 && b < 5) return "задания";
+  return "заданий";
+};
+
+function statusText(){
+  const done = st.typesDone, clean = st.cleanTypes;
+  if (done < MIN_TO_FINISH){
+    const left = MIN_TO_FINISH - done;
+    return `Закрой ещё <b>${left}</b> ${kinds(left)}, чтобы получить код.`;
+  }
+  const mark = markNow(done, clean);
+  const open = st.cards.filter(c => c.state !== "ok").length;
+  let text = mark === 5
+      ? "Наработано на <b>5</b>. Забирай код и сдавай."
+      : `Можно остановиться прямо сейчас — это <b>${mark}</b>.`;
+  if (mark < 5 && open)
+    text += ` Незакрытых заданий: <b>${open}</b> — закроешь, и оценка ` +
+            `может вырасти.`;
+  if (markFor(done) > mark || (mark < 5 && !open))
+    text += " С первой попытки закрыто <b>" + clean + "</b>, остальное " +
+            "поднимает оценку только на балл. Хочешь выше — «Начать заново».";
+  return text;
+}
+
+function renderTypes(){
+  document.getElementById("types").innerHTML = T_TYPES.map((name, i) => {
+    const ok = st.cards[i].state === "ok";
+    return `<div class="type${ok ? " done" : ""}">
+              <span class="nm">${i + 1}. ${hEsc(name)}</span>
+              ${ok ? `<span class="first">${st.clean[i]
+                  ? "с первой попытки" : "не с первой"}</span>` : ""}</div>`;
+  }).join("");
+
+  const done = st.typesDone;
+  const mark = markNow(done, st.cleanTypes);
+  const el = document.getElementById("mark");
+  // до первой ступени оценки ещё нет — прочерк, не двойка
+  el.textContent = done >= MIN_TO_FINISH ? mark : "—";
+  el.className = done >= MIN_TO_FINISH ? "m" + mark : "";
+
+  const btn = document.getElementById("finish");
+  btn.disabled = done < MIN_TO_FINISH || st.locked;
+  btn.textContent = done >= MIN_TO_FINISH
+      ? `Закончить и получить код (на ${mark})`
+    : "Закончить и получить код";
+
+  const text = statusText();
+  document.getElementById("need").innerHTML = text;
+  document.getElementById("finishnote").innerHTML = st.locked ? "" : text;
+}
+
+function render(){
+  renderTypes();
+  const main = document.getElementById("main");
+  main.innerHTML = "";
+
+  st.cards.forEach((c, i) => {
+    const t = c.task;
+    const card = document.createElement("div");
+    card.className = "card" + (c.state === "ok" ? " ok" : "")
+                   + (st.locked ? " locked" : "");
+
+    let tail;
+    if (c.state === "open"){
+      tail = `<div class="howans">${HOWTO}</div>
+      <div class="row">
+        <input type="text" id="ans${i}" autocomplete="off"
+               spellcheck="false" placeholder="ответ" maxlength="8"
+               inputmode="numeric" value="${hEsc(c.draft || "")}"
+               ${st.locked ? "disabled" : ""}>
+        <button class="primary" data-go="${i}"
+                ${st.locked ? "disabled" : ""}>Проверить</button>
+      </div>`;
+    } else if (c.state === "ok"){
+      tail = `<div class="row">
+        <input type="text" value="${hEsc(c.given)}" disabled></div>
+        <div class="verdict ok">Правильно — задание закрыто${st.clean[i]
+            ? " с первой попытки" : ""}</div>`;
+    } else {
+      tail = `<div class="row">
+        <input type="text" value="${hEsc(c.given)}" disabled>
+        <button class="primary" data-new="${i}"
+                ${st.locked ? "disabled" : ""}>Новая задача</button></div>
+        <div class="verdict err">Ошибка. Верный ответ: ${hEsc(t.answer)}.
+           Задание остаётся незакрытым — прочитай разбор, нажми «Новая
+           задача» и реши такое же с другими данными.</div>
+        <div class="solution"><span class="cap">разбор</span>
+           ${t.explain}</div>`;
+    }
+
+    // Код задачи — картинкой: его читают глазами, а не вставляют в чат.
+    const code = t.code && typeof frz === "function"
+        ? `<div class="codebox">${frz(t.code)}</div>` : "";
+
+    card.innerHTML = `
+      <div class="kicker">${i + 1} &middot; ${hEsc(T_TYPES[i])}</div>
+      <div class="question">${t.question}</div>
+      ${code}
+      ${tail}`;
+    main.appendChild(card);
+  });
+
+  main.querySelectorAll("button[data-go]").forEach(b =>
+    b.addEventListener("click", () => answer(+b.dataset.go)));
+  main.querySelectorAll("button[data-new]").forEach(b =>
+    b.addEventListener("click", () => newTask(+b.dataset.new)));
+  main.querySelectorAll("input[type=text]:not(:disabled)").forEach(inp =>
+    inp.addEventListener("keydown", e => {
+      if (e.key === "Enter"){ e.preventDefault(); answer(+inp.id.slice(3)); }
+    }));
+}
+
+/* Кнопка «Сдать»: фамилию и класс страница помнит между заходами, код
+   подставляет сам. Переписывать код руками не нужно — именно на
+   переписывании и брались «код не разобрался». */
+function wireSend(code){
+  const fam = document.getElementById("fam");
+  const send = document.getElementById("send");
+  if (!fam || !send) return;
+  const kls = document.getElementById("kls");
+  const note = document.getElementById("sendnote");
+  try {
+    fam.value = localStorage.getItem("hw-fam") || "";
+    kls.value = localStorage.getItem("hw-kls") || "";
+  } catch (e) {}
+  send.addEventListener("click", () => {
+    const f = fam.value.trim(), k = kls.value.trim();
+    if (!f || !k){
+      note.textContent = "Впиши фамилию и класс — иначе непонятно, "
+                       + "чья это работа.";
+      (f ? kls : fam).focus();
+      return;
+    }
+    try {
+      localStorage.setItem("hw-fam", f);
+      localStorage.setItem("hw-kls", k);
+    } catch (e) {}
+    const url = FORM.replace("ФАМИЛИЯ", encodeURIComponent(f))
+                    .replace("КЛАСС", encodeURIComponent(k))
+                    .replace("КОД", encodeURIComponent(code));
+    window.open(url, "_blank", "noopener");
+    note.textContent = "Форма открылась в новой вкладке. Не забудь нажать "
+                     + "в ней «Отправить».";
+  });
+}
+
+function renderFinish(){
+  captureDrafts();
+  st.locked = true;
+  render();
+  const done = st.typesDone, mark = markNow(done, st.cleanTypes);
+  const code = makeCode(st);
+  const open = st.cards.filter(c => c.state !== "ok").length;
+
+  const more = !open || mark === 5 ? ""
+  : `<div class="row"><button id="back">Вернуться к заданиям</button>
+       <span class="stats">этот код останется действительным; закроешь
+             остальное — получишь новый</span></div>`;
+
+  const box = document.getElementById("final");
+  box.innerHTML = `
+    <div class="finish">
+      <h2>Готово — наработано на ${mark}</h2>
+      <p class="stats">Закрыто заданий: <b>${done}</b> из
+         ${TYPES_TOTAL} &middot; из них с первой попытки:
+         <b>${st.cleanTypes}</b> &middot; решено задач: <b>${st.solved}</b>
+         &middot; ошибок: <b>${st.wrong}</b></p>
+      <div class="code">${code}</div>
+      <p class="stats">Это код твоей работы. Он у каждого свой и зависит
+         от того, сколько и как ты решал.</p>
+      ${FORM ? `<div class="send">
+        <label>Фамилия
+          <input id="fam" autocomplete="off" placeholder="как в журнале"></label>
+        <label>Класс
+          <input id="kls" autocomplete="off" placeholder="11а"
+                 style="width:110px"></label>
+        <button id="send" class="primary">Сдать работу</button>
+        <p class="stats note" id="sendnote">Кнопка откроет форму: фамилия,
+           класс и код уже будут вписаны — останется нажать
+           «Отправить».</p>
+      </div>` : `<div class="send">
+        <p class="stats note">Форму сдачи ещё не подключили — код впиши в
+           неё сам(а), ссылку даст учитель.</p>
+      </div>`}
+      ${more}
+    </div>`;
+
+  wireSend(code);
+  box.scrollIntoView({block: "start", behavior: "smooth"});
+  const back = document.getElementById("back");
+  if (back) back.addEventListener("click", () => {
+    st.locked = false;
+    box.innerHTML = "";
+    render();
+  });
+}
+
+document.getElementById("finish").addEventListener("click", () => {
+  if (st.typesDone >= MIN_TO_FINISH && !st.locked) renderFinish();
+});
+document.getElementById("restart").addEventListener("click", restart);
+
+render();
+</script>
+<p class="ai-mark" style='margin:34px auto 0;max-width:860px;padding-top:12px;border-top:1px solid #d9dce6;color:#5c6070;font:13px/1.5 "Segoe UI",system-ui,sans-serif'>Материалы подготовлены с использованием технологий искусственного интеллекта.</p>
+</body>
+</html>
