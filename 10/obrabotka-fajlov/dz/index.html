@@ -1,0 +1,1023 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Домашнее задание — обработка данных в файлах</title>
+<meta name="description" content="Домашнее задание 10 класса (углублённый) к восьмому занятию: читаем программы, которые работают с файлом, — отбор по условию, пары соседних, самая длинная серия, запись в файл; ищем файл, на котором чужая программа врёт; вопросы про файлы. Python не нужен.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E10%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{margin:0;padding:20px 16px 60px;font:17px/1.55 "Segoe UI",system-ui,sans-serif}
+.wrap{max-width:820px;margin:0 auto}
+h1{font-size:23px;margin:0 0 4px}
+h2{font-size:18px;margin:0 0 10px}
+.sub{color:var(--muted);font-size:15px;margin:0 0 18px}
+code,pre{font-family:Consolas,"Cascadia Mono",monospace}
+pre{background:#1e2430;color:#e7ecf5;padding:13px 16px;border-radius:10px;
+    overflow-x:auto;font-size:15px;line-height:1.5;margin:10px 0}
+code{background:var(--card);border:1px solid var(--line);border-radius:5px;
+     padding:1px 5px;font-size:15px}
+pre code{background:none;border:0;padding:0;color:inherit;font-size:inherit}
+.intro{border:1px solid var(--line);border-radius:12px;background:var(--card);
+       padding:14px 18px;margin-bottom:18px}
+.intro dl{margin:0}
+.intro dt{font-weight:700;margin-top:10px}
+.intro dt:first-child{margin-top:0}
+.intro dd{margin:2px 0 0}
+.progress{border:2px solid var(--accent);border-radius:12px;padding:12px 16px;
+          background:#fff;margin-bottom:18px}
+.ptop{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.ptop h2{margin:0}
+.sp{flex:1 1 auto}
+.score{display:flex;align-items:baseline;gap:10px;color:var(--muted);font-size:15px}
+.score b{font:700 34px/1 "Segoe UI",system-ui,sans-serif;color:var(--ink);
+         min-width:40px;text-align:center;border:2px solid var(--line);
+         border-radius:8px;padding:2px 8px}
+.m5 b{color:var(--ok);border-color:var(--ok-line)}
+.m4 b{color:var(--accent);border-color:#a9c6e8}
+.m3 b{color:#8a5a00;border-color:var(--hi-line)}
+.types{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);border-radius:20px;padding:4px 12px;
+      font-size:14px;color:var(--muted);background:var(--card)}
+.chip.done{border-color:var(--ok-line);background:var(--ok-bg);color:var(--ok);
+           font-weight:600}
+.chip.cur{border-color:var(--accent);color:var(--accent);font-weight:600}
+.card{border:1px solid var(--line);border-radius:12px;padding:16px 18px;
+      background:#fff;margin-bottom:14px}
+.card.ok{border-color:var(--ok-line);background:var(--ok-bg)}
+.card.err{border-color:var(--err-line);background:var(--err-bg)}
+.tag{font-size:13px;color:var(--muted);margin:0 0 6px}
+.inp{font-size:15px;color:var(--muted);margin:4px 0}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px}
+input[type=text]{font:16px/1 Consolas,monospace;padding:10px 12px;border-radius:8px;
+                 border:1px solid var(--line);width:100%;max-width:340px}
+button{font:600 15px/1 inherit;padding:11px 16px;border-radius:9px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);color:var(--muted)}
+.verdict{margin-top:10px;font-size:15.5px}
+.verdict.ok{color:var(--ok)}
+.verdict.err{color:var(--err)}
+.note{border:1px solid var(--hi-line);background:var(--hi-bg);border-radius:10px;
+      padding:11px 15px;margin:12px 0;font-size:15.5px}
+.code{font:700 26px/1.2 Consolas,monospace;letter-spacing:.06em;
+      background:var(--card);border:2px dashed var(--accent);border-radius:12px;
+      padding:16px;text-align:center;margin:12px 0;user-select:all}
+.stats{color:var(--muted);font-size:14px}
+label{display:block;font-size:14px;color:var(--muted);margin-bottom:3px}
+.fields{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0}
+.fields div{flex:1 1 180px}
+.fields input{max-width:none}
+details{margin-top:10px;border:1px dashed var(--line);border-radius:9px;padding:8px 12px}
+summary{cursor:pointer;color:var(--accent);font-weight:600}
+/* файл задачи: строки сверху вниз, каждая в своей клетке */
+.file{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin:8px 0;
+      font:15px/1 Consolas,monospace}
+.file .fname{color:var(--muted);font-family:"Segoe UI",system-ui,sans-serif;
+             font-size:13px;margin-right:6px}
+.file .ln{border:1px solid var(--line);background:#fff;border-radius:5px;
+          padding:5px 8px;min-width:34px;text-align:right}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Домашнее задание — обработка данных в файлах</h1>
+<p class="sub">10 класс, углублённый уровень. Читаем программы, которые берут числа из файла: сколько чисел подошло, сколько пар соседних, какая серия самая длинная, что окажется в записанном файле; придумываем файл, на котором чужая программа врёт; отвечаем на вопросы про файлы. Python не нужен.</p>
+
+<div class="intro">
+  <dl>
+    <dt>Что нужно сделать</dt>
+    <dd>Закрыть шесть типов задач — по одной верно решённой на каждый. Ошибся —
+        тип не закрыт, и следующей придёт задача того же типа: разбор только что
+        показан, примени его.</dd>
+    <dt>Сколько закроешь — на то и наработал</dt>
+    <dd>Шесть типов — «5», пять — «4», четыре — «3». Меньше четырёх кода не
+        будет: сдавать нечего.</dd>
+    <dt>Главный инструмент — выписать в столбик</dt>
+    <dd>Иди по файлу сверху вниз и выписывай то, что считает программа: подходящие числа, пары, длину серии. Остаток у отрицательных — по правилам Python: −17 % 10 равно 3. Считать в уме и на бумаге: на проверочной Python тоже не будет.</dd>
+    <dt>Как сдать</dt>
+    <dd>В конце появится кнопка <b>«Сдать работу»</b>: впишешь фамилию и
+        класс, кнопка сама откроет форму с уже вписанным кодом. Переписывать
+        код руками не надо — именно на этом чаще всего и ошибаются.</dd>
+  </dl>
+</div>
+
+<div class="progress">
+  <div class="ptop">
+    <h2>Что осталось закрыть</h2>
+    <span class="sp"></span>
+    <div class="score" id="scorebox">
+      <span>наработано на</span><b id="mark">—</b>
+    </div>
+  </div>
+  <div class="types" id="types"></div>
+  <p class="stats" id="stats"></p>
+</div>
+
+<div id="area"></div>
+
+</div>
+
+<script>
+/* ==== ТИПЫ: вставлено gen.py, руками не править ==== */
+/* Обработка данных в файлах — источник правды для тренажёра практикума, ДЗ и
+   проверочной. Вставляется скриптом gen.py --sync между маркерами.
+   Руками в html не править.
+
+   Шесть типов задач — урок 16 плана («Обработка данных, хранящихся в файлах»),
+   в духе задания 17 ЕГЭ: в файле по одному целому числу в строке.
+     0 «отбор по условию»          — цикл for line in f: сколько чисел подошло и их
+                                     сумма или наибольшее
+     1 «первая строка — количество» — n = int(f.readline()), дальше читается ровно
+                                     n строк — или все оставшиеся
+     2 «пары соседних»             — prev и x: сколько пар подошло
+     3 «самая длинная серия»       — cur и best: длина серии подряд идущих
+     4 «два прохода»               — сначала наибольшее, файл открыт заново, потом
+                                     счёт относительно него
+     5 «запись в файл»             — что окажется в out.txt: сколько строк и какое
+                                     число в последней
+
+   Истину страница считает теми же правилами, что в коде задачи: условие у
+   каждой задачи записано дважды — выражением Python (показывается ученику) и
+   функцией JS (считает ответ). Остаток от деления — по правилам Python
+   (pyMod): −17 % 10 == 3.
+
+   gen.py --selftest берёт код задачи КАК ЕСТЬ, кладёт рядом файл data.txt и
+   исполняет настоящим Python; для типа 5 читает получившийся out.txt. Ответ
+   страницы обязан совпасть с настоящим запуском — иначе условие записано
+   дважды по-разному. Списков в коде задач нет: класс их не проходил. */
+
+const T_TYPES = [
+  'отбор по условию',
+  'первая строка — количество',
+  'пары соседних',
+  'самая длинная серия',
+  'два прохода',
+  'запись в файл'
+];
+const T_PER_TYPE = 1;      /* задач каждого типа в наборе тренажёра: один проход, правило Светы 21.09.2026 */
+
+/* Что сказать, когда ответ не сошёлся: приём, а не ответ ([[answer-fingerprints]]). */
+const T_HINTS = [
+  'Иди по файлу сверху вниз и выписывай в столбик только подходящие числа. Остаток '
+    + 'у отрицательных — по правилам Python: −17 % 10 равно 3 (−17 = 10·(−2) + 3), '
+    + 'а −12 % 3 равно 0.',
+  'Первая строка уже прочитана readline() — она в n, а не в сумме. range(n) читает '
+    + 'ровно n следующих строк, остальные остаются непрочитанными. А for line in f '
+    + 'идёт по всем строкам, которые ещё не прочитаны, до конца файла.',
+  'Выпиши пары: первое со вторым, второе с третьим и так далее — пар на одну меньше, '
+    + 'чем чисел. prev — это предыдущее число, первое уже прочитано до цикла. Проверь '
+    + 'условие для каждой пары.',
+  'Веди два числа: cur — длина текущей серии, best — лучшая до сих пор. Подходящее '
+    + 'число: cur + 1. Неподходящее обнуляет cur, но best не трогает.',
+  'Первый проход находит наибольшее m. Потом файл открыт заново, и второй проход '
+    + 'идёт с самого начала — сравнивай каждое число с уже известным m.',
+  'Строк в out.txt столько, сколько раз выполнился print(..., file=g). В последней '
+    + 'строке — то, что напечатано последним: последнее подходящее число после '
+    + 'преобразования.'
+];
+
+function tRng(seed) {
+  let s = seed >>> 0;
+  return function () {
+    s = (s * 1664525 + 1013904223) >>> 0;
+    return s / 4294967296;
+  };
+}
+function tRand(rng, a, b) { return a + Math.floor(rng() * (b - a + 1)); }
+function tPick(rng, arr) { return arr[tRand(rng, 0, arr.length - 1)]; }
+function tShuffle(rng, arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = tRand(rng, 0, i);
+    const tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+  }
+  return a;
+}
+
+/* --------------------------------------------- арифметика по правилам Python */
+function pyMod(a, b) { return a - b * Math.floor(a / b); }         /* a % b  */
+
+function tNums(rng, n, lo, hi) {
+  const out = [];
+  for (let i = 0; i < n; i++) out.push(tRand(rng, lo, hi));
+  return out;
+}
+function tList(xs) { return xs.join(', '); }
+
+/* Условия отбора: py — как в коде задачи, f — то же самое для страницы. */
+const T_CONDS = [
+  { py: 'x % 3 == 0',           f: x => pyMod(x, 3) === 0,          say: 'кратные 3' },
+  { py: 'x % 2 != 0',           f: x => pyMod(x, 2) !== 0,          say: 'нечётные' },
+  { py: 'x % 10 == 7',          f: x => pyMod(x, 10) === 7,         say: 'с остатком 7 от деления на 10' },
+  { py: 'abs(x) % 10 == 7',     f: x => Math.abs(x) % 10 === 7,     say: 'оканчивающиеся на 7' },
+  { py: 'x > 0 and x % 5 == 0', f: x => x > 0 && pyMod(x, 5) === 0, say: 'положительные кратные 5' },
+  { py: 'x < 0 or x % 4 == 0',  f: x => x < 0 || pyMod(x, 4) === 0, say: 'отрицательные или кратные 4' }
+];
+
+/* Файл, в котором по условию подходит от lo до hi чисел. Числа с 7 на конце
+   подмешиваем нарочно: без них условие «на 7» почти никогда не срабатывает. */
+function tFileFor(rng, cond, n, lo, hi, minOk, maxOk) {
+  for (;;) {
+    const xs = tNums(rng, n, lo, hi).map(x => tRand(rng, 0, 3) === 0
+      ? (x < 0 ? -1 : 1) * (Math.abs(x) - Math.abs(x) % 10 + 7) : x);
+    const k = xs.filter(cond.f).length;
+    if (k >= minOk && k <= maxOk) return xs;
+  }
+}
+
+/* ------------------------------------------------ 0: отбор по условию */
+function m0(rng) {
+  const cond = tPick(rng, T_CONDS);
+  const agg = tPick(rng, ['s', 'm']);
+  const xs = tFileFor(rng, cond, tRand(rng, 7, 9), -60, 99, 2, 5);
+  const ok = xs.filter(cond.f);
+  const k = ok.length;
+  const code = agg === 's'
+    ? ['f = open("data.txt")', 'k = 0', 's = 0', 'for line in f:', '    x = int(line)',
+       '    if ' + cond.py + ':', '        k = k + 1', '        s = s + x', 'print(k, s)']
+    : ['f = open("data.txt")', 'k = 0', 'm = -1000', 'for line in f:', '    x = int(line)',
+       '    if ' + cond.py + ':', '        k = k + 1', '        if x > m:', '            m = x',
+       'print(k, m)'];
+  const v = agg === 's' ? ok.reduce((a, b) => a + b, 0) : Math.max.apply(null, ok);
+  return {
+    code: code.join('\n'), file: xs,
+    question: 'Что напечатает программа? Ответ — два числа через пробел.',
+    answer: k + ' ' + v,
+    explain: 'Подходят (' + cond.say + '): ' + tList(ok) + ' — их ' + k + ', '
+           + (agg === 's' ? 'сумма ' : 'наибольшее ') + v + '.'
+  };
+}
+
+/* ------------------------------------------ 1: первая строка — количество */
+function m1(rng) {
+  const n = tRand(rng, 3, 5);
+  const extra = tRand(rng, 2, 3);
+  const rest = tNums(rng, n + extra, -20, 60);
+  const way = tPick(rng, ['range', 'rest']);
+  const lim = tPick(rng, [0, 10, 20]);
+  const useCond = tRand(rng, 0, 1) === 1;
+  const cnd = useCond ? '    if x > ' + lim + ':\n        s = s + x' : '    s = s + x';
+  const read = way === 'range'
+    ? 'for i in range(n):\n    x = int(f.readline())\n'
+    : 'for line in f:\n    x = int(line)\n';
+  const code = 'f = open("data.txt")\nn = int(f.readline())\ns = 0\n' + read + cnd + '\nprint(n, s)';
+  const used = way === 'range' ? rest.slice(0, n) : rest;
+  const took = useCond ? used.filter(x => x > lim) : used;
+  const s = took.reduce((a, b) => a + b, 0);
+  return {
+    code, file: [n].concat(rest),
+    question: 'Что напечатает программа? Ответ — два числа через пробел.',
+    answer: n + ' ' + s,
+    explain: 'Первая строка ушла в n = ' + n + '. '
+           + (way === 'range'
+             ? 'range(n) прочитал ровно ' + n + ' следующих строк: ' + tList(used)
+               + '; ещё ' + extra + ' строки остались непрочитанными.'
+             : 'for line in f прочитал все оставшиеся строки: ' + tList(used) + '.')
+           + (useCond ? ' Из них больше ' + lim + ': ' + (took.length ? tList(took) : 'ни одного') + '.' : '')
+           + ' Сумма ' + s + '.'
+  };
+}
+
+/* --------------------------------------------------- 2: пары соседних */
+const T_PAIRS = [
+  { py: '(prev + x) % 3 == 0',           f: (p, x) => pyMod(p + x, 3) === 0,           say: 'сумма кратна 3' },
+  { py: 'prev * x < 0',                  f: (p, x) => p * x < 0,                       say: 'числа разных знаков' },
+  { py: 'x > prev',                      f: (p, x) => x > p,                           say: 'второе больше первого' },
+  { py: 'prev % 2 == 0 and x % 2 == 0',  f: (p, x) => pyMod(p, 2) === 0 && pyMod(x, 2) === 0, say: 'оба чётные' },
+  { py: 'prev % 5 == 0 or x % 5 == 0',   f: (p, x) => pyMod(p, 5) === 0 || pyMod(x, 5) === 0, say: 'хотя бы одно кратно 5' }
+];
+function m2(rng) {
+  const pc = tPick(rng, T_PAIRS);
+  let xs, good;
+  for (;;) {
+    xs = tNums(rng, tRand(rng, 7, 9), -30, 50);
+    good = [];
+    for (let i = 1; i < xs.length; i++) if (pc.f(xs[i - 1], xs[i])) good.push('(' + xs[i - 1] + '; ' + xs[i] + ')');
+    if (good.length >= 2 && good.length <= xs.length - 3) break;
+  }
+  const code = ['f = open("data.txt")', 'prev = int(f.readline())', 'c = 0', 'for line in f:',
+                '    x = int(line)', '    if ' + pc.py + ':', '        c = c + 1', '    prev = x',
+                'print(c)'].join('\n');
+  return {
+    code, file: xs,
+    question: 'Что напечатает программа?',
+    answer: '' + good.length,
+    explain: 'Пар всего ' + (xs.length - 1) + ', подходят (' + pc.say + '): '
+           + good.join(', ') + ' — ' + good.length + '.'
+  };
+}
+
+/* ------------------------------------------------ 3: самая длинная серия */
+const T_RUNS = [
+  { py: 'x % 2 == 0', f: x => pyMod(x, 2) === 0, say: 'чётных' },
+  { py: 'x > 0',      f: x => x > 0,             say: 'положительных' },
+  { py: 'x % 3 != 0', f: x => pyMod(x, 3) !== 0, say: 'не кратных 3' }
+];
+function runsOf(xs, f) {
+  let cur = 0, best = 0;
+  for (const x of xs) {
+    if (f(x)) { cur++; if (cur > best) best = cur; } else cur = 0;
+  }
+  return best;
+}
+function m3(rng) {
+  const rc = tPick(rng, T_RUNS);
+  let xs, best;
+  for (;;) {
+    xs = tNums(rng, tRand(rng, 10, 12), -20, 40);
+    best = runsOf(xs, rc.f);
+    /* серий должно быть несколько, лучшая — не весь файл и не одно число */
+    let breaks = 0;
+    for (let i = 1; i < xs.length; i++) if (rc.f(xs[i - 1]) && !rc.f(xs[i])) breaks++;
+    if (best >= 2 && best <= 5 && breaks >= 2) break;
+  }
+  const code = ['f = open("data.txt")', 'cur = 0', 'best = 0', 'for line in f:',
+                '    x = int(line)', '    if ' + rc.py + ':', '        cur = cur + 1',
+                '        if cur > best:', '            best = cur', '    else:',
+                '        cur = 0', 'print(best)'].join('\n');
+  const marks = xs.map(x => rc.f(x) ? '<b>' + x + '</b>' : '' + x);
+  return {
+    code, file: xs,
+    question: 'Что напечатает программа?',
+    answer: '' + best,
+    explain: 'Подходящие выделены: ' + marks.join(', ') + '. Самая длинная серия '
+           + rc.say + ' подряд — ' + best + '.'
+  };
+}
+
+/* ------------------------------------------------------ 4: два прохода */
+const T_SECOND = [
+  { py: 'x * 2 > m',   f: (x, m) => x * 2 > m,  say: 'больше половины m' },
+  { py: 'm - x < 10',  f: (x, m) => m - x < 10, say: 'меньше чем на 10 меньше m' },
+  { py: 'x == m',      f: (x, m) => x === m,    say: 'равны m' },
+  { py: 'x % 10 == m % 10', f: (x, m) => pyMod(x, 10) === pyMod(m, 10), say: 'с той же последней цифрой, что у m' }
+];
+function m4(rng) {
+  const sc = tPick(rng, T_SECOND);
+  let xs, m, ok;
+  for (;;) {
+    xs = tNums(rng, tRand(rng, 7, 9), 1, 60);
+    if (sc.py === 'x == m' && tRand(rng, 0, 1)) xs[tRand(rng, 0, xs.length - 1)] = Math.max.apply(null, xs);
+    m = Math.max.apply(null, xs);
+    ok = xs.filter(x => sc.f(x, m));
+    if (ok.length >= (sc.py === 'x == m' ? 1 : 2) && ok.length < xs.length) break;
+  }
+  const code = ['f = open("data.txt")', 'm = int(f.readline())', 'for line in f:',
+                '    x = int(line)', '    if x > m:', '        m = x', 'f.close()',
+                'f = open("data.txt")', 'c = 0', 'for line in f:', '    x = int(line)',
+                '    if ' + sc.py + ':', '        c = c + 1', 'print(m, c)'].join('\n');
+  return {
+    code, file: xs,
+    question: 'Что напечатает программа? Ответ — два числа через пробел.',
+    answer: m + ' ' + ok.length,
+    explain: 'Первый проход: наибольшее m = ' + m + '. Второй проход с начала файла, '
+           + 'подходят (' + sc.say + '): ' + tList(ok) + ' — ' + ok.length + '.'
+  };
+}
+
+/* ------------------------------------------------------ 5: запись в файл */
+const T_WRITE = [
+  { py: 'x * 2',   f: x => x * 2 },
+  { py: 'x - 1',   f: x => x - 1 },
+  { py: 'x // 10', f: x => Math.floor(x / 10) },
+  { py: 'abs(x)',  f: x => Math.abs(x) }
+];
+function m5(rng) {
+  const cond = tPick(rng, T_CONDS);
+  const wr = tPick(rng, T_WRITE);
+  const xs = tFileFor(rng, cond, tRand(rng, 7, 9), -60, 99, 2, 5);
+  const ok = xs.filter(cond.f);
+  const last = wr.f(ok[ok.length - 1]);
+  const code = ['f = open("data.txt")', 'g = open("out.txt", "w")', 'for line in f:',
+                '    x = int(line)', '    if ' + cond.py + ':',
+                '        print(' + wr.py + ', file=g)', 'g.close()'].join('\n');
+  return {
+    code, file: xs,
+    question: 'Сколько строк окажется в файле <code>out.txt</code> и какое число будет '
+            + 'в последней из них? Ответ — два числа через пробел.',
+    answer: ok.length + ' ' + last,
+    explain: 'Подходят (' + cond.say + '): ' + tList(ok) + '. Каждое записано своей строкой '
+           + 'как ' + wr.py + ' — строк ' + ok.length + ', в последней ' + last + '.'
+  };
+}
+
+const T_MAKERS = [m0, m1, m2, m3, m4, m5];
+
+/* --------------------------------------------------------------- задачи */
+function tTask(type, rng) {
+  const m = T_MAKERS[type](rng);
+  return { type, code: m.code, file: m.file, answer: m.answer, explain: m.explain,
+           question: m.question || 'Что напечатает программа?' };
+}
+
+/* Файл задачи на странице: строки сверху вниз, каждая в своей клетке. Данные
+   — текстом, картинкой только код ([[template-as-image]]). */
+function tFileHtml(xs) {
+  return '<div class="file"><span class="fname">data.txt</span>'
+       + xs.map(x => '<span class="ln">' + x + '</span>').join('') + '</div>';
+}
+
+/* Сверка ответа. Пробелы схлопываем, запятые между числами прощаем: «4, 17»
+   и «4 17» — одно и то же. Минус можно набрать и длинным «−». */
+function tNorm(s) {
+  return String(s).replace(/−/g, '-').replace(/[,;]/g, ' ')
+      .replace(/\s+/g, ' ').trim();
+}
+function tCheck(task, raw) {
+  return tNorm(raw) === tNorm(task.answer);
+}
+
+/* Набор для практикума: T_PER_TYPE кругов по всем типам, внутри круга типы
+   перемешаны. Круг один: тренажёр в части 1 — разминка, время пары уходит на
+   три программы. Второй круг — одной цифрой. */
+function tMake(seed) {
+  const rng = tRng(seed);
+  const out = [];
+  for (let round = 0; round < T_PER_TYPE; round++) {
+    const order = tShuffle(rng, [0, 1, 2, 3, 4, 5]);
+    for (let i = 0; i < order.length; i++) out.push(tTask(order[i], rng));
+  }
+  return out;
+}
+/* ==== /ТИПЫ ==== */
+
+/* ==== ЗАДАЧИ ДЗ: вставлено gen.py, руками не править ==== */
+/* Домашнее задание: что сдают после пары «Обработка данных в файлах».
+   Источник правды. Вставляется gen.py --sync в homework.html и test.html.
+
+   Четыре типа берутся из types.js (отбор по условию, пары соседних, самая
+   длинная серия, запись в файл), дальше два своих:
+     4 «найди контрпример» — программа читает файл и в ней ТОНКАЯ ошибка из
+                             сегодняшней темы: последняя цифра без abs (врёт на
+                             отрицательных), наибольшее со стартом 0, лишняя пара
+                             с нулём перед первым числом, лучшая серия, которую
+                             забыли сравнить после цикла. Ученик называет
+                             содержимое файла, на котором программа врёт.
+                             Ключа нет: считаем верным и кривым способом и
+                             смотрим, разошлись ли.
+     5 «как это работает»  — вопрос с тремя вариантами: текстовый и двоичный
+                             файл, файловая переменная, режимы "r" и "w",
+                             readline и for line in f, второй проход, abs,
+                             старт prev, куда положить файл.
+*/
+
+const HW_TYPES = [
+  'отбор по условию',
+  'пары соседних',
+  'самая длинная серия',
+  'запись в файл',
+  'найди контрпример',
+  'как это работает'
+];
+/* тип ДЗ -> тип задачи из types.js */
+const HW_FROM_TRAINER = { 0: 0, 1: 2, 2: 3, 3: 5 };
+
+/* --------------------------------------------- тип 4: найди контрпример */
+
+const HW_BUGS = {
+  mod10: {
+    spec: 'Программа печатает, сколько чисел файла оканчивается на цифру 7.',
+    code: 'f = open("data.txt")\nk = 0\nfor line in f:\n    x = int(line)\n'
+        + '    if x % 10 == 7:\n        k = k + 1\nprint(k)',
+    hint: 'Какое число оканчивается на 7, но даёт другой остаток от деления на 10 '
+        + 'по правилам Python?',
+    why: 'Для отрицательных остаток в Python не совпадает с последней цифрой: '
+       + '−17 % 10 == 3. Последнюю цифру берут у модуля: abs(x) % 10.'
+  },
+  maxzero: {
+    spec: 'Программа печатает наибольшее из чисел файла, оканчивающихся на 7. '
+        + 'В файле есть хотя бы одно такое число.',
+    code: 'f = open("data.txt")\nm = 0\nfor line in f:\n    x = int(line)\n'
+        + '    if abs(x) % 10 == 7:\n        if x > m:\n            m = x\nprint(m)',
+    hint: 'С какого числа начинается m — и всегда ли среди подходящих найдётся '
+        + 'число больше него?',
+    why: 'Старт m = 0 — число, которого в файле может не быть. Если все числа на 7 '
+       + 'отрицательные, программа напечатает 0. Начинать надо с очень маленького '
+       + 'числа или с первого подходящего.'
+  },
+  prevzero: {
+    spec: 'Программа печатает, сколько пар соседних чисел файла имеют сумму, '
+        + 'кратную 3. Пара — два числа, стоящие в файле друг за другом.',
+    code: 'f = open("data.txt")\nprev = 0\nc = 0\nfor line in f:\n    x = int(line)\n'
+        + '    if (prev + x) % 3 == 0:\n        c = c + 1\n    prev = x\nprint(c)',
+    hint: 'Сколько пар проверит программа, если в файле два числа? А сколько их на '
+        + 'самом деле?',
+    why: 'prev = 0 до цикла создаёт лишнюю пару (0; первое число). Если первое '
+       + 'число кратно 3, она засчитается. prev надо начинать с первого числа, '
+       + 'прочитанного до цикла.'
+  },
+  lastrun: {
+    spec: 'Программа печатает длину самой длинной серии чётных чисел, идущих в '
+        + 'файле подряд.',
+    code: 'f = open("data.txt")\ncur = 0\nbest = 0\nfor line in f:\n    x = int(line)\n'
+        + '    if x % 2 == 0:\n        cur = cur + 1\n    else:\n'
+        + '        if cur > best:\n            best = cur\n        cur = 0\nprint(best)',
+    hint: 'Когда программа сравнивает серию с лучшей? А если серия так и не '
+        + 'оборвалась?',
+    why: 'Серию сравнивают с лучшей только когда её оборвало нечётное число. '
+       + 'Серия в самом конце файла ничем не обрывается — и не сравнивается. '
+       + 'Сравнивать надо на каждом шаге или ещё раз после цикла.'
+  }
+};
+
+/* ограничения на данные: сколько чисел в файле и какие */
+const HW_SHAPE = {
+  mod10:    { min: 1, max: 10 },
+  maxzero:  { min: 1, max: 10 },
+  prevzero: { min: 2, max: 10 },
+  lastrun:  { min: 1, max: 10 }
+};
+const HW_LO = -1000, HW_HI = 1000;
+
+function hwCounter(rng) {
+  const bug = tPick(rng, ['mod10', 'maxzero', 'prevzero', 'lastrun']);
+  const b = HW_BUGS[bug], sh = HW_SHAPE[bug];
+  return {
+    kind: 'counter', bug,
+    code: b.code,
+    question: '<b>Что программа должна делать.</b> В файле <code>data.txt</code> по '
+            + 'одному целому числу в строке. ' + b.spec
+            + '<br><b>Задание.</b> Здесь спрятана ошибка, из-за которой программа '
+            + 'врёт не всегда, а на особых данных. Придумай такой файл: впиши его '
+            + 'числа по порядку через пробел (от ' + sh.min + ' до ' + sh.max
+            + ' чисел, каждое от ' + HW_LO + ' до ' + HW_HI + ').',
+    hint: b.hint,
+    explain: b.why
+  };
+}
+
+/* верный и кривой ответ каждой программы — ровно то, что она напечатает */
+function hwTrueFalse(bug, xs) {
+  if (bug === 'mod10') {
+    const good = xs.filter(x => Math.abs(x) % 10 === 7).length;
+    const bad = xs.filter(x => pyMod(x, 10) === 7).length;
+    return ['' + good, '' + bad];
+  }
+  if (bug === 'maxzero') {
+    const ok = xs.filter(x => Math.abs(x) % 10 === 7);
+    let m = 0;
+    for (const x of ok) if (x > m) m = x;
+    return ['' + Math.max.apply(null, ok), '' + m];
+  }
+  if (bug === 'prevzero') {
+    let good = 0, bad = 0, prev = 0;
+    for (let i = 1; i < xs.length; i++) if (pyMod(xs[i - 1] + xs[i], 3) === 0) good++;
+    for (const x of xs) { if (pyMod(prev + x, 3) === 0) bad++; prev = x; }
+    return ['' + good, '' + bad];
+  }
+  let cur = 0, best = 0, cur2 = 0, best2 = 0;
+  for (const x of xs) {
+    if (pyMod(x, 2) === 0) { cur++; if (cur > best) best = cur; } else cur = 0;
+    if (pyMod(x, 2) === 0) cur2++;
+    else { if (cur2 > best2) best2 = cur2; cur2 = 0; }
+  }
+  return ['' + best, '' + best2];
+}
+
+function hwCheckCounter(task, raw) {
+  const parts = String(raw).replace(/−/g, '-').trim().split(/[\s,;]+/)
+    .filter(function (s) { return s; });
+  const sh = HW_SHAPE[task.bug];
+  if (!parts.length || !parts.every(function (s) { return /^-?\d+$/.test(s); }))
+    return { ok: false, why: 'нужны целые числа файла через пробел' };
+  if (parts.length < sh.min || parts.length > sh.max)
+    return { ok: false, why: 'в файле должно быть от ' + sh.min + ' до ' + sh.max + ' чисел' };
+  const xs = parts.map(Number);
+  if (xs.some(function (x) { return x < HW_LO || x > HW_HI; }))
+    return { ok: false, why: 'числа — от ' + HW_LO + ' до ' + HW_HI };
+  if (task.bug === 'maxzero' && !xs.some(function (x) { return Math.abs(x) % 10 === 7; }))
+    return { ok: false, why: 'по условию в файле есть хотя бы одно число, оканчивающееся на 7' };
+  const tf = hwTrueFalse(task.bug, xs);
+  if (tf[0] === tf[1])
+    return { ok: false, why: 'на этом файле программа печатает верное «' + tf[0]
+                           + '» — ошибка прячется в других данных' };
+  return { ok: true, why: 'верно: должно быть «' + tf[0] + '», а программа печатает «'
+                        + tf[1] + '»' };
+}
+
+/* --------------------------------------------- тип 5: как это работает */
+const HW_THEORY = [
+  {
+    q: 'Чем текстовый файл отличается от двоичного?',
+    opts: ['В текстовом лежат коды символов, разбитые на строки, — его можно прочитать в Блокноте',
+           'Текстовый файл всегда меньше двоичного',
+           'В двоичном файле можно хранить только числа 0 и 1'],
+    right: 0,
+    why: 'Текстовый файл — это символы и переводы строк. Двоичный (картинка, программа, '
+       + 'архив) — байты в своём формате, Блокнот покажет в нём мусор.'
+  },
+  {
+    q: 'Что лежит в переменной f после строки <code>f = open("data.txt")</code>?',
+    opts: ['Файловая переменная: через неё программа читает файл по порядку',
+           'Всё содержимое файла одной строкой',
+           'Первое число из файла'],
+    right: 0,
+    why: 'open не читает файл, а открывает его. f — файловая переменная (указатель): '
+       + 'она помнит, до какого места файл уже прочитан.'
+  },
+  {
+    q: 'Что случится с файлом out.txt, в котором уже были строки, после '
+     + '<code>g = open("out.txt", "w")</code>?',
+    opts: ['Файл станет пустым: режим "w" стирает старое содержимое',
+           'Новые строки допишутся в конец',
+           'Программа остановится с ошибкой: файл занят'],
+    right: 0,
+    why: 'Режим "w" создаёт файл заново. Дописать в конец — режим "a". Открывая файл '
+       + 'на запись, проверь, что это не твои данные.'
+  },
+  {
+    q: 'В файле строки 5, 8, 3. Что напечатает '
+     + '<code>f = open("data.txt")<br>a = f.readline()<br>b = f.readline()<br>print(int(b))</code>?',
+    opts: ['8', '5', '13'],
+    right: 0,
+    why: 'Каждый readline() читает следующую строку: первый — 5, второй — 8. '
+       + 'Файловая переменная помнит, где остановилась.'
+  },
+  {
+    q: 'Программа сделала <code>n = int(f.readline())</code>, а потом '
+     + '<code>for line in f:</code>. Какие строки пройдёт цикл?',
+    opts: ['Все, кроме первой: она уже прочитана',
+           'Все строки файла, начиная с первой',
+           'Только первые n строк'],
+    right: 0,
+    why: 'Цикл for line in f продолжает с того места, где остановилось чтение, и идёт '
+       + 'до конца файла. Ровно n строк прочитает только for i in range(n).'
+  },
+  {
+    q: 'Зачем в задаче «сначала найди наибольшее, потом посчитай пары» файл '
+     + 'открывают второй раз?',
+    opts: ['Первый проход дочитал файл до конца — чтобы идти сначала, его открывают заново',
+           'Без повторного open числа прочитаются с ошибкой',
+           'Второй open нужен, чтобы сохранить файл'],
+    right: 0,
+    why: 'После первого прохода файловая переменная стоит в конце: второй for по ней '
+       + 'не сделает ни одного витка. Списков мы не знаем, поэтому второй проход — '
+       + 'повторным открытием.'
+  },
+  {
+    q: 'Как в Python проверить, что целое x (может быть отрицательным) '
+     + 'оканчивается на 7?',
+    opts: ['abs(x) % 10 == 7', 'x % 10 == 7', 'x // 10 == 7'],
+    right: 0,
+    why: 'В Python −17 % 10 == 3: остаток не бывает отрицательным. Последнюю цифру '
+       + 'берут у модуля числа.'
+  },
+  {
+    q: 'Пары соседних чисел считают через prev. С чего начинать prev?',
+    opts: ['С первого числа файла, прочитанного до цикла',
+           'С нуля',
+           'С последнего числа файла'],
+    right: 0,
+    why: 'Первая пара — первое и второе число. Старт prev = 0 добавит лишнюю пару '
+       + '(0; первое число), которой в файле нет.'
+  },
+  {
+    q: 'Программа открывает <code>open("17.txt")</code>. Где должен лежать файл?',
+    opts: ['В той же папке, что и программа',
+           'В любой папке на диске — Python найдёт сам',
+           'Только на рабочем столе'],
+    right: 0,
+    why: 'Имя без пути ищется в текущей папке — при запуске из IDLE это папка '
+       + 'программы. Файл из другого места — FileNotFoundError.'
+  },
+  {
+    q: 'Что делает <code>print(x, file=g)</code>, если g открыт на запись?',
+    opts: ['Записывает x отдельной строкой в файл g',
+           'Печатает x на экран и в файл',
+           'Записывает в файл слово «x»'],
+    right: 0,
+    why: 'print с параметром file пишет не на экран, а в файл — со своим переводом '
+       + 'строки, как обычно.'
+  },
+  {
+    q: 'В самой длинной серии best обновляют так: '
+     + '<code>if cur &gt; best: best = cur</code>. Где должна стоять эта проверка?',
+    opts: ['На каждом шаге, сразу после cur = cur + 1',
+           'Только там, где серия оборвалась',
+           'Один раз, перед циклом'],
+    right: 0,
+    why: 'Если сравнивать только при обрыве, серия в самом конце файла не будет '
+       + 'сравнена: её ничто не обрывает.'
+  }
+];
+
+function hwTheory(rng) {
+  const item = tPick(rng, HW_THEORY);
+  const idx = tShuffle(rng, [0, 1, 2]);
+  const letters = ['A', 'Б', 'В'];
+  const opts = idx.map(function (k, pos) {
+    return letters[pos] + ') ' + item.opts[k];
+  });
+  const right = letters[idx.indexOf(item.right)];
+  return {
+    kind: 'theory', qid: HW_THEORY.indexOf(item),
+    code: '',
+    question: item.q + '<br><br>' + opts.join('<br>')
+            + '<br><br>Ответ — одна буква.',
+    answer: right,
+    explain: 'Верно: ' + right + ') ' + item.opts[item.right] + '. ' + item.why
+  };
+}
+
+/* ------------------------------------------------------------ сборка */
+function hwMake(type, rng) {
+  let t;
+  if (type in HW_FROM_TRAINER) {
+    t = tTask(HW_FROM_TRAINER[type], rng);
+    t.kind = 'trainer';
+  } else if (type === 4) {
+    t = hwCounter(rng);
+  } else {
+    t = hwTheory(rng);
+  }
+  t.hwType = type;
+  return t;
+}
+
+function hwVerdict(task, raw) {
+  if (!String(raw).trim()) return { ok: false, why: '' };
+  if (task.kind === 'counter') return hwCheckCounter(task, raw);
+  if (task.kind === 'theory') {
+    const map = { 'A': 'A', 'А': 'A', 'a': 'A', 'а': 'A',
+                  'Б': 'Б', 'б': 'Б', 'B': 'Б',
+                  'В': 'В', 'в': 'В', 'C': 'В', 'c': 'В' };
+    const got = map[String(raw).trim().charAt(0)] || '';
+    return { ok: got === task.answer, why: '' };
+  }
+  return { ok: tCheck(task, raw), why: '' };
+}
+/* ==== /ЗАДАЧИ ДЗ ==== */
+
+/* Форма сдачи ДЗ — одна на все темы. Ссылку разносит set_form_link.py. */
+const FORM = "https://docs.google.com/forms/d/e/1FAIpQLSfQyhaxcnzn4ZaKSe_ZMsluw7qRQnrw_80H6SfrnYB5EThUIA/viewform?usp=pp_url&entry.853601231=ФАМИЛИЯ&entry.1091635917=КЛАСС&entry.487188307=КОД";
+const ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+const EPOCH = Date.UTC(2026, 0, 1);
+const PREFIX = "FL";
+const NEED_STREAK = 1;     // тип закрывает один верный ответ
+const MIN_TYPES = 4;       // ниже этого код не выдаётся
+const SCALE = [[6, 5], [5, 4], [4, 3]];
+
+const bin = (v, w) => v.toString(2).padStart(w, "0");
+// Семибитными частями строки: в нагрузке 33 бита, а побитовые операции в JS
+// 32-битные — старший бит молча потерялся бы.
+function checksum(bitstr){
+  let cs = 0x5B;
+  for (let i = 0; i < bitstr.length; i += 7)
+    cs ^= parseInt(bitstr.substr(i, 7).padEnd(7, "0"), 2);
+  return cs & 0x7F;
+}
+function makeCode(st){
+  const day = Math.max(0, Math.min(2047, Math.floor(
+      (Date.now() - EPOCH) / 86400000)));
+  const payload = bin(day, 11) + bin(Math.min(15, st.typesDone), 4) +
+                  bin(Math.min(15, st.cleanTypes), 4) +
+                  bin(Math.min(127, st.solved), 7) +
+                  bin(Math.min(127, st.wrong), 7);
+  const bitstr = payload + bin(checksum(payload), 7);
+  let out = "";
+  for (let i = 0; i < 40; i += 5)
+    out += ALPHABET[parseInt(bitstr.substr(i, 5), 2)];
+  return PREFIX + "-" + out.slice(0, 4) + "-" + out.slice(4);
+}
+
+/* ---------------------------------------------------------- состояние */
+const N = HW_TYPES.length;
+const rng = tRng((Date.now() ^ (Math.random() * 1e9)) >>> 0);
+const st = {
+  streak: Array(N).fill(0),
+  done: Array(N).fill(false),
+  clean: Array(N).fill(true),
+  solved: 0, wrong: 0,
+  cur: null, answered: false, retry: null
+};
+Object.defineProperty(st, "typesDone",
+  {get(){ return st.done.filter(Boolean).length; }});
+Object.defineProperty(st, "cleanTypes",
+  {get(){ return st.done.filter((d, i) => d && st.clean[i]).length; }});
+
+function markFor(n){
+  for (const [need, m] of SCALE) if (n >= need) return m;
+  return null;
+}
+/* После ошибки — тот же тип: разбор только что показан, применить его надо по
+   горячему. Иначе — любой незакрытый. */
+function pickType(){
+  if (st.retry !== null && !st.done[st.retry]) return st.retry;
+  const open = [];
+  for (let i = 0; i < N; i++) if (!st.done[i]) open.push(i);
+  if (!open.length) return null;
+  return open[tRand(rng, 0, open.length - 1)];
+}
+/* ==== FRZ: вставлено freeze.py, руками не править ==== */
+/* Код задачи — картинкой, прямо в браузере.
+   Вставляется freeze.py --sync между маркерами FRZ. Руками в html не править.
+
+   Тренажёр, ДЗ и проверочная рисуют код каждой задачи сами при открытии, и
+   заморозить его при выкладке нельзя — его ещё нет. Поэтому страница
+   рисует код на canvas и вставляет <img>: скопировать мышкой и запустить в
+   IDLE не выйдет — задача снова про чтение (Света, 14.09.2026).
+
+   Стиль тот же, что у блоков <pre>: Consolas 15px, тёмный фон, комментарий
+   после # серо-голубой. Рисуем в двойном размере — чётко на любом экране. */
+function frz(code) {
+  var S = 2, SIZE = 15, LEAD = 22, PX = 14, PY = 12;
+  var lines = String(code).replace(/\r/g, '').split('\n');
+  var c = document.createElement('canvas'), g = c.getContext('2d');
+  var font = (SIZE * S) + 'px Consolas, "Cascadia Mono", "Courier New", monospace';
+  g.font = font;
+  var w = 0;
+  for (var i = 0; i < lines.length; i++) w = Math.max(w, g.measureText(lines[i]).width);
+  c.width = Math.ceil(w) + 2 * PX * S;
+  c.height = lines.length * LEAD * S + 2 * PY * S;
+  g.fillStyle = '#1e2430';
+  g.fillRect(0, 0, c.width, c.height);
+  g.font = font;                       /* смена размера сбрасывает шрифт */
+  g.textBaseline = 'middle';
+  for (var k = 0; k < lines.length; k++) {
+    var y = PY * S + k * LEAD * S + LEAD * S / 2;
+    var line = lines[k], at = line.indexOf('#');
+    var head = at < 0 ? line : line.slice(0, at), tail = at < 0 ? '' : line.slice(at);
+    g.fillStyle = '#e7ecf5';
+    g.fillText(head, PX * S, y);
+    if (tail) {
+      g.fillStyle = '#8fa6c4';
+      g.fillText(tail, PX * S + g.measureText(head).width, y);
+    }
+  }
+  if (!document.getElementById('frz-css')) {
+    var st = document.createElement('style');
+    st.id = 'frz-css';
+    st.textContent = 'img.frz-b{display:block;max-width:100%;height:auto;'
+                   + 'border-radius:10px;margin:8px 0}';
+    document.head.appendChild(st);
+  }
+  return '<img class="frz-b" width="' + (c.width / S) + '" height="' + (c.height / S)
+       + '" alt="код задачи — читай с экрана" src="' + c.toDataURL('image/png') + '">';
+}
+/* ==== /FRZ ==== */
+
+function esc(s){ return String(s).replace(/[&<>]/g, c =>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+/* ------------------------------------------------------------- экран */
+function paintProgress(){
+  const box = document.getElementById("types");
+  box.innerHTML = "";
+  HW_TYPES.forEach((name, i) => {
+    const c = document.createElement("span");
+    c.className = "chip" + (st.done[i] ? " done"
+                          : (st.cur && st.cur.hwType === i ? " cur" : ""));
+    c.textContent = name + (st.done[i] ? " ✓" : "");
+    box.appendChild(c);
+  });
+  const m = markFor(st.typesDone);
+  const sb = document.getElementById("scorebox");
+  sb.className = "score" + (m ? " m" + m : "");
+  document.getElementById("mark").textContent = m || "—";
+  document.getElementById("stats").textContent =
+    "закрыто типов: " + st.typesDone + " из " + N +
+    " · решено задач: " + st.solved + " · ошибок: " + st.wrong +
+    (st.typesDone < MIN_TYPES
+      ? " · до кода работы осталось закрыть " + (MIN_TYPES - st.typesDone) : "");
+}
+
+function nextTask(){
+  const type = pickType();
+  if (type === null) { finish(); return; }
+  st.cur = hwMake(type, rng);
+  st.answered = false;
+  const t = st.cur;
+  const hint = t.hint
+    ? '<details><summary>Подсказка</summary><p>' + t.hint + '</p></details>' : "";
+  document.getElementById("area").innerHTML =
+    '<div class="card" id="task">' +
+      '<p class="tag">' + HW_TYPES[type] +
+        (st.retry === type ? ' · ещё раз, тот же тип' : '') + '</p>' +
+      (t.code ? frz(t.code) : '') +
+      (t.file ? tFileHtml(t.file) : '') +
+      '<p>' + (t.question || "Что напечатает программа?") + '</p>' +
+      '<div class="row">' +
+        '<input type="text" id="ans" autocomplete="off" spellcheck="false">' +
+        '<button class="primary" id="go">Проверить</button>' +
+      '</div>' +
+      hint +
+      '<div class="verdict" id="v"></div>' +
+    '</div>';
+  document.getElementById("go").addEventListener("click", judge);
+  document.getElementById("ans").addEventListener("keydown", e => {
+    if (e.key === "Enter") judge();
+  });
+  document.getElementById("ans").focus();
+  paintProgress();
+}
+
+function judge(){
+  if (st.answered) { nextTask(); return; }
+  const raw = document.getElementById("ans").value;
+  if (!raw.trim()) return;
+  const t = st.cur, type = t.hwType;
+  const res = hwVerdict(t, raw);
+  const card = document.getElementById("task");
+  const v = document.getElementById("v");
+  st.answered = true;
+  document.getElementById("go").textContent = "Дальше";
+  document.getElementById("ans").disabled = true;
+  if (res.ok){
+    st.solved++;
+    st.streak[type]++;
+    st.retry = null;
+    card.className = "card ok";
+    v.className = "verdict ok";
+    let text = "Верно. " + (res.why ? res.why + " " : "") + (t.explain || "");
+    if (st.streak[type] >= NEED_STREAK){
+      st.done[type] = true;
+      text += " Тип закрыт.";
+    }
+    v.innerHTML = text;
+  } else {
+    st.wrong++;
+    st.streak[type] = 0;
+    st.clean[type] = false;
+    st.retry = type;
+    card.className = "card err";
+    v.className = "verdict err";
+    v.innerHTML = "Пока нет" + (res.why ? " — " + res.why : "") +
+      ". " + (t.explain || "") +
+      " Следующая задача — того же типа.";
+  }
+  paintProgress();
+}
+
+function finish(){
+  const m = markFor(st.typesDone);
+  const code = st.typesDone >= MIN_TYPES ? makeCode(st) : null;
+  const more = st.typesDone < N
+    ? '<button id="more">Закрыть ещё типы</button>' : "";
+  document.getElementById("area").innerHTML =
+    '<div class="card">' +
+      '<h2>Работа окончена</h2>' +
+      '<p>Закрыто типов: <b>' + st.typesDone + '</b> из ' + N +
+        '. Решено задач: ' + st.solved + ', ошибок: ' + st.wrong + '.' +
+        (m ? ' Наработано на <b>' + m + '</b>.' : '') + '</p>' +
+      (code
+        ? '<p>Твой код работы:</p><div class="code">' + code + '</div>' +
+          '<div class="fields">' +
+            '<div><label for="fam">Фамилия</label>' +
+              '<input type="text" id="fam" autocomplete="off"></div>' +
+            '<div><label for="kls">Класс</label>' +
+              '<input type="text" id="kls" autocomplete="off"></div>' +
+          '</div>' +
+          '<div class="row"><button id="send" class="primary">Сдать работу</button></div>' +
+          '<p class="stats">Кнопка откроет форму: фамилия, класс и код уже ' +
+            'будут вписаны — останется нажать «Отправить».</p>'
+        : '<div class="note">Закрыто меньше ' + MIN_TYPES +
+          ' типов — кода работы нет. Закрой ещё хотя бы ' +
+          (MIN_TYPES - st.typesDone) + ', и он появится.</div>') +
+      '<div class="row">' + more + '</div>' +
+    '</div>';
+  const b = document.getElementById("more");
+  if (b) b.addEventListener("click", nextTask);
+  wireSend(code);
+}
+
+function wireSend(code){
+  const btn = document.getElementById("send");
+  if (!btn) return;
+  const fam = document.getElementById("fam"), kls = document.getElementById("kls");
+  try {
+    fam.value = localStorage.getItem("fam") || "";
+    kls.value = localStorage.getItem("kls") || "";
+  } catch (e) {}
+  btn.addEventListener("click", () => {
+    if (!fam.value.trim()){ fam.focus(); return; }
+    try {
+      localStorage.setItem("fam", fam.value.trim());
+      localStorage.setItem("kls", kls.value.trim());
+    } catch (e) {}
+    const url = FORM.replace("ФАМИЛИЯ", encodeURIComponent(fam.value.trim()))
+                    .replace("КЛАСС", encodeURIComponent(kls.value.trim()))
+                    .replace("КОД", encodeURIComponent(code));
+    window.open(url, "_blank", "noopener");
+  });
+}
+
+paintProgress();
+nextTask();
+</script>
+<p class="ai-mark" style="margin:34px auto 0;max-width:860px;padding-top:12px;border-top:1px solid #d9dce6;color:#5c6070;font:13px/1.5 "Segoe UI",system-ui,sans-serif">Материалы подготовлены с использованием технологий искусственного интеллекта.</p>
+</body>
+</html>
