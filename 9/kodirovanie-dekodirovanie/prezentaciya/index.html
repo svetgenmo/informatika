@@ -685,6 +685,95 @@ function firstTrap(msg, table, opts){
   return null;
 }
 
+/* Куда заводит лишняя ветка: самый длинный частичный разбор остатка.
+   Возвращает буквы, которые ещё читаются, и место, где кончаются
+   подходящие коды. Если ветка доходит до конца — path это полный
+   разбор, а at === rest.length. */
+function deadEnd(rest, table){
+  let best = null;
+  (function rec(i, acc){
+    if (!best || i > best.at) best = {at: i, path: acc.slice()};
+    if (i === rest.length) return;
+    for (const e of table){
+      if (!rest.startsWith(e.c, i)) continue;
+      acc.push(e.L);
+      rec(i + e.c.length, acc);
+      acc.pop();
+    }
+  })(0, []);
+  return best;
+}
+
+/* Разбор по шагам: идём по верному разбиению код за кодом, и на КАЖДОМ
+   шаге называем все коды, которые начинаются с остатка. Лишние ветки
+   закрываем тут же: тупиком (показывая, где он наступает — сразу или
+   через несколько букв) или оговоркой «буквы не повторяются». Шаг
+   пропускать нельзя: «сняли Г — и вдруг остаток после Е» ученик читает
+   как ошибку в разборе, а не как сокращение (правка 22.09.2026). */
+function walkSteps(msg, table, word, distinct, shown){
+  const steps = [];
+  let pos = 0;
+  for (let k = 0; k < word.length; k++){
+    const good = table.find(e => e.L === word[k]);
+    const cur = msg.slice(pos);
+    const rest = msg.slice(pos + good.c.length);
+    const alts = table.filter(e => e !== good && msg.startsWith(e.c, pos));
+    const where = k === 0 ? "с начала цепочки" : "с остатка «" + shown(cur) + "»";
+    const take = rest
+      ? "Берём «" + good.c + "» — буква " + good.L + "; остаётся «" +
+        shown(rest) + "»."
+    : "Берём «" + good.c + "» — буква " + good.L + ", цепочка кончилась.";
+
+    if (!alts.length){
+      steps.push((k === 0 ? "Разбираем цепочку слева направо. С начала " +
+                            "цепочки начинается только один код: «"
+                          : "С остатка «" + shown(cur) +
+                            "» начинается только один код: «") +
+                 good.c + "» — буква " + good.L +
+                 (rest ? "; остаётся «" + shown(rest) + "»." :
+                         ", цепочка кончилась."));
+      pos += good.c.length;
+      continue;
+    }
+
+    const names = [good].concat(alts).map(e => "«" + e.c + "» (буква " +
+                                              e.L + ")");
+    let s = "Развилка: " + where + " " +
+            (alts.length === 1 ? "начинаются два кода" : "начинаются сразу " +
+             (alts.length + 1) + " кода") + " — " +
+            names.slice(0, -1).join(", ") + " и " + names[names.length - 1] + ".";
+    for (const a of alts){
+      const used = word.slice(0, k);
+      if (distinct && used.indexOf(a.L) >= 0){
+        s += " «" + a.c + "» не годится: буква " + a.L + " уже была, а " +
+             "буквы в сообщении не повторяются.";
+        continue;
+      }
+      const after = msg.slice(pos + a.c.length);
+      const d = deadEnd(after, table);
+      if (d.at === after.length){
+        // ветка дочитывается до конца — её режет только оговорка
+        const p = used + a.L + d.path.join("");
+        const dup = [...p].find((L, j) => p.indexOf(L) !== j);
+        s += " Если взять «" + a.c + "», цепочка дочитывается до конца как " +
+             p + " — но там буква " + dup + " дважды, а условие это " +
+             "запрещает.";
+      } else if (!d.path.length){
+        s += " Если взять «" + a.c + "», остаётся «" + shown(after) +
+             "», а так не начинается ни один код — тупик.";
+      } else {
+        s += " Если взять «" + a.c + "», дальше ещё читается " +
+             d.path.join(", ") + ", но потом остаётся «" +
+             shown(after.slice(d.at)) + "», а так не начинается ни один " +
+             "код — тупик.";
+      }
+    }
+    steps.push(s + " " + take);
+    pos += good.c.length;
+  }
+  return steps;
+}
+
 /* ------------------------------------------------------- таблица кода
    Коды раздаются случайно, но длины взяты с вариантов, а таблица
    обязана быть НЕ префиксной: иначе разбор идёт без единой развилки и
@@ -867,26 +956,8 @@ function makeDecode(t){
     const split = word.split("").map(L => table.find(e => e.L === L).c);
     const shown = s => showChain(s, table, cipher);
 
-    const steps = [
-      trap.at === 0
-        ? "Разбор идёт слева направо, и развилка здесь на первом же шаге: " +
-          "с начала цепочки начинаются сразу два кода — «" +
-          trap.instead.c + "» (буква " + trap.instead.L + ") и «" +
-          trap.taken.c + "» (буква " + trap.taken.L + ")."
-      : "Разбираем цепочку слева направо. Первым идёт код «" + split[0] +
-          "» — это буква " + word[0] + ".",
-      (trap.at === 0 ? "Второй вариант не годится: если взять «"
-                   : "Развилка: с остатка «" + shown(msg.slice(trap.at)) +
-                       "» начинается ещё и код «" + trap.taken.c +
-                       "» (буква " + trap.taken.L + "). Но если взять «") +
-        trap.taken.c + "», дальше остаётся «" + shown(trap.rest) +
-        "», а так не начинается ни один код — тупик.",
-      "Верное разбиение получается одно: " + split.join(" | ") + "."
-    ];
-    if (clash)
-      steps.push("Оговорка тут не для красоты: без неё цепочка " +
-                 "разбирается ещё и как " + clash.p + ", но там буква " +
-                 clash.L + " встречается дважды — условие это запрещает.");
+    const steps = walkSteps(msg, table, word, norepeat, shown);
+    steps.push("Разбиение получилось одно: " + split.join(" | ") + ".");
     steps.push(num
       ? "Это " + letters(word.length) + " — их и записываем в ответ."
     : "Читаем буквы подряд: " + word + ".");
