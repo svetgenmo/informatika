@@ -837,9 +837,10 @@ function genCountTrue(rnd, bases) {
   const kinds = [10, ...bases];
   for (let i = 0; i < 3; i++) {
     const b = kinds[i % kinds.length];
-    // числа рядом с left, чтобы ответ нельзя было угадать по размеру
+    // числа рядом с left, чтобы ответ нельзя было угадать по размеру;
+    // одно и то же значение дважды не берём — строки выглядели бы опечаткой
     const v = left + randInt(rnd, -40, 40);
-    if (v === left || v < 8) { i--; continue; }
+    if (v === left || v < 8 || rights.some(r => r.v === v)) { i--; continue; }
     rights.push({b, v});
     if (left > v) trues++;
     rows.push(`${toBase(left, 2)}<sub>2</sub> &gt; ${sub(toBase(v, b), b)}`);
