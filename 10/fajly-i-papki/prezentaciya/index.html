@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Операции с файлами и папками — презентация</title>
+<meta name="description" content="Разбор темы «Операции с файлами и папками», 10 класс: имя и расширение, папки и путь, копирование и перемещение, Корзина, поиск по маске, облачное хранение и совместная работа, данные на телефоне. И постановка практикума — рисунки в реферате и PDF.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E10%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ink)}
+body{font:20px/1.5 "Segoe UI",system-ui,sans-serif;overflow:hidden}
+
+.deck{position:relative;height:100vh;width:100vw}
+.slide{position:absolute;inset:0;display:none;flex-direction:column;
+       justify-content:center;padding:60px 80px;max-width:1100px;
+       margin:0 auto}
+.slide.active{display:flex}
+.slide h1{font-size:42px;margin:0 0 18px}
+.slide h2{font-size:30px;margin:0 0 20px;color:var(--accent)}
+.kicker{font-size:15px;letter-spacing:.1em;text-transform:uppercase;
+        color:var(--muted);font-weight:700;margin:0 0 8px}
+.slide p{font-size:22px;margin:10px 0;color:var(--ink)}
+.slide p.lead{font-size:26px;color:var(--muted)}
+.slide ul{font-size:22px;padding-left:30px}
+.slide li{margin:8px 0}
+
+.box{border:2px solid var(--line);border-radius:14px;padding:18px 24px;
+     background:var(--card);margin:14px 0}
+.box.ok{border-color:var(--ok-line);background:var(--ok-bg)}
+.box.hi{border-color:var(--hi-line);background:var(--hi-bg)}
+.box b{color:var(--ink)}
+.box p{font-size:20px;margin:6px 0}
+
+/* ---- лента времени: что делится, а что нет ---- */
+.tape{margin:18px 0}
+.tape .row{display:flex;align-items:center;gap:12px;margin:10px 0}
+.tape .lbl{flex:0 0 190px;font-size:17px;color:var(--muted);text-align:right}
+.tape .bars{display:flex;gap:4px;flex:1 1 auto}
+.seg{height:38px;border-radius:7px;display:flex;align-items:center;
+     justify-content:center;font-size:15px;font-weight:600;color:#fff}
+.seg.seq{background:var(--hi);flex:0 0 22%}
+.seg.par{background:var(--accent);flex:1 1 auto}
+.seg.par.small{flex:0 0 19.5%}
+.tape .time{flex:0 0 110px;font-size:18px;font-weight:700}
+
+/* ---- ссылки на видео: кликаются прямо со слайда ---- */
+.vids{display:flex;flex-direction:column;gap:14px;margin:18px 0}
+a.vid{display:block;text-decoration:none;color:inherit;
+      border:2px solid var(--hi-line);border-left:6px solid var(--hi);
+      border-radius:12px;padding:14px 20px;background:var(--hi-bg)}
+a.vid:hover{background:#fdecd0}
+a.vid .nm{font-size:22px;font-weight:700;color:var(--hi)}
+a.vid .dur{font-size:17px;font-weight:400;color:var(--muted);
+           margin-left:10px;white-space:nowrap}
+a.vid .ds{display:block;margin-top:2px;font-size:17px;color:var(--muted)}
+
+/* ---- три вычислителя рядом ---- */
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin:18px 0}
+.three .c{border:2px solid var(--line);border-radius:12px;padding:14px 18px;
+          font-size:18px;background:#fff}
+.three .c b{display:block;margin-bottom:6px;color:var(--accent);
+            font-size:20px}
+.three .c small{color:var(--muted);font-size:15px}
+
+.nav{position:fixed;bottom:0;left:0;right:0;display:flex;
+     align-items:center;gap:14px;padding:10px 24px;font-size:14px;
+     color:var(--muted);background:linear-gradient(transparent,#fff 40%)}
+.dots{display:flex;gap:7px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--line)}
+.dot.cur{background:var(--accent)}
+.hint{margin-left:auto}
+.zone{position:fixed;top:0;bottom:40px;width:15%;z-index:2;cursor:pointer}
+.zone.l{left:0}.zone.r{right:0}
+
+/* Колода рассчитана на проектор; на узком экране (кто-то откроет её с
+   телефона) ленту времени незачем ужимать до нечитаемых огрызков —
+   подписи уезжают наверх, полосы получают всю ширину. */
+@media (max-width:900px){
+  .slide{padding:40px 24px}
+  .slide h1{font-size:32px} .slide h2{font-size:24px}
+  .slide p,.slide ul{font-size:19px}
+  .tape .row{flex-wrap:wrap}
+  .tape .lbl{flex:1 0 100%;text-align:left}
+  .tape .bars{flex:1 1 70%}
+  .tape .time{flex:0 0 70px;text-align:right}
+  .seg{font-size:13px;overflow:hidden}
+  .three{grid-template-columns:1fr}
+}
+
+/* ---- размер шрифта на проекторе: A− / A+ ---- */
+.zoom{display:inline-flex;align-items:center;gap:3px;margin-left:8px}
+.zoom button{padding:5px 9px;font-size:14px;min-width:36px;line-height:1}
+.zoom .z{color:var(--muted);font-size:14px;min-width:46px;text-align:center;
+         font-variant-numeric:tabular-nums}
+.slide{overflow-y:auto}
+kbd{font:600 17px/1 Consolas,monospace;background:#fff;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:2px 6px;white-space:nowrap}
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+<section class="slide active">
+  <p class="kicker">10 класс &middot; урок 4</p>
+  <h1>Операции с файлами и папками</h1>
+  <p class="lead">Где лежат данные, как их найти, скопировать и не
+     потерять — на компьютере, в облаке и в телефоне. Во второй половине
+     урока реферат обрастает папкой проекта, рисунками и PDF.</p>
+</section>
+
+<section class="slide">
+  <p class="kicker">Файловая система</p>
+  <h2>Файл: имя и расширение</h2>
+  <p style="font:700 34px/1.3 Consolas,monospace;margin:18px 0">
+     реферат<span style="color:var(--hi)">.docx</span></p>
+  <ul>
+    <li><b>Расширение</b> — часть имени после последней точки. По нему
+        система выбирает, <b>чем открыть</b> файл.</li>
+    <li>Формат оно не меняет: «реферат.pdf», переименованный из .docx, —
+        всё тот же документ Word. Формат меняют <b>сохранением</b>.</li>
+    <li>Запрещены знаки <b>\ / : * ? " &lt; &gt; |</b> — у каждого своя
+        служебная роль.</li>
+  </ul>
+  <div class="box hi"><b>Проводник прячет расширения.</b> Включить показ:
+     меню вида → «Показать» → «Расширения имён файлов».</div>
+</section>
+
+<section class="slide">
+  <p class="kicker">Файловая система</p>
+  <h2>Папки и путь</h2>
+  <p>Папки вложены друг в друга и образуют <b>дерево</b>. На вершине —
+     диск. Путь перечисляет все папки от диска до файла:</p>
+  <p style="font:600 26px/1.3 Consolas,monospace;margin:14px 0">
+     C:\Users\Ivanov\Документы\<b>реферат.docx</b></p>
+  <div class="three">
+    <div class="c"><b>Одно имя — много мест</b>
+      «реферат.docx» может лежать в десяти папках: полные пути разные.</div>
+    <div class="c"><b>Перенёс — новый адрес</b>
+      Ярлык на старый путь перестанет работать.</div>
+    <div class="c"><b>Файловая система</b>
+      Хранит записи: какой файл в какой папке и где на диске его данные.</div>
+  </div>
+</section>
+
+<section class="slide">
+  <p class="kicker">Операции</p>
+  <h2>Копировать, переместить, удалить</h2>
+  <div class="three">
+    <div class="c"><b>Копировать</b> <kbd>Ctrl</kbd>+<kbd>C</kbd>
+      Второй независимый экземпляр. Правка копии оригинал не меняет.</div>
+    <div class="c"><b>Переместить</b> <kbd>Ctrl</kbd>+<kbd>X</kbd>
+      Тот же файл в новом месте. На том же диске — мгновенно: меняется
+      только запись.</div>
+    <div class="c"><b>Переименовать</b> <kbd>F2</kbd>
+      Меняется запись в папке, содержимое — нет.</div>
+  </div>
+  <div class="box hi"><b>Корзина спасает не всегда.</b> С жёсткого диска
+     удалённое уходит в Корзину. <kbd>Shift</kbd>+<kbd>Delete</kbd> и
+     удаление с флешки — мимо неё, сразу.</div>
+  <p>Мышью: на тот же диск — перемещение, на другой — копирование.</p>
+</section>
+
+<section class="slide">
+  <p class="kicker">Поиск</p>
+  <h2>Маски имён и фильтры</h2>
+  <div class="three">
+    <div class="c"><b>*</b> любое число любых символов, даже ни одного
+      <small>*.docx — все документы Word</small></div>
+    <div class="c"><b>?</b> ровно один символ
+      <small>отчёт?.txt — «отчёт1.txt», но не «отчёт12.txt»</small></div>
+    <div class="c"><b>Фильтры</b> тип, дата изменения, размер
+      <small>когда имени не помнишь</small></div>
+  </div>
+  <div class="box">Поиск в проводнике идёт по открытой папке <b>и всем
+     вложенным</b>. Искать от корня диска долго — начинайте с папки,
+     где файл вероятнее всего.</div>
+</section>
+
+<section class="slide">
+  <p class="kicker">Интернет-сервисы</p>
+  <h2>Облако и совместная работа</h2>
+  <ul>
+    <li><b>Облачное хранилище</b> держит файлы на сервере: открыть можно
+        с любого устройства, где выполнен вход.</li>
+    <li><b>Синхронизация</b> делает копии на всех устройствах
+        одинаковыми — и работает без сети: изменения уйдут, когда связь
+        вернётся.</li>
+    <li><b>Доступ по ссылке</b> — с правами: просмотр, комментарии,
+        редактирование. Выбирает владелец.</li>
+    <li><b>Онлайн-редактор</b>: правят вместе, одновременно; прежние
+        состояния — в истории версий.</li>
+  </ul>
+  <div class="box hi"><b>Синхронизация — не резервная копия.</b> Удалил
+     файл на ноутбуке — он исчез и в облаке, и на телефоне. Копия хранится
+     отдельно и от правок не меняется.</div>
+</section>
+
+<section class="slide">
+  <p class="kicker">Мобильные устройства</p>
+  <h2>Данные в телефоне</h2>
+  <p>Там тоже папки и файлы — их показывает приложение «Файлы». Отличие в
+     условиях: памяти мало, телефон теряют.</p>
+  <div class="three">
+    <div class="c"><b>Хранить</b> в облаке — только то, что включено в
+      настройках. Часто это одни фото.</div>
+    <div class="c"><b>Передать</b> кабелем, через облако, сообщением.</div>
+    <div class="c"><b>Мессенджер</b> — способ передать, а не хранить:
+      фото сжимаются, переписка теряется.</div>
+  </div>
+  <div class="box ok"><b>Вопрос одного предложения:</b> если телефон
+     утонет сегодня, что из него уцелеет?</div>
+</section>
+
+<section class="slide">
+  <p class="kicker">Практикум &middot; урок 4 из 5</p>
+  <h2>Реферат: третий слой</h2>
+  <ul>
+    <li>Урок 2 — общий вид документа и титульный лист.</li>
+    <li>Урок 3 — заголовки, содержание, номера страниц.</li>
+    <li><b>Сегодня</b> — папка проекта, рисунки с подписями и ссылками,
+        PDF.</li>
+    <li>Урок 5 — списки, таблицы, приложения.</li>
+    <li>Урок 6 — список источников и лицензии.</li>
+  </ul>
+  <div class="box"><b>Сегодняшняя тема — внутри работы.</b> Создать папки,
+     переместить документ, скачать и распаковать архив, переименовать
+     файлы, найти свой документ поиском — всё это шаги практикума.</div>
+</section>
+
+<section class="slide">
+  <p class="kicker">Главное на сегодня</p>
+  <h2>Рисунок в реферате — не просто картинка</h2>
+  <div class="three">
+    <div class="c"><b>Отдельный абзац</b>
+      по центру и без отступа 1,25 — иначе центр съезжает.</div>
+    <div class="c"><b>Подпись под ним</b>
+      «Рисунок 1 — Структура работы». Номер вставляет Word.</div>
+    <div class="c"><b>Ссылка в тексте</b>
+      «…показана на рисунке 1». Без неё незачем смотреть.</div>
+  </div>
+  <div class="box ok"><b>Номер — поле, как содержание на уроке 3.</b>
+     Вставили рисунок между первым и вторым — Word перенумерует все
+     подписи сам. Цифра, набранная руками, останется прежней.</div>
+</section>
+
+<section class="slide">
+  <p class="kicker">Главное на сегодня</p>
+  <h2>.docx — для правки, PDF — для отправки</h2>
+  <p>Документ Word на чужом компьютере может выглядеть иначе: другой
+     шрифт, другая версия Word, съехавшие страницы. PDF выглядит
+     одинаково везде — шрифты у него внутри.</p>
+  <div class="box hi"><b>Переименовать .docx в .pdf нельзя.</b> Формат
+     меняют командой «Сохранить как» → тип PDF. Проверка отличит
+     настоящий PDF от переименованного.</div>
+  <p class="lead">Открывайте страницу практикума: шаг 1 — папка проекта.</p>
+</section>
+
+
+</div>
+
+<div class="nav">
+  <span id="pos">1 / 10</span>
+  <span class="zoom" title="Размер шрифта на экране: клавиши + и −"><button id="zoomOut" title="Мельче (клавиша −)">A−</button><span class="z" id="zoomVal"></span><button id="zoomIn" title="Крупнее (клавиша +)">A+</button></span>
+  <div class="dots" id="dots"></div>
+  <span class="hint">← → или клик по краям экрана &middot; F11 — во весь экран</span>
+</div>
+<div class="zone l" id="prevZone"></div>
+<div class="zone r" id="nextZone"></div>
+
+<script>
+"use strict";
+const slides = Array.from(document.querySelectorAll(".slide"));
+const dotsBox = document.getElementById("dots");
+slides.forEach((_, i) => {
+  const d = document.createElement("span");
+  d.className = "dot" + (i === 0 ? " cur" : "");
+  dotsBox.appendChild(d);
+});
+const dots = Array.from(dotsBox.children);
+let cur = 0;
+
+function go(i){
+  if (i < 0 || i >= slides.length) return;
+  slides[cur].classList.remove("active");
+  dots[cur].classList.remove("cur");
+  cur = i;
+  slides[cur].classList.add("active");
+  dots[cur].classList.add("cur");
+  document.getElementById("pos").textContent = `${cur + 1} / ${slides.length}`;
+}
+
+document.addEventListener("keydown", e => {
+  if (["ArrowRight", "PageDown", " "].includes(e.key)) go(cur + 1);
+  else if (["ArrowLeft", "PageUp"].includes(e.key)) go(cur - 1);
+  else if (e.key === "Home") go(0);
+  else if (e.key === "End") go(slides.length - 1);
+});
+document.getElementById("prevZone").addEventListener("click", () => go(cur - 1));
+document.getElementById("nextZone").addEventListener("click", () => go(cur + 1));
+
+/* ---- размер шрифта на проекторе ----
+   Zoom только на области слайда: zoom на body растягивает 100vh, и панель
+   уезжает за экран (проверено 17.09.2026). Шаг запоминается в
+   localStorage и общий для всех презентаций: один раз подобрала на
+   проекторе — дальше везде так. ZOOM_BASE — стартовый масштаб этой колоды:
+   у колод с базовым кеглем 20px он выше, чем у 24px. */
+const ZOOM_BASE = 1.15;
+const ZOOM_KEY = "slides-zoom-step";
+let zoomStep = 0;
+try { zoomStep = Math.max(-3, Math.min(6, parseInt(localStorage.getItem(ZOOM_KEY), 10) || 0)); }
+catch (e) {}
+function applyZoom(){
+  const z = Math.round(ZOOM_BASE * Math.pow(1.1, zoomStep) * 100) / 100;
+  document.querySelectorAll(".slide").forEach(el => { el.style.zoom = z; });
+  document.getElementById("zoomVal").textContent = Math.round(z * 100) + "%";
+}
+function setZoom(d){
+  zoomStep = Math.max(-3, Math.min(6, zoomStep + d));
+  try { localStorage.setItem(ZOOM_KEY, String(zoomStep)); } catch (e) {}
+  applyZoom();
+}
+document.getElementById("zoomIn").addEventListener("click", () => setZoom(1));
+document.getElementById("zoomOut").addEventListener("click", () => setZoom(-1));
+document.addEventListener("keydown", e => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key === "+" || e.key === "=") setZoom(1);
+  else if (e.key === "-" || e.key === "_") setZoom(-1);
+  else return;
+  e.preventDefault();
+});
+applyZoom();
+</script>
+<p class="ai-mark" style="position:fixed;bottom:2px;right:14px;margin:0;color:#b7bccb;font:11px/1 'Segoe UI',system-ui,sans-serif">Материалы подготовлены с использованием технологий искусственного интеллекта.</p>
+</body>
+</html>
