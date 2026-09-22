@@ -348,7 +348,9 @@ const VARIANT_HEADS = [[["Задачи операционной системы",
    Слои по урокам (поле stage у каждой проверки):
      2 — общий вид документа и титульный лист (9 пунктов);
      3 — заголовки двух уровней стилями, разрывы страниц, двухуровневое
-         автособираемое содержание, номера страниц (7 пунктов).
+         автособираемое содержание, номера страниц (7 пунктов);
+     4 — рисунки с подписями и ссылками на них, PDF рядом с документом
+         (7 пунктов).
    Отметка ставится за каждый слой отдельно: кто догоняет прошлый урок,
    не теряет отметку за нынешний из-за чужого долга.
 
@@ -600,6 +602,9 @@ function readPara(p, styles, inTable){
 
   const runs = [];
   let text = "", pageBreak = false, hasTab = false, fields = [];
+  // рисунки: w:drawing (обычная картинка), w:pict (старый формат) и
+  // mc:AlternateContent (фигура с запасным видом) — внутри прогона
+  const drawings = [];
   // разрыв раздела «со следующей страницы» — тоже новая страница
   if (pPr && kid(pPr, "w:sectPr")) pageBreak = true;
   const walkRuns = (node) => {
@@ -614,6 +619,10 @@ function readPara(p, styles, inTable){
           } else if (c.tag === "w:tab"){ rt += "\t"; hasTab = true; }
           else if (c.tag === "w:br"){
             if (c.attrs["w:type"] === "page") pageBreak = true; else rt += "\n";
+          } else if (c.tag === "w:drawing"){
+            drawings.push({inline: !!kid(c, "wp:inline")});
+          } else if (c.tag === "w:pict" || c.tag === "mc:AlternateContent"){
+            drawings.push({inline: false});
           } else if (c.tag === "w:instrText"){
             const t = kid(c, "#text");
             if (t) fields.push(t.text.trim());
@@ -653,7 +662,9 @@ function readPara(p, styles, inTable){
   return {
     styleId: styleId, styleName: chain.length ? chain[0].name : "Обычный",
     jc: jc, text: text, runs: runs, inTable: !!inTable,
-    empty: text.trim() === "",
+    // абзац с одной картинкой — не пустая строка, хотя букв в нём нет
+    empty: text.trim() === "" && !drawings.length,
+    drawings: drawings,
     pageBreak: pageBreak,
     pageBreakBefore: (pPr && kid(pPr, "w:pageBreakBefore"))
                      ? isOn(kid(pPr, "w:pageBreakBefore"))
@@ -1002,6 +1013,138 @@ function checkDocx(files, opts){
         : "На титульном листе стоит номер. Двойной щелчок по номеру → " +
           "галочка «Особый колонтитул для первой страницы».");
 
+  /* ============================================ слой урока 4
+
+     Рисунок — это абзац, в котором стоит картинка и нет букв. Подпись —
+     первый непустой абзац под ним. Рисунки ищутся только после
+     титульного листа: на титульный их не ставят.
+
+     Номер подписи обязан быть полем SEQ — его вставляет «Ссылки →
+     Вставить название». Набранная руками цифра не пересчитается, когда
+     между рисунками появится новый; это тот же довод, что и про
+     содержание на уроке 3.
+
+     PDF проверки не разбирают — только убеждаются, что рядом лежит
+     настоящий PDF с тем же именем. Страница получает его вместе с
+     .docx (перетащить оба сразу), check.py — из той же папки.        */
+
+  const pics = [];
+  for (let i = titleEnd; i < paras.length; i++)
+    if (paras[i].drawings.length) pics.push(i);
+  const nPics = pics.reduce((s, i) => s + paras[i].drawings.length, 0);
+  const CAPTION = /^\s*рисунок\s+(\d+)\s*[—–-]\s*(\S.*)$/i;
+  const captionOf = (i) => {
+    for (let j = i + 1; j < paras.length && j <= i + 2; j++)
+      if (!paras[j].empty) return CAPTION.test(paras[j].text) ? j : -1;
+    return -1;
+  };
+  const caps = pics.map(captionOf);
+  const noIndent = p => p.firstLine === null || Math.abs(p.firstLine) < 0.1;
+  const none = "Рисунков пока нет — сначала вставь их (шаги 6 и 9).";
+
+  /* --- 16. рисунки вставлены --- */
+  add("pictures", 4, "рисунки вставлены",
+      "В основной части не меньше двух рисунков",
+      nPics >= 2,
+      nPics === 0
+        ? "Рисунков нет. Вставка → Рисунки → Это устройство → папка «Рисунки» " +
+          "в папке проекта."
+        : "Рисунок пока один. Вставь и второй — по файлу «Что куда вставлять.txt».");
+
+  /* --- 17. рисунок отдельным абзацем по центру --- */
+  const badPic = pics.filter(i => {
+    const p = paras[i];
+    return p.text.trim() !== "" || p.jc !== "center" || !noIndent(p) ||
+           p.drawings.some(d => !d.inline);
+  });
+  const floating = pics.some(i => paras[i].drawings.some(d => !d.inline));
+  add("picture-para", 4, "рисунок по центру",
+      "Рисунок стоит отдельным абзацем по центру, без отступа первой строки",
+      pics.length > 0 && !badPic.length,
+      !pics.length ? none :
+      floating
+        ? "Рисунок «плавает» поверх текста. Щёлкни по нему → значок " +
+          "«Параметры разметки» справа → «В тексте»."
+        : "Рисунок " + badPic.map(i => pics.indexOf(i) + 1).join(", ") +
+          " стоит не так. Он должен быть один в своём абзаце, по центру " +
+          "(Ctrl+E) и без отступа: Главная → Абзац → первая строка «(нет)». " +
+          "Отступ 1,25 рисунок унаследовал от абзаца текста.");
+
+  /* --- 18. подпись под каждым рисунком --- */
+  const noCap = pics.filter((i, k) => caps[k] < 0);
+  const badCap = caps.filter(j => j >= 0 &&
+      (paras[j].jc !== "center" || !noIndent(paras[j])));
+  add("captions", 4, "подписи под рисунками",
+      "Под каждым рисунком — подпись «Рисунок 1 — Название» по центру",
+      pics.length > 0 && !noCap.length && !badCap.length,
+      !pics.length ? none :
+      noCap.length
+        ? "Под рисунком " + noCap.map(i => pics.indexOf(i) + 1).join(", ") +
+          " нет подписи вида «Рисунок 1 — Название». Правой кнопкой по " +
+          "рисунку → Вставить название; положение — «Под выделенным объектом»."
+        : "Подпись стоит не по центру или с отступом первой строки. Проще " +
+          "поправить один раз стиль «Название объекта»: по центру, отступ «(нет)».");
+
+  /* --- 19. номер подписи — поле Word --- */
+  const capIdx = caps.filter(j => j >= 0);
+  const typed = capIdx.filter(j => !paras[j].fields.some(f => /^SEQ\b/i.test(f)));
+  add("caption-field", 4, "номер подписи полем",
+      "Номер в подписи вставил Word (Ссылки → Вставить название), а не рука",
+      capIdx.length > 0 && !typed.length,
+      !capIdx.length ? "Подписей пока нет." :
+      "Номер набран руками: «" + typed.map(j => paras[j].text.trim()).join("», «") +
+      "». Удали подпись и вставь заново: правой кнопкой по рисунку → " +
+      "Вставить название. Такой номер Word пересчитает сам, если между " +
+      "рисунками появится новый.");
+
+  /* --- 20. номера по порядку, без точки --- */
+  const nums = capIdx.map(j => Number(CAPTION.exec(paras[j].text)[1]));
+  const inOrder = nums.every((n, k) => n === k + 1);
+  const dotted = capIdx.filter(j => /\.\s*$/.test(paras[j].text));
+  add("caption-order", 4, "номера по порядку",
+      "Подписи пронумерованы по порядку, в конце подписи нет точки",
+      capIdx.length > 0 && inOrder && !dotted.length,
+      !capIdx.length ? "Подписей пока нет." :
+      !inOrder
+        ? "Номера идут так: " + nums.join(", ") + ". Рисунки нумеруются по " +
+          "порядку в тексте: правой кнопкой по номеру → Обновить поле; если не " +
+          "помогло — вставь подпись заново."
+        : "В конце подписи стоит точка. Подпись — как заголовок: без точки.");
+
+  /* --- 21. ссылки на рисунки в тексте --- */
+  const capSet = new Set(capIdx);
+  const refText = paras.filter((p, i) => i >= titleEnd && !capSet.has(i) && !p.isToc)
+                       .map(p => p.text.toLowerCase().replace(/ё/g, "е")).join("\n");
+  const refs = new Set();
+  const RE = /(?:^|[^а-я])(?:рисун[а-я]*|рис\.)\s*(\d+)/g;
+  let rm;
+  while ((rm = RE.exec(refText))) refs.add(Number(rm[1]));
+  const noRef = nums.filter(n => !refs.has(n));
+  add("picture-refs", 4, "ссылки на рисунки",
+      "На каждый рисунок есть ссылка в тексте («… на рисунке 1»)",
+      nums.length > 0 && !noRef.length,
+      !nums.length ? "Подписей пока нет — ссылаться не на что." :
+      "Нет ссылки на рисунок " + noRef.join(", ") + ". В абзаце перед " +
+      "рисунком допиши фразу со ссылкой, например «Структура работы " +
+      "показана на рисунке 1». Рисунок без ссылки в тексте — просто картинка.");
+
+  /* --- 22. PDF рядом --- */
+  const stem = s => (s || "").replace(/\.(docx|pdf)$/i, "").trim().toLowerCase();
+  const pdf = opts.pdf || null;
+  const pdfOk = !!(pdf && pdf.isPdf && (!opts.docName || stem(pdf.name) === stem(opts.docName)));
+  add("pdf", 4, "PDF рядом",
+      "Рядом с документом сохранён PDF с тем же именем",
+      pdfOk,
+      pdfOk ? "" :
+      !pdf
+        ? "PDF не нашёлся. Файл → Сохранить как → в папку проекта, тип файла " +
+          "PDF. Потом перетащи на рамку оба файла сразу — .docx и .pdf."
+        : !pdf.isPdf
+          ? "Файл «" + pdf.name + "» — не PDF, хотя так назван. Сохрани заново " +
+            "через Файл → Сохранить как → тип PDF: переименовать .docx в .pdf нельзя."
+          : "PDF называется «" + pdf.name + "», а документ — «" + opts.docName +
+            "». Имена должны совпадать: это одна и та же работа.");
+
   /* ------------------------------------------------------- итог */
 
   const stage = opts.stage || 2;
@@ -1062,7 +1205,7 @@ function markFor(score, total){
 
 /* Фамилия из имени файла: «Одинцова.docx» → «Одинцова».            */
 function surnameFromFile(name){
-  return (name || "").replace(/\.docx$/i, "")
+  return (name || "").replace(/\.(docx|pdf)$/i, "")
                      .replace(/[_-].*$/, "")
                      .trim();
 }
