@@ -1,0 +1,1007 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Основы теории игр — обзорный практикум</title>
+<meta name="description" content="Обзорный практикум 11 класса (углублённый) к девятой паре: игра с полной информацией, дерево игры и число партий, разметка дерева минимаксом, выигрышные и проигрышные позиции, игра с двумя кучами камней.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E11%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{margin:0;padding:20px 16px 60px;font:17px/1.55 "Segoe UI",system-ui,sans-serif}
+.wrap{max-width:820px;margin:0 auto}
+h1{font-size:23px;margin:0 0 4px}
+h2{font-size:18px;margin:0 0 10px}
+.sub{color:var(--muted);font-size:15px;margin:0 0 18px}
+code{font-family:Consolas,"Cascadia Mono",monospace;background:var(--card);
+     border:1px solid var(--line);border-radius:5px;padding:1px 6px;
+     font-size:15px;letter-spacing:.04em}
+.intro{border:1px solid var(--line);border-radius:12px;background:var(--card);
+       padding:14px 18px;margin-bottom:18px}
+.intro dl{margin:0}
+.intro dt{font-weight:700;margin-top:10px}
+.intro dt:first-child{margin-top:0}
+.intro dd{margin:2px 0 0}
+.progress{border:2px solid var(--accent);border-radius:12px;padding:12px 16px;
+          background:#fff;margin-bottom:18px}
+.ptop{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.ptop h2{margin:0}
+.sp{flex:1 1 auto}
+.score{display:flex;align-items:baseline;gap:10px;color:var(--muted);font-size:15px}
+.score b{font:700 34px/1 "Segoe UI",system-ui,sans-serif;color:var(--ink);
+         min-width:40px;text-align:center;border:2px solid var(--line);
+         border-radius:8px;padding:2px 8px}
+.m5 b{color:var(--ok);border-color:var(--ok-line)}
+.m4 b{color:var(--accent);border-color:#a9c6e8}
+.m3 b{color:#8a5a00;border-color:var(--hi-line)}
+.types{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);border-radius:20px;padding:4px 12px;
+      font-size:14px;color:var(--muted);background:var(--card)}
+.chip.done{border-color:var(--ok-line);background:var(--ok-bg);color:var(--ok);
+           font-weight:600}
+.chip.miss{border-color:var(--err-line);background:var(--err-bg);color:var(--err)}
+.chip.cur{border-color:var(--accent);color:var(--accent);font-weight:600}
+.card{border:1px solid var(--line);border-radius:12px;padding:16px 18px;
+      background:#fff;margin-bottom:14px}
+.card.ok{border-color:var(--ok-line);background:var(--ok-bg)}
+.card.err{border-color:var(--err-line);background:var(--err-bg)}
+.tag{font-size:13px;color:var(--muted);margin:0 0 6px}
+.q{font-size:17px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+input[type=text]{font:16px/1 Consolas,monospace;padding:10px 12px;border-radius:8px;
+                 border:1px solid var(--line);width:100%;max-width:340px}
+button{font:600 15px/1 inherit;padding:11px 16px;border-radius:9px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);color:var(--muted)}
+.verdict{margin-top:10px;font-size:15.5px;font-weight:600}
+.verdict.ok{color:var(--ok)}
+.verdict.err{color:var(--err)}
+.why{margin-top:8px;font-size:15.5px;color:var(--ink)}
+.note{border:1px solid var(--hi-line);background:var(--hi-bg);border-radius:10px;
+      padding:11px 15px;margin:12px 0;font-size:15.5px}
+.code{font:700 26px/1.2 Consolas,monospace;letter-spacing:.06em;
+      background:var(--card);border:2px dashed var(--accent);border-radius:12px;
+      padding:16px;text-align:center;margin:12px 0;user-select:all}
+.stats{color:var(--muted);font-size:14px}
+label{display:block;font-size:14px;color:var(--muted);margin-bottom:3px}
+.fields{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0}
+.fields div{flex:1 1 180px}
+.fields input{max-width:none}
+sup,sub{font-size:12px}
+h3{font-size:16.5px;margin:16px 0 6px;color:var(--accent)}
+details.help{margin-top:26px;border:1px solid var(--line);border-radius:12px;
+        padding:12px 18px;background:var(--card)}
+details.help summary{cursor:pointer;font-weight:600;font-size:17px;
+        color:var(--accent)}
+details.help p{margin:6px 0}
+details.help ol,details.help ul{margin:6px 0;padding-left:22px}
+details.help li{margin:4px 0}
+details.help table{border-collapse:collapse;margin:8px 0;font-size:15px}
+details.help th,details.help td{border:1px solid var(--line);
+        padding:4px 10px;text-align:center;background:#fff}
+details.help th{background:#fff;color:var(--muted);font-weight:600}
+table.gm{border-collapse:collapse;margin:10px 0;font:15px/1.2 Consolas,"Cascadia Mono",monospace}
+table.gm th,table.gm td{border:1px solid var(--line);min-width:34px;height:30px;
+        text-align:center;padding:0 4px;background:#fff}
+table.gm th{background:var(--card);color:var(--muted);font-weight:600}
+table.gm td.d{background:#e4e7ef}
+.adj{display:block;margin:8px 0}
+.adj code{display:inline-block;margin:0 8px 6px 0}
+/* Список утверждений в понятийной задаче: строки длинные, их надо разделить. */
+.q ol.st{margin:10px 0;padding-left:26px}
+.q ol.st li{margin:6px 0}
+details.help pre{font-family:Consolas,"Cascadia Mono",monospace;
+        background:#1e2430;color:#e7ecf5;padding:10px 12px;border-radius:9px;
+        font-size:14.5px;overflow-x:auto}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Основы теории игр: поиск выигрышной стратегии</h1>
+<p class="sub">11 класс, углублённый уровень. Обзорный практикум к девятой паре:
+шесть задач по содержанию темы.</p>
+
+<div class="intro">
+  <dl>
+    <dt>Что нужно сделать</dt>
+    <dd>Шесть задач — по одной на каждый вопрос темы, и все сразу на
+        странице: решай в любом порядке. Ответил верно — вопрос закрыт.
+        Ошибся — сразу видно, как это решается, а вопрос остаётся
+        открытым: кнопка «Новые числа» даёт ту же задачу с другими данными,
+        и её можно сдать ещё раз. Сколько закрыл, столько и наработал.
+        Времени нужно около пятнадцати минут: дерево игры и разметку позиций
+        удобнее расписать на черновике — в столбик, от конца к началу.</dd>
+    <dt>Отметка и добор</dt>
+    <dd>Закрыто 6 из 6 — «5», 5 — «4», 3 или 4 — «3». Кнопка
+        <b>«Получить код»</b> внизу страницы появляется, как только закрыто
+        три вопроса: можно забрать код сразу, а можно дорешать оставшиеся и
+        получить код получше — решать самому, до какой отметки добирать.</dd>
+    <dt>Ответ — целое число</dt>
+    <dd>Везде число, и только число: <code>34</code>, а не <code>34 камня</code>
+        и не <code>34.</code>. На КЕГЭ ответ читает машина, и здесь так же.</dd>
+    <dt>Как сдать</dt>
+    <dd>В конце появится код работы и кнопка <b>«Сдать работу»</b>: впишешь
+        фамилию и класс, кнопка сама откроет форму с уже вписанным кодом.
+        Переписывать код руками не надо — на этом чаще всего и ошибаются.</dd>
+    <dt>Не успел на уроке</dt>
+    <dd>Открой эту же страницу дома и пройди целиком: вариант будет другой,
+        а сдаётся всё так же — одним кодом.</dd>
+  </dl>
+</div>
+
+<div class="progress">
+  <div class="ptop">
+    <h2>Вопросы темы</h2>
+    <span class="sp"></span>
+    <div class="score" id="scorebox">
+      <span>наработано на</span><b id="mark">—</b>
+    </div>
+  </div>
+  <div class="types" id="types"></div>
+  <p class="stats" id="stats"></p>
+</div>
+
+<div id="area"></div>
+<div id="bottom"></div>
+
+<details class="help">
+  <summary>Подсказка: теория игр</summary>
+  <h3>Игра с полной информацией</h3>
+  <p>Оба игрока в любой момент видят всю позицию и знают все сделанные ходы;
+     ничего скрытого и случайного нет. Ходят по очереди, игра конечна и
+     кончается победой одного из них. Тогда исход определён уже начальной
+     позицией: у <b>одного</b> из игроков есть выигрышная стратегия —
+     правило выбора хода, которое приводит к победе <b>при любой</b> игре
+     соперника, а не только при его ошибке.</p>
+
+  <h3>Дерево игры</h3>
+  <p>Вершины — позиции, рёбра — ходы, корень — начальная позиция, листья —
+     конечные. Одна и та же позиция может встретиться в дереве несколько раз:
+     к ней ведут разные последовательности ходов. Строят дерево <b>сверху
+     вниз</b>, а размечают — <b>снизу вверх</b>: значение вершины известно
+     только после того, как посчитаны все её потомки.</p>
+
+  <h3>Выигрышные и проигрышные позиции</h3>
+  <ul>
+    <li>позиция без ходов <b>проигрышная</b> (проигрывает тот, кто не может
+        ходить);</li>
+    <li>позиция <b>выигрышная</b>, если из неё есть ход <b>хотя бы в одну</b>
+        проигрышную;</li>
+    <li>позиция <b>проигрышная</b>, если <b>все</b> ходы из неё ведут в
+        выигрышные.</li>
+  </ul>
+  <p>Размечают столбиком от 0 вверх: 0 — П, дальше каждое число смотрит, куда
+     уводят его ходы.</p>
+
+  <h3>Куча камней: берут от 1 до k</h3>
+  <p>Проигрышные позиции — числа, <b>кратные k + 1</b>. Выигрышный первый ход
+     — взять остаток от деления на k + 1, а потом на каждый ход соперника x
+     отвечать <b>k + 1 − x</b>. Если наоборот, взявший последний камень
+     проигрывает, проигрышные позиции — числа с <b>остатком 1</b> при делении
+     на k + 1.</p>
+
+  <h3>Разметка дерева минимаксом</h3>
+  <p>В листьях записан результат числом. Игрок, которому нужно <b>больше</b>,
+     в своей вершине берёт <b>максимум</b> из значений потомков; сопернику
+     нужно меньше — он берёт <b>минимум</b>. Уровни чередуются, счёт идёт от
+     листьев к корню; значение корня и есть результат при правильной игре
+     обоих.</p>
+
+  <h3>Считаем партии и вершины</h3>
+  <p>Для кучи из n камней с набором ходов M: число партий
+     P(n) = сумма P(n − m) по всем m из M, P(0) = 1; число вершин дерева
+     V(n) = 1 + сумма V(n − m), V(0) = 1. Слагаемое берётся, только когда
+     камней хватает.</p>
+
+  <h3>Две кучи: +1 или удвоить</h3>
+  <p>Позиция — пара чисел (a, b); ход добавляет один камень в кучу или
+     удваивает кучу. Игра кончается, когда a + b ≥ S. Первым ходом можно
+     получить сумму a + b + 1, 2a + b или a + 2b — значит первым ходом
+     выигрывают ровно при S, не превосходящем <b>наибольшей</b> из этих трёх
+     сумм.</p>
+</details>
+
+</div>
+
+<script>
+/* ==== ЗАДАЧИ: вставлено gen.py, руками не править ==== */
+/* Обзорный тест-практикум к девятой паре 11 класса (углублённый уровень).
+   Содержание ФГОС, уроки 17–18 официального плана: «Основы теории игр» и
+   практическая работа «Поиск выигрышной стратегии в игре с полной
+   информацией». В столбце «Задание ЕГЭ» плана у урока 17 стоят 19, 20, 21,
+   у урока 18 — 19 и 20: отсюда игра с двумя кучами камней.
+
+   Единственный источник задач. В practice.html вписывается скриптом
+   gen.py между маркерами — руками страницу не править.
+
+   Ответ везде — целое число. Сверка знак в знак, как на КЕГЭ; tHint
+   объясняет, что не так с формой ответа. */
+
+const T_TYPES = [
+  "понятия теории игр",
+  "дерево партий",
+  "минимакс на дереве",
+  "берут от 1 до k",
+  "ходы из набора",
+  "две кучи: +1 или ×2"
+];
+
+function tRng(seed) {
+  let s = seed >>> 0;
+  return function () {
+    s ^= s << 13; s >>>= 0;
+    s ^= s >> 17;
+    s ^= s << 5;  s >>>= 0;
+    return s / 4294967296;
+  };
+}
+
+function tRand(rng, a, b) { return a + Math.floor(rng() * (b - a + 1)); }
+function tPick(rng, arr) { return arr[tRand(rng, 0, arr.length - 1)]; }
+
+function tShuffle(rng, arr) {
+  const a = arr.slice();
+  for (let j = a.length - 1; j > 0; j--) {
+    const k = tRand(rng, 0, j);
+    const t = a[j]; a[j] = a[k]; a[k] = t;
+  }
+  return a;
+}
+
+function tPl(n, one, few, many) {
+  const h = n % 100, t = n % 10;
+  if (h >= 11 && h <= 14) return many;
+  if (t === 1) return one;
+  if (t >= 2 && t <= 4) return few;
+  return many;
+}
+
+/* Й и О пропущены: Й путается с И, О — с нулём. */
+const G_V = ["А", "Б", "В", "Г", "Д", "Е", "Ж", "З", "И", "К", "Л", "М",
+             "Н", "П", "Р", "С", "Т"];
+
+function gTable(head, rows) {
+  let h = '<table class="gm"><tr>';
+  for (const c of head) h += "<th>" + c + "</th>";
+  h += "</tr>";
+  for (const r of rows) {
+    h += "<tr><th>" + r[0] + "</th>";
+    for (let i = 1; i < r.length; i++) h += "<td>" + r[i] + "</td>";
+    h += "</tr>";
+  }
+  return h + "</table>";
+}
+
+/* Перечисление ходов словами: «1 или 2», «1, 2 или 3». */
+function gOrList(xs) {
+  if (xs.length === 1) return xs[0];
+  return xs.slice(0, -1).join(", ") + " или " + xs[xs.length - 1];
+}
+
+/* ==== БАНК УТВЕРЖДЕНИЙ (JSON; читает и gen.py) ==== */
+const T_BANK = [
+{"t": "В игре с полной информацией каждый игрок в любой момент знает всю позицию и все сделанные ранее ходы.", "v": true, "w": "верно, это и есть определение полной информации"},
+{"t": "Позиция выигрышная, если из неё есть ход хотя бы в одну проигрышную позицию.", "v": true, "w": "верно: своим ходом можно передать сопернику проигрышную позицию"},
+{"t": "Позиция проигрышная, если любой ход из неё ведёт в выигрышную позицию.", "v": true, "w": "верно: что бы ни сделал ходящий, соперник получит выигрышную позицию"},
+{"t": "Разметку дерева игры ведут снизу вверх: от конечных позиций к начальной.", "v": true, "w": "верно: значение позиции известно только после того, как посчитаны все её потомки"},
+{"t": "Выигрышная стратегия — это правило выбора хода, которое приводит к победе при любой игре соперника.", "v": true, "w": "верно, именно при любой"},
+{"t": "Дерево игры — это дерево, вершины которого позиции, а рёбра — возможные ходы.", "v": true, "w": "верно"},
+{"t": "Шахматы, шашки и крестики-нолики — игры с полной информацией.", "v": true, "w": "верно: вся позиция видна обоим игрокам"},
+{"t": "Одна и та же позиция может встретиться в дереве игры несколько раз.", "v": true, "w": "верно: к ней ведут разные последовательности ходов, и в дереве это разные вершины"},
+{"t": "В конечной игре с полной информацией без ничьих у одного из игроков обязательно есть выигрышная стратегия.", "v": true, "w": "верно: разметка дерева всегда доводится до корня, и корень получает одно из двух значений"},
+{"t": "Если проигрывает тот, кто не может сделать ход, то позиция без ходов проигрышная.", "v": true, "w": "верно: это конечная позиция, и она отдаёт поражение тому, чья очередь"},
+{"t": "В игре с полной информацией часть сведений скрыта от соперника — например, закрытые карты.", "v": false, "w": "неверно: как раз скрытых сведений в такой игре нет"},
+{"t": "Позиция выигрышная, если из неё есть ход в выигрышную позицию.", "v": false, "w": "неверно: ход нужен в проигрышную позицию, иначе выгоду от неё получит соперник"},
+{"t": "Выигрышная стратегия приносит победу только в том случае, если соперник ошибётся.", "v": false, "w": "неверно: она работает и против безошибочной игры, иначе это не стратегия, а надежда"},
+{"t": "Разметку дерева игры ведут сверху вниз: от начальной позиции к конечным.", "v": false, "w": "неверно: сверху вниз дерево строят, а размечают снизу вверх"},
+{"t": "У каждой позиции в дереве игры ровно два потомка.", "v": false, "w": "неверно: потомков столько, сколько ходов разрешают правила"},
+{"t": "Выигрышная стратегия может быть сразу у обоих игроков.", "v": false, "w": "неверно: тогда одну и ту же партию выиграли бы оба"},
+{"t": "Кто ходит первым, тот в любой игре с полной информацией имеет выигрышную стратегию.", "v": false, "w": "неверно: кто выигрывает, зависит от правил и начальной позиции"},
+{"t": "Позиция проигрышная, если хотя бы один ход из неё ведёт в выигрышную позицию.", "v": false, "w": "неверно: проигрышная — это когда все ходы ведут в выигрышные"},
+{"t": "Домино, в котором кости соперника закрыты, — игра с полной информацией.", "v": false, "w": "неверно: часть позиции скрыта, значит информация неполная"}
+];
+/* ==== /БАНК ==== */
+
+/* ---------------------------------------------------------------- задачи */
+
+function tTask(type, rng) {
+  if (type === 0) return tConcepts(rng);
+  if (type === 1) return tGameTree(rng);
+  if (type === 2) return tMinimax(rng);
+  if (type === 3) return tTakeUpToK(rng);
+  if (type === 4) return tMoveSet(rng);
+  return tTwoHeaps(rng);
+}
+
+/* 0. Понятия теории игр: сколько из пяти утверждений верны.
+      Отбор: верных не 0 и не 5 — иначе ответ угадывается «по краю». */
+function tConcepts(rng) {
+  const SHOW = 5;
+  let pick = [];
+  for (let t = 0; t < 400; t++) {
+    pick = tShuffle(rng, T_BANK.map(function (_, i) { return i; })).slice(0, SHOW);
+    const k = pick.filter(function (i) { return T_BANK[i].v; }).length;
+    if (k >= 1 && k <= SHOW - 1) break;
+  }
+  const items = pick.map(function (i) { return "<li>" + T_BANK[i].t + "</li>"; });
+  const right = pick.filter(function (i) { return T_BANK[i].v; }).length;
+  /* В самом банке пояснение начинается со слова «верно»/«неверно» — второй
+     раз его здесь не приписываем. */
+  const why = pick.map(function (i, n) { return (n + 1) + ") " + T_BANK[i].w; });
+  return {
+    type: 0, kind: "concepts", answer: String(right),
+    question: "Ниже пять утверждений об играх с полной информацией и о поиске " +
+      "выигрышной стратегии. Сколько из них верны?<ol class=\"st\">" +
+      items.join("") + "</ol><p>В ответе укажите число.</p>",
+    explain: why.join("; ") + ". Верных — " + right + "."
+  };
+}
+
+/* 1. Дерево игры: партии и вершины.
+      Куча из N камней, за ход берут одно из чисел набора; игра кончается,
+      когда камней не осталось. Партия — путь от корня до конечной позиции. */
+function gPlays(n, moves) {
+  const p = Array(n + 1).fill(0);
+  p[0] = 1;
+  for (let i = 1; i <= n; i++)
+    for (const m of moves) if (m <= i) p[i] += p[i - m];
+  return p;
+}
+
+function gNodes(n, moves) {
+  const v = Array(n + 1).fill(0);
+  v[0] = 1;
+  for (let i = 1; i <= n; i++) {
+    v[i] = 1;
+    for (const m of moves) if (m <= i) v[i] += v[i - m];
+  }
+  return v;
+}
+
+/* Число партий ровно из k ходов: d[i][j] — из i камней за j ходов. */
+function gExact(n, moves, k) {
+  const d = [];
+  for (let i = 0; i <= n; i++) d.push(Array(k + 1).fill(0));
+  d[0][0] = 1;
+  for (let i = 1; i <= n; i++)
+    for (let j = 1; j <= k; j++)
+      for (const m of moves) if (m <= i) d[i][j] += d[i - m][j - 1];
+  return d[n][k];
+}
+
+function tGameTree(rng) {
+  const kind = tPick(rng, ["plays", "nodes", "exact"]);
+  let moves, N, k, ans;
+  for (let t = 0; t < 400; t++) {
+    moves = tPick(rng, [[1, 2], [1, 2], [1, 2, 3], [1, 3]]);
+    const top = moves.length === 2 && moves[1] === 2 ? 10 : 8;
+    N = tRand(rng, 6, top);
+    if (kind === "plays") {
+      ans = gPlays(N, moves)[N];
+      if (ans < 8 || ans > 200) continue;
+      break;
+    }
+    if (kind === "nodes") {
+      ans = gNodes(N, moves)[N];
+      if (ans < 12 || ans > 300) continue;
+      break;
+    }
+    k = tRand(rng, Math.ceil(N / moves[moves.length - 1]) + 1, N - 1);
+    ans = gExact(N, moves, k);
+    const all = gPlays(N, moves)[N];
+    if (ans < 3 || ans > 90 || ans === all) continue;
+    break;
+  }
+  const lead = "В куче <b>" + N + "</b> " + tPl(N, "камень", "камня", "камней") +
+    ". За один ход разрешается взять " + gOrList(moves.map(function (m) {
+      return "<b>" + m + "</b>";
+    })) + " " + tPl(moves[moves.length - 1], "камень", "камня", "камней") +
+    ". Игра заканчивается, когда камней не остаётся; партия — это вся " +
+    "последовательность ходов от начала до конца. ";
+  const pv = gPlays(N, moves);
+  const tail = [];
+  for (let i = 0; i <= N; i++) tail.push("P(" + i + ") = " + pv[i]);
+  if (kind === "plays") {
+    return {
+      type: 1, kind: kind, answer: String(ans),
+      question: lead + "Сколько всего различных партий возможно в этой игре?",
+      explain: "P(i) — число партий из i камней; P(0) = 1 (игра уже кончилась), " +
+        "а из i камней первый ход уводит в один из вариантов: P(i) = " +
+        moves.map(function (m) { return "P(i − " + m + ")"; }).join(" + ") +
+        " (слагаемое берётся, только если хватает камней). Считаем снизу: " +
+        tail.join(", ") + "."
+    };
+  }
+  if (kind === "nodes") {
+    const nv = gNodes(N, moves);
+    const t2 = [];
+    for (let i = 0; i <= N; i++) t2.push("V(" + i + ") = " + nv[i]);
+    return {
+      type: 1, kind: kind, answer: String(ans),
+      question: lead + "Сколько всего вершин в дереве этой игры, считая корень " +
+        "(начальную позицию) и все конечные позиции?",
+      explain: "V(i) — число вершин поддерева, растущего из позиции «i камней»: " +
+        "сама вершина плюс поддеревья всех ходов, V(0) = 1. Значит V(i) = 1 + " +
+        moves.map(function (m) { return "V(i − " + m + ")"; }).join(" + ") +
+        ". Считаем снизу: " + t2.join(", ") + "."
+    };
+  }
+  return {
+    type: 1, kind: kind, answer: String(ans),
+    question: lead + "Сколько среди всех партий таких, которые состоят ровно " +
+      "из <b>" + k + "</b> " + tPl(k, "хода", "ходов", "ходов") + "?",
+    explain: "Партия из " + k + " ходов — это способ разложить " + N +
+      " на " + k + " слагаемых из набора " + moves.join(", ") +
+      ", причём порядок слагаемых важен. Считаем таблицей: d(i, j) — из i " +
+      "камней за j ходов, d(0, 0) = 1, d(i, j) = " +
+      moves.map(function (m) { return "d(i − " + m + ", j − 1)"; }).join(" + ") +
+      ". Ответ — d(" + N + ", " + k + ") = " + ans + ". Всего партий, для " +
+      "сравнения, " + gPlays(N, moves)[N] + "."
+  };
+}
+
+/* 2. Минимакс на полном двоичном дереве глубины 3: 15 вершин, 8 листьев.
+      В корне ходит тот, кто хочет число побольше, дальше по очереди. */
+function gMinimax(vals, maxFirst) {
+  /* vals[i] для листьев 7..14; возвращает массив значений всех вершин. */
+  const v = vals.slice();
+  for (let i = 6; i >= 0; i--) {
+    const d = i === 0 ? 0 : i <= 2 ? 1 : 2;      /* уровень вершины */
+    const wantMax = (d % 2 === 0) === maxFirst;
+    v[i] = wantMax ? Math.max(v[2 * i + 1], v[2 * i + 2])
+                   : Math.min(v[2 * i + 1], v[2 * i + 2]);
+  }
+  return v;
+}
+
+function tMinimax(rng) {
+  const kind = tPick(rng, ["root", "node", "rootmin"]);
+  let names, leaf, vmax, vmin, ask;
+  for (let t = 0; t < 400; t++) {
+    names = tShuffle(rng, G_V).slice(0, 15);
+    const pool = tShuffle(rng, Array.from({length: 30}, function (_, i) { return i + 1; }));
+    leaf = Array(15).fill(0);
+    for (let i = 7; i < 15; i++) leaf[i] = pool[i - 7];
+    vmax = gMinimax(leaf, true);
+    vmin = gMinimax(leaf, false);
+    const ls = leaf.slice(7);
+    if (vmax[0] === Math.max.apply(null, ls)) continue;
+    if (vmax[0] === Math.min.apply(null, ls)) continue;
+    if (kind === "rootmin" && vmin[0] === vmax[0]) continue;
+    ask = tRand(rng, 1, 2);
+    if (kind === "node" && vmax[ask] === vmax[0]) continue;
+    break;
+  }
+  const rows = [];
+  const order = names.map(function (nm, i) { return [nm, i]; })
+    .sort(function (x, y) { return G_V.indexOf(x[0]) - G_V.indexOf(y[0]); });
+  for (const pair of order) {
+    const i = pair[1];
+    if (i >= 7) rows.push([pair[0], "—", "—", String(leaf[i])]);
+    else rows.push([pair[0], names[2 * i + 1], names[2 * i + 2], "—"]);
+  }
+  const who = kind === "rootmin" ? "Ваня" : "Петя";
+  const aim = kind === "rootmin" ? "меньше" : "больше";
+  const other = kind === "rootmin" ? "Петя" : "Ваня";
+  const aim2 = kind === "rootmin" ? "больше" : "меньше";
+  const lead = "Игра идёт по дереву. В каждой позиции тот, чья очередь, " +
+    "выбирает одного из двух потомков; в конечных позициях (листьях) записан " +
+    "результат партии — число. В корне <b>" + names[0] + "</b> ходит " + who +
+    ", он хочет, чтобы итоговое число было как можно " + aim + "; на " +
+    "следующем уровне ходит " + other + ", ему нужно как можно " + aim2 +
+    "; дальше игроки чередуются. " +
+    gTable(["вершина", "левый", "правый", "результат"], rows);
+  if (kind === "node") {
+    return {
+      type: 2, kind: kind, answer: String(vmax[ask]),
+      question: lead + "Какой результат получится при правильной игре обоих, " +
+        "если игра начнётся не из корня, а из позиции <b>" + names[ask] + "</b>?",
+      explain: "Размечаем дерево снизу вверх. В вершине " + names[ask] +
+        " ходит " + other + " (это второй уровень), поэтому он берёт меньшее " +
+        "из значений потомков; уровнем ниже выбирают большее. Получается " +
+        vmax[ask] + ". Для сравнения: из корня при правильной игре выходит " +
+        vmax[0] + "."
+    };
+  }
+  const v = kind === "rootmin" ? vmin : vmax;
+  return {
+    type: 2, kind: kind, answer: String(v[0]),
+    question: lead + "Какой результат получится при правильной игре обоих?",
+    explain: "Размечаем снизу вверх: у листьев значения уже есть, каждая " +
+      "внутренняя вершина берёт " + (kind === "rootmin" ? "минимум" : "максимум") +
+      " или " + (kind === "rootmin" ? "максимум" : "минимум") + " из своих " +
+      "потомков — смотря чья очередь на этом уровне. Значения вершин " +
+      "верхних уровней: " + names.slice(0, 7).map(function (nm, i) {
+        return nm + " = " + v[i];
+      }).join(", ") + ". Ответ — значение корня " + names[0] + "."
+  };
+}
+
+/* 3. Куча N камней, за ход берут от 1 до k. Проигрышные позиции —
+      кратные (k + 1); в мизере (кто взял последний, проиграл) —
+      дающие остаток 1. */
+function tTakeUpToK(rng) {
+  const kind = tPick(rng, ["move", "count", "misere"]);
+  let N, k, ans;
+  for (let t = 0; t < 400; t++) {
+    k = tRand(rng, 2, 5);
+    N = tRand(rng, 12, 45);
+    if (kind === "move") { ans = N % (k + 1); if (!ans) continue; break; }
+    if (kind === "count") { ans = Math.floor(N / (k + 1)); if (ans < 3) continue; break; }
+    ans = (N - 1) % (k + 1);
+    if (!ans) continue;
+    break;
+  }
+  const p = k + 1;
+  const lose = [];
+  for (let i = p; i <= N; i += p) lose.push(i);
+  if (kind === "count") {
+    return {
+      type: 3, kind: kind, answer: String(ans),
+      question: "В куче бывает от 1 до <b>" + N + "</b> камней. За один ход " +
+        "разрешается взять от <b>1</b> до <b>" + k + "</b> камней. Выигрывает " +
+        "тот, кто возьмёт последний камень. Для скольких начальных чисел камней " +
+        "в этом диапазоне проигрывает тот, кто ходит первым (при правильной игре " +
+        "соперника)?",
+      explain: "Позиция проигрышная, когда число камней кратно " + p +
+        " = " + k + " + 1: сколько бы ни взял первый (от 1 до " + k +
+        "), соперник добирает до " + p + " и остаток снова кратен " + p +
+        ". Такие числа до " + N + ": " + lose.join(", ") + " — их " + ans + "."
+    };
+  }
+  if (kind === "move") {
+    return {
+      type: 3, kind: kind, answer: String(ans),
+      question: "В куче <b>" + N + "</b> " + tPl(N, "камень", "камня", "камней") +
+        ". За один ход разрешается взять от <b>1</b> до <b>" + k + "</b> камней. " +
+        "Выигрывает тот, кто возьмёт последний камень. Сколько камней должен " +
+        "взять первым ходом начинающий, чтобы выиграть при любой игре соперника?",
+      explain: "Проигрышные позиции — кратные " + p + " = " + k + " + 1. Надо " +
+        "оставить сопернику ближайшее сверху вниз кратное: " + N + " − " + ans +
+        " = " + (N - ans) + ", а " + (N - ans) + " делится на " + p +
+        ". Значит взять " + ans + " (это остаток " + N + " при делении на " + p +
+        "). Дальше на каждый ход соперника, взявшего x, отвечаем " + p + " − x."
+    };
+  }
+  return {
+    type: 3, kind: kind, answer: String(ans),
+    question: "В куче <b>" + N + "</b> " + tPl(N, "камень", "камня", "камней") +
+      ". За один ход разрешается взять от <b>1</b> до <b>" + k + "</b> камней. " +
+      "Здесь наоборот: тот, кто возьмёт последний камень, <b>проигрывает</b>. " +
+      "Сколько камней должен взять первым ходом начинающий, чтобы выиграть?",
+    explain: "Последний камень теперь отравлен: сопернику надо оставить ровно " +
+      "один камень, а до того — 1 + " + p + ", 1 + 2·" + p +
+      " и так далее, то есть числа с остатком 1 при делении на " + p +
+      ". Остаток " + N + " при делении на " + p + " равен " + (N % p) +
+      ", значит убрать надо " + ans + ": останется " + (N - ans) + " = " +
+      p + "·" + ((N - ans - 1) / p) + " + 1."
+  };
+}
+
+/* 4. Куча N камней, за ход берут ровно a или ровно b камней; проигрывает
+      тот, кто не может сделать ход. Разметка позиций по таблице. */
+function gWin(n, a, b) {
+  const w = Array(n + 1).fill(false);
+  for (let i = 1; i <= n; i++)
+    w[i] = (i >= a && !w[i - a]) || (i >= b && !w[i - b]);
+  return w;
+}
+
+function tMoveSet(rng) {
+  const kind = tPick(rng, ["count", "next", "move"]);
+  let N, a, b, m, ans, w;
+  for (let t = 0; t < 400; t++) {
+    const p = tPick(rng, [[1, 3], [1, 4], [2, 3], [2, 5], [3, 4], [1, 5], [3, 5]]);
+    a = p[0]; b = p[1];
+    N = tRand(rng, 16, 30);
+    w = gWin(N, a, b);
+    if (kind === "count") {
+      ans = 0;
+      for (let i = 1; i <= N; i++) if (!w[i]) ans++;
+      if (ans < 3 || ans > 14) continue;
+      break;
+    }
+    if (kind === "next") {
+      m = tRand(rng, 3, N - 6);
+      ans = 0;
+      for (let i = m + 1; i <= N; i++) if (!w[i]) { ans = i; break; }
+      if (!ans) continue;
+      break;
+    }
+    /* Ровно один выигрышный ход — иначе у задачи два верных ответа. */
+    const good = [];
+    for (const mv of [a, b]) if (N >= mv && !w[N - mv]) good.push(mv);
+    if (good.length !== 1) continue;
+    ans = good[0];
+    break;
+  }
+  const lose = [];
+  for (let i = 1; i <= N; i++) if (!w[i]) lose.push(i);
+  const rule = "За один ход разрешается взять ровно <b>" + a + "</b> или ровно " +
+    "<b>" + b + "</b> " + tPl(b, "камень", "камня", "камней") +
+    ". Проигрывает тот, кто не может сделать ход. ";
+  const how = "Размечаем позиции снизу: позиция проигрышная, когда оба хода " +
+    "(взять " + a + " или взять " + b + ") либо невозможны, либо ведут в " +
+    "выигрышную позицию. Проигрышные числа камней до " + N + ": " +
+    lose.join(", ") + ".";
+  if (kind === "count") {
+    return {
+      type: 4, kind: kind, answer: String(ans),
+      question: "В куче бывает от 1 до <b>" + N + "</b> камней. " + rule +
+        "Для скольких начальных чисел камней в этом диапазоне проигрывает тот, " +
+        "кто ходит первым?",
+      explain: how + " Их " + ans + "."
+    };
+  }
+  if (kind === "next") {
+    return {
+      type: 4, kind: kind, answer: String(ans),
+      question: "Рассматриваются кучи от 1 до <b>" + N + "</b> камней. " + rule +
+        "Найдите наименьшее число камней, большее <b>" + m + "</b>, при котором " +
+        "проигрывает тот, чья очередь ходить.",
+      explain: how + " Первое из них больше " + m + " — это " + ans + "."
+    };
+  }
+  return {
+    type: 4, kind: kind, answer: String(ans),
+    question: "В куче <b>" + N + "</b> " + tPl(N, "камень", "камня", "камней") +
+      ". " + rule + "Сколько камней нужно взять первым ходом, чтобы выиграть " +
+      "при любой игре соперника?",
+    explain: how + " Из " + N + " выигрывает единственный ход — взять " + ans +
+      ": остаётся " + (N - ans) + ", а это проигрышная позиция для соперника. " +
+      "Второй ход оставил бы " + (N - (ans === a ? b : a)) +
+      " — позицию, из которой соперник выигрывает сам."
+  };
+}
+
+/* 5. Две кучи, ход — добавить один камень в кучу или удвоить кучу; игра
+      кончается, когда всего не меньше S. Линия задания 19 ЕГЭ. */
+function tTwoHeaps(rng) {
+  const kind = tPick(rng, ["maxS", "minS", "howmany"]);
+  let a, b, S, ans, sums;
+  for (let t = 0; t < 400; t++) {
+    a = tRand(rng, 2, 24);
+    b = tRand(rng, 2, 24);
+    if (a === b || Math.abs(a - b) < 2) continue;
+    sums = [a + b + 1, a + b + 1, 2 * a + b, a + 2 * b];
+    const top = Math.max(2 * a + b, a + 2 * b);
+    if (kind === "maxS") { ans = top; break; }
+    if (kind === "minS") { ans = top + 1; break; }
+    S = tRand(rng, a + b + 1, top);
+    ans = sums.filter(function (s) { return s >= S; }).length;
+    if (ans < 1 || ans > 3) continue;
+    break;
+  }
+  const lead = "Два игрока, Петя и Ваня, играют с двумя кучами камней. В первой " +
+    "куче <b>" + a + "</b> " + tPl(a, "камень", "камня", "камней") + ", во второй — <b>" +
+    b + "</b>. Ходят по очереди, первым ходит Петя. За один ход можно добавить " +
+    "один камень в одну из куч или увеличить вдвое число камней в одной из куч. " +
+    "Игра заканчивается, как только всего в двух кучах становится не менее S " +
+    "камней; выигрывает игрок, сделавший последний ход. ";
+  const list = "После первого хода Пети в кучах может стать всего " +
+    (a + b + 1) + " (добавил камень в любую из куч), " + (2 * a + b) +
+    " (удвоил первую) или " + (a + 2 * b) + " (удвоил вторую).";
+  if (kind === "maxS") {
+    return {
+      type: 5, kind: kind, answer: String(ans),
+      question: lead + "Найдите наибольшее значение S, при котором Петя " +
+        "выигрывает своим первым ходом.",
+      explain: list + " Первым ходом Петя выигрывает, если хотя бы одна из этих " +
+        "сумм не меньше S, — значит S не больше наибольшей из них: " + ans + "."
+    };
+  }
+  if (kind === "minS") {
+    return {
+      type: 5, kind: kind, answer: String(ans),
+      question: lead + "Найдите наименьшее значение S, при котором Петя " +
+        "не может выиграть первым ходом.",
+      explain: list + " Пока S не превышает наибольшую из сумм (" + (ans - 1) +
+        "), Петя заканчивает игру сразу. Значит первое «неудобное» значение — " +
+        ans + "."
+    };
+  }
+  return {
+    type: 5, kind: kind, answer: String(ans),
+    question: lead + "Пусть S = <b>" + S + "</b>. Сколько из четырёх возможных " +
+      "первых ходов Пети сразу заканчивают игру?",
+    explain: list + " Всего ходов четыре: два «добавить камень» дают по " +
+      (a + b + 1) + ", удвоение первой кучи — " + (2 * a + b) +
+      ", удвоение второй — " + (a + 2 * b) + ". Игру заканчивают те, где сумма " +
+      "не меньше " + S + ", таких ходов " + ans + "."
+  };
+}
+
+/* ------------------------------------------------------------- сборка */
+
+function tMake(seed) {
+  const rng = tRng(seed || 1);
+  const order = tShuffle(rng, [0, 1, 2, 3, 4, 5]);
+  return order.map(function (type) { return tTask(type, rng); });
+}
+
+/* Сверка знак в знак. Прощаются только пробелы по краям — их не видно. */
+function tCheck(task, raw) {
+  const s = String(raw === undefined || raw === null ? "" : raw).trim();
+  return s === task.answer;
+}
+
+/* Что не так с ФОРМОЙ ответа. null — форма в порядке, ошибка в сути. */
+function tHint(task, raw) {
+  const s = String(raw === undefined || raw === null ? "" : raw).trim();
+  if (!s) return "Ответ пустой.";
+  if (/^\d+$/.test(s)) return null;
+  if (/[А-Яа-яA-Za-z]/.test(s)) return "Ответ — целое число, без слов и единиц.";
+  if (/\d/.test(s)) return "Только число — без пробелов, запятых и знаков.";
+  return "Ответ — целое число.";
+}
+/* ==== /ЗАДАЧИ ==== */
+
+/* Форма сдачи ДЗ — одна на все темы. Ссылку разносит set_form_link.py. */
+const FORM = "https://docs.google.com/forms/d/e/1FAIpQLSfQyhaxcnzn4ZaKSe_ZMsluw7qRQnrw_80H6SfrnYB5EThUIA/viewform?usp=pp_url&entry.853601231=ФАМИЛИЯ&entry.1091635917=КЛАСС&entry.487188307=КОД";
+
+const ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+const EPOCH = Date.UTC(2026, 0, 1);
+const PREFIX = "TG";
+const SCALE = [[6, 5], [5, 4], [3, 3]];
+
+const bin = (v, w) => v.toString(2).padStart(w, "0");
+
+/* Семибитными частями строки: в нагрузке 33 бита, а побитовые операции в JS
+   32-битные — старший бит молча потерялся бы. */
+function checksum(bitstr){
+  let cs = 0x5B;
+  for (let i = 0; i < bitstr.length; i += 7)
+    cs ^= parseInt(bitstr.substr(i, 7).padEnd(7, "0"), 2);
+  return cs & 0x7F;
+}
+
+function makeCode(st){
+  const day = Math.max(0, Math.min(2047, Math.floor(
+      (Date.now() - EPOCH) / 86400000)));
+  const payload = bin(day, 11) + bin(Math.min(15, st.typesDone), 4) +
+                  bin(Math.min(15, st.cleanTypes), 4) +
+                  bin(Math.min(127, st.solved), 7) +
+                  bin(Math.min(127, st.wrong), 7);
+  const bitstr = payload + bin(checksum(payload), 7);
+  let out = "";
+  for (let i = 0; i < 40; i += 5)
+    out += ALPHABET[parseInt(bitstr.substr(i, 5), 2)];
+  return PREFIX + "-" + out.slice(0, 4) + "-" + out.slice(4);
+}
+
+/* ---------------------------------------------------------- состояние
+   Все вопросы темы лежат на странице сразу — решать можно в любом
+   порядке, объём виден с первого взгляда. Вопрос закрывается одним верным
+   ответом и больше не спрашивается. Ошибся — разбор сразу, а вопрос
+   остаётся открытым: кнопка «Новые числа» на той же карточке даёт задачу с
+   другими данными, и её можно сдать ещё раз. Код выдаётся, когда закрыто
+   хотя бы MIN_TO_FINISH; после кода карточки запираются.
+   До 17.09.2026 вопросы шли по одному, раундами; Света попросила
+   показывать все сразу: не видно объёма и нельзя выбрать порядок. */
+const T_COUNT = T_TYPES.length;
+const MIN_TO_FINISH = 3;
+
+let st;
+
+function esc(s){ return String(s).replace(/[&<>]/g, c =>
+  ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+
+function markFor(n){
+  for (const [need, m] of SCALE) if (n >= need) return m;
+  return null;
+}
+
+function wordQ(n){
+  const a = n % 100, b = a % 10;
+  if (a > 4 && a < 21) return "вопросов";
+  if (b === 1) return "вопрос";
+  if (b > 1 && b < 5) return "вопроса";
+  return "вопросов";
+}
+
+function newRng(){ return tRng((Date.now() ^ (Math.random() * 1e9)) >>> 0); }
+
+function freshState(){
+  const s = {
+    closed: Array(T_COUNT).fill(false),
+    clean:  Array(T_COUNT).fill(true),
+    tried:  Array(T_COUNT).fill(false),
+    tasks:  Array(T_COUNT).fill(null),
+    solved: 0, wrong: 0, code: null
+  };
+  for (let i = 0; i < T_COUNT; i++) s.tasks[i] = tTask(i, newRng());
+  Object.defineProperty(s, "typesDone",
+    {get(){ return s.closed.filter(Boolean).length; }});
+  Object.defineProperty(s, "cleanTypes",
+    {get(){ return s.closed.filter((d, i) => d && s.clean[i]).length; }});
+  return s;
+}
+
+function paint(){
+  const box = document.getElementById("types");
+  box.innerHTML = "";
+  for (let i = 0; i < T_COUNT; i++) {
+    const el = document.createElement("span");
+    el.className = "chip" + (st.closed[i] ? " done" : st.tried[i] ? " miss" : "");
+    el.textContent = (i + 1) + ". " + T_TYPES[i];
+    box.appendChild(el);
+  }
+  const done = st.typesDone;
+  const m = markFor(done);
+  const sb = document.getElementById("scorebox");
+  sb.className = "score" + (m ? " m" + m : "");
+  document.getElementById("mark").textContent = m ? m : "—";
+  document.getElementById("stats").textContent =
+    "Закрыто: " + done + " из " + T_COUNT + ". Решено задач: " + st.solved +
+    ", ошибок: " + st.wrong + ".";
+  renderBottom();
+}
+
+function cardHtml(i){
+  const t = st.tasks[i];
+  return '<div class="card" id="task-' + i + '">' +
+      '<p class="tag">' + (i + 1) + ' &middot; ' + T_TYPES[i] + '</p>' +
+      '<div class="q">' + t.question + '</div>' +
+      '<div class="row">' +
+        '<input type="text" id="ans-' + i + '" autocomplete="off" spellcheck="false" ' +
+               'placeholder="ответ"' + '>' +
+        '<button class="primary" id="go-' + i + '">Ответить</button>' +
+      '</div>' +
+      '<div class="verdict" id="v-' + i + '"></div>' +
+    '</div>';
+}
+
+function bindCard(i){
+  document.getElementById("ans-" + i).addEventListener("keydown", function(e){
+    if (e.key === "Enter") judge(i);
+  });
+  document.getElementById("go-" + i).addEventListener("click", function(){ judge(i); });
+}
+
+function renderAll(){
+  let html = "";
+  for (let i = 0; i < T_COUNT; i++) html += cardHtml(i);
+  document.getElementById("area").innerHTML = html;
+  for (let i = 0; i < T_COUNT; i++) bindCard(i);
+}
+
+function renderCard(i){
+  document.getElementById("task-" + i).outerHTML = cardHtml(i);
+  bindCard(i);
+}
+
+function judge(i){
+  if (st.code) return;
+  const t = st.tasks[i];
+  const raw = document.getElementById("ans-" + i).value;
+  const ok = tCheck(t, raw);
+  st.tried[i] = true;
+  if (ok) { st.closed[i] = true; st.solved++; }
+  else { st.wrong++; st.clean[i] = false; }
+
+  const card = document.getElementById("task-" + i);
+  card.className = "card " + (ok ? "ok" : "err");
+  document.getElementById("ans-" + i).disabled = true;
+  document.getElementById("go-" + i).disabled = true;
+  const v = document.getElementById("v-" + i);
+  v.className = "verdict " + (ok ? "ok" : "err");
+  v.innerHTML = ok
+    ? "Правильно — вопрос закрыт."
+    : "Ошибка. Твой ответ: <code>" + esc(raw) + "</code>, верный: <code>" +
+      t.answer + "</code>." +  (tHint(t, raw) ? " " + tHint(t, raw) : "") +
+      " Вопрос остался открытым: возьми ту же задачу с другими данными.";
+  card.insertAdjacentHTML("beforeend",
+    '<div class="why">' + t.explain + '</div>' +
+    (ok ? '' : '<div class="row"><button class="primary" id="re-' + i +
+               '">Новые числа</button></div>'));
+  if (!ok) document.getElementById("re-" + i).addEventListener("click", function(){
+    st.tasks[i] = tTask(i, newRng());
+    st.tried[i] = false;
+    renderCard(i);
+    document.getElementById("ans-" + i).focus();
+    paint();
+  });
+  paint();
+}
+
+function renderBottom(){
+  const box = document.getElementById("bottom");
+  if (st.code) return;
+  const done = st.typesDone, open = T_COUNT - done;
+  if (done < MIN_TO_FINISH) {
+    box.innerHTML = '<p class="stats">Код работы появится, когда будет закрыто ' +
+      'хотя бы ' + MIN_TO_FINISH + ' ' + wordQ(MIN_TO_FINISH) + ' (сейчас ' +
+      done + ').</p>';
+    return;
+  }
+  const m = markFor(done);
+  const up = SCALE.filter(s => s[0] > done).pop();
+  let msg;
+  if (up) {
+    msg = "Наработано на <b>" + m + "</b> (закрыто " + done + " из " + T_COUNT +
+      "). Можно забрать код сейчас, а можно дорешать ещё " + open + " " +
+      wordQ(open) + " и дойти до <b>" + up[1] + "</b>.";
+  } else {
+    msg = "Все " + T_COUNT + " " + wordQ(T_COUNT) + " закрыты — наработано на <b>" +
+      m + "</b>.";
+  }
+  box.innerHTML =
+    '<div class="card">' +
+      '<p>' + msg + '</p>' +
+      '<div class="row"><button class="primary" id="stop">Получить код' +
+        (open > 0 ? ' сейчас' : '') + '</button></div>' +
+    '</div>';
+  document.getElementById("stop").addEventListener("click", finish);
+}
+
+function finish(){
+  const code = makeCode(st);
+  st.code = code;
+  document.querySelectorAll("#area input, #area button").forEach(function(el){
+    el.disabled = true;
+  });
+  const m = markFor(st.typesDone);
+  const open = [];
+  for (let i = 0; i < T_COUNT; i++) if (!st.closed[i]) open.push(T_TYPES[i]);
+  document.getElementById("bottom").innerHTML =
+    '<div class="card">' +
+      '<h2>Работа завершена</h2>' +
+      '<p>Закрыто <b>' + st.typesDone + '</b> из ' + T_COUNT +
+        (m ? ', это отметка <b>' + m + '</b>' : '') + '.' +
+        (open.length ? ' Не закрыто: ' + open.join(", ") + '.' : '') +
+      '</p>' +
+      '<p>Код работы — его и надо сдать:</p>' +
+      '<div class="code">' + code + '</div>' +
+      '<div class="note">Код хранит дату, число закрытых вопросов, число ' +
+        'решённых и неверных задач. Переписывать его руками не нужно: впиши ' +
+        'фамилию и класс, и кнопка откроет форму с уже подставленным кодом.</div>' +
+      '<div class="fields">' +
+        '<div><label for="fam">Фамилия и имя</label>' +
+          '<input type="text" id="fam" autocomplete="off"></div>' +
+        '<div><label for="kls">Класс</label>' +
+          '<input type="text" id="kls" autocomplete="off" value="11"></div>' +
+      '</div>' +
+      '<div class="row">' +
+        '<button id="send" class="primary">Сдать работу</button>' +
+        '<button id="again">Начать заново</button>' +
+      '</div>' +
+      '<p class="stats">«Начать заново» откроет все ' + T_COUNT + ' вопросов с ' +
+        'нуля — для дополнительной тренировки. Сдавать нужно тот код, который ' +
+        'получен сейчас.</p>' +
+    '</div>';
+  document.getElementById("bottom").scrollIntoView({behavior: "smooth", block: "start"});
+  document.getElementById("send").addEventListener("click", function(){
+    const fam = document.getElementById("fam").value.trim();
+    if (!fam) { document.getElementById("fam").focus(); return; }
+    const kls = document.getElementById("kls").value.trim() || "11";
+    window.open(FORM.replace("ФАМИЛИЯ", encodeURIComponent(fam))
+                    .replace("КЛАСС", encodeURIComponent(kls))
+                    .replace("КОД", encodeURIComponent(code)), "_blank");
+  });
+  document.getElementById("again").addEventListener("click", resetAll);
+  paint();
+}
+
+function resetAll(){
+  st = freshState();
+  renderAll();
+  paint();
+}
+
+resetAll();
+</script>
+<p class="ai-mark" style="margin:34px auto 0;max-width:860px;padding-top:12px;border-top:1px solid #d9dce6;color:#5c6070;font:13px/1.5 "Segoe UI",system-ui,sans-serif">Материалы подготовлены с использованием технологий искусственного интеллекта.</p>
+</body>
+</html>
