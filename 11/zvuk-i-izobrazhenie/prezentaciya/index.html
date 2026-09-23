@@ -1,0 +1,575 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Задание 7 ЕГЭ: кодирование звука и изображения — презентация</title>
+<meta name="description" content="Презентация к разбору задания 7 ЕГЭ в 11 классе (углублённый): формула объёма звукового файла и растрового изображения, лестница единиц, палитра и биты на пиксель, разбор демоверсии 2027 в Python, «вверх» против «целой части», канал связи и карты памяти, обратный ход к числу цветов.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E11%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ink)}
+body{font:20px/1.5 "Segoe UI",system-ui,sans-serif}
+.deck{height:100vh;display:flex;flex-direction:column}
+.stage{flex:1 1 auto;overflow-y:auto;padding:34px 56px 12px}
+.slide{display:none;max-width:1100px;margin:0 auto}
+.slide.on{display:block}
+
+h1{font-size:48px;line-height:1.1;margin:0 0 18px;text-wrap:balance}
+h2{font-size:34px;line-height:1.15;margin:0 0 18px;text-wrap:balance}
+.lead{font-size:23px;color:var(--muted);margin:0 0 24px}
+p{margin:0 0 14px}
+ul{margin:0 0 14px;padding-left:28px}
+li{margin:8px 0}
+code{font-family:Consolas,"Cascadia Mono",monospace;background:var(--card);
+     border:1px solid var(--line);border-radius:6px;padding:1px 7px;font-size:.92em}
+pre{font-family:Consolas,"Cascadia Mono",monospace;background:#1e2430;color:#e7ecf5;
+    padding:16px 20px;border-radius:12px;font-size:20px;line-height:1.45;
+    overflow-x:auto;margin:10px 0}
+pre code{background:none;border:0;padding:0;color:inherit;font-size:inherit}
+pre .c{color:#8fa6c4}
+pre .out{color:#9dd4b4}
+pre .hl{color:#ffd479}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;align-items:start}
+.box{border:1px solid var(--line);border-radius:14px;padding:16px 20px;background:#fff}
+.box h3{margin:0 0 8px;font-size:22px}
+.good{border-color:var(--ok-line);background:var(--ok-bg)}
+.bad{border-color:var(--err-line);background:var(--err-bg)}
+.warn{border-color:var(--hi-line);background:var(--hi-bg)}
+.big{font-size:25px}
+table{border-collapse:collapse;font-size:19px;margin:10px 0}
+th,td{border:1px solid var(--line);padding:7px 14px;text-align:left}
+th{background:var(--card)}
+table.mini th,table.mini td{padding:6px 12px}
+.key{color:var(--accent);font-weight:700}
+.step[hidden]{display:none}
+.tag{display:inline-block;background:var(--accent);color:#fff;border-radius:20px;
+     padding:3px 14px;font-size:16px;font-weight:700;margin-bottom:12px}
+.tag.gray{background:var(--muted)}
+.bar{flex:0 0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+     border-top:1px solid var(--line);background:var(--card);padding:12px 24px}
+.bar .spacer{flex:1 1 auto}
+.count{color:var(--muted);font-size:17px;font-variant-numeric:tabular-nums}
+.keys{color:var(--muted);font-size:15px}
+.keys kbd{font:600 13px/1 Consolas,monospace;border:1px solid var(--line);
+          border-bottom-width:2px;border-radius:5px;padding:2px 6px;background:#fff}
+button{font:600 17px/1 inherit;padding:11px 18px;border-radius:10px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);color:var(--muted)}
+
+/* ---- размер шрифта на проекторе: A− / A+ ---- */
+.zoom{display:inline-flex;align-items:center;gap:3px;margin-left:8px}
+.zoom button{padding:8px 10px;font-size:15px;min-width:36px;line-height:1}
+.zoom .z{color:var(--muted);font-size:15px;min-width:46px;text-align:center;
+         font-variant-numeric:tabular-nums}
+
+/* ---- условие задачи на слайде: слева от разбора, на своём месте ---- */
+.cond{border:1px solid var(--line);border-radius:14px;padding:16px 20px;
+      background:var(--card);font-size:19px}
+.cond p:last-child{margin-bottom:0}
+.ladder{font:600 21px/1.9 Consolas,monospace}
+.ladder span{color:var(--accent)}
+.fnote{color:var(--muted);font-size:17px}
+ol{margin:0 0 14px;padding-left:28px}
+</style>
+</head>
+<body>
+<div class="deck">
+<div class="stage" id="stage">
+
+<section class="slide on">
+  <h1>Задание 7:<br>звук и изображение</h1>
+  <p class="lead">Сколько места занимает запись — и сколько её влезет в канал,
+  на карту памяти или в палитру.<br>
+  Всё задание держится на <b>двух формулах</b> и <b>одной лестнице единиц</b>.</p>
+  <p>Базовый уровень, один балл. Ответ — одно целое число.</p>
+</section>
+
+<section class="slide">
+  <span class="tag">условие</span>
+  <h2>Как это выглядит на экзамене</h2>
+  <div class="two">
+    <div class="cond">
+      <p>Голосовое сообщение оцифровывается в формате <b>стерео</b> с частотой
+         дискретизации <b>32 000 Гц</b> и глубиной кодирования <b>16 бит</b>.
+         Определите наименьшее количество <b>Кбайт</b>, необходимое для
+         сохранения сообщения в памяти (без учёта заголовка), если его
+         длительность — <b>2 минуты 27 секунд</b>.</p>
+    </div>
+    <div>
+      <div class="box"><h3>Что дано</h3>
+        <p>Четыре числа и единица, в которой хотят ответ. Больше в условии
+           ничего и не бывает: ни алгоритма, ни программы.</p></div>
+      <div class="box warn" style="margin-top:14px"><h3>Где теряют балл</h3>
+        <p>Не в формуле, а в переводе единиц и в словах «наименьшее
+           количество» — они значат округление <b>вверх</b>.</p></div>
+    </div>
+  </div>
+  <p class="fnote">Вторая половина задач — про изображение: размер в пикселях,
+     палитра, пакеты снимков и карты памяти. Формула другая, дальше всё то же.</p>
+</section>
+
+<section class="slide">
+  <span class="tag">звук</span>
+  <h2>Как оцифровывают звук</h2>
+  <p class="big">Микрофон меряет громкость много раз в секунду и каждое
+     измерение записывает числом.</p>
+  <table>
+    <tr><th>Частота дискретизации</th><td>сколько <b>измерений в секунду</b>.
+        32 000 Гц — это 32 000 чисел каждую секунду</td></tr>
+    <tr><th>Глубина кодирования</th><td>сколько <b>бит на одно измерение</b>.
+        16 бит — значит каждое число занимает 16 бит</td></tr>
+    <tr><th>Каналы</th><td>моно — дорожка одна, <b>стерео — две</b>, и весь
+        счёт удваивается</td></tr>
+  </table>
+  <div class="box good">
+    <h3 style="font-size:26px">биты = частота · глубина · каналы · секунды</h3>
+    <p>Всё задание про звук — это она. Сжатия в условии не бывает: если
+       написано «без сжатия», формула работает как есть.</p>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">единицы</span>
+  <h2>Лестница единиц</h2>
+  <div class="two">
+    <div>
+      <p class="ladder">
+        8 бит <span>=</span> 1 байт<br>
+        1024 байта <span>=</span> 1 Кбайт<br>
+        1024 Кбайт <span>=</span> 1 Мбайт<br>
+        1024 Мбайт <span>=</span> 1 Гбайт
+      </p>
+      <p>Вверх по лестнице — <b>деление</b>, вниз — умножение.</p>
+    </div>
+    <div>
+      <div class="box bad"><h3>1024, а не 1000</h3>
+        <p>Килобайт в информатике — это 2<sup>10</sup> байт. Ответ, посчитанный
+           через 1000, отличается процента на два — и не совпадает с ключом.</p></div>
+      <div class="box bad" style="margin-top:14px"><h3>Биты или байты</h3>
+        <p>Канал связи считает <b>биты в секунду</b>, память — <b>байты</b>.
+           Между ними всегда восьмёрка; потерянная восьмёрка даёт ответ ровно
+           в 8 раз мимо.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">разбор</span>
+  <h2>Демоверсия 2027: считаем</h2>
+  <div class="two">
+    <div class="cond">
+      <p>Стерео, <b>32 000 Гц</b>, <b>16 бит</b>, длительность
+         <b>2 минуты 27 секунд</b>.</p>
+      <p>Определите наименьшее количество <b>Кбайт</b>, необходимое для
+         сохранения.</p>
+    </div>
+    <div class="steps">
+      <ol>
+        <li class="step" hidden>Секунды: 2 · 60 + 27 = <span class="key">147</span></li>
+        <li class="step" hidden>За секунду: 32 000 · 16 · 2 =
+            <span class="key">1 024 000</span> бит</li>
+        <li class="step" hidden>Всего: 1 024 000 · 147 =
+            <span class="key">150 528 000</span> бит</li>
+        <li class="step" hidden>В байтах: ÷ 8 = <span class="key">18 816 000</span></li>
+        <li class="step" hidden>В Кбайт: ÷ 1024 = <span class="key">18 375</span>
+            — делится нацело, округлять нечего</li>
+      </ol>
+      <div class="step box good" hidden><h3>Ответ: 18375</h3>
+        <p class="fnote">Без единиц измерения и без пробелов между разрядами —
+           ответ читает машина.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">инструмент</span>
+  <h2>То же самое в Python</h2>
+  <div class="two">
+    <div>
+<pre><code>freq = 32000     <span class="c"># частота, Гц</span>
+depth = 16       <span class="c"># глубина, бит</span>
+ch = 2           <span class="c"># стерео</span>
+t = 2 * 60 + 27  <span class="c"># длительность, с</span>
+
+bits = freq * depth * ch * t
+b = bits // 8    <span class="c"># байты</span>
+print(b // 1024) <span class="c"># Кбайт</span>
+<span class="out">&gt;&gt;&gt; 18375</span></code></pre>
+    </div>
+    <div>
+      <div class="box"><h3>Почему не в уме</h3>
+        <p>Четыре умножения и три деления. В уме теряется не формула, а одна
+           из ступеней лестницы — и ответ мимо ровно в 8 или в 1024 раза.</p></div>
+      <div class="box good" style="margin-top:14px"><h3>Две строки, которые решают всё</h3>
+        <p><code>//</code> — деление с отбрасыванием дробной части. Это и есть
+           «целая часть полученного числа».</p>
+        <p><code>-(-b // 1024)</code> — то же деление, но <b>вверх</b>.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">ловушка</span>
+  <h2>Вверх или вниз — читаем вопрос</h2>
+  <table>
+    <tr><th>В условии</th><th>Что делать</th><th>В Python</th></tr>
+    <tr><td><b>наименьшее количество</b> Кбайт, необходимое для сохранения</td>
+        <td>округлить <b>вверх</b>: файл не влезет в неполную единицу</td>
+        <td><code>-(-b // 1024)</code></td></tr>
+    <tr><td>укажите <b>целую часть</b> полученного числа</td>
+        <td>отбросить дробную часть</td>
+        <td><code>b // 1024</code></td></tr>
+    <tr><td><b>сколько снимков</b> влезет, <b>максимально возможное</b> число</td>
+        <td>отбросить: недописанный снимок не считается</td>
+        <td><code>budget // img</code></td></tr>
+  </table>
+  <div class="box warn">
+    <p class="big">Разница между этими ответами — <b>единица</b>. И она стоит
+       целого балла.</p>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">изображение</span>
+  <h2>Картинка: пиксели и палитра</h2>
+  <p class="big">Растровое изображение — это сетка пикселей, и у каждого
+     записан свой цвет.</p>
+  <div class="two">
+    <div>
+      <div class="box good"><h3 style="font-size:24px">биты = ширина · высота ·
+          бит на пиксель</h3>
+        <p>Сколько бит на пиксель — столько же двоичных разрядов у номера
+           цвета.</p></div>
+      <div class="box" style="margin-top:14px"><h3>Палитра и биты</h3>
+        <p><b>цветов = 2<sup>бит</sup></b>, и обратно: бит столько, в какую
+           степень надо возвести двойку.</p></div>
+    </div>
+    <div>
+      <table class="mini">
+        <tr><th>Цветов</th><th>Бит на пиксель</th></tr>
+        <tr><td>16</td><td>4</td></tr>
+        <tr><td>256</td><td>8</td></tr>
+        <tr><td>2048</td><td>11</td></tr>
+        <tr><td>4096</td><td>12</td></tr>
+        <tr><td>16 384</td><td>14</td></tr>
+        <tr><td>2<sup>24</sup></td><td>24</td></tr>
+      </table>
+      <p class="fnote">В условии пишут то так, то этак: «палитра из 4096
+         цветов» и «глубина цвета 12 бит» — это одно и то же.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">разбор</span>
+  <h2>Пакет снимков</h2>
+  <div class="two">
+    <div class="cond">
+      <p>Камера делает цветные фотографии размером <b>1024×960</b> пикселей,
+         палитра из <b>16 384</b> цветов. Снимки группируются в пакеты по
+         <b>400</b> штук.</p>
+      <p>Определите размер одного пакета в <b>Мбайт</b>. В ответе — целая
+         часть.</p>
+    </div>
+    <div class="steps">
+      <ol>
+        <li class="step" hidden>16 384 = 2<sup>14</sup>, значит на пиксель
+            <span class="key">14 бит</span></li>
+        <li class="step" hidden>Один снимок: 1024 · 960 · 14 =
+            <span class="key">13 762 560</span> бит</li>
+        <li class="step" hidden>В байтах: ÷ 8 = <span class="key">1 720 320</span></li>
+        <li class="step" hidden>Пакет: · 400 = <span class="key">688 128 000</span> байт</li>
+        <li class="step" hidden>В Мбайт: ÷ 1024 ÷ 1024 = 656,25 →
+            <span class="key">656</span></li>
+      </ol>
+      <div class="step box good" hidden><h3>Ответ: 656</h3>
+        <p class="fnote">«Целая часть» — значит 656, а не 657: округлять
+           по правилам математики здесь не просят.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">канал</span>
+  <h2>Сколько влезет: канал и время</h2>
+  <p>Канал даёт <b>бит в секунду</b>. Умножаем на отведённое время — получаем
+     весь бюджет, дальше делим на размер одного снимка.</p>
+  <div class="two">
+    <div>
+<pre><code>w = 1024
+h = 768
+bits = 12                <span class="c"># 4096 цветов</span>
+img = w * h * bits // 8  <span class="c"># байт на снимок</span>
+
+speed = 1310720          <span class="c"># бит/с</span>
+t = 300                  <span class="c"># секунд на пакет</span>
+print(speed * t // 8 // img)
+<span class="out">&gt;&gt;&gt; 41</span></code></pre>
+    </div>
+    <div>
+      <div class="box"><h3>Почему целая часть</h3>
+        <p>41 снимок передаётся целиком, на 42-й времени уже не хватает.
+           «Максимально возможное количество» — это всегда вниз.</p></div>
+      <div class="box warn" style="margin-top:14px"><h3>Где восьмёрка</h3>
+        <p>Бюджет получился в битах, размер снимка — в байтах. Делить можно
+           только приведя к одному: либо <code>// 8</code> у бюджета, либо
+           <code>* 8</code> у снимка.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">карта памяти</span>
+  <h2>Два шага: карты памяти</h2>
+  <p>Здесь спрашивают не «сколько всего», а <b>сколько на последней карте</b>.
+     Значит сначала — сколько влезает на одну, потом — остаток.</p>
+  <div class="two">
+    <div>
+<pre><code>img = 7680 * 4320 * 16 // 8
+card = 9 * 1024 * 1024 * 1024
+
+per = card // img   <span class="c"># на одну карту</span>
+print(per)
+<span class="out">&gt;&gt;&gt; 145</span>
+
+print(4010 % per)   <span class="c"># на последней</span>
+<span class="out">&gt;&gt;&gt; 95</span></code></pre>
+    </div>
+    <div>
+      <div class="box"><h3>Почему остаток</h3>
+        <p>Полные карты забиты по 145 снимков: 145 · 27 = 3915. Оставшиеся
+           4010 − 3915 = 95 и лежат на последней.</p></div>
+      <div class="box bad" style="margin-top:14px"><h3>Частый неверный ответ</h3>
+        <p><b>145</b> — это сколько влезает на карту, а спрашивали про
+           последнюю. Читаем вопрос до конца.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">обратный ход</span>
+  <h2>Сколько цветов можно взять</h2>
+  <p>Задача наоборот: объём известен, ищем <b>бит на пиксель</b>, а уже из них
+     число цветов.</p>
+  <div class="two">
+    <div class="box"><h3>Через канал</h3>
+      <p>Бюджет на снимок: <code>speed * t // n</code> бит.</p>
+      <p>На пиксель: <code>bits = budget // (w * h)</code> — целая часть, иначе
+         не влезет.</p>
+      <p>Цветов: <code>2 ** bits</code>.</p>
+    </div>
+    <div class="box"><h3>Через сжатие</h3>
+      <p>«Отведено 90 Кбайт, при сжатии объём уменьшается на 15 %» — значит
+         90 Кбайт это <b>85 %</b> исходного.</p>
+      <p>До сжатия: <code>90 * 1024 * 100 // 85</code> байт, дальше так же.</p>
+    </div>
+  </div>
+  <div class="box bad">
+    <p class="big">Главная ошибка — написать в ответе <b>число бит</b>. Спрашивают
+       цвета: их <code>2 ** bits</code>.</p>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">без счёта</span>
+  <h2>Пересчёт и экономия</h2>
+  <div class="two">
+    <div>
+      <div class="box good"><h3>Пересчёт: считать заново не надо</h3>
+        <p>Размер прямо пропорционален каналам, частоте и глубине. Записали
+           тот же фрагмент в стерео и с частотой в 3,5 раза выше —</p>
+        <p class="big">35 · 2 · 3,5 = <b>245</b> Мбайт.</p>
+        <p class="fnote">Ни длительность, ни исходная частота не нужны: они
+           сокращаются.</p></div>
+    </div>
+    <div>
+      <div class="box"><h3>Экономия: две записи и вычитание</h3>
+        <p>Считаем размер снимка <b>до</b> и <b>после</b> пересжатия,
+           вычитаем и умножаем на число фотографий.</p>
+        <p><code>(was - now) * n</code>, дальше по лестнице в нужную
+           единицу.</p>
+        <p class="fnote">Размер меняется и от числа пикселей, и от глубины
+           цвета — меняться могут оба сразу.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">итог</span>
+  <h2>Четыре ловушки задания 7</h2>
+  <div class="two">
+    <div>
+      <div class="box bad"><h3>1. Биты или байты</h3>
+        <p>Канал — биты, память — байты. Ответ мимо в 8 раз.</p></div>
+      <div class="box bad" style="margin-top:12px"><h3>2. 1024, а не 1000</h3>
+        <p>Кбайт, Мбайт, Гбайт — каждая ступень в 1024 раза.</p></div>
+    </div>
+    <div>
+      <div class="box bad"><h3>3. Вверх или целая часть</h3>
+        <p>«Сколько влезет» — вниз. «Сколько нужно, чтобы сохранить» — вверх.</p></div>
+      <div class="box bad" style="margin-top:12px"><h3>4. Цвета или биты</h3>
+        <p>На пиксель <i>k</i> бит, а цветов 2<sup><i>k</i></sup>.</p></div>
+    </div>
+  </div>
+  <p class="big">Формулы две, лестница одна. Всё остальное — внимательное
+     чтение вопроса.</p>
+</section>
+
+<section class="slide">
+  <span class="tag gray">практикум</span>
+  <h2>Что дальше</h2>
+  <p>Девять задач — по одной на каждую форму вопроса, все на экране сразу,
+     порядок свой. Ошибся — появится разбор и программа, которая считает
+     именно эту задачу, а кнопка «Новые числа» даст такую же с другими
+     данными.</p>
+  <table>
+    <tr><th>Звук</th><td>объём записи · время передачи · заголовок трека ·
+        пересчёт при смене формата</td></tr>
+    <tr><th>Изображение</th><td>объём пакета · сколько снимков влезет ·
+        последняя карта памяти · сколько цветов · экономия</td></tr>
+  </table>
+  <p class="fnote">Отметка практикума: девять задач — «5», восемь — «4»,
+     семь — «3».</p>
+</section>
+
+<section class="slide">
+  <span class="tag">дома</span>
+  <h2>Домашняя работа</h2>
+  <p>Те же девять форм вопроса, по одной задаче на каждую. Тип закрывается
+     одним верным ответом; ошибся — придёт такая же задача с другими
+     числами.</p>
+  <div class="two">
+    <div>
+      <div class="box"><h3>Как сдать</h3>
+        <p>От шести закрытых типов появится <b>код работы</b> вида
+           <code>ZV-XXXX-XXXX</code> и кнопка «Сдать работу».</p>
+        <p>Вторая кнопка открывает письмо: к коду прикладываются
+           <b>снимки своих расчётов</b> — программа и то, что она
+           напечатала.</p></div>
+    </div>
+    <div>
+      <div class="box good"><h3>Зачем снимок</h3>
+        <p>Число можно получить и не написав программу. Снимок кода
+           показывает, что приём ваш, — поэтому он и просится вместе с
+           ответом.</p>
+        <p class="fnote">Отметка: девять типов — «5», восемь — «4»,
+           семь — «3».</p></div>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<div class="bar">
+  <button id="prev">← Назад</button>
+  <button id="step" class="primary">Раскрыть</button>
+  <button id="next">Вперёд →</button>
+  <span class="count" id="count"></span>
+  <span class="zoom" title="Размер шрифта на экране: клавиши + и −"><button id="zoomOut" title="Мельче (клавиша −)">A−</button><span class="z" id="zoomVal"></span><button id="zoomIn" title="Крупнее (клавиша +)">A+</button></span>
+  <div class="spacer"></div>
+  <span class="ai-mark" style="color:#5c6070;font-size:13px">Материалы подготовлены с использованием технологий искусственного интеллекта.</span>
+  <span class="keys"><kbd>Пробел</kbd> раскрыть и дальше ·
+    <kbd>←</kbd> <kbd>→</kbd> слайды</span>
+</div>
+</div>
+
+<script>
+const slides = [...document.querySelectorAll(".slide")];
+let cur = 0, shown = 0;
+
+const stepsOf = i => [...slides[i].querySelectorAll(".steps > .step")];
+
+function show(i){
+  slides[cur].classList.remove("on");
+  cur = Math.max(0, Math.min(slides.length - 1, i));
+  slides[cur].classList.add("on");
+  shown = stepsOf(cur).filter(el => !el.hidden).length;
+  document.getElementById("stage").scrollTop = 0;
+  sync();
+}
+
+function sync(){
+  const total = stepsOf(cur).length;
+  document.getElementById("count").textContent = `${cur + 1} / ${slides.length}`;
+  document.getElementById("prev").disabled = cur === 0;
+  document.getElementById("next").disabled = cur === slides.length - 1;
+  const b = document.getElementById("step");
+  b.hidden = total === 0;
+  if (total){
+    b.disabled = shown >= total;
+    b.textContent = shown >= total ? "Всё открыто"
+                  : shown === 0 ? "Раскрыть" : `Дальше (${shown}/${total})`;
+  }
+}
+
+function nextStep(){
+  const steps = stepsOf(cur);
+  if (shown >= steps.length) return false;
+  steps[shown].hidden = false;
+  steps[shown].scrollIntoView({block: "nearest", behavior: "smooth"});
+  shown++;
+  sync();
+  return true;
+}
+
+document.getElementById("prev").addEventListener("click", () => show(cur - 1));
+document.getElementById("next").addEventListener("click", () => show(cur + 1));
+document.getElementById("step").addEventListener("click", nextStep);
+
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowRight" || e.key === "PageDown"){ show(cur + 1); }
+  else if (e.key === "ArrowLeft" || e.key === "PageUp"){ show(cur - 1); }
+  else if (e.key === " " || e.key === "Enter"){
+    if (!nextStep()) show(cur + 1);
+  } else return;
+  e.preventDefault();
+});
+
+show(0);
+
+/* ---- размер шрифта на проекторе ----
+   Zoom только на области слайда: zoom на body растягивает 100vh, и панель
+   уезжает за экран (проверено 17.09.2026). Шаг запоминается в
+   localStorage и общий для всех презентаций: один раз подобрала на
+   проекторе — дальше везде так. ZOOM_BASE — стартовый масштаб этой колоды:
+   у колод с базовым кеглем 20px он выше, чем у 24px. */
+const ZOOM_BASE = 1.2;
+const ZOOM_KEY = "slides-zoom-step";
+let zoomStep = 0;
+try { zoomStep = Math.max(-3, Math.min(6, parseInt(localStorage.getItem(ZOOM_KEY), 10) || 0)); }
+catch (e) {}
+function applyZoom(){
+  const z = Math.round(ZOOM_BASE * Math.pow(1.1, zoomStep) * 100) / 100;
+  document.getElementById("stage").style.zoom = z;
+  document.getElementById("zoomVal").textContent = Math.round(z * 100) + "%";
+}
+function setZoom(d){
+  zoomStep = Math.max(-3, Math.min(6, zoomStep + d));
+  try { localStorage.setItem(ZOOM_KEY, String(zoomStep)); } catch (e) {}
+  applyZoom();
+}
+document.getElementById("zoomIn").addEventListener("click", () => setZoom(1));
+document.getElementById("zoomOut").addEventListener("click", () => setZoom(-1));
+document.addEventListener("keydown", e => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key === "+" || e.key === "=") setZoom(1);
+  else if (e.key === "-" || e.key === "_") setZoom(-1);
+  else return;
+  e.preventDefault();
+});
+applyZoom();
+</script>
+</body>
+</html>
