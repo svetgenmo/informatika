@@ -53,6 +53,7 @@
     - [Базы данных: поиск по трём таблицам](https://svetgenmo.github.io/informatika/11/baza-dannyh/) — Задание 3 ЕГЭ: решаем в электронных таблицах
     - [Условие Фано: дерево кода](https://svetgenmo.github.io/informatika/11/kod-fano/) — Задание 4 ЕГЭ: неравномерный двоичный код
     - [Алгоритм достраивает число](https://svetgenmo.github.io/informatika/11/postroenie-chisla/) — Задание 5 ЕГЭ: анализ алгоритма для исполнителя
+    - [Исполнитель Черепаха](https://svetgenmo.github.io/informatika/11/cherepaha/) — Задание 6 ЕГЭ: циклические алгоритмы для исполнителя
   - *Практикумы по программе*
     - [Количество информации и сжатие данных](https://svetgenmo.github.io/informatika/11/informaciya-i-szhatie/) — Обзорный практикум по содержанию ФГОС к первой паре 11 класса
     - [Код Хаффмана и условие Фано](https://svetgenmo.github.io/informatika/11/kod-huffmana/) — Обзорный практикум по содержанию ФГОС ко второй паре 11 класса

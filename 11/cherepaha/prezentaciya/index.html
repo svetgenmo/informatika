@@ -1,0 +1,755 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Задание 6 ЕГЭ: исполнитель Черепаха — презентация</title>
+<meta name="description" content="Презентация к разбору задания 6 ЕГЭ в 11 классе (углублённый): исполнитель Черепаха, перевод его команд в библиотеку turtle, сбор координат, рамка фигуры, пересечение и объединение, точки и площадь, разбор демоверсии 2027 кодом, Г-образная фигура и параллелограмм с углом 45 градусов.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E11%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ink)}
+body{font:20px/1.5 "Segoe UI",system-ui,sans-serif}
+.deck{height:100vh;display:flex;flex-direction:column}
+.stage{flex:1 1 auto;overflow-y:auto;padding:34px 56px 12px}
+.slide{display:none;max-width:1100px;margin:0 auto}
+.slide.on{display:block}
+
+h1{font-size:48px;line-height:1.1;margin:0 0 18px;text-wrap:balance}
+h2{font-size:34px;line-height:1.15;margin:0 0 18px;text-wrap:balance}
+.lead{font-size:23px;color:var(--muted);margin:0 0 24px}
+p{margin:0 0 14px}
+ul{margin:0 0 14px;padding-left:28px}
+li{margin:8px 0}
+code{font-family:Consolas,"Cascadia Mono",monospace;background:var(--card);
+     border:1px solid var(--line);border-radius:6px;padding:1px 7px;font-size:.92em}
+pre{font-family:Consolas,"Cascadia Mono",monospace;background:#1e2430;color:#e7ecf5;
+    padding:16px 20px;border-radius:12px;font-size:20px;line-height:1.45;
+    overflow-x:auto;margin:10px 0}
+pre code{background:none;border:0;padding:0;color:inherit;font-size:inherit}
+pre .c{color:#8fa6c4}
+pre .out{color:#9dd4b4}
+pre .hl{color:#ffd479}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;align-items:start}
+.box{border:1px solid var(--line);border-radius:14px;padding:16px 20px;background:#fff}
+.box h3{margin:0 0 8px;font-size:22px}
+.good{border-color:var(--ok-line);background:var(--ok-bg)}
+.bad{border-color:var(--err-line);background:var(--err-bg)}
+.warn{border-color:var(--hi-line);background:var(--hi-bg)}
+.big{font-size:25px}
+table{border-collapse:collapse;font-size:19px;margin:10px 0}
+th,td{border:1px solid var(--line);padding:7px 14px;text-align:left}
+th{background:var(--card)}
+table.mini th,table.mini td{padding:6px 12px}
+.key{color:var(--accent);font-weight:700}
+.step[hidden]{display:none}
+.tag{display:inline-block;background:var(--accent);color:#fff;border-radius:20px;
+     padding:3px 14px;font-size:16px;font-weight:700;margin-bottom:12px}
+.tag.gray{background:var(--muted)}
+.bar{flex:0 0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+     border-top:1px solid var(--line);background:var(--card);padding:12px 24px}
+.bar .spacer{flex:1 1 auto}
+.count{color:var(--muted);font-size:17px;font-variant-numeric:tabular-nums}
+.keys{color:var(--muted);font-size:15px}
+.keys kbd{font:600 13px/1 Consolas,monospace;border:1px solid var(--line);
+          border-bottom-width:2px;border-radius:5px;padding:2px 6px;background:#fff}
+button{font:600 17px/1 inherit;padding:11px 18px;border-radius:10px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);color:var(--muted)}
+
+/* ---- размер шрифта на проекторе: A− / A+ ---- */
+.zoom{display:inline-flex;align-items:center;gap:3px;margin-left:8px}
+.zoom button{padding:8px 10px;font-size:15px;min-width:36px;line-height:1}
+.zoom .z{color:var(--muted);font-size:15px;min-width:46px;text-align:center;
+         font-variant-numeric:tabular-nums}
+
+/* ---- алгоритм Черепахи и её след: их же рисует разбор задач ---- */
+pre.alg{background:var(--card);color:var(--ink);border:1px solid var(--line);
+        font-size:19px;line-height:1.5;white-space:pre-wrap;padding:12px 16px}
+svg.fpic{display:block;width:100%;max-width:560px;height:auto;margin:10px 0;
+         background:#fff;border:1px solid var(--line);border-radius:12px}
+.fnote{color:var(--muted);font-size:17px}
+ol{margin:0 0 14px;padding-left:28px}
+</style>
+</head>
+<body>
+<div class="deck">
+<div class="stage" id="stage">
+
+<section class="slide on">
+  <h1>Задание 6:<br>исполнитель Черепаха</h1>
+  <p class="lead">Черепаха чертит одну или две замкнутые фигуры. Спрашивают,
+  сколько внутри целых точек, какая у фигур площадь или периметр.<br>
+  Решаем <b>кодом</b>: те же команды отдаём библиотеке <code>turtle</code>,
+  и она сама скажет, где что нарисовано.</p>
+  <p>Базовый уровень, один балл. Ответ — одно целое число.</p>
+</section>
+
+<section class="slide">
+  <span class="tag">условие</span>
+  <h2>Что умеет Черепаха</h2>
+  <p>Стоит в начале координат, смотрит <b>вверх</b> (вдоль оси ординат),
+     хвост опущен — значит рисует.</p>
+  <div class="two">
+    <div>
+      <table class="mini">
+        <tr><th>Команда</th><th>Что делает</th></tr>
+        <tr><td>Вперёд <i>n</i></td><td>пройти <i>n</i> единиц туда, куда смотрит</td></tr>
+        <tr><td>Назад <i>n</i></td><td>пройти <i>n</i> единиц в обратную сторону</td></tr>
+        <tr><td>Направо <i>m</i></td><td>повернуться на <i>m</i>° по часовой стрелке</td></tr>
+        <tr><td>Налево <i>m</i></td><td>повернуться на <i>m</i>° против часовой</td></tr>
+        <tr><td>Поднять хвост</td><td>дальше идти, не рисуя</td></tr>
+        <tr><td>Опустить хвост</td><td>снова рисовать</td></tr>
+      </table>
+    </div>
+    <div>
+      <div class="box"><h3>Повтори <i>k</i> [ … ]</h3>
+        <p>Команды в скобках выполняются <i>k</i> раз подряд. Это обычный
+           цикл — и ровно так он и переводится.</p></div>
+      <div class="box warn" style="margin-top:14px">
+        <p><b>Поворот меняет только направление.</b> Черепаха с места не
+           двигается: «Направо 90» — это не шаг вправо.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">метод</span>
+  <h2>Черепаха → <code>turtle</code>: перевод один в один</h2>
+  <div class="two">
+    <div>
+      <table class="mini">
+        <tr><th>Черепаха</th><th>Python</th></tr>
+        <tr><td>Вперёд 24</td><td><code>forward(24)</code></td></tr>
+        <tr><td>Назад 18</td><td><code>backward(18)</code></td></tr>
+        <tr><td>Направо 90</td><td><code>right(90)</code></td></tr>
+        <tr><td>Налево 270</td><td><code>left(270)</code></td></tr>
+        <tr><td>Поднять хвост</td><td><code>penup()</code></td></tr>
+        <tr><td>Опустить хвост</td><td><code>pendown()</code></td></tr>
+        <tr><td>Повтори 6 [ … ]</td><td><code>for i in range(6):</code></td></tr>
+      </table>
+      <p class="fnote">Где мы сейчас — <code>xcor()</code> и
+         <code>ycor()</code>. Это и есть то, ради чего берём turtle.</p>
+    </div>
+    <div>
+      <div class="box bad"><h3>Две поправки, без которых не сойдётся</h3>
+        <ul>
+          <li><b>turtle стартует вправо</b>, а Черепаха — вверх. Первой
+              строкой <code>setheading(90)</code>.</li>
+          <li><b>Начало координат</b> у turtle в центре экрана, и это
+              то же самое, что (0, 0) у Черепахи. Ничего переносить не
+              надо.</li>
+        </ul>
+      </div>
+      <pre><code>from turtle import *
+
+speed(0)
+<span class="hl">setheading(90)</span>   <span class="c"># Черепаха смотрит вверх</span></code></pre>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">метод</span>
+  <h2>Запустили — и видим, что нарисовано</h2>
+  <div class="two">
+    <div>
+<!-- ==== ПРИМЕР:demo-pic: вставлено gen.py, руками не править ==== -->
+<pre class="alg">Повтори 6 [Вперёд 24 Направо 90 Вперёд 30 Направо 90]
+Поднять хвост
+Вперёд 2 Направо 90 Вперёд 10 Налево 90
+Опустить хвост
+Повтори 6 [Вперёд 75 Направо 90 Вперёд 71 Направо 90]</pre><svg class="fpic" viewBox="0 0 460 320" role="img" aria-label="след Черепахи на координатной плоскости"><line x1="84.9" y1="0" x2="84.9" y2="320" stroke="#c8ccd8"/><line x1="0" y1="297.9" x2="460" y2="297.9" stroke="#c8ccd8"/><rect x="120.7" y="211.9" width="71.7" height="78.8" fill="#f0c98a" opacity="0.55"/><polyline points="84.9,297.9 84.9,211.9 192.4,211.9 192.4,297.9 84.9,297.9 84.9,211.9 192.4,211.9 192.4,297.9 84.9,297.9 84.9,211.9 192.4,211.9 192.4,297.9 84.9,297.9" fill="none" stroke="#1f5fa8" stroke-width="2"/><polyline points="120.7,290.8 120.7,22.1 375.1,22.1 375.1,290.8 120.7,290.8 120.7,22.1 375.1,22.1 375.1,290.8 120.7,290.8 120.7,22.1 375.1,22.1 375.1,290.8 120.7,290.8" fill="none" stroke="#b3261e" stroke-width="2"/><circle cx="84.9" cy="297.9" r="3.5" fill="#1b1b1f"/></svg>
+<!-- ==== /ПРИМЕР ==== -->
+    </div>
+    <div>
+      <div class="steps">
+        <div class="step" hidden>
+          <p class="big">Две рамки, и они <b>перекрываются</b>.</p>
+          <p>Картинка отвечает на вопрос «как оно расположено», но не
+             отвечает «сколько». Считать по клеточкам с экрана —
+             долго и промахнёшься.</p>
+        </div>
+        <div class="step" hidden>
+          <div class="box good"><p>Значит берём у turtle не картинку, а
+            <b>числа</b>: координаты углов. Дальше всё решает арифметика.</p></div>
+        </div>
+        <div class="step" hidden>
+          <p class="fnote">Рисование можно и выключить (<code>speed(0)</code>
+             и <code>hideturtle()</code> ускоряют), но на экзамене картинка
+             полезна: сразу видно, не перепутал ли направление.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">каркас</span>
+  <h2>Рамка фигуры: две подпрограммы на все задачи</h2>
+  <div class="two">
+    <div>
+<pre><code>mnx = 0
+mxx = 0
+mny = 0
+mxy = 0
+
+def sbros():        <span class="c"># начать рамку здесь</span>
+    global mnx, mxx, mny, mxy
+    mnx = round(xcor())
+    mxx = mnx
+    mny = round(ycor())
+    mxy = mny
+
+def metka():        <span class="c"># растянуть рамку сюда</span>
+    global mnx, mxx, mny, mxy
+    x = round(xcor())
+    y = round(ycor())
+    mnx = min(mnx, x)
+    mxx = max(mxx, x)
+    mny = min(mny, y)
+    mxy = max(mxy, y)</code></pre>
+    </div>
+    <div>
+      <div class="steps">
+        <div class="step" hidden>
+          <p><code>sbros()</code> — перед фигурой, <code>metka()</code> —
+             после каждого <code>forward</code> и <code>backward</code>.
+             В конце в четырёх переменных лежат границы фигуры.</p>
+        </div>
+        <div class="step" hidden>
+          <p><code>global</code> нужен, потому что подпрограмма <b>меняет</b>
+             переменные снаружи, а не только читает их.</p>
+          <p><code>round</code> — потому что turtle считает через синусы, и
+             вместо 30 бывает 29.999999999999996.</p>
+        </div>
+        <div class="step" hidden>
+          <div class="box good"><p>Набрали один раз — дальше меняются только
+            команды Черепахи. Каркас на все задания 6.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">арифметика</span>
+  <h2>Пересечение двух рамок</h2>
+  <p>Прямоугольники со сторонами вдоль осей: их общая часть — снова
+     прямоугольник, и границы у него берутся крест-накрест.</p>
+  <div class="two">
+    <div>
+<pre><code>lx = <span class="hl">max</span>(ax1, bx1)   <span class="c"># левая граница</span>
+rx = <span class="hl">min</span>(ax2, bx2)   <span class="c"># правая</span>
+ny = <span class="hl">max</span>(ay1, by1)   <span class="c"># нижняя</span>
+vy = <span class="hl">min</span>(ay2, by2)   <span class="c"># верхняя</span></code></pre>
+    </div>
+    <div>
+      <div class="box"><p><b>Левее</b> всех не годится: общая часть
+        начинается там, где начались <i>обе</i> фигуры — значит
+        <code>max</code>. Кончается там, где кончилась <i>первая из
+        них</i> — значит <code>min</code>.</p></div>
+      <div class="box warn" style="margin-top:14px">
+        <p>Если вышло <code>rx &lt; lx</code> — фигуры не пересекаются. На
+           экзамене такого не дают, но проверить себя стоит.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">арифметика</span>
+  <h2>Точки, площадь, периметр — три разных вопроса</h2>
+  <table>
+    <tr><th>Спрашивают</th><th>Что писать</th><th>Почему</th></tr>
+    <tr><td>целые точки, с границей</td>
+        <td><code>(rx - lx + 1) * (vy - ny + 1)</code></td>
+        <td>точек по оси на <b>одну больше</b>, чем длина</td></tr>
+    <tr><td>площадь</td>
+        <td><code>(rx - lx) * (vy - ny)</code></td>
+        <td>это уже длины сторон, без единицы</td></tr>
+    <tr><td>периметр</td>
+        <td><code>2 * ((rx - lx) + (vy - ny))</code></td>
+        <td>сумма сторон, удвоенная</td></tr>
+    <tr><td>точки, <b>без</b> границы</td>
+        <td><code>(rx - lx - 1) * (vy - ny - 1)</code></td>
+        <td>оба крайних значения выкинули</td></tr>
+  </table>
+  <div class="box bad"><p class="big">От 0 до 3 — это <b>4</b> точки, а
+    длина 3. Вся разница между «сколько точек» и «какая площадь» в этой
+    единице, и на ней теряют балл чаще всего.</p></div>
+</section>
+
+<section class="slide">
+  <span class="tag">разбор</span>
+  <h2>Демоверсия 2027: точки в пересечении</h2>
+  <div class="two">
+    <div>
+<!-- ==== ПРИМЕР:demo-code: вставлено gen.py, руками не править ==== -->
+<pre><code>from turtle import *
+
+# подпрограммы sbros() и metka() — с прошлого слайда
+
+speed(0)
+setheading(90)               # Черепаха смотрит вверх, turtle — вправо
+sbros()
+for i in range(6):
+    forward(24)
+    metka()
+    right(90)
+    forward(30)
+    metka()
+    right(90)
+ax1 = mnx
+ax2 = mxx
+ay1 = mny
+ay2 = mxy
+
+penup()
+forward(2)
+right(90)
+forward(10)
+left(90)
+pendown()
+sbros()
+for i in range(6):
+    forward(75)
+    metka()
+    right(90)
+    forward(71)
+    metka()
+    right(90)
+bx1 = mnx
+bx2 = mxx
+by1 = mny
+by2 = mxy
+
+lx = max(ax1, bx1)           # рамка пересечения
+rx = min(ax2, bx2)
+ny = max(ay1, by1)
+vy = min(ay2, by2)
+print((rx - lx + 1) * (vy - ny + 1))
+done()</code></pre>
+<!-- ==== /ПРИМЕР ==== -->
+    </div>
+    <div>
+      <div class="steps">
+        <div class="step" hidden>
+          <p>Первая рамка: <b>x</b> от 0 до 30, <b>y</b> от 0 до 24.<br>
+             Вторая: <b>x</b> от 10 до 81, <b>y</b> от 2 до 77.</p>
+        </div>
+        <div class="step" hidden>
+          <p>Пересечение: <b>x</b> от 10 до 30, <b>y</b> от 2 до 24.</p>
+          <p class="big">21 · 23 = <span class="key">483</span></p>
+        </div>
+        <div class="step" hidden>
+          <div class="box good"><p>Обратите внимание: переход между фигурами
+            (<code>penup</code> … <code>pendown</code>) в рамку <b>не
+            входит</b>. Поэтому <code>sbros()</code> стоит сразу после
+            <code>pendown()</code>.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">разбор</span>
+  <h2>Тот же чертёж: а если спросят про объединение?</h2>
+  <div class="two">
+    <div>
+<!-- ==== ПРИМЕР:union-code: вставлено gen.py, руками не править ==== -->
+<pre><code>from turtle import *
+
+# подпрограммы sbros() и metka() — с прошлого слайда
+
+speed(0)
+setheading(90)               # Черепаха смотрит вверх, turtle — вправо
+sbros()
+for i in range(6):
+    forward(24)
+    metka()
+    right(90)
+    forward(30)
+    metka()
+    right(90)
+ax1 = mnx
+ax2 = mxx
+ay1 = mny
+ay2 = mxy
+
+penup()
+forward(2)
+right(90)
+forward(10)
+left(90)
+pendown()
+sbros()
+for i in range(6):
+    forward(75)
+    metka()
+    right(90)
+    forward(71)
+    metka()
+    right(90)
+bx1 = mnx
+bx2 = mxx
+by1 = mny
+by2 = mxy
+
+lx = max(ax1, bx1)           # рамка пересечения
+rx = min(ax2, bx2)
+ny = max(ay1, by1)
+vy = min(ay2, by2)
+a = (ax2 - ax1 + 1) * (ay2 - ay1 + 1)
+b = (bx2 - bx1 + 1) * (by2 - by1 + 1)
+c = (rx - lx + 1) * (vy - ny + 1)
+print(a + b - c)           # общее считаем один раз
+done()</code></pre>
+<!-- ==== /ПРИМЕР ==== -->
+    </div>
+    <div>
+      <div class="steps">
+        <div class="step" hidden>
+          <p>Точки первой фигуры: 31 · 25 = <b>775</b>.<br>
+             Точки второй: 72 · 76 = <b>5472</b>.</p>
+        </div>
+        <div class="step" hidden>
+          <p>Сложили — и общая часть посчиталась <b>дважды</b>. Вычитаем её
+             один раз:</p>
+          <p class="big">775 + 5472 − 483 = <span class="key">5764</span></p>
+        </div>
+        <div class="step" hidden>
+          <div class="box good"><p>Правило одно и для площадей:
+            <code>a + b - c</code>. Меняется только то, считаем мы точки
+            (с «плюс один») или площадь (без него).</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag gray">ловушка</span>
+  <h2>Нечётное число повторов</h2>
+  <p>Рамку Черепаха обходит за <b>два</b> повтора. Значит при чётном
+     «Повтори» она возвращается в начало, а при нечётном остаётся в
+     <b>противоположном углу</b> и смотрит вниз.</p>
+  <div class="two">
+    <div>
+      <div class="box bad"><h3>Чем это опасно</h3>
+        <p>Переход к второй фигуре («Поднять хвост, Вперёд 3 …»)
+           отсчитывается <b>оттуда</b>. Нарисуешь на бумаге от начала
+           координат — вторая рамка уедет.</p></div>
+    </div>
+    <div>
+      <div class="box good"><h3>Почему код не ошибётся</h3>
+        <p>turtle держит положение и направление сам. Мы просто пишем
+           команды подряд — и где Черепаха оказалась, там и оказалась.</p>
+        <p class="fnote">Это главный довод в пользу кода на этом номере.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag gray">ловушка</span>
+  <h2>Одну и ту же рамку пишут по-разному</h2>
+  <div class="three">
+    <div class="box"><h3>Обычно</h3>
+      <pre class="alg">Вперёд 20 Направо 90
+Вперёд 30 Направо 90</pre></div>
+    <div class="box"><h3>Задом наперёд</h3>
+      <pre class="alg">Вперёд 20 Налево 90
+Назад 30 Налево 90</pre></div>
+    <div class="box"><h3>Через 270</h3>
+      <pre class="alg">Вперёд 20 Налево 270
+Вперёд 30 Направо 90</pre></div>
+  </div>
+  <p>Все три чертят прямоугольник 30 на 20 — но в разных местах и в разную
+     сторону. Ещё бывает <b>Направо 45 Направо 45</b>: два поворота подряд
+     дают тот же прямой угол.</p>
+  <div class="box good"><p><b>Разбираться в этом руками не нужно.</b>
+    Переписали команды как есть — turtle посчитала. Именно поэтому
+    и «Назад», и «270» в условии не страшны.</p></div>
+</section>
+
+<section class="slide">
+  <span class="tag">редкая форма</span>
+  <h2>Фигура одна, и она не прямоугольник</h2>
+  <div class="two">
+    <div>
+<!-- ==== ПРИМЕР:el-pic: вставлено gen.py, руками не править ==== -->
+<pre class="alg">Вперёд 12 Налево 270 Вперёд 8 Налево 270
+Вперёд 4 Налево 90 Вперёд 18 Направо 90
+Вперёд 8 Направо 90 Вперёд 26 Направо 90</pre><svg class="fpic" viewBox="0 0 460 271" role="img" aria-label="след Черепахи на координатной плоскости"><line x1="54.1" y1="0" x2="54.1" y2="271" stroke="#c8ccd8"/><line x1="0" y1="216.7" x2="460" y2="216.7" stroke="#c8ccd8"/><polyline points="54.1,216.7 54.1,54.3 162.4,54.3 162.4,108.4 405.9,108.4 405.9,216.7 54.1,216.7" fill="none" stroke="#1f5fa8" stroke-width="2"/><circle cx="54.1" cy="216.7" r="3.5" fill="#1b1b1f"/></svg>
+<!-- ==== /ПРИМЕР ==== -->
+    </div>
+    <div>
+      <div class="steps">
+        <div class="step" hidden>
+          <p>Рамка тут не поможет: внутри рамки есть пустой угол. Зато
+             фигура распадается на <b>два прямоугольника</b> — 8 на 12 и
+             18 на 8.</p>
+        </div>
+        <div class="step" hidden>
+<!-- ==== ПРИМЕР:el-code: вставлено gen.py, руками не править ==== -->
+<pre><code>from turtle import *
+
+def tochka():                # напечатать, где мы сейчас
+    print(round(xcor()), round(ycor()))
+
+speed(0)
+setheading(90)
+tochka()
+forward(12)
+tochka()
+left(270)
+forward(8)
+tochka()
+left(270)
+forward(4)
+tochka()
+left(90)
+forward(18)
+tochka()
+right(90)
+forward(8)
+tochka()
+right(90)
+forward(26)
+tochka()
+right(90)
+
+# по напечатанным вершинам: большая часть 8 на 12,
+# приступка 18 на 8, общая сторона длиной 8
+w1 = 8
+h1 = 12
+w2 = 18
+h2 = 8
+print((w1 - 1) * (h1 - 1) + (h2 - 1) + (w2 - 1) * (h2 - 1))
+done()</code></pre>
+<!-- ==== /ПРИМЕР ==== -->
+        </div>
+        <div class="step" hidden>
+          <p>Точки <b>строго внутри</b>: 7 · 11 = 77 и 17 · 7 = 119. И
+             отдельно — 7 точек на общей стороне: для фигуры они
+             внутренние, а в части не попали.</p>
+          <p class="big">77 + 7 + 119 = <span class="key">203</span></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">редкая форма</span>
+  <h2>Углы не прямые: 135 и 45</h2>
+  <div class="two">
+    <div>
+<!-- ==== ПРИМЕР:par-pic: вставлено gen.py, руками не править ==== -->
+<pre class="alg">Повтори 5 [Вперёд 23 Налево 135 Вперёд 24 Налево 45]</pre><svg class="fpic" viewBox="0 0 460 320" role="img" aria-label="след Черепахи на координатной плоскости"><line x1="286.6" y1="0" x2="286.6" y2="320" stroke="#c8ccd8"/><line x1="0" y1="180.1" x2="460" y2="180.1" stroke="#c8ccd8"/><polyline points="286.6,180.1 286.6,26.7 173.4,139.9 173.4,293.3 286.6,180.1 286.6,26.7 173.4,139.9 173.4,293.3 286.6,180.1 286.6,26.7 173.4,139.9" fill="none" stroke="#1f5fa8" stroke-width="2"/><circle cx="286.6" cy="180.1" r="3.5" fill="#1b1b1f"/></svg>
+<!-- ==== /ПРИМЕР ==== -->
+    </div>
+    <div>
+      <div class="steps">
+        <div class="step" hidden>
+          <p>135 + 45 = 180: за два повтора фигура замыкается. Это
+             параллелограмм со сторонами 23 и 24.</p>
+          <p>Вершины <b>нецелые</b> — считать точки тут и не просят.
+             Просят площадь, и целую часть.</p>
+        </div>
+        <div class="step" hidden>
+<!-- ==== ПРИМЕР:par-code: вставлено gen.py, руками не править ==== -->
+<pre><code>from turtle import *
+
+speed(0)
+setheading(90)
+
+ax = xcor()
+ay = ycor()
+forward(23)
+bx = xcor()
+by = ycor()
+left(135)
+forward(24)
+cx = xcor()
+cy = ycor()
+left(45)
+forward(23)
+dx = xcor()
+dy = ycor()
+
+s1 = abs((bx - ax) * (cy - ay) - (cx - ax) * (by - ay)) / 2
+s2 = abs((cx - ax) * (dy - ay) - (dx - ax) * (cy - ay)) / 2
+print(int(s1 + s2))          # целая часть площади
+done()</code></pre>
+<!-- ==== /ПРИМЕР ==== -->
+        </div>
+        <div class="step" hidden>
+          <p>Площадь через координаты: четырёхугольник делим на два
+             треугольника, у каждого площадь — половина модуля
+             векторного произведения.</p>
+          <p class="big">390.32… → <span class="key">390</span></p>
+          <div class="box bad"><p>23 · 24 = 552 — это НЕ ответ: у
+            параллелограмма площадь меньше произведения сторон.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">порядок</span>
+  <h2>Что дальше на уроке</h2>
+  <ol>
+    <li><b>Практикум</b> — семь задач, по одной на каждую форму вопроса,
+        все на экране сразу. Решаем в любом порядке, каркас набираем
+        руками один раз.</li>
+    <li>Ошибся — появится программа, которая считает именно эту задачу, и
+        картинка со следом. Кнопка <b>«Новые числа»</b> даст задачу того же
+        типа: балл можно доработать.</li>
+    <li>Отметка за практикум: семь верных — «5», шесть — «4», пять — «3».</li>
+  </ol>
+  <div class="box warn"><p><b>Ответ — одно целое число.</b> Без единиц
+    измерения, без пробелов, без запятой. Сверка знак в знак, как на
+    КЕГЭ.</p></div>
+</section>
+
+<section class="slide">
+  <span class="tag">дома</span>
+  <h2>Домашняя работа</h2>
+  <p>Те же семь форм вопроса, по одной задаче на каждую. Тип закрывается
+     одним верным ответом; ошибся — придёт такая же задача с другими
+     числами.</p>
+  <div class="two">
+    <div>
+      <div class="box"><h3>Как сдать</h3>
+        <p>От пяти закрытых типов появится <b>код работы</b> вида
+           <code>CH-XXXX-XXXX</code> и кнопка «Сдать работу».</p>
+        <p>Вторая кнопка открывает письмо: к коду прикладываются
+           <b>снимки своей программы</b> и того, что она напечатала.</p></div>
+    </div>
+    <div>
+      <div class="box good"><h3>Зачем снимок</h3>
+        <p>Число можно получить и не написав программу. Снимок кода
+           показывает, что приём ваш, — поэтому он и просится вместе с
+           ответом.</p>
+        <p class="fnote">Отметка: семь типов — «5», шесть — «4»,
+           пять — «3».</p></div>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<div class="bar">
+  <button id="prev">← Назад</button>
+  <button id="step" class="primary">Раскрыть</button>
+  <button id="next">Вперёд →</button>
+  <span class="count" id="count"></span>
+  <span class="zoom" title="Размер шрифта на экране: клавиши + и −"><button id="zoomOut" title="Мельче (клавиша −)">A−</button><span class="z" id="zoomVal"></span><button id="zoomIn" title="Крупнее (клавиша +)">A+</button></span>
+  <div class="spacer"></div>
+  <span class="ai-mark" style="color:#5c6070;font-size:13px">Материалы подготовлены с использованием технологий искусственного интеллекта.</span>
+  <span class="keys"><kbd>Пробел</kbd> раскрыть и дальше ·
+    <kbd>←</kbd> <kbd>→</kbd> слайды</span>
+</div>
+</div>
+
+<script>
+const slides = [...document.querySelectorAll(".slide")];
+let cur = 0, shown = 0;
+
+const stepsOf = i => [...slides[i].querySelectorAll(".steps > .step")];
+
+function show(i){
+  slides[cur].classList.remove("on");
+  cur = Math.max(0, Math.min(slides.length - 1, i));
+  slides[cur].classList.add("on");
+  shown = stepsOf(cur).filter(el => !el.hidden).length;
+  document.getElementById("stage").scrollTop = 0;
+  sync();
+}
+
+function sync(){
+  const total = stepsOf(cur).length;
+  document.getElementById("count").textContent = `${cur + 1} / ${slides.length}`;
+  document.getElementById("prev").disabled = cur === 0;
+  document.getElementById("next").disabled = cur === slides.length - 1;
+  const b = document.getElementById("step");
+  b.hidden = total === 0;
+  if (total){
+    b.disabled = shown >= total;
+    b.textContent = shown >= total ? "Всё открыто"
+                  : shown === 0 ? "Раскрыть" : `Дальше (${shown}/${total})`;
+  }
+}
+
+function nextStep(){
+  const steps = stepsOf(cur);
+  if (shown >= steps.length) return false;
+  steps[shown].hidden = false;
+  steps[shown].scrollIntoView({block: "nearest", behavior: "smooth"});
+  shown++;
+  sync();
+  return true;
+}
+
+document.getElementById("prev").addEventListener("click", () => show(cur - 1));
+document.getElementById("next").addEventListener("click", () => show(cur + 1));
+document.getElementById("step").addEventListener("click", nextStep);
+
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowRight" || e.key === "PageDown"){ show(cur + 1); }
+  else if (e.key === "ArrowLeft" || e.key === "PageUp"){ show(cur - 1); }
+  else if (e.key === " " || e.key === "Enter"){
+    if (!nextStep()) show(cur + 1);
+  } else return;
+  e.preventDefault();
+});
+
+show(0);
+
+/* ---- размер шрифта на проекторе ----
+   Zoom только на области слайда: zoom на body растягивает 100vh, и панель
+   уезжает за экран (проверено 17.09.2026). Шаг запоминается в
+   localStorage и общий для всех презентаций: один раз подобрала на
+   проекторе — дальше везде так. ZOOM_BASE — стартовый масштаб этой колоды:
+   у колод с базовым кеглем 20px он выше, чем у 24px. */
+const ZOOM_BASE = 1.2;
+const ZOOM_KEY = "slides-zoom-step";
+let zoomStep = 0;
+try { zoomStep = Math.max(-3, Math.min(6, parseInt(localStorage.getItem(ZOOM_KEY), 10) || 0)); }
+catch (e) {}
+function applyZoom(){
+  const z = Math.round(ZOOM_BASE * Math.pow(1.1, zoomStep) * 100) / 100;
+  document.getElementById("stage").style.zoom = z;
+  document.getElementById("zoomVal").textContent = Math.round(z * 100) + "%";
+}
+function setZoom(d){
+  zoomStep = Math.max(-3, Math.min(6, zoomStep + d));
+  try { localStorage.setItem(ZOOM_KEY, String(zoomStep)); } catch (e) {}
+  applyZoom();
+}
+document.getElementById("zoomIn").addEventListener("click", () => setZoom(1));
+document.getElementById("zoomOut").addEventListener("click", () => setZoom(-1));
+document.addEventListener("keydown", e => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key === "+" || e.key === "=") setZoom(1);
+  else if (e.key === "-" || e.key === "_") setZoom(-1);
+  else return;
+  e.preventDefault();
+});
+applyZoom();
+</script>
+</body>
+</html>
