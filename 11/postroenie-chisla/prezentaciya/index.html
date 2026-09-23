@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Задание 5 ЕГЭ: алгоритм достраивает число — презентация</title>
-<meta name="description" content="Презентация к разбору задания 5 ЕГЭ в 11 классе (углублённый): алгоритм строит число R по записи числа N, признак и две ветки, перевод в двоичную и троичную систему, каркас программы перебора, разбор демоверсии 2027 кодом, отбор через max и min, шесть форм вопроса по замеру 13 задач.">
+<meta name="description" content="Презентация к разбору задания 5 ЕГЭ в 11 классе (углублённый): алгоритм строит число R по записи числа N, признак и две ветки, перевод в двоичную и троичную систему, каркас программы перебора, проверка алгоритма печатью следа и сверка с примером из условия, разбор демоверсии 2027 кодом, отбор через max и min, шесть форм вопроса по замеру 13 задач.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E11%3C/text%3E%3C/svg%3E">
 <style>
 :root{
@@ -211,7 +211,8 @@ s = bin(n)[2:]      <span class="c"># bin даёт '0b1101',
         t = '11' + s + '11'
     else:
         t = '1' + s + '00'
-    r = int(t, 2)</code></pre>
+    r = int(t, 2)
+    <span class="c">#print(n, s, t, r)</span></code></pre>
     </div>
     <div>
       <ul>
@@ -225,7 +226,83 @@ s = bin(n)[2:]      <span class="c"># bin даёт '0b1101',
           <p>Дальше остаётся <b>одна строка отбора</b> — та, что зависит от
              вопроса. Каркас во всех задачах один и тот же.</p>
         </div>
+        <div class="step" hidden>
+          <p>А закомментированная строка <code>#print(n, s, t, r)</code> —
+             не украшение. С неё начинается работа: следующий слайд.</p>
+        </div>
       </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">проверка</span>
+  <h2>Сначала убедиться, что алгоритм прочитан верно</h2>
+  <p>Строка отбора пока не написана. Сперва печатаем то, что получается
+     в цикле, и <b>сверяем с примером из условия</b>.</p>
+  <div class="two">
+    <div>
+<pre><code>for n in range(1, <span class="hl">101</span>):   <span class="c"># пока немного</span>
+    s = f'{n:b}'
+    if n % 2 == 0:
+        t = '11' + s + '11'
+    else:
+        t = '1' + s + '00'
+    r = int(t, 2)
+    <span class="hl">print(n, s, t, r)</span></code></pre>
+      <p>Печатаем все четыре величины: число, его запись, достроенную
+         запись и результат.</p>
+    </div>
+    <div>
+      <p>Первые строки на экране:</p>
+      <table class="trace">
+        <tr><th><i>n</i></th><th><i>s</i></th><th><i>t</i></th><th><i>r</i></th></tr>
+        <tr><td>1</td><td>1</td><td>1100</td><td>12</td></tr>
+        <tr><td>2</td><td>10</td><td>111011</td><td>59</td></tr>
+        <tr><td>3</td><td>11</td><td>11100</td><td>28</td></tr>
+        <tr><td>4</td><td>100</td><td>1110011</td><td>115</td></tr>
+        <tr><td colspan="4">…</td></tr>
+        <tr class="hit"><td>13</td><td>1101</td><td>1110100</td><td>116</td></tr>
+      </table>
+      <p>В условии было сказано: <b>для <i>N</i> = 13 получается
+         <i>R</i> = 116</b>. Строка с 13 совпала — правило прочитано верно,
+         можно идти дальше.</p>
+    </div>
+  </div>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="two">
+        <div class="box bad">
+          <h3>Не совпало</h3>
+          <p>Столбцы показывают, на каком шаге разошлось: <i>s</i> — перевод,
+             <i>t</i> — достройка, <i>r</i> — обратный перевод. Чужое число в
+             <i>t</i> — перепутаны ветки или сторона приписывания; чужое в
+             <i>r</i> — не то основание в <code>int(t, 2)</code>.</p>
+          <p>Искать ошибку <b>здесь</b>, пока задача ещё не решается.</p>
+        </div>
+        <div class="box warn">
+          <h3>Почему <code>range(1, 101)</code></h3>
+          <p>На первом шаге нужен не ответ, а глазами читаемый след: сто
+             строк видно, тысячу — уже нет, и пример из условия в ней не
+             найти.</p>
+          <p>Пример из условия всегда маленький — сотни хватает.</p>
+        </div>
+      </div>
+    </div>
+    <div class="step" hidden>
+      <p class="big">Совпало — <b>гасим печать и возвращаем большой
+         диапазон</b>, а дальше дописываем строку отбора:</p>
+<pre><code>for n in range(1, <span class="hl">1001</span>):
+    ...
+    r = int(t, 2)
+    <span class="c">#print(n, s, t, r)</span>
+    <span class="hl">if r &gt; 95 and (best == 0 or r &lt; best):
+        best = r</span></code></pre>
+    </div>
+    <div class="step" hidden>
+      <div class="box good"><p><b>Не стирать, а закомментировать.</b>
+        Показался странным ответ — решётку снять, и след снова перед
+        глазами. Набирать строку заново на экзамене некогда.</p></div>
     </div>
   </div>
 </section>
@@ -246,6 +323,7 @@ for n in range(1, 1001):
     else:
         t = '1' + s + '00'
     r = int(t, 2)
+    <span class="c">#print(n, s, t, r)</span>
     <span class="hl">if r &gt; 95 and (best == 0 or r &lt; best):
         best = r</span>
 print(best)</code></pre>
@@ -350,6 +428,50 @@ print(m)</code></pre>
          В коде это разница между <code>best = n</code> и
          <code>best = r</code> — одна буква.</p>
     </div>
+    <div class="step" hidden>
+      <h3>Последняя строка подробно: «ближе всего»</h3>
+      <p>Единственный вопрос, где в цикле держим <b>две</b> переменные:
+         одна для сравнения, другая для ответа.</p>
+      <div class="two">
+        <div>
+<pre><code><span class="hl">dist = 10 ** 9</span>   <span class="c"># расстояние: пока
+              # ничего не нашли</span>
+best = 0      <span class="c"># сам ответ</span>
+for n in range(1, 1001):
+    ...
+    r = int(t, 2)
+    <span class="c">#print(n, s, t, r)</span>
+    <span class="hl">d = abs(r - T)
+    if d &lt;= dist:
+        dist = d
+        best = n</span>
+print(best)</code></pre>
+          <p>Правило демоверсии, порог <i>T</i> = 200:</p>
+          <table class="trace">
+            <tr><th><i>n</i></th><th><i>r</i></th><th><code>abs(r - 200)</code></th></tr>
+            <tr class="hit"><td>17</td><td>196</td><td>4</td></tr>
+            <tr><td>18</td><td>459</td><td>259</td></tr>
+            <tr class="hit"><td>19</td><td>204</td><td>4</td></tr>
+          </table>
+        </div>
+        <div>
+          <ul>
+            <li><code>abs</code> — потому что «ближе» не значит «больше»:
+              <i>R</i> годится с любой стороны от <i>T</i>, важна только
+              разница;</li>
+            <li>сравниваем <b>расстояния</b> (<code>dist</code>), а
+              запоминаем <b>номер</b> (<code>best</code>). Положить <code>d</code>
+              в <code>best</code> — частая ошибка: напечатается расстояние,
+              а не ответ;</li>
+            <li>знак <code>&lt;=</code>, а не <code>&lt;</code>: ближе
+              четвёрки к 200 не подошёл никто, а таких <i>n</i> два.
+              <code>&lt;=</code> перезапишет ответ более поздним — останется
+              <b>19</b>, наибольшее, как и спросили. При <code>&lt;</code>
+              осталось бы 17.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -431,6 +553,7 @@ for n in range(1, 1001):
     else:
         t = s + to3(ds(s) * 2)
     r = int(t, 3)
+    <span class="c">#print(n, s, t, r)</span>
     if r &gt; 520 and r % 2 == 1 \
        and (best == 0 or r &lt; best):
         best = r
