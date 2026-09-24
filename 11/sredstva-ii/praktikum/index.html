@@ -1,0 +1,1006 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Средства искусственного интеллекта — обзорный практикум</title>
+<meta name="description" content="Обзорный практикум 11 класса (углублённый) к десятой паре: средства искусственного интеллекта — машинный перевод и распознавание речи, когнитивные сервисы, распознавание лиц, искусственный нейрон и нейронная сеть, качество распознавания, узнавание по признакам, перебор в игре.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E11%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{margin:0;padding:20px 16px 60px;font:17px/1.55 "Segoe UI",system-ui,sans-serif}
+.wrap{max-width:820px;margin:0 auto}
+h1{font-size:23px;margin:0 0 4px}
+h2{font-size:18px;margin:0 0 10px}
+.sub{color:var(--muted);font-size:15px;margin:0 0 18px}
+code{font-family:Consolas,"Cascadia Mono",monospace;background:var(--card);
+     border:1px solid var(--line);border-radius:5px;padding:1px 6px;
+     font-size:15px;letter-spacing:.04em}
+.intro{border:1px solid var(--line);border-radius:12px;background:var(--card);
+       padding:14px 18px;margin-bottom:18px}
+.intro dl{margin:0}
+.intro dt{font-weight:700;margin-top:10px}
+.intro dt:first-child{margin-top:0}
+.intro dd{margin:2px 0 0}
+.progress{border:2px solid var(--accent);border-radius:12px;padding:12px 16px;
+          background:#fff;margin-bottom:18px}
+.ptop{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.ptop h2{margin:0}
+.sp{flex:1 1 auto}
+.score{display:flex;align-items:baseline;gap:10px;color:var(--muted);font-size:15px}
+.score b{font:700 34px/1 "Segoe UI",system-ui,sans-serif;color:var(--ink);
+         min-width:40px;text-align:center;border:2px solid var(--line);
+         border-radius:8px;padding:2px 8px}
+.m5 b{color:var(--ok);border-color:var(--ok-line)}
+.m4 b{color:var(--accent);border-color:#a9c6e8}
+.m3 b{color:#8a5a00;border-color:var(--hi-line)}
+.types{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);border-radius:20px;padding:4px 12px;
+      font-size:14px;color:var(--muted);background:var(--card)}
+.chip.done{border-color:var(--ok-line);background:var(--ok-bg);color:var(--ok);
+           font-weight:600}
+.chip.miss{border-color:var(--err-line);background:var(--err-bg);color:var(--err)}
+.chip.cur{border-color:var(--accent);color:var(--accent);font-weight:600}
+.card{border:1px solid var(--line);border-radius:12px;padding:16px 18px;
+      background:#fff;margin-bottom:14px}
+.card.ok{border-color:var(--ok-line);background:var(--ok-bg)}
+.card.err{border-color:var(--err-line);background:var(--err-bg)}
+.tag{font-size:13px;color:var(--muted);margin:0 0 6px}
+.q{font-size:17px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+input[type=text]{font:16px/1 Consolas,monospace;padding:10px 12px;border-radius:8px;
+                 border:1px solid var(--line);width:100%;max-width:340px}
+button{font:600 15px/1 inherit;padding:11px 16px;border-radius:9px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);color:var(--muted)}
+.verdict{margin-top:10px;font-size:15.5px;font-weight:600}
+.verdict.ok{color:var(--ok)}
+.verdict.err{color:var(--err)}
+.why{margin-top:8px;font-size:15.5px;color:var(--ink)}
+.note{border:1px solid var(--hi-line);background:var(--hi-bg);border-radius:10px;
+      padding:11px 15px;margin:12px 0;font-size:15.5px}
+.code{font:700 26px/1.2 Consolas,monospace;letter-spacing:.06em;
+      background:var(--card);border:2px dashed var(--accent);border-radius:12px;
+      padding:16px;text-align:center;margin:12px 0;user-select:all}
+.stats{color:var(--muted);font-size:14px}
+label{display:block;font-size:14px;color:var(--muted);margin-bottom:3px}
+.fields{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0}
+.fields div{flex:1 1 180px}
+.fields input{max-width:none}
+sup,sub{font-size:12px}
+h3{font-size:16.5px;margin:16px 0 6px;color:var(--accent)}
+details.help{margin-top:26px;border:1px solid var(--line);border-radius:12px;
+        padding:12px 18px;background:var(--card)}
+details.help summary{cursor:pointer;font-weight:600;font-size:17px;
+        color:var(--accent)}
+details.help p{margin:6px 0}
+details.help ol,details.help ul{margin:6px 0;padding-left:22px}
+details.help li{margin:4px 0}
+details.help table{border-collapse:collapse;margin:8px 0;font-size:15px}
+details.help th,details.help td{border:1px solid var(--line);
+        padding:4px 10px;text-align:center;background:#fff}
+details.help th{background:#fff;color:var(--muted);font-weight:600}
+table.gm{border-collapse:collapse;margin:10px 0;font:15px/1.2 Consolas,"Cascadia Mono",monospace}
+table.gm th,table.gm td{border:1px solid var(--line);min-width:34px;height:30px;
+        text-align:center;padding:0 4px;background:#fff}
+table.gm th{background:var(--card);color:var(--muted);font-weight:600}
+table.gm td.d{background:#e4e7ef}
+.adj{display:block;margin:8px 0}
+.adj code{display:inline-block;margin:0 8px 6px 0}
+/* Список утверждений в понятийной задаче: строки длинные, их надо разделить. */
+.q ol.st{margin:10px 0;padding-left:26px}
+.q ol.st li{margin:6px 0}
+details.help pre{font-family:Consolas,"Cascadia Mono",monospace;
+        background:#1e2430;color:#e7ecf5;padding:10px 12px;border-radius:9px;
+        font-size:14.5px;overflow-x:auto}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Средства искусственного интеллекта</h1>
+<p class="sub">11 класс, углублённый уровень. Обзорный практикум к десятой паре:
+шесть задач по содержанию темы.</p>
+
+<div class="intro">
+  <dl>
+    <dt>Что нужно сделать</dt>
+    <dd>Шесть задач — по одной на каждый вопрос темы, и все сразу на
+        странице: решай в любом порядке. Ответил верно — вопрос закрыт.
+        Ошибся — сразу видно, как это решается, а вопрос остаётся
+        открытым: кнопка «Новые числа» даёт ту же задачу с другими данными,
+        и её можно сдать ещё раз. Сколько закрыл, столько и наработал.
+        Времени нужно около пятнадцати минут: взвешенные суммы нейрона и
+        расстояния до эталонов удобнее расписать на черновике столбиком.</dd>
+    <dt>Отметка и добор</dt>
+    <dd>Закрыто 6 из 6 — «5», 5 — «4», 3 или 4 — «3». Кнопка
+        <b>«Получить код»</b> внизу страницы появляется, как только закрыто
+        три вопроса: можно забрать код сразу, а можно дорешать оставшиеся и
+        получить код получше — решать самому, до какой отметки добирать.</dd>
+    <dt>Ответ — целое число</dt>
+    <dd>Везде число, и только число: <code>85</code>, а не <code>85 %</code>
+        и не <code>85.</code>. На КЕГЭ ответ читает машина, и здесь так же.</dd>
+    <dt>Как сдать</dt>
+    <dd>В конце появится код работы и кнопка <b>«Сдать работу»</b>: впишешь
+        фамилию и класс, кнопка сама откроет форму с уже вписанным кодом.
+        Переписывать код руками не надо — на этом чаще всего и ошибаются.</dd>
+    <dt>Не успел на уроке</dt>
+    <dd>Открой эту же страницу дома и пройди целиком: вариант будет другой,
+        а сдаётся всё так же — одним кодом.</dd>
+  </dl>
+</div>
+
+<div class="progress">
+  <div class="ptop">
+    <h2>Вопросы темы</h2>
+    <span class="sp"></span>
+    <div class="score" id="scorebox">
+      <span>наработано на</span><b id="mark">—</b>
+    </div>
+  </div>
+  <div class="types" id="types"></div>
+  <p class="stats" id="stats"></p>
+</div>
+
+<div id="area"></div>
+<div id="bottom"></div>
+
+<details class="help">
+  <summary>Подсказка: средства искусственного интеллекта</summary>
+  <h3>Что относят к средствам ИИ</h3>
+  <p><b>Машинный перевод</b> и <b>распознавание устной речи</b> — задачи, для
+     которых нельзя написать полный набор правил: одно и то же слово у разных
+     людей звучит по-разному, а перевод зависит от смысла всей фразы. Такие
+     задачи решают программы, настроенные на большом количестве примеров.
+     <b>Когнитивные сервисы</b> — готовые службы, выполняющие «человеческие»
+     задачи (узнать предмет на снимке, перевести текст, распознать речь); к
+     ним обращаются по сети, обученная модель работает на стороне сервиса.</p>
+
+  <h3>Идентификация и поиск изображений</h3>
+  <p>Снимок сравнивают не с другим снимком, а с его <b>числовым описанием</b> —
+     набором признаков. Поиск похожего изображения и распознавание лица — это
+     поиск ближайшего набора чисел. Обратный поиск по картинке ищет страницы,
+     где встречается похожее изображение.</p>
+
+  <h3>Самообучающиеся системы</h3>
+  <p>Система меняет поведение по мере поступления данных, и программу для этого
+     не переписывают: меняются её <b>настройки</b>. Обучение <b>с учителем</b>
+     идёт по примерам, у которых правильный ответ известен. Проверять точность
+     надо на тех примерах, которых система не видела: на выученных она
+     завышена.</p>
+
+  <h3>Искусственный нейрон</h3>
+  <p>У нейрона несколько входов, у каждого свой <b>вес</b>. Нейрон считает
+     взвешенную сумму w<sub>1</sub>x<sub>1</sub> + w<sub>2</sub>x<sub>2</sub> +
+     … и сравнивает её с <b>порогом</b>: сумма не меньше порога — на выходе 1,
+     иначе 0. Отрицательный вес — вход, который мешает срабатыванию.</p>
+
+  <h3>Нейронная сеть: сколько в ней чисел</h3>
+  <p>Слои <b>полносвязные</b>: каждый нейрон соединён с каждым нейроном
+     следующего слоя. Значит между соседними слоями связей столько, сколько
+     даёт произведение их размеров, а всего связей — сумма таких произведений.
+     Обучение подбирает веса всех связей и пороги всех нейронов, кроме
+     входного слоя.</p>
+
+  <h3>Качество распознавания: четыре клетки</h3>
+  <p>Решения системы «свой / чужой» раскладываются на четыре клетки: верно
+     узнанные свои, чужие, принятые за своих, свои, которых не узнали, и верно
+     отклонённые чужие. Отсюда три разные доли, и знаменатель у них разный:</p>
+  <ul>
+    <li>доля верных решений — от <b>всех</b> проверенных;</li>
+    <li>доля верных среди названных «своими» — от <b>ответов «свой»</b>;</li>
+    <li>доля узнанных своих — от <b>всех своих</b>.</li>
+  </ul>
+
+  <h3>Узнавание по признакам</h3>
+  <p>Непохожесть двух наборов признаков — <b>сумма модулей разностей</b>
+     одноимённых признаков. Объект относят к тому эталону, до которого
+     непохожесть наименьшая. Если до нескольких эталонов почти одинаково
+     близко, ответ считается ненадёжным.</p>
+
+  <h3>Искусственный интеллект в играх</h3>
+  <p>Программа перебирает продолжения и оценивает позиции числом. Если из
+     каждой позиции ровно b продолжений, то на глубине d позиций
+     <b>b<sup>d</sup></b>, а всего в переборе 1 + b + b² + … + b<sup>d</sup>.
+     Перебирать до конца партии невозможно — поэтому глубину ограничивают, а
+     на последнем уровне позицию оценивают.</p>
+
+  <h3>Интернет вещей и робототехника</h3>
+  <p>Интернет вещей — сеть устройств (датчиков, счётчиков, бытовой техники),
+     обменивающихся данными <b>без участия человека</b>. Робот с методами ИИ
+     выбирает действие по показаниям датчиков, а не повторяет записанную
+     человеком цепочку движений.</p>
+</details>
+
+</div>
+
+<script>
+/* ==== ЗАДАЧИ: вставлено gen.py, руками не править ==== */
+/* Обзорный тест-практикум к десятой паре 11 класса (углублённый уровень).
+   Содержание ФГОС, уроки 19–20 официального плана: «Средства искусственного
+   интеллекта» и практическая работа по той же теме. В столбце «Задание ЕГЭ»
+   плана у этих уроков пусто — экзаменационной линии у темы нет, поэтому
+   вопросы собраны по самому содержанию: сервисы перевода и распознавания
+   речи, когнитивные сервисы, распознавание лиц, самообучающиеся системы,
+   нейронные сети, интернет вещей, искусственный интеллект в играх.
+
+   Единственный источник задач. В practice.html вписывается скриптом
+   gen.py между маркерами — руками страницу не править.
+
+   Ответ везде — целое число. Сверка знак в знак, как на КЕГЭ; tHint
+   объясняет, что не так с формой ответа. */
+
+const T_TYPES = [
+  "понятия: средства ИИ",
+  "искусственный нейрон",
+  "размер нейронной сети",
+  "качество распознавания",
+  "узнавание по признакам",
+  "перебор в игре"
+];
+
+function tRng(seed) {
+  let s = seed >>> 0;
+  return function () {
+    s ^= s << 13; s >>>= 0;
+    s ^= s >> 17;
+    s ^= s << 5;  s >>>= 0;
+    return s / 4294967296;
+  };
+}
+
+function tRand(rng, a, b) { return a + Math.floor(rng() * (b - a + 1)); }
+function tPick(rng, arr) { return arr[tRand(rng, 0, arr.length - 1)]; }
+
+function tShuffle(rng, arr) {
+  const a = arr.slice();
+  for (let j = a.length - 1; j > 0; j--) {
+    const k = tRand(rng, 0, j);
+    const t = a[j]; a[j] = a[k]; a[k] = t;
+  }
+  return a;
+}
+
+function tPl(n, one, few, many) {
+  const h = n % 100, t = n % 10;
+  if (h >= 11 && h <= 14) return many;
+  if (t === 1) return one;
+  if (t >= 2 && t <= 4) return few;
+  return many;
+}
+
+function gTable(head, rows) {
+  let h = '<table class="gm"><tr>';
+  for (const c of head) h += "<th>" + c + "</th>";
+  h += "</tr>";
+  for (const r of rows) {
+    h += "<tr><th>" + r[0] + "</th>";
+    for (let i = 1; i < r.length; i++) h += "<td>" + r[i] + "</td>";
+    h += "</tr>";
+  }
+  return h + "</table>";
+}
+
+/* Отрицательные числа печатаем типографским минусом: в вес «−3» ученик не
+   должен читать дефис переноса. Питон в gen.py разбирает его обратно. */
+function gSign(v) { return v < 0 ? "−" + String(-v) : String(v); }
+
+/* ==== БАНК УТВЕРЖДЕНИЙ (JSON; читает и gen.py) ==== */
+const T_BANK = [
+{"t": "Современный сервис машинного перевода настроен на большом наборе уже переведённых людьми текстов, а не собран из словаря и правил грамматики.", "v": true, "w": "верно: правила и словарь были в переводчиках прошлого поколения, сейчас перевод строит обученная на текстах модель"},
+{"t": "Распознавание устной речи превращает звуковой сигнал в текст, причём одно и то же слово у разных людей даёт разный сигнал.", "v": true, "w": "верно: голос, темп и произношение у всех свои — поэтому задача и решается не сравнением с образцом"},
+{"t": "Когнитивные сервисы — это готовые службы, которые выполняют «человеческие» задачи: узнают предмет на снимке, переводят текст, распознают речь.", "v": true, "w": "верно, это и есть определение когнитивного сервиса"},
+{"t": "Система распознавания лиц сравнивает не сами снимки, а числовые описания лиц, полученные из снимков.", "v": true, "w": "верно: снимок сводится к набору чисел, и сравниваются уже числа"},
+{"t": "Самообучающаяся система меняет своё поведение по мере поступления новых данных, и переписывать её программу для этого не нужно.", "v": true, "w": "верно: меняются не команды программы, а её настройки — веса"},
+{"t": "Обучение нейронной сети — это подбор весов связей по примерам, для которых правильный ответ известен.", "v": true, "w": "верно, именно подбор весов по примерам"},
+{"t": "Искусственный нейрон складывает входы, умноженные на веса, и сравнивает полученную сумму с порогом.", "v": true, "w": "верно: взвешенная сумма и порог — всё устройство нейрона"},
+{"t": "Для обучения с учителем нужны примеры, у которых правильный ответ заранее известен.", "v": true, "w": "верно: «учитель» — это и есть известные ответы в обучающих данных"},
+{"t": "Обратный поиск по изображению находит страницы, на которых встречается похожая картинка.", "v": true, "w": "верно: на вход подаётся картинка, на выходе — страницы с похожими"},
+{"t": "Интернет вещей — сеть устройств (датчиков, бытовой техники, счётчиков), которые обмениваются данными без участия человека.", "v": true, "w": "верно: обмен идёт между устройствами, человек в нём не звено"},
+{"t": "Программа, играющая в шахматы, перебирает продолжения и оценивает получающиеся позиции числом.", "v": true, "w": "верно: перебор плюс оценочная функция"},
+{"t": "Ошибки системы распознавания бывают двух видов: своего принять за чужого и чужого принять за своего.", "v": true, "w": "верно, и цена этих двух ошибок обычно разная"},
+{"t": "Нейронная сеть работает по правилам «если — то», которые человек заранее вписывает в её программу.", "v": false, "w": "неверно: правил «если — то» в ней нет, есть веса, подобранные по примерам"},
+{"t": "Если система распознавания лиц ошиблась, значит в её программе есть опечатка, которую надо найти и исправить.", "v": false, "w": "неверно: ошибки бывают и у правильно написанной системы — она отвечает не наверняка, а с вероятностью"},
+{"t": "Машинный перевод нейросетью не делает ошибок, потому что программа не устаёт и не отвлекается.", "v": false, "w": "неверно: ошибки от усталости тут ни при чём, модель ошибается на редких словах и многозначных оборотах"},
+{"t": "Самообучающаяся система обучается сама, и обучающие данные ей не нужны.", "v": false, "w": "неверно: данные нужны обязательно — учиться не на чем, если их нет"},
+{"t": "Точность распознавания 99 % означает, что система ошибётся не больше одного раза за всё время работы.", "v": false, "w": "неверно: это одна ошибка примерно на сто решений, а решений бывают миллионы"},
+{"t": "Программа, играющая в шахматы, обязана просматривать все возможные продолжения до конца партии.", "v": false, "w": "неверно: вариантов слишком много, перебор идёт на ограниченную глубину и завершается оценкой позиции"},
+{"t": "Интернет вещей — это другое название сети Интернет, только с более быстрыми каналами.", "v": false, "w": "неверно: дело не в скорости, а в том, кто обменивается данными — устройства, а не люди"},
+{"t": "Чем больше в нейронной сети слоёв и нейронов, тем меньше у неё настраиваемых параметров.", "v": false, "w": "неверно: наоборот, число весов растёт вместе с числом нейронов"},
+{"t": "Когнитивный сервис работает только на том компьютере, где его обучили, и по сети к нему обратиться нельзя.", "v": false, "w": "неверно: к таким сервисам как раз обращаются по сети, обученная модель работает на стороне сервиса"},
+{"t": "Распознавание речи и распознавание лиц — это одна и та же задача, и решает её одна и та же программа.", "v": false, "w": "неверно: общий у них только подход, а признаки и обучающие данные совершенно разные"},
+{"t": "Обучающую и проверочную выборку берут одинаковыми: так измеренная точность получается честнее.", "v": false, "w": "неверно: на выученных примерах точность завышена, проверять надо на тех, которых система не видела"},
+{"t": "Робот не может принимать решения сам — он лишь повторяет записанную человеком последовательность движений.", "v": false, "w": "неверно: робот с методами ИИ выбирает действие по данным датчиков, а не по записанной цепочке"}
+];
+/* ==== /БАНК ==== */
+
+/* ---------------------------------------------------------------- задачи */
+
+function tTask(type, rng) {
+  if (type === 0) return tConcepts(rng);
+  if (type === 1) return tNeuron(rng);
+  if (type === 2) return tNetSize(rng);
+  if (type === 3) return tQuality(rng);
+  if (type === 4) return tNearest(rng);
+  return tSearch(rng);
+}
+
+/* 0. Понятия: сколько из пяти утверждений о средствах ИИ верны.
+      Отбор: верных не 0 и не 5 — иначе ответ угадывается «по краю». */
+function tConcepts(rng) {
+  const SHOW = 5;
+  let pick = [];
+  for (let t = 0; t < 400; t++) {
+    pick = tShuffle(rng, T_BANK.map(function (_, i) { return i; })).slice(0, SHOW);
+    const k = pick.filter(function (i) { return T_BANK[i].v; }).length;
+    if (k >= 1 && k <= SHOW - 1) break;
+  }
+  const items = pick.map(function (i) { return "<li>" + T_BANK[i].t + "</li>"; });
+  const right = pick.filter(function (i) { return T_BANK[i].v; }).length;
+  /* В самом банке пояснение начинается со слова «верно»/«неверно» — второй
+     раз его здесь не приписываем. */
+  const why = pick.map(function (i, n) { return (n + 1) + ") " + T_BANK[i].w; });
+  return {
+    type: 0, kind: "concepts", answer: String(right),
+    question: "Ниже пять утверждений о средствах искусственного интеллекта. " +
+      "Сколько из них верны?<ol class=\"st\">" + items.join("") +
+      "</ol><p>В ответе укажите число.</p>",
+    explain: why.join("; ") + ". Верных — " + right + "."
+  };
+}
+
+/* 1. Искусственный нейрон: взвешенная сумма против порога.
+      Три входа 0/1, веса целые (есть отрицательные), порог целый. */
+function gWsum(w, x) {
+  let s = 0;
+  for (let i = 0; i < w.length; i++) s += w[i] * x[i];
+  return s;
+}
+
+/* Семь наборов из трёх нулей и единиц, кроме (0, 0, 0): на нулевом наборе
+   сумма всегда 0 и веса ничего не решают. */
+const N_SETS = [[0,0,1],[0,1,0],[0,1,1],[1,0,0],[1,0,1],[1,1,0],[1,1,1]];
+
+function tNeuron(rng) {
+  const kind = tPick(rng, ["count", "thr", "weight"]);
+  const WPOOL = [-4, -3, -2, -1, 1, 2, 3, 4, 5, 6];
+
+  if (kind === "weight") {
+    let w1, w2, T, x1, x2, ans;
+    for (let t = 0; t < 400; t++) {
+      w1 = tPick(rng, WPOOL); w2 = tPick(rng, WPOOL);
+      if (w1 === w2) continue;
+      x1 = tRand(rng, 0, 1); x2 = tRand(rng, 0, 1);
+      T = tRand(rng, 3, 14);
+      ans = T - (w1 * x1 + w2 * x2);
+      if (ans < 1 || ans > 20) continue;
+      break;
+    }
+    return {
+      type: 1, kind: kind, answer: String(ans),
+      question: "У искусственного нейрона три входа. Веса первых двух связей " +
+        "равны <b>" + gSign(w1) + "</b> и <b>" + gSign(w2) + "</b>, вес третьей " +
+        "связи стёрся и неизвестен. Порог нейрона — <b>" + T + "</b>: нейрон " +
+        "выдаёт 1, если взвешенная сумма входов <i>не меньше</i> порога, и 0 " +
+        "иначе. На вход подали набор x1 = <b>" + x1 + "</b>, x2 = <b>" + x2 +
+        "</b>, x3 = <b>1</b>. При каком наименьшем целом весе третьей связи " +
+        "нейрон выдаст на этом наборе 1?",
+      explain: "Первые два входа дают " + gSign(w1) + "·" + x1 + " + " +
+        gSign(w2) + "·" + x2 + " = " + (w1 * x1 + w2 * x2) + ". Третий вход " +
+        "равен 1, значит третий вес входит в сумму целиком. Нужно " +
+        (w1 * x1 + w2 * x2) + " + w ≥ " + T + ", то есть w ≥ " + ans +
+        ". Наименьшее целое — " + ans + "."
+    };
+  }
+
+  let w, sets, sums, T, ans;
+  for (let t = 0; t < 600; t++) {
+    w = tShuffle(rng, WPOOL).slice(0, 3);
+    if (w.filter(function (v) { return v < 0; }).length !== 1) continue;
+    sets = tShuffle(rng, N_SETS).slice(0, 6);
+    sums = sets.map(function (x) { return gWsum(w, x); });
+    const top = Math.max.apply(null, sums);
+    if (kind === "thr") {
+      if (top < 4) continue;
+      ans = top + 1;
+      break;
+    }
+    T = tRand(rng, 2, top);
+    ans = sums.filter(function (s) { return s >= T; }).length;
+    if (ans < 2 || ans > 4) continue;
+    break;
+  }
+  const rows = sets.map(function (x, i) {
+    return [String(i + 1), String(x[0]), String(x[1]), String(x[2])];
+  });
+  const lead = "Искусственный нейрон имеет три входа x1, x2, x3 с весами <b>" +
+    gSign(w[0]) + "</b>, <b>" + gSign(w[1]) + "</b> и <b>" + gSign(w[2]) +
+    "</b>. Он считает взвешенную сумму входов и выдаёт 1, если сумма " +
+    "<i>не меньше</i> порога, и 0 иначе. На вход по очереди подали шесть " +
+    "наборов:" + gTable(["набор", "x1", "x2", "x3"], rows);
+  const calc = sets.map(function (x, i) {
+    return (i + 1) + ") " + gSign(sums[i]);
+  }).join(", ");
+  if (kind === "thr") {
+    return {
+      type: 1, kind: kind, answer: String(ans),
+      question: lead + "При каком наименьшем целом пороге нейрон выдаст 0 на " +
+        "всех шести наборах?",
+      explain: "Считаем взвешенную сумму каждого набора: " + calc +
+        ". Наибольшая сумма — " + (ans - 1) + ". Пока порог не превышает её, " +
+        "хотя бы один набор проходит; значит нужен порог " + ans + "."
+    };
+  }
+  return {
+    type: 1, kind: kind, answer: String(ans),
+    question: lead + "Порог нейрона равен <b>" + T + "</b>. На скольких из " +
+      "шести наборов нейрон выдаст 1?",
+    explain: "Считаем взвешенную сумму каждого набора: " + calc +
+      ". Нейрон выдаёт 1 там, где сумма не меньше " + T + ", — таких наборов " +
+      ans + "."
+  };
+}
+
+/* 2. Размер нейронной сети: сколько в ней связей и настраиваемых чисел.
+      Слои полносвязные: каждый нейрон слоя соединён с каждым нейроном
+      следующего. */
+function tNetSize(rng) {
+  const kind = tPick(rng, ["weights", "params", "grow"]);
+  let n0, n1, n2, n3, k, ans, wts;
+  for (let t = 0; t < 400; t++) {
+    n0 = tRand(rng, 4, 12);
+    n1 = tRand(rng, 3, 10);
+    n2 = tRand(rng, 2, 8);
+    n3 = tRand(rng, 1, 3);
+    wts = n0 * n1 + n1 * n2 + n2 * n3;
+    if (wts < 40 || wts > 400) continue;
+    if (kind === "weights") { ans = wts; break; }
+    if (kind === "params") { ans = wts + n1 + n2 + n3; break; }
+    k = tRand(rng, 2, 4);
+    ans = k * (n0 + n2);
+    if (ans < 8) continue;
+    break;
+  }
+  const lead = "В нейронной сети четыре слоя: входной из <b>" + n0 + "</b> " +
+    tPl(n0, "нейрона", "нейронов", "нейронов") + ", два скрытых — из <b>" + n1 +
+    "</b> и <b>" + n2 + "</b> " + tPl(n2, "нейрона", "нейронов", "нейронов") +
+    " — и выходной из <b>" + n3 + "</b> " +
+    tPl(n3, "нейрона", "нейронов", "нейронов") + ". Слои полносвязные: каждый " +
+    "нейрон слоя соединён связью с каждым нейроном следующего слоя, связей " +
+    "внутри слоя и через слой нет. ";
+  const sum3 = n0 + "·" + n1 + " + " + n1 + "·" + n2 + " + " + n2 + "·" + n3 +
+    " = " + (n0 * n1) + " + " + (n1 * n2) + " + " + (n2 * n3) + " = " + wts;
+  if (kind === "weights") {
+    return {
+      type: 2, kind: kind, answer: String(ans),
+      question: lead + "Сколько в сети связей?",
+      explain: "Между соседними слоями связей столько, сколько даёт " +
+        "произведение их размеров: " + sum3 + "."
+    };
+  }
+  if (kind === "params") {
+    return {
+      type: 2, kind: kind, answer: String(ans),
+      question: lead + "Кроме весов связей, у каждого нейрона скрытых и " +
+        "выходного слоёв настраивается ещё одно число — порог (смещение). " +
+        "Сколько всего чисел настраивается при обучении такой сети?",
+      explain: "Весов связей " + sum3 + ". Порогов столько, сколько нейронов " +
+        "в скрытых и выходном слоях: " + n1 + " + " + n2 + " + " + n3 + " = " +
+        (n1 + n2 + n3) + " (у входного слоя порогов нет — он только принимает " +
+        "данные). Всего " + wts + " + " + (n1 + n2 + n3) + " = " + ans + "."
+    };
+  }
+  return {
+    type: 2, kind: kind, answer: String(ans),
+    question: lead + "На сколько станет больше связей, если в первый скрытый " +
+      "слой добавить <b>" + k + "</b> " +
+      tPl(k, "нейрон", "нейрона", "нейронов") + "?",
+    explain: "Каждый новый нейрон первого скрытого слоя приносит связи со " +
+      "всеми нейронами входного слоя (" + n0 + ") и со всеми нейронами второго " +
+      "скрытого слоя (" + n2 + "), то есть " + n0 + " + " + n2 + " = " +
+      (n0 + n2) + " связей. Для " + k + " " +
+      tPl(k, "нейрона", "нейронов", "нейронов") + " это " + k + "·" +
+      (n0 + n2) + " = " + ans + ". Остальные слои не меняются."
+  };
+}
+
+/* 3. Качество распознавания: матрица ошибок в процентах.
+      «Свои» есть в базе, «чужие» нет; система решает, свой или чужой. */
+function tQuality(rng) {
+  const kind = tPick(rng, ["acc", "prec", "recall"]);
+  let S, CH, N, B, FP, A, ans;
+  for (let t = 0; t < 900; t++) {
+    S = tRand(rng, 20, 90);
+    CH = tRand(rng, 20, 120);
+    N = S + CH;
+    B = tRand(rng, Math.ceil(S / 2), S - 1);
+    FP = tRand(rng, 1, Math.max(1, Math.floor(CH * 0.4)));
+    A = B + FP;
+    if (CH - FP < 1 || S - B < 1) continue;
+    let v;
+    if (kind === "acc") v = (B + CH - FP) * 100 / N;
+    else if (kind === "prec") v = B * 100 / A;
+    else v = B * 100 / S;
+    if (v !== Math.floor(v) || v < 50 || v > 96) continue;
+    ans = v;
+    break;
+  }
+  const snap = function (n) { return tPl(n, "снимок", "снимка", "снимков"); };
+  const lead = "Система распознавания лиц проверила <b>" + N + "</b> " +
+    snap(N) + ". Среди них <b>" + S + "</b> " + snap(S) +
+    " «своих» (эти люди есть в базе), остальные — «чужие». Система назвала " +
+    "«своими» <b>" + A + "</b> " + snap(A) + ", и <b>" + B +
+    "</b> из них действительно «свои». ";
+  const facts = "Разложим решения по четырём клеткам: верно узнано своих — " +
+    B + "; чужих приняли за своих — " + A + " − " + B + " = " + (A - B) +
+    "; своих не узнали — " + S + " − " + B + " = " + (S - B) +
+    "; верно отклонено чужих — (" + N + " − " + S + ") − " + (A - B) + " = " +
+    (CH - FP) + ". ";
+  if (kind === "acc") {
+    return {
+      type: 3, kind: kind, answer: String(ans),
+      question: lead + "Какую долю всех решений система приняла верно? Ответ " +
+        "дайте в процентах (целое число, знак процента писать не нужно).",
+      explain: facts + "Верных решений " + B + " + " + (CH - FP) + " = " +
+        (B + CH - FP) + " из " + N + ". Это " + (B + CH - FP) + " / " + N +
+        " · 100 % = " + ans + " %."
+    };
+  }
+  if (kind === "prec") {
+    return {
+      type: 3, kind: kind, answer: String(ans),
+      question: lead + "Какая доля снимков, названных «своими», названа так " +
+        "верно? Ответ дайте в процентах (целое число, знак процента писать " +
+        "не нужно).",
+      explain: facts + "Из " + A + " снимков, названных «своими», верно " +
+        "названы " + B + ". Это " + B + " / " + A + " · 100 % = " + ans +
+        " %. Обратите внимание: считаем не от всех снимков, а только от тех, " +
+        "по которым система сказала «свой»."
+    };
+  }
+  return {
+    type: 3, kind: kind, answer: String(ans),
+    question: lead + "Какую долю «своих» система узнала? Ответ дайте в " +
+      "процентах (целое число, знак процента писать не нужно).",
+    explain: facts + "Своих было " + S + ", узнано " + B + ". Это " + B +
+      " / " + S + " · 100 % = " + ans + " %. Здесь знаменатель — все свои, а " +
+      "не все снимки и не все ответы «свой»."
+  };
+}
+
+/* 4. Узнавание по признакам: ближайший эталон.
+      Снимок сведён к трём числам-признакам; расстояние — сумма модулей
+      разностей (так считают «непохожесть» в простейших системах). */
+function gDist(a, b) {
+  let s = 0;
+  for (let i = 0; i < a.length; i++) s += Math.abs(a[i] - b[i]);
+  return s;
+}
+
+function tNearest(rng) {
+  const kind = tPick(rng, ["nearest", "dist", "count"]);
+  const M = 6;
+  let ref, obj, dist, best, ans, d;
+  for (let t = 0; t < 600; t++) {
+    ref = [];
+    for (let i = 0; i < M; i++)
+      ref.push([tRand(rng, 0, 9), tRand(rng, 0, 9), tRand(rng, 0, 9)]);
+    obj = [tRand(rng, 0, 9), tRand(rng, 0, 9), tRand(rng, 0, 9)];
+    dist = ref.map(function (r) { return gDist(r, obj); });
+    const lo = Math.min.apply(null, dist);
+    if (dist.filter(function (v) { return v === lo; }).length !== 1) continue;
+    if (lo < 2) continue;                 /* совпал с эталоном — задачи нет */
+    best = dist.indexOf(lo) + 1;
+    if (kind === "nearest") { ans = best; break; }
+    if (kind === "dist") { ans = lo; break; }
+    d = tRand(rng, lo, Math.max.apply(null, dist) - 1);
+    ans = dist.filter(function (v) { return v <= d; }).length;
+    if (ans < 1 || ans > M - 2) continue;
+    break;
+  }
+  const rows = ref.map(function (r, i) {
+    return [String(i + 1), String(r[0]), String(r[1]), String(r[2])];
+  });
+  const lead = "Программа узнаёт рукописную цифру: снимок сводится к трём " +
+    "числам-признакам, а в памяти хранятся эталоны — по одному на каждую " +
+    "цифру. Эталоны заданы таблицей:" +
+    gTable(["эталон", "признак 1", "признак 2", "признак 3"], rows) +
+    "<p>Непохожесть двух наборов признаков считается как сумма модулей " +
+    "разностей одноимённых признаков. У нового снимка признаки равны " +
+    "<b>" + obj[0] + "</b>, <b>" + obj[1] + "</b> и <b>" + obj[2] + "</b>.</p>";
+  const calc = dist.map(function (v, i) { return (i + 1) + ") " + v; }).join(", ");
+  if (kind === "nearest") {
+    return {
+      type: 4, kind: kind, answer: String(ans),
+      question: lead + "<p>К какому эталону программа отнесёт этот снимок? " +
+        "Укажите номер эталона.</p>",
+      explain: "Считаем непохожесть до каждого эталона: " + calc +
+        ". Наименьшая — " + Math.min.apply(null, dist) + ", у эталона " + ans + "."
+    };
+  }
+  if (kind === "dist") {
+    return {
+      type: 4, kind: kind, answer: String(ans),
+      question: lead + "<p>Чему равна непохожесть снимка и ближайшего к нему " +
+        "эталона?</p>",
+      explain: "Считаем непохожесть до каждого эталона: " + calc +
+        ". Наименьшая — " + ans + " (эталон " + best + ")."
+    };
+  }
+  return {
+    type: 4, kind: kind, answer: String(ans),
+    question: lead + "<p>Программа считает ответ ненадёжным, если снимок " +
+      "похож сразу на несколько эталонов. Сколько эталонов отстоят от снимка " +
+      "не больше чем на <b>" + d + "</b>?</p>",
+    explain: "Считаем непохожесть до каждого эталона: " + calc +
+      ". Не больше " + d + " — у " + ans + " " +
+      tPl(ans, "эталона", "эталонов", "эталонов") + "."
+  };
+}
+
+/* 5. Перебор в игре: сколько позиций просматривает программа.
+      Из каждой позиции ровно b продолжений, перебор на глубину d. */
+function gPow(b, d) {
+  let v = 1;
+  for (let i = 0; i < d; i++) v *= b;
+  return v;
+}
+
+function tSearch(rng) {
+  const kind = tPick(rng, ["leaves", "total", "time"]);
+  let b, d, leaves, total, P, ans;
+  for (let t = 0; t < 400; t++) {
+    b = tRand(rng, 3, 6);
+    d = tRand(rng, 3, 9);
+    leaves = gPow(b, d);
+    total = (gPow(b, d + 1) - 1) / (b - 1);
+    if (kind === "leaves") {
+      if (leaves < 27 || leaves > 200000) continue;
+      ans = leaves;
+      break;
+    }
+    if (kind === "total") {
+      if (total < 40 || total > 200000) continue;
+      ans = total;
+      break;
+    }
+    if (leaves < 200 || leaves > 300000) continue;
+    const k = tRand(rng, 1, d - 2);
+    P = gPow(b, k);
+    if (P < 81) continue;               /* «две позиции в секунду» — не про компьютер */
+    ans = leaves / P;
+    if (ans < 5 || ans > 1200) continue;
+    break;
+  }
+  const lead = "Учебная программа, играющая в настольную игру, перебирает " +
+    "варианты: в каждой позиции ровно <b>" + b + "</b> возможных " +
+    tPl(b, "продолжение", "продолжения", "продолжений") + ", и перебор идёт " +
+    "на глубину <b>" + d + "</b> " + tPl(d, "хода", "хода", "ходов") + ". ";
+  const pow = b + (d > 1 ? " в степени " + d : "") + " = " + leaves;
+  if (kind === "leaves") {
+    return {
+      type: 5, kind: kind, answer: String(ans),
+      question: lead + "Сколько позиций окажется на последнем, самом глубоком " +
+        "уровне перебора?",
+      explain: "На каждом следующем уровне позиций в " + b + " раз больше: " +
+        "после первого хода их " + b + ", после второго " + (b * b) +
+        " и так далее. На уровне " + d + " их " + pow + "."
+    };
+  }
+  if (kind === "total") {
+    const parts = [];
+    for (let i = 0; i <= d; i++) parts.push(String(gPow(b, i)));
+    return {
+      type: 5, kind: kind, answer: String(ans),
+      question: lead + "Сколько всего позиций просмотрит такой перебор, считая " +
+        "начальную позицию и все промежуточные?",
+      explain: "Складываем уровни: " + parts.join(" + ") + " = " + ans +
+        ". Это сумма геометрической прогрессии: (" + b + " в степени " +
+        (d + 1) + " − 1) / " + (b - 1) + "."
+    };
+  }
+  return {
+    type: 5, kind: kind, answer: String(ans),
+    question: lead + "Компьютер оценивает <b>" + P + "</b> " +
+      tPl(P, "позицию", "позиции", "позиций") + " в секунду. Сколько секунд " +
+      "уйдёт на оценку всех позиций самого глубокого уровня?",
+    explain: "На глубине " + d + " позиций " + pow + ". Делим на скорость: " +
+      leaves + " / " + P + " = " + ans + " " +
+      tPl(ans, "секунда", "секунды", "секунд") + "."
+  };
+}
+
+/* ------------------------------------------------------------- сборка */
+
+function tMake(seed) {
+  const rng = tRng(seed || 1);
+  const order = tShuffle(rng, [0, 1, 2, 3, 4, 5]);
+  return order.map(function (type) { return tTask(type, rng); });
+}
+
+/* Сверка знак в знак. Прощаются только пробелы по краям — их не видно. */
+function tCheck(task, raw) {
+  const s = String(raw === undefined || raw === null ? "" : raw).trim();
+  return s === task.answer;
+}
+
+/* Что не так с ФОРМОЙ ответа. null — форма в порядке, ошибка в сути. */
+function tHint(task, raw) {
+  const s = String(raw === undefined || raw === null ? "" : raw).trim();
+  if (!s) return "Ответ пустой.";
+  if (/^\d+$/.test(s)) return null;
+  if (/[%]/.test(s)) return "Знак процента писать не нужно — только число.";
+  if (/[А-Яа-яA-Za-z]/.test(s)) return "Ответ — целое число, без слов и единиц.";
+  if (/\d/.test(s)) return "Только число — без пробелов, запятых и знаков.";
+  return "Ответ — целое число.";
+}
+/* ==== /ЗАДАЧИ ==== */
+
+/* Форма сдачи ДЗ — одна на все темы. Ссылку разносит set_form_link.py. */
+const FORM = "https://docs.google.com/forms/d/e/1FAIpQLSfQyhaxcnzn4ZaKSe_ZMsluw7qRQnrw_80H6SfrnYB5EThUIA/viewform?usp=pp_url&entry.853601231=ФАМИЛИЯ&entry.1091635917=КЛАСС&entry.487188307=КОД";
+
+const ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+const EPOCH = Date.UTC(2026, 0, 1);
+const PREFIX = "II";
+const SCALE = [[6, 5], [5, 4], [3, 3]];
+
+const bin = (v, w) => v.toString(2).padStart(w, "0");
+
+/* Семибитными частями строки: в нагрузке 33 бита, а побитовые операции в JS
+   32-битные — старший бит молча потерялся бы. */
+function checksum(bitstr){
+  let cs = 0x5B;
+  for (let i = 0; i < bitstr.length; i += 7)
+    cs ^= parseInt(bitstr.substr(i, 7).padEnd(7, "0"), 2);
+  return cs & 0x7F;
+}
+
+function makeCode(st){
+  const day = Math.max(0, Math.min(2047, Math.floor(
+      (Date.now() - EPOCH) / 86400000)));
+  const payload = bin(day, 11) + bin(Math.min(15, st.typesDone), 4) +
+                  bin(Math.min(15, st.cleanTypes), 4) +
+                  bin(Math.min(127, st.solved), 7) +
+                  bin(Math.min(127, st.wrong), 7);
+  const bitstr = payload + bin(checksum(payload), 7);
+  let out = "";
+  for (let i = 0; i < 40; i += 5)
+    out += ALPHABET[parseInt(bitstr.substr(i, 5), 2)];
+  return PREFIX + "-" + out.slice(0, 4) + "-" + out.slice(4);
+}
+
+/* ---------------------------------------------------------- состояние
+   Все вопросы темы лежат на странице сразу — решать можно в любом
+   порядке, объём виден с первого взгляда. Вопрос закрывается одним верным
+   ответом и больше не спрашивается. Ошибся — разбор сразу, а вопрос
+   остаётся открытым: кнопка «Новые числа» на той же карточке даёт задачу с
+   другими данными, и её можно сдать ещё раз. Код выдаётся, когда закрыто
+   хотя бы MIN_TO_FINISH; после кода карточки запираются.
+   До 17.09.2026 вопросы шли по одному, раундами; Света попросила
+   показывать все сразу: не видно объёма и нельзя выбрать порядок. */
+const T_COUNT = T_TYPES.length;
+const MIN_TO_FINISH = 3;
+
+let st;
+
+function esc(s){ return String(s).replace(/[&<>]/g, c =>
+  ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+
+function markFor(n){
+  for (const [need, m] of SCALE) if (n >= need) return m;
+  return null;
+}
+
+function wordQ(n){
+  const a = n % 100, b = a % 10;
+  if (a > 4 && a < 21) return "вопросов";
+  if (b === 1) return "вопрос";
+  if (b > 1 && b < 5) return "вопроса";
+  return "вопросов";
+}
+
+function newRng(){ return tRng((Date.now() ^ (Math.random() * 1e9)) >>> 0); }
+
+function freshState(){
+  const s = {
+    closed: Array(T_COUNT).fill(false),
+    clean:  Array(T_COUNT).fill(true),
+    tried:  Array(T_COUNT).fill(false),
+    tasks:  Array(T_COUNT).fill(null),
+    solved: 0, wrong: 0, code: null
+  };
+  for (let i = 0; i < T_COUNT; i++) s.tasks[i] = tTask(i, newRng());
+  Object.defineProperty(s, "typesDone",
+    {get(){ return s.closed.filter(Boolean).length; }});
+  Object.defineProperty(s, "cleanTypes",
+    {get(){ return s.closed.filter((d, i) => d && s.clean[i]).length; }});
+  return s;
+}
+
+function paint(){
+  const box = document.getElementById("types");
+  box.innerHTML = "";
+  for (let i = 0; i < T_COUNT; i++) {
+    const el = document.createElement("span");
+    el.className = "chip" + (st.closed[i] ? " done" : st.tried[i] ? " miss" : "");
+    el.textContent = (i + 1) + ". " + T_TYPES[i];
+    box.appendChild(el);
+  }
+  const done = st.typesDone;
+  const m = markFor(done);
+  const sb = document.getElementById("scorebox");
+  sb.className = "score" + (m ? " m" + m : "");
+  document.getElementById("mark").textContent = m ? m : "—";
+  document.getElementById("stats").textContent =
+    "Закрыто: " + done + " из " + T_COUNT + ". Решено задач: " + st.solved +
+    ", ошибок: " + st.wrong + ".";
+  renderBottom();
+}
+
+function cardHtml(i){
+  const t = st.tasks[i];
+  return '<div class="card" id="task-' + i + '">' +
+      '<p class="tag">' + (i + 1) + ' &middot; ' + T_TYPES[i] + '</p>' +
+      '<div class="q">' + t.question + '</div>' +
+      '<div class="row">' +
+        '<input type="text" id="ans-' + i + '" autocomplete="off" spellcheck="false" ' +
+               'placeholder="ответ"' + '>' +
+        '<button class="primary" id="go-' + i + '">Ответить</button>' +
+      '</div>' +
+      '<div class="verdict" id="v-' + i + '"></div>' +
+    '</div>';
+}
+
+function bindCard(i){
+  document.getElementById("ans-" + i).addEventListener("keydown", function(e){
+    if (e.key === "Enter") judge(i);
+  });
+  document.getElementById("go-" + i).addEventListener("click", function(){ judge(i); });
+}
+
+function renderAll(){
+  let html = "";
+  for (let i = 0; i < T_COUNT; i++) html += cardHtml(i);
+  document.getElementById("area").innerHTML = html;
+  for (let i = 0; i < T_COUNT; i++) bindCard(i);
+}
+
+function renderCard(i){
+  document.getElementById("task-" + i).outerHTML = cardHtml(i);
+  bindCard(i);
+}
+
+function judge(i){
+  if (st.code) return;
+  const t = st.tasks[i];
+  const raw = document.getElementById("ans-" + i).value;
+  const ok = tCheck(t, raw);
+  st.tried[i] = true;
+  if (ok) { st.closed[i] = true; st.solved++; }
+  else { st.wrong++; st.clean[i] = false; }
+
+  const card = document.getElementById("task-" + i);
+  card.className = "card " + (ok ? "ok" : "err");
+  document.getElementById("ans-" + i).disabled = true;
+  document.getElementById("go-" + i).disabled = true;
+  const v = document.getElementById("v-" + i);
+  v.className = "verdict " + (ok ? "ok" : "err");
+  v.innerHTML = ok
+    ? "Правильно — вопрос закрыт."
+    : "Ошибка. Твой ответ: <code>" + esc(raw) + "</code>, верный: <code>" +
+      t.answer + "</code>." +  (tHint(t, raw) ? " " + tHint(t, raw) : "") +
+      " Вопрос остался открытым: возьми ту же задачу с другими данными.";
+  card.insertAdjacentHTML("beforeend",
+    '<div class="why">' + t.explain + '</div>' +
+    (ok ? '' : '<div class="row"><button class="primary" id="re-' + i +
+               '">Новые числа</button></div>'));
+  if (!ok) document.getElementById("re-" + i).addEventListener("click", function(){
+    st.tasks[i] = tTask(i, newRng());
+    st.tried[i] = false;
+    renderCard(i);
+    document.getElementById("ans-" + i).focus();
+    paint();
+  });
+  paint();
+}
+
+function renderBottom(){
+  const box = document.getElementById("bottom");
+  if (st.code) return;
+  const done = st.typesDone, open = T_COUNT - done;
+  if (done < MIN_TO_FINISH) {
+    box.innerHTML = '<p class="stats">Код работы появится, когда будет закрыто ' +
+      'хотя бы ' + MIN_TO_FINISH + ' ' + wordQ(MIN_TO_FINISH) + ' (сейчас ' +
+      done + ').</p>';
+    return;
+  }
+  const m = markFor(done);
+  const up = SCALE.filter(s => s[0] > done).pop();
+  let msg;
+  if (up) {
+    msg = "Наработано на <b>" + m + "</b> (закрыто " + done + " из " + T_COUNT +
+      "). Можно забрать код сейчас, а можно дорешать ещё " + open + " " +
+      wordQ(open) + " и дойти до <b>" + up[1] + "</b>.";
+  } else {
+    msg = "Все " + T_COUNT + " " + wordQ(T_COUNT) + " закрыты — наработано на <b>" +
+      m + "</b>.";
+  }
+  box.innerHTML =
+    '<div class="card">' +
+      '<p>' + msg + '</p>' +
+      '<div class="row"><button class="primary" id="stop">Получить код' +
+        (open > 0 ? ' сейчас' : '') + '</button></div>' +
+    '</div>';
+  document.getElementById("stop").addEventListener("click", finish);
+}
+
+function finish(){
+  const code = makeCode(st);
+  st.code = code;
+  document.querySelectorAll("#area input, #area button").forEach(function(el){
+    el.disabled = true;
+  });
+  const m = markFor(st.typesDone);
+  const open = [];
+  for (let i = 0; i < T_COUNT; i++) if (!st.closed[i]) open.push(T_TYPES[i]);
+  document.getElementById("bottom").innerHTML =
+    '<div class="card">' +
+      '<h2>Работа завершена</h2>' +
+      '<p>Закрыто <b>' + st.typesDone + '</b> из ' + T_COUNT +
+        (m ? ', это отметка <b>' + m + '</b>' : '') + '.' +
+        (open.length ? ' Не закрыто: ' + open.join(", ") + '.' : '') +
+      '</p>' +
+      '<p>Код работы — его и надо сдать:</p>' +
+      '<div class="code">' + code + '</div>' +
+      '<div class="note">Код хранит дату, число закрытых вопросов, число ' +
+        'решённых и неверных задач. Переписывать его руками не нужно: впиши ' +
+        'фамилию и класс, и кнопка откроет форму с уже подставленным кодом.</div>' +
+      '<div class="fields">' +
+        '<div><label for="fam">Фамилия и имя</label>' +
+          '<input type="text" id="fam" autocomplete="off"></div>' +
+        '<div><label for="kls">Класс</label>' +
+          '<input type="text" id="kls" autocomplete="off" value="11"></div>' +
+      '</div>' +
+      '<div class="row">' +
+        '<button id="send" class="primary">Сдать работу</button>' +
+        '<button id="again">Начать заново</button>' +
+      '</div>' +
+      '<p class="stats">«Начать заново» откроет все ' + T_COUNT + ' вопросов с ' +
+        'нуля — для дополнительной тренировки. Сдавать нужно тот код, который ' +
+        'получен сейчас.</p>' +
+    '</div>';
+  document.getElementById("bottom").scrollIntoView({behavior: "smooth", block: "start"});
+  document.getElementById("send").addEventListener("click", function(){
+    const fam = document.getElementById("fam").value.trim();
+    if (!fam) { document.getElementById("fam").focus(); return; }
+    const kls = document.getElementById("kls").value.trim() || "11";
+    window.open(FORM.replace("ФАМИЛИЯ", encodeURIComponent(fam))
+                    .replace("КЛАСС", encodeURIComponent(kls))
+                    .replace("КОД", encodeURIComponent(code)), "_blank");
+  });
+  document.getElementById("again").addEventListener("click", resetAll);
+  paint();
+}
+
+function resetAll(){
+  st = freshState();
+  renderAll();
+  paint();
+}
+
+resetAll();
+</script>
+<p class="ai-mark" style="margin:34px auto 0;max-width:860px;padding-top:12px;border-top:1px solid #d9dce6;color:#5c6070;font:13px/1.5 "Segoe UI",system-ui,sans-serif">Материалы подготовлены с использованием технологий искусственного интеллекта.</p>
+</body>
+</html>
