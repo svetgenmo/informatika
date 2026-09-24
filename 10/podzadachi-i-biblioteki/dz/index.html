@@ -1,0 +1,1148 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Домашнее задание — подзадачи и библиотеки</title>
+<meta name="description" content="Домашнее задание 10 класса (углублённый) к девятому занятию: что напечатает программа из этапов, каким вызовом заменить кусок, деление с округлением, порядок этапов, поиск данных, на которых чужая программа врёт, и вопросы про импорт, стандартную и стороннюю библиотеку.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E10%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{margin:0;padding:20px 16px 60px;font:17px/1.55 "Segoe UI",system-ui,sans-serif}
+.wrap{max-width:820px;margin:0 auto}
+h1{font-size:23px;margin:0 0 4px}
+h2{font-size:18px;margin:0 0 10px}
+.sub{color:var(--muted);font-size:15px;margin:0 0 18px}
+code,pre{font-family:Consolas,"Cascadia Mono",monospace}
+pre{background:#1e2430;color:#e7ecf5;padding:13px 16px;border-radius:10px;
+    overflow-x:auto;font-size:15px;line-height:1.5;margin:10px 0}
+code{background:var(--card);border:1px solid var(--line);border-radius:5px;
+     padding:1px 5px;font-size:15px}
+pre code{background:none;border:0;padding:0;color:inherit;font-size:inherit}
+.intro{border:1px solid var(--line);border-radius:12px;background:var(--card);
+       padding:14px 18px;margin-bottom:18px}
+.intro dl{margin:0}
+.intro dt{font-weight:700;margin-top:10px}
+.intro dt:first-child{margin-top:0}
+.intro dd{margin:2px 0 0}
+.progress{border:2px solid var(--accent);border-radius:12px;padding:12px 16px;
+          background:#fff;margin-bottom:18px}
+.ptop{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.ptop h2{margin:0}
+.sp{flex:1 1 auto}
+.score{display:flex;align-items:baseline;gap:10px;color:var(--muted);font-size:15px}
+.score b{font:700 34px/1 "Segoe UI",system-ui,sans-serif;color:var(--ink);
+         min-width:40px;text-align:center;border:2px solid var(--line);
+         border-radius:8px;padding:2px 8px}
+.m5 b{color:var(--ok);border-color:var(--ok-line)}
+.m4 b{color:var(--accent);border-color:#a9c6e8}
+.m3 b{color:#8a5a00;border-color:var(--hi-line)}
+.types{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);border-radius:20px;padding:4px 12px;
+      font-size:14px;color:var(--muted);background:var(--card)}
+.chip.done{border-color:var(--ok-line);background:var(--ok-bg);color:var(--ok);
+           font-weight:600}
+.chip.cur{border-color:var(--accent);color:var(--accent);font-weight:600}
+.card{border:1px solid var(--line);border-radius:12px;padding:16px 18px;
+      background:#fff;margin-bottom:14px}
+.card.ok{border-color:var(--ok-line);background:var(--ok-bg)}
+.card.err{border-color:var(--err-line);background:var(--err-bg)}
+.tag{font-size:13px;color:var(--muted);margin:0 0 6px}
+.inp{font-size:15px;color:var(--muted);margin:4px 0}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px}
+input[type=text]{font:16px/1 Consolas,monospace;padding:10px 12px;border-radius:8px;
+                 border:1px solid var(--line);width:100%;max-width:340px}
+button{font:600 15px/1 inherit;padding:11px 16px;border-radius:9px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);color:var(--muted)}
+.verdict{margin-top:10px;font-size:15.5px}
+.verdict.ok{color:var(--ok)}
+.verdict.err{color:var(--err)}
+.note{border:1px solid var(--hi-line);background:var(--hi-bg);border-radius:10px;
+      padding:11px 15px;margin:12px 0;font-size:15.5px}
+.code{font:700 26px/1.2 Consolas,monospace;letter-spacing:.06em;
+      background:var(--card);border:2px dashed var(--accent);border-radius:12px;
+      padding:16px;text-align:center;margin:12px 0;user-select:all}
+.stats{color:var(--muted);font-size:14px}
+label{display:block;font-size:14px;color:var(--muted);margin-bottom:3px}
+.fields{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0}
+.fields div{flex:1 1 180px}
+.fields input{max-width:none}
+details{margin-top:10px;border:1px dashed var(--line);border-radius:9px;padding:8px 12px}
+summary{cursor:pointer;color:var(--accent);font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Домашнее задание — подзадачи и библиотеки</h1>
+<p class="sub">10 класс, углублённый уровень. Читаем программы этапами: что
+напечатает программа из трёх этапов, каким вызовом из библиотеки заменяется целый
+кусок, как считает деление с округлением, в каком порядке должны идти этапы; ищем
+данные, на которых чужая программа врёт; отвечаем на вопросы про подзадачи и
+библиотеки. Python не нужен.</p>
+
+<div class="intro">
+  <dl>
+    <dt>Что нужно сделать</dt>
+    <dd>Закрыть шесть типов задач — по одной верно решённой на каждый. Ошибся —
+        тип не закрыт, и следующей придёт задача того же типа: разбор только что
+        показан, примени его.</dd>
+    <dt>Сколько закроешь — на то и наработал</dt>
+    <dd>Шесть типов — «5», пять — «4», четыре — «3». Меньше четырёх кода не
+        будет: сдавать нечего.</dd>
+    <dt>Главный приём — считать этапами</dt>
+    <dd>Разбери программу на куски: что получилось к концу первого этапа, что
+        ко второму. Где ответ — номер варианта или строки, пиши только число;
+        где порядок этапов — номера через пробел. Считать в уме и на бумаге:
+        на проверочной Python тоже не будет, а запустив программу, ответ
+        узнаешь, но не научишься.</dd>
+    <dt>Как сдать</dt>
+    <dd>В конце появится кнопка <b>«Сдать работу»</b>: впишешь фамилию и
+        класс, кнопка сама откроет форму с уже вписанным кодом. Переписывать
+        код руками не надо — именно на этом чаще всего и ошибаются.</dd>
+  </dl>
+</div>
+
+<div class="progress">
+  <div class="ptop">
+    <h2>Что осталось закрыть</h2>
+    <span class="sp"></span>
+    <div class="score" id="scorebox">
+      <span>наработано на</span><b id="mark">—</b>
+    </div>
+  </div>
+  <div class="types" id="types"></div>
+  <p class="stats" id="stats"></p>
+</div>
+
+<div id="area"></div>
+
+</div>
+
+<script>
+/* ==== ТИПЫ: вставлено gen.py, руками не править ==== */
+/* Разбиение задачи на подзадачи и библиотеки — источник правды для тренажёра
+   практикума, ДЗ и проверочной. Вставляется скриптом gen.py --sync между
+   маркерами. Руками в html не править.
+
+   Шесть типов задач — уроки 17–18 плана («Разбиение задачи на подзадачи»,
+   «Использование стандартной библиотеки языка программирования. Подключение
+   библиотек подпрограмм сторонних производителей»):
+     0 «этапы программы»    — программа из трёх помеченных этапов: что напечатает
+     1 «чужая подзадача»    — каким вызовом из библиотеки заменяется целый кусок
+     2 «деление и округление» — floor, ceil, int и // на одном и том же делении
+     3 «что возвращает функция» — где целое, а где дробное: sqrt, isqrt, pow, gcd
+     4 «подключение»        — какая строка упадёт при таком импорте (0 — ни одна)
+     5 «порядок этапов»     — в каком порядке должны идти этапы, чтобы сработало
+
+   Ответ каждой задачи страница считает сама, а gen.py --selftest берёт
+   исполняемый текст задачи (meta.src) КАК ЕСТЬ и исполняет настоящим Python:
+   ответ страницы обязан совпасть с запуском. Для типа 4 сверяется номер
+   упавшей строки, для типа 5 — что верный порядок ровно один из 24.
+
+   Списков в коде задач нет: класс их не проходил. */
+
+const T_TYPES = [
+  'этапы программы',
+  'чужая подзадача',
+  'деление и округление',
+  'что возвращает функция',
+  'подключение',
+  'порядок этапов'
+];
+const T_PER_TYPE = 1;      /* задач каждого типа в наборе: один проход, правило Светы 21.09.2026 */
+
+/* Что сказать, когда ответ не сошёлся: приём, а не ответ ([[answer-fingerprints]]). */
+const T_HINTS = [
+  'Читай по этапам, а не всю программу сразу. Посчитай, что получится к концу '
+    + 'второго этапа, запиши это число на бумаге — и только потом считай третий этап. '
+    + 'В ответе два числа: первый print и второй.',
+  'Посмотри, ЧТО кусок оставляет в переменной, а не как он это делает. Подставь '
+    + 'числа из программы в каждый вариант и сравни с тем, что напечатает кусок. '
+    + 'Достаточно одного несовпадения, чтобы вариант отпал.',
+  'Отрицательное деление: floor округляет ВНИЗ (к меньшему), ceil — вверх, int '
+    + 'отбрасывает дробную часть (к нулю), а // в Python — это как раз floor. '
+    + 'Посчитай a / b дробью и приложи к ней три правила.',
+  'Дробное число Python печатает с точкой: 4.0, а не 4. Дробное возвращают sqrt, '
+    + 'pow из math и hypot — даже когда результат ровный. Целое возвращают isqrt, '
+    + 'gcd, factorial, floor и ceil.',
+  'Смотри, что именно внесено в программу первой строкой. import math даёт только '
+    + 'имя math (звать через точку), from math import sqrt — одно имя sqrt (и math '
+    + 'остаётся неизвестным), from math import * — все имена библиотеки.',
+  'Начни с конца: print печатает переменную, её кто-то должен посчитать раньше. '
+    + 'Поднимайся по цепочке: чтобы посчитать эту переменную, нужна предыдущая. '
+    + 'Порядок получится ровно один.'
+];
+
+function tRng(seed) {
+  let s = seed >>> 0;
+  return function () {
+    s = (s * 1664525 + 1013904223) >>> 0;
+    return s / 4294967296;
+  };
+}
+function tRand(rng, a, b) { return a + Math.floor(rng() * (b - a + 1)); }
+function tPick(rng, arr) { return arr[tRand(rng, 0, arr.length - 1)]; }
+function tShuffle(rng, arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = tRand(rng, 0, i);
+    const tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+  }
+  return a;
+}
+
+/* --------------------------------------------- арифметика по правилам Python */
+function pyDiv(a, b) { return Math.floor(a / b); }                 /* a // b */
+function pyMod(a, b) { return a - b * Math.floor(a / b); }         /* a % b  */
+function pyGcd(a, b) { a = Math.abs(a); b = Math.abs(b); while (b) { const t = a % b; a = b; b = t; } return a; }
+function pyFact(n) { let f = 1; for (let i = 2; i <= n; i++) f *= i; return f; }
+function pyDigits(n) { let s = 0; n = Math.abs(n); while (n > 0) { s += n % 10; n = Math.floor(n / 10); } return s; }
+
+/* Как Python печатает дробное: ровное значение всё равно с точкой — 8.0. */
+function pyFloat(x) { return Number.isInteger(x) ? x + '.0' : String(x); }
+
+/* Строки программы с номерами — для задач, где ответ это номер строки. */
+function numbered(lines) {
+  return lines.map((l, i) => String(i + 1).padStart(2, ' ') + '  ' + l).join('\n');
+}
+
+/* ----------------------------------------------- тип 0: этапы программы */
+/* Подзадача второго этапа: короткий цикл, который класс уже писал. */
+const ST2 = [
+  { name: 'сумма цифр числа',
+    src: (v) => 's = 0\nm = n\nwhile m > 0:\n    s = s + m % 10\n    m = m // 10',
+    out: 's', val: (n) => pyDigits(n) },
+  { name: 'количество цифр числа',
+    src: () => 's = 0\nm = n\nwhile m > 0:\n    s = s + 1\n    m = m // 10',
+    out: 's', val: (n) => String(n).length },
+  { name: 'наибольшая цифра числа',
+    src: () => 's = 0\nm = n\nwhile m > 0:\n    if m % 10 > s:\n        s = m % 10\n    m = m // 10',
+    out: 's', val: (n) => Math.max.apply(null, String(n).split('').map(Number)) },
+  { name: 'сколько раз число делится на 2',
+    src: () => 's = 0\nm = n\nwhile m % 2 == 0:\n    s = s + 1\n    m = m // 2',
+    out: 's', val: (n) => { let c = 0, m = n; while (m % 2 === 0) { c++; m /= 2; } return c; } }
+];
+/* Третий этап: что сделать с результатом подзадачи. */
+const ST3 = [
+  { txt: 'print(n // s)', val: (n, s) => pyDiv(n, s), name: 'частное от деления числа на результат' },
+  { txt: 'print(n % s)',  val: (n, s) => pyMod(n, s), name: 'остаток от деления числа на результат' },
+  { txt: 'print(s * s)',  val: (n, s) => s * s,       name: 'квадрат результата' },
+  { txt: 'print(n - s)',  val: (n, s) => n - s,       name: 'разность числа и результата' }
+];
+
+function m0(rng) {
+  const st = tPick(rng, ST2);
+  const fin = tPick(rng, ST3);
+  let n = tRand(rng, 1000, 99999);
+  if (st.name === 'сколько раз число делится на 2') n = tRand(rng, 1, 200) * 2;
+  const s = st.val(n);
+  if (s === 0) return m0(rng);                       /* делить на ноль нечем */
+  const src = '# Этап 1: взять число\nn = ' + n
+            + '\n# Этап 2: ' + st.name + '\n' + st.src()
+            + '\nprint(' + st.out + ')\n# Этап 3: ответ\n' + fin.txt;
+  return {
+    code: src,
+    src,
+    question: 'Что напечатает программа? Два числа через пробел.',
+    answer: s + ' ' + fin.val(n, s),
+    explain: 'Второй этап — отдельная подзадача: ' + st.name + ' для ' + n + ' даёт '
+           + s + '. Это первое напечатанное число. Третий этап берёт готовый результат: '
+           + fin.name + ' — ' + fin.val(n, s) + '. Этапы считаются по очереди, и каждый '
+           + 'можно проверить своим print.'
+  };
+}
+
+/* ----------------------------------------------- тип 1: чужая подзадача */
+/* Кусок программы и четыре вызова: ровно один делает то же самое. Верность
+   проверяется подстановкой чисел — и страницей, и настоящим Python. */
+const SUB = [
+  { name: 'факториал',
+    vars: (rng) => ({ n: tRand(rng, 3, 9) }),
+    src: (v) => 'n = ' + v.n + '\nf = 1\ni = 2\nwhile i <= n:\n    f = f * i\n    i = i + 1\nprint(f)',
+    val: (v) => pyFact(v.n),
+    right: 'factorial(n)',
+    wrong: ['pow(n, n)', 'isqrt(n)', 'gcd(n, n)', 'n ** 2'],
+    calc: { 'factorial(n)': (v) => pyFact(v.n), 'pow(n, n)': (v) => Math.pow(v.n, v.n),
+            'isqrt(n)': (v) => Math.floor(Math.sqrt(v.n)), 'gcd(n, n)': (v) => v.n,
+            'n ** 2': (v) => v.n * v.n },
+    why: 'кусок перемножает все числа от 2 до n — это факториал, и он уже написан в math' },
+  { name: 'НОД вычитанием',
+    vars: (rng) => { const g = tRand(rng, 2, 12); return { a: g * tRand(rng, 2, 9), b: g * tRand(rng, 2, 9) }; },
+    src: (v) => 'a = ' + v.a + '\nb = ' + v.b + '\nwhile a != b:\n    if a > b:\n        a = a - b\n    else:\n        b = b - a\nprint(a)',
+    val: (v) => pyGcd(v.a, v.b),
+    right: 'gcd(a, b)',
+    wrong: ['a % b', 'a // b', 'isqrt(a * b)', 'min(a, b)'],
+    calc: { 'gcd(a, b)': (v) => pyGcd(v.a, v.b), 'a % b': (v) => pyMod(v.a, v.b),
+            'a // b': (v) => pyDiv(v.a, v.b), 'isqrt(a * b)': (v) => Math.floor(Math.sqrt(v.a * v.b)),
+            'min(a, b)': (v) => Math.min(v.a, v.b) },
+    why: 'вычитание меньшего из большего до равенства — это алгоритм Евклида, то есть НОД' },
+  { name: 'целая часть корня',
+    vars: (rng) => ({ n: tRand(rng, 20, 9000) }),
+    src: (v) => 'n = ' + v.n + '\nd = 1\nwhile d * d <= n:\n    d = d + 1\nprint(d - 1)',
+    val: (v) => Math.floor(Math.sqrt(v.n)),
+    right: 'isqrt(n)',
+    wrong: ['sqrt(n)', 'n // 2', 'floor(n / 2)', 'gcd(n, 2)'],
+    calc: { 'isqrt(n)': (v) => Math.floor(Math.sqrt(v.n)), 'sqrt(n)': (v) => Math.sqrt(v.n),
+            'n // 2': (v) => pyDiv(v.n, 2), 'floor(n / 2)': (v) => Math.floor(v.n / 2),
+            'gcd(n, 2)': (v) => pyGcd(v.n, 2) },
+    why: 'кусок ищет наибольшее d, у которого d * d ещё не больше n, — это целый корень; '
+       + 'sqrt вернул бы дробное' },
+  { name: 'модуль числа',
+    vars: (rng) => ({ x: tPick(rng, [-1, 1]) * tRand(rng, 5, 400) }),
+    src: (v) => 'x = ' + v.x + '\nif x < 0:\n    x = -x\nprint(x)',
+    val: (v) => Math.abs(v.x),
+    right: 'abs(x)',
+    wrong: ['-x', 'floor(x)', 'x * x', 'isqrt(x * x) + 1'],
+    calc: { 'abs(x)': (v) => Math.abs(v.x), '-x': (v) => -v.x, 'floor(x)': (v) => v.x,
+            'x * x': (v) => v.x * v.x, 'isqrt(x * x) + 1': (v) => Math.abs(v.x) + 1 },
+    why: 'кусок делает число неотрицательным — это модуль, встроенная функция abs' },
+  { name: 'возведение в степень',
+    vars: (rng) => ({ a: tRand(rng, 2, 7), b: tRand(rng, 2, 6) }),
+    src: (v) => 'a = ' + v.a + '\nb = ' + v.b + '\np = 1\ni = 0\nwhile i < b:\n    p = p * a\n    i = i + 1\nprint(p)',
+    val: (v) => Math.pow(v.a, v.b),
+    right: 'a ** b',
+    wrong: ['a * b', 'pow(a, b)', 'factorial(a)', 'gcd(a, b)'],
+    calc: { 'a ** b': (v) => Math.pow(v.a, v.b), 'a * b': (v) => v.a * v.b,
+            'pow(a, b)': (v) => Math.pow(v.a, v.b), 'factorial(a)': (v) => pyFact(v.a),
+            'gcd(a, b)': (v) => pyGcd(v.a, v.b) },
+    why: 'кусок умножает a на себя b раз — это возведение в степень; '
+       + 'pow из math дало бы то же число, но дробным' },
+  { name: 'наибольшее из двух',
+    vars: (rng) => ({ a: tRand(rng, 1, 500), b: tRand(rng, 1, 500) }),
+    src: (v) => 'a = ' + v.a + '\nb = ' + v.b + '\nif a > b:\n    m = a\nelse:\n    m = b\nprint(m)',
+    val: (v) => Math.max(v.a, v.b),
+    right: 'max(a, b)',
+    wrong: ['min(a, b)', 'a + b', 'abs(a - b)', 'gcd(a, b)'],
+    calc: { 'max(a, b)': (v) => Math.max(v.a, v.b), 'min(a, b)': (v) => Math.min(v.a, v.b),
+            'a + b': (v) => v.a + v.b, 'abs(a - b)': (v) => Math.abs(v.a - v.b),
+            'gcd(a, b)': (v) => pyGcd(v.a, v.b) },
+    why: 'кусок выбирает большее из двух — это встроенная функция max' }
+];
+
+function m1(rng) {
+  const sc = tPick(rng, SUB);
+  const v = sc.vars(rng);
+  const want = sc.val(v);
+  /* Берём только те неверные варианты, которые на ЭТИХ числах дают другое. */
+  const bad = tShuffle(rng, sc.wrong.filter(w => sc.calc[w](v) !== want)).slice(0, 3);
+  if (bad.length < 3) return m1(rng);
+  const opts = tShuffle(rng, [sc.right].concat(bad));
+  const src = sc.src(v);
+  /* строки-присваивания сверху — из них живут переменные вариантов */
+  const head = src.split('\n').filter(l => /^[a-z] = -?\d+$/.test(l)).join('\n');
+  const shown = src + '\n\n' + opts.map((o, i) => (i + 1) + ') print(' + o + ')').join('\n');
+  return {
+    code: shown,
+    src,
+    meta: { opts, head, want: String(want) },
+    question: 'Этот кусок — отдельная подзадача, и она уже решена в библиотеке. '
+            + 'Каким из четырёх вызовов его можно заменить, ничего не изменив? '
+            + 'Ответ — номер варианта.',
+    answer: '' + (opts.indexOf(sc.right) + 1),
+    explain: 'Верен вариант ' + (opts.indexOf(sc.right) + 1) + ': ' + sc.right
+           + '. Здесь ' + sc.why + '. Кусок печатает ' + want
+           + ' — столько же даёт и вызов; остальные варианты на этих же числах дают '
+           + bad.map(w => w + ' = ' + (sc.calc[w](v) % 1 === 0
+               ? sc.calc[w](v) : sc.calc[w](v).toFixed(2))).join(', ') + '.'
+  };
+}
+
+/* ------------------------------------------ тип 2: деление и округление */
+function m2(rng) {
+  let a = tRand(rng, 10, 400) * tPick(rng, [-1, 1]);
+  const b = tRand(rng, 2, 12) * tPick(rng, [-1, 1, 1]);
+  if (pyMod(a, b) === 0) a = a + tPick(rng, [1, -1]);      /* ровное деление нам не интересно */
+  const vals = [Math.floor(a / b), Math.ceil(a / b), Math.trunc(a / b), pyDiv(a, b)];
+  const src = 'from math import floor, ceil\na = ' + a + '\nb = ' + b
+            + '\nprint(floor(a / b), ceil(a / b), int(a / b), a // b)';
+  return {
+    code: src,
+    src,
+    question: 'Что напечатает программа? Четыре числа через пробел.',
+    answer: vals.join(' '),
+    explain: 'a / b = ' + (a / b).toFixed(4).replace(/0+$/, '') + '. floor округляет вниз '
+           + '(к меньшему) — ' + vals[0] + '; ceil вверх — ' + vals[1] + '; int отбрасывает '
+           + 'дробную часть, то есть округляет к нулю, — ' + vals[2] + '; а // в Python '
+           + 'работает как floor — ' + vals[3] + '. '
+           + (vals[0] === vals[2] ? 'Здесь int и floor совпали: результат неотрицательный.'
+                                  : 'На отрицательном результате int и // расходятся — '
+                                    + 'это самая частая ошибка.')
+  };
+}
+
+/* ------------------------------------- тип 3: что возвращает функция */
+const TRIPLES = [[3, 4, 5], [6, 8, 10], [5, 12, 13], [9, 12, 15], [8, 15, 17],
+                 [7, 24, 25], [20, 21, 29], [12, 16, 20], [15, 20, 25], [10, 24, 26]];
+
+function m3(rng) {
+  const k = tRand(rng, 3, 30), n = tRand(rng, 20, 900);
+  const tr = tPick(rng, TRIPLES);
+  const a = tRand(rng, 2, 5), b = tRand(rng, 2, 4);
+  const pool = [
+    { call: 'sqrt(' + (k * k) + ')', show: pyFloat(k) },
+    { call: 'isqrt(' + n + ')', show: '' + Math.floor(Math.sqrt(n)) },
+    { call: 'hypot(' + tr[0] + ', ' + tr[1] + ')', show: pyFloat(tr[2]) },
+    { call: 'pow(' + a + ', ' + b + ')', show: pyFloat(Math.pow(a, b)) },
+    { call: 'gcd(' + (k * 6) + ', ' + (k * 4) + ')', show: '' + (k * 2) },
+    { call: 'factorial(' + tRand(rng, 3, 7) + ')', show: null },
+    { call: 'floor(sqrt(' + n + '))', show: '' + Math.floor(Math.sqrt(n)) },
+    { call: 'ceil(' + n + ' / ' + (b + 1) + ')', show: '' + Math.ceil(n / (b + 1)) }
+  ];
+  pool[5].show = '' + pyFact(Number(pool[5].call.slice(10, -1)));
+  const pick = tShuffle(rng, pool).slice(0, 4);
+  const src = 'from math import *\nprint(' + pick.map(p => p.call).join(', ') + ')';
+  const floats = pick.filter(p => p.show.indexOf('.') >= 0);
+  return {
+    code: src,
+    src,
+    question: 'Что напечатает программа? Числа через пробел, ровно так, как их '
+            + 'напечатает Python.',
+    answer: pick.map(p => p.show).join(' '),
+    explain: 'Печатается ' + pick.map(p => p.call + ' = ' + p.show).join(', ') + '. '
+           + (floats.length
+              ? 'С точкой печатается дробное: sqrt, pow и hypot из math возвращают дробное '
+                + 'число даже тогда, когда оно ровное — отсюда ' + floats[0].show + '.'
+              : 'Здесь все функции вернули целое: isqrt, gcd, factorial, floor и ceil '
+                + 'дробного не дают.')
+  };
+}
+
+/* ------------------------------------------------- тип 4: подключение */
+/* Три формы подключения и вызовы: ответ — номер первой строки, которая упадёт
+   (0 — не упадёт ни одна). Плохая строка в программе не больше одной. */
+const CALLS = [
+  { bare: 'sqrt(16)', dotted: 'math.sqrt(16)', name: 'sqrt' },
+  { bare: 'floor(7.4)', dotted: 'math.floor(7.4)', name: 'floor' },
+  { bare: 'gcd(12, 18)', dotted: 'math.gcd(12, 18)', name: 'gcd' },
+  { bare: 'factorial(5)', dotted: 'math.factorial(5)', name: 'factorial' },
+  { bare: 'isqrt(50)', dotted: 'math.isqrt(50)', name: 'isqrt' },
+  { bare: 'ceil(2.1)', dotted: 'math.ceil(2.1)', name: 'ceil' }
+];
+
+function m4(rng) {
+  const cs = tShuffle(rng, CALLS).slice(0, 3);
+  const form = tRand(rng, 0, 2);
+  const names = ['a', 'b', 'c'];
+  let head, ok, explain;
+  if (form === 0) {
+    head = 'import math';
+    ok = (c) => c.dotted;
+    explain = 'import math вносит в программу только имя math — все функции зовутся '
+            + 'через точку: ' + cs[0].dotted + '. Голое имя ' + cs[0].name
+            + ' программе неизвестно.';
+  } else if (form === 1) {
+    head = 'from math import ' + cs.map(c => c.name).join(', ');
+    ok = (c) => c.bare;
+    explain = 'from math import перечисляет имена поимённо: они становятся доступны без '
+            + 'приставки, а вот само имя math в программу не попадает — запись через '
+            + 'точку (' + cs[0].dotted + ') упадёт.';
+  } else {
+    head = 'from math import *';
+    ok = (c) => c.bare;
+    explain = 'Звёздочка вносит все имена библиотеки сразу, зовём их без приставки. '
+            + 'Имени math при этом всё равно нет.';
+  }
+  /* где портим: 0 — нигде, иначе номер строки-присваивания (2..4) */
+  const spoil = tRand(rng, 0, 3);
+  const lines = [head];
+  cs.forEach((c, i) => {
+    const good = ok(c);
+    let call = good;
+    if (spoil === i + 1) call = (form === 0) ? c.bare : c.dotted;
+    lines.push(names[i] + ' = ' + call);
+  });
+  lines.push('print(' + names.join(', ') + ')');
+  const src = lines.join('\n');
+  const answer = spoil === 0 ? 0 : spoil + 1;
+  return {
+    code: numbered(lines),
+    src,
+    meta: { fail: answer },
+    question: 'Какая строка упадёт с ошибкой? Ответ — номер строки; если не упадёт '
+            + 'ни одна, ответ 0.',
+    answer: '' + answer,
+    explain: explain + ' ' + (answer
+      ? 'Падает строка ' + answer + ': ' + lines[answer - 1].split(' = ')[1]
+        + ' — такого имени в программе нет (NameError).'
+      : 'Здесь все три вызова записаны правильно для этого подключения — программа '
+        + 'отработает целиком.')
+  };
+}
+
+/* ---------------------------------------------- тип 5: порядок этапов */
+function m5(rng) {
+  /* цепочка из четырёх этапов: значение, преобразование, преобразование, печать */
+  const n = tRand(rng, 2, 20);
+  const m = tRand(rng, 2, 9);
+  const d = tRand(rng, 1, 30);
+  const shapes = [
+    { s: 's = n * ' + m, t: 't = s + ' + d, calc: (n) => (n * m) + d },
+    { s: 's = n + ' + d, t: 't = s * ' + m, calc: (n) => (n + d) * m },
+    { s: 's = n * n', t: 't = s - ' + d, calc: (n) => n * n - d },
+    { s: 's = n + n', t: 't = s * s', calc: (n) => (n + n) * (n + n) }
+  ];
+  const sh = tPick(rng, shapes);
+  const stages = [
+    { txt: 'n = ' + n, tag: 'взять исходное число' },
+    { txt: sh.s, tag: 'первое преобразование' },
+    { txt: sh.t, tag: 'второе преобразование' },
+    { txt: 'print(t)', tag: 'напечатать ответ' }
+  ];
+  const order = tShuffle(rng, [0, 1, 2, 3]);        /* как их показать */
+  const shown = order.map((idx, i) => (i + 1) + ') ' + stages[idx].txt
+                       + '      # ' + stages[idx].tag);
+  /* ответ: в каком порядке брать показанные номера */
+  const answer = [0, 1, 2, 3].map(step => order.indexOf(step) + 1).join(' ');
+  const src = [0, 1, 2, 3].map(i => stages[i].txt).join('\n');
+  return {
+    code: shown.join('\n'),
+    src,
+    meta: { stages: order.map(i => stages[i].txt), value: sh.calc(n) },
+    question: 'Этапы перепутаны. В каком порядке они должны идти, чтобы программа '
+            + 'напечатала ' + sh.calc(n) + '? Ответ — номера через пробел.',
+    answer,
+    explain: 'Порядок ' + answer + '. Каждый этап пользуется тем, что посчитал '
+           + 'предыдущий: печатать t можно только после того, как t посчитан, а для '
+           + 't нужна s, для s — n. Любой другой порядок упадёт с ошибкой «нет такой '
+           + 'переменной»: подзадачи связаны данными, и связь задаёт порядок.'
+  };
+}
+
+const T_MAKERS = [m0, m1, m2, m3, m4, m5];
+
+/* --------------------------------------------------------------- задачи */
+function tTask(type, rng) {
+  const m = T_MAKERS[type](rng);
+  const t = { type, code: m.code, src: m.src, answer: m.answer, explain: m.explain,
+              question: m.question || 'Что напечатает программа?' };
+  if (m.meta !== undefined) t.meta = m.meta;
+  return t;
+}
+
+/* Сверка ответа. Пробелы схлопываем, запятые между числами прощаем: «4, 17»
+   и «4 17» — одно и то же. Минус можно набрать и длинным «−». Точку или
+   скобку после номера («2)», «2.») тоже прощаем. */
+function tNorm(s) {
+  return String(s).replace(/−/g, '-').replace(/[,;]/g, ' ')
+      .replace(/(\d)[.)](?=\s|$)/g, '$1')
+      .replace(/\s+/g, ' ').trim();
+}
+function tCheck(task, raw) {
+  return tNorm(raw) === tNorm(task.answer);
+}
+
+/* Набор для практикума: T_PER_TYPE кругов по всем типам, внутри круга типы
+   перемешаны — одинаковые не идут подряд. Круг один: тренажёр в части 1 —
+   разминка, время пары уходит на три программы. Второй круг — одной цифрой. */
+function tMake(seed) {
+  const rng = tRng(seed);
+  const out = [];
+  for (let round = 0; round < T_PER_TYPE; round++) {
+    const order = tShuffle(rng, [0, 1, 2, 3, 4, 5]);
+    for (let i = 0; i < order.length; i++) out.push(tTask(order[i], rng));
+  }
+  return out;
+}
+/* ==== /ТИПЫ ==== */
+
+/* ==== ЗАДАЧИ ДЗ: вставлено gen.py, руками не править ==== */
+/* Домашнее задание: что сдают после пары «Разбиение на подзадачи и библиотеки».
+   Источник правды. Вставляется gen.py --sync в homework.html и test.html.
+
+   Четыре типа берутся из types.js (этапы программы, чужая подзадача, деление и
+   округление, порядок этапов), дальше два своих:
+     4 «найди контрпример» — программа с ТОНКОЙ ошибкой сегодняшней темы: чужую
+                             подзадачу взяли не ту или взяли неправильно.
+                             Ключа нет: считаем верным и кривым способом и
+                             смотрим, разошлись ли.
+     5 «как это работает»  — вопрос с тремя вариантами: подзадачи, формы импорта,
+                             стандартная и сторонняя библиотека, pip, help,
+                             что возвращает функция.
+*/
+
+const HW_TYPES = [
+  'этапы программы',
+  'чужая подзадача',
+  'деление и округление',
+  'порядок этапов',
+  'найди контрпример',
+  'как это работает'
+];
+/* тип ДЗ -> тип задачи из types.js */
+const HW_FROM_TRAINER = { 0: 0, 1: 1, 2: 2, 3: 5 };
+
+/* --------------------------------------------- тип 4: найди контрпример */
+
+const HW_BUGS = {
+  intdiv: {
+    title: 'целое деление',
+    spec: 'Программа читает целое число n (от −1000 до 1000) и должна напечатать '
+        + '<code>n // 10</code> — частное по правилам Python.',
+    code: 'n = int(input())\nprint(int(n / 10))',
+    fields: 'одно целое число от −1000 до 1000',
+    hint: 'int отбрасывает дробную часть — округляет к нулю; // округляет вниз, к '
+        + 'меньшему. На каких числах «к нулю» и «вниз» — разные стороны?',
+    why: 'На положительных числах int(n / 10) и n // 10 совпадают, а на отрицательных '
+       + 'с остатком расходятся: int(−37 / 10) = −3, а −37 // 10 = −4. Подзадачу «целое '
+       + 'деление» в Python уже решает //, и подменять её на int(n / b) нельзя.'
+  },
+  boxes: {
+    title: 'сколько коробок',
+    spec: 'Программа читает количество предметов a (от 1 до 1000) и вместимость '
+        + 'коробки b (от 1 до 100) и должна напечатать, сколько коробок нужно, '
+        + 'чтобы увезти все предметы.',
+    code: 'a = int(input())\nb = int(input())\nprint(int(a / b) + 1)',
+    fields: 'два целых числа через пробел: a от 1 до 1000 и b от 1 до 100',
+    hint: 'Прибавлять единицу «на неполную коробку» нужно не всегда. Когда неполной '
+        + 'коробки не остаётся вовсе?',
+    why: 'Когда a делится на b нацело, все коробки полные, и лишняя единица даёт '
+       + 'коробку с воздухом: для 20 предметов по 5 нужно 4 коробки, а программа '
+       + 'печатает 5. Готовая подзадача «округлить вверх» — это ceil(a / b) из math '
+       + 'или −(−a // b).'
+  },
+  round5: {
+    title: 'округление половины',
+    spec: 'Программа читает целое k (от 0 до 1000) и должна напечатать k + 1 — '
+        + 'то есть округлить k + 0.5 вверх.',
+    code: 'k = int(input())\nprint(round(k + 0.5))',
+    fields: 'одно целое число от 0 до 1000',
+    hint: 'Проверь несколько подряд идущих k и сравни с k + 1. Правило round для '
+        + 'ровной половины не такое, как учат в школе.',
+    why: 'round в Python округляет половину к ЧЁТНОМУ: round(2.5) = 2, round(3.5) = 4. '
+       + 'Поэтому на чётных k программа печатает k, а не k + 1. Чужая функция делает '
+       + 'ровно то, что написано в её документации, а не то, что мы привыкли ждать: '
+       + 'для округления вверх есть ceil.'
+  },
+  gcdone: {
+    title: 'НОД трёх чисел',
+    spec: 'Программа читает три натуральных числа (от 1 до 1000), каждое со своей '
+        + 'строки, и должна напечатать их наибольший общий делитель.',
+    code: 'from math import gcd\ng = 1\nfor i in range(3):\n    x = int(input())\n'
+        + '    g = gcd(g, x)\nprint(g)',
+    fields: 'три натуральных числа через пробел, от 1 до 1000',
+    hint: 'Посмотри, что лежит в g до первого числа, и посчитай gcd(1, x). Какие '
+        + 'числа надо подать, чтобы ответ был не 1?',
+    why: 'Накопитель стартует с единицы, а gcd(1, x) = 1 — цепочка застревает на '
+       + 'единице навсегда. Верный старт — ноль: gcd(0, x) = x, и первое же число '
+       + 'попадает в накопитель целиком. Библиотечная функция тут ни при чём: '
+       + 'ошибка в том, как её позвали.'
+  }
+};
+
+function hwCounter(rng) {
+  const bug = tPick(rng, ['intdiv', 'boxes', 'round5', 'gcdone']);
+  const b = HW_BUGS[bug];
+  return {
+    kind: 'counter', bug,
+    code: b.code,
+    question: '<b>Что программа должна делать.</b> ' + b.spec
+            + '<br><b>Задание.</b> Здесь спрятана ошибка, из-за которой программа '
+            + 'врёт не всегда, а на особых данных. Назови такие данные (' + b.fields
+            + ').',
+    hint: b.hint,
+    explain: b.why
+  };
+}
+
+/* Округление половины к чётному — как это делает Python. */
+function pyRound(x) {
+  const fl = Math.floor(x);
+  const frac = x - fl;
+  if (frac > 0.5) return fl + 1;
+  if (frac < 0.5) return fl;
+  return fl % 2 === 0 ? fl : fl + 1;
+}
+
+/* верный и кривой ответ каждой программы — ровно то, что она напечатает */
+function hwTrueFalse(bug, xs) {
+  if (bug === 'intdiv')
+    return ['' + pyDiv(xs[0], 10), '' + Math.trunc(xs[0] / 10)];
+  if (bug === 'boxes')
+    return ['' + Math.ceil(xs[0] / xs[1]), '' + (Math.trunc(xs[0] / xs[1]) + 1)];
+  if (bug === 'round5')
+    return ['' + (xs[0] + 1), '' + pyRound(xs[0] + 0.5)];
+  let g = 0;
+  for (const x of xs) g = pyGcd(g, x);
+  return ['' + g, '1'];
+}
+
+const HW_SHAPE = {
+  intdiv: { count: 1, lo: -1000, hi: 1000, what: 'одно целое число' },
+  boxes: { count: 2, lo: 1, hi: 1000, what: 'два числа: предметы и вместимость' },
+  round5: { count: 1, lo: 0, hi: 1000, what: 'одно целое число' },
+  gcdone: { count: 3, lo: 1, hi: 1000, what: 'три натуральных числа' }
+};
+
+function hwCheckCounter(task, raw) {
+  const parts = String(raw).trim().split(/[\s,;]+/).filter(function (s) { return s; });
+  const sh = HW_SHAPE[task.bug];
+  if (parts.length !== sh.count || !parts.every(function (s) { return /^[-−]?\d+$/.test(s); }))
+    return { ok: false, why: 'нужно ' + sh.what + (sh.count > 1 ? ' через пробел' : '') };
+  const xs = parts.map(function (s) { return Number(s.replace('−', '-')); });
+  if (xs.some(function (x) { return x < sh.lo || x > sh.hi; }))
+    return { ok: false, why: 'числа — от ' + sh.lo + ' до ' + sh.hi };
+  if (task.bug === 'boxes' && (xs[1] < 1 || xs[1] > 100))
+    return { ok: false, why: 'вместимость коробки — от 1 до 100' };
+  const tf = hwTrueFalse(task.bug, xs);
+  if (tf[0] === tf[1])
+    return { ok: false, why: 'на этих данных программа печатает верное «' + tf[0]
+                           + '» — ошибка прячется в других' };
+  return { ok: true, why: 'верно: должно быть «' + tf[0] + '», а программа печатает «'
+                        + tf[1] + '»' };
+}
+
+/* --------------------------------------------- тип 5: как это работает */
+const HW_THEORY = [
+  {
+    q: 'Зачем разбивать задачу на подзадачи?',
+    opts: ['Каждый кусок можно написать и проверить отдельно, а часть из них '
+           + 'вообще окажется уже написанной в библиотеке',
+           'Программа из нескольких кусков работает быстрее',
+           'Этого требует Python: длинные программы он не запускает'],
+    right: 0,
+    why: 'Подзадача — это кусок с понятным входом и выходом. Его можно проверить '
+       + 'своим print, не трогая остальное, и заменить готовым вызовом, если такой '
+       + 'есть. Скорость тут ни при чём, а длину программы Python не ограничивает.'
+  },
+  {
+    q: 'Что вносит в программу строка <code>import math</code>?',
+    opts: ['Одно имя math: функции зовутся через точку, math.sqrt(16)',
+           'Все имена библиотеки сразу: можно писать просто sqrt(16)',
+           'Ничего не вносит, это комментарий для читателя'],
+    right: 0,
+    why: 'import math делает доступным только само имя библиотеки. Голое sqrt после '
+       + 'такой строки — NameError: такого имени в программе нет.'
+  },
+  {
+    q: 'Чем <code>from math import *</code> отличается от <code>import math</code>?',
+    opts: ['Вносит все имена библиотеки, звать их надо без приставки — зато имени '
+           + 'math по-прежнему нет',
+           'Ничем, это две записи одного и того же',
+           'Подключает библиотеку быстрее'],
+    right: 0,
+    why: 'Звёздочка высыпает имена библиотеки прямо в программу. Платой за удобство '
+       + 'бывает столкновение имён: своя переменная с именем функции затирает функцию.'
+  },
+  {
+    q: 'После <code>from random import *</code> ученик написал <code>seed = int(input())</code>. '
+     + 'Что будет?',
+    opts: ['Имя seed теперь занято числом, и вызов seed(...) упадёт: функцию затёрли',
+           'Ничего особенного: переменная и функция не мешают друг другу',
+           'Python переименует переменную сам'],
+    right: 0,
+    why: 'Имена в Python общие: переменная и функция живут в одном списке имён. '
+       + 'Поэтому переменную не называют именем функции — входное число для генератора '
+       + 'зовут, например, start.'
+  },
+  {
+    q: 'Что такое стандартная библиотека?',
+    opts: ['Набор модулей, который идёт вместе с Python: math, random, time — '
+           + 'ставить отдельно ничего не надо',
+           'Библиотека, которую чаще всего ставят программисты',
+           'Книга с описанием языка'],
+    right: 0,
+    why: 'Стандартная библиотека уже лежит в установленном Python: достаточно import. '
+       + 'Сторонние библиотеки надо доставать отдельно.'
+  },
+  {
+    q: 'Чем сторонняя библиотека отличается от стандартной?',
+    opts: ['Её написали не авторы Python, и её надо установить отдельно — командой '
+           + 'pip install',
+           'Она работает медленнее стандартной',
+           'Её нельзя использовать в школьных задачах'],
+    right: 0,
+    why: 'pygame, numpy, requests, Pillow в поставку Python не входят. Их ставят '
+       + 'командой pip install <имя> — и до установки import для них не работает.'
+  },
+  {
+    q: 'Что разумно проверить, прежде чем ставить стороннюю библиотеку?',
+    opts: ['Откуда она и кто её поддерживает: чужой код получает те же права, что '
+           + 'и ваша программа',
+           'Ничего: если pip её ставит, значит, она безопасна',
+           'Только размер файла'],
+    right: 0,
+    why: 'pip ставит то, что попросили, и ничего не проверяет по существу. Чужая '
+       + 'библиотека выполняется с вашими правами — поэтому смотрят на источник, '
+       + 'популярность и свежесть.'
+  },
+  {
+    q: 'Где посмотреть, что делает незнакомая функция из библиотеки?',
+    opts: ['Позвать help(имя) прямо в IDLE — это документация, написанная авторами',
+           'Только в интернете: в Python документации нет',
+           'Нигде: надо запускать и угадывать по ответам'],
+    right: 0,
+    why: 'help(round), help(math.isqrt) печатают ту самую шапку «что на входе, что на '
+       + 'выходе», которую мы сами писали в прошлой паре. Чужая документация читается '
+       + 'так же, как своя.'
+  },
+  {
+    q: 'Что напечатает <code>print(sqrt(16))</code> после <code>from math import *</code>?',
+    opts: ['4.0 — sqrt всегда возвращает дробное число',
+           '4 — корень из 16 целый',
+           'Ошибку: 16 не дробное'],
+    right: 0,
+    why: 'sqrt возвращает дробное даже тогда, когда результат ровный, и печатается '
+       + 'оно с точкой. Если нужен целый корень, в math есть isqrt.'
+  },
+  {
+    q: 'Чем <code>isqrt(n)</code> отличается от <code>sqrt(n)</code>?',
+    opts: ['isqrt даёт целую часть корня целым числом и точен на больших n, '
+           + 'sqrt даёт дробное',
+           'Ничем, это одна и та же функция',
+           'isqrt работает только для полных квадратов'],
+    right: 0,
+    why: 'isqrt(50) = 7, sqrt(50) ≈ 7.07. Для границы перебора делителей нужен именно '
+       + 'целый корень — с ним не нужно бояться дробной погрешности.'
+  },
+  {
+    q: 'Чему равно <code>gcd(0, x)</code> для натурального x?',
+    opts: ['x — поэтому накопитель НОД цепочки удобно начинать с нуля',
+           '0 — ноль делится на всё',
+           '1 — у нуля нет общих делителей'],
+    right: 0,
+    why: 'Ноль делится на любое x, значит, наибольший общий делитель нуля и x равен x. '
+       + 'Отсюда приём: g = 0 перед циклом, дальше g = gcd(g, x) для каждого числа.'
+  },
+  {
+    q: 'Совпадают ли <code>floor(a / b)</code> и <code>int(a / b)</code>?',
+    opts: ['Только пока результат неотрицательный: floor округляет вниз, int — к нулю',
+           'Всегда: это две записи одного действия',
+           'Никогда: floor работает с дробными, int с целыми'],
+    right: 0,
+    why: 'floor(−7 / 2) = −4, int(−7 / 2) = −3. В Python // работает как floor, '
+       + 'поэтому подменять // на int(a / b) нельзя.'
+  },
+  {
+    q: 'Зачем в программе с бросками кубика зовут <code>seed(start)</code>?',
+    opts: ['Чтобы случайные числа повторялись: с тем же посевом выпадет та же '
+           + 'последовательность, и ответ можно проверить',
+           'Чтобы числа стали по-настоящему случайными',
+           'Чтобы ускорить randint'],
+    right: 0,
+    why: 'Генератор псевдослучайный: посев задаёт начало последовательности. Это и '
+       + 'позволяет проверять такую программу — у всех с одним посевом один ответ.'
+  }
+];
+
+function hwTheory(rng) {
+  const item = tPick(rng, HW_THEORY);
+  const idx = tShuffle(rng, [0, 1, 2]);
+  const letters = ['A', 'Б', 'В'];
+  const opts = idx.map(function (k, pos) {
+    return letters[pos] + ') ' + item.opts[k];
+  });
+  const right = letters[idx.indexOf(item.right)];
+  return {
+    kind: 'theory', qid: HW_THEORY.indexOf(item),
+    code: '',
+    question: item.q + '<br><br>' + opts.join('<br>')
+            + '<br><br>Ответ — одна буква.',
+    answer: right,
+    explain: 'Верно: ' + right + ') ' + item.opts[item.right] + '. ' + item.why
+  };
+}
+
+/* ------------------------------------------------------------ сборка */
+function hwMake(type, rng) {
+  let t;
+  if (type in HW_FROM_TRAINER) {
+    t = tTask(HW_FROM_TRAINER[type], rng);
+    t.kind = 'trainer';
+  } else if (type === 4) {
+    t = hwCounter(rng);
+  } else {
+    t = hwTheory(rng);
+  }
+  t.hwType = type;
+  return t;
+}
+
+function hwVerdict(task, raw) {
+  if (!String(raw).trim()) return { ok: false, why: '' };
+  if (task.kind === 'counter') return hwCheckCounter(task, raw);
+  if (task.kind === 'theory') {
+    const map = { 'A': 'A', 'А': 'A', 'a': 'A', 'а': 'A',
+                  'Б': 'Б', 'б': 'Б', 'B': 'Б',
+                  'В': 'В', 'в': 'В', 'C': 'В', 'c': 'В' };
+    const got = map[String(raw).trim().charAt(0)] || '';
+    return { ok: got === task.answer, why: '' };
+  }
+  return { ok: tCheck(task, raw), why: '' };
+}
+/* ==== /ЗАДАЧИ ДЗ ==== */
+
+/* Форма сдачи ДЗ — одна на все темы. Ссылку разносит set_form_link.py. */
+const FORM = "https://docs.google.com/forms/d/e/1FAIpQLSfQyhaxcnzn4ZaKSe_ZMsluw7qRQnrw_80H6SfrnYB5EThUIA/viewform?usp=pp_url&entry.853601231=ФАМИЛИЯ&entry.1091635917=КЛАСС&entry.487188307=КОД";
+const ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+const EPOCH = Date.UTC(2026, 0, 1);
+const PREFIX = "PB";
+const NEED_STREAK = 1;     // тип закрывает один верный ответ
+const MIN_TYPES = 4;       // ниже этого код не выдаётся
+const SCALE = [[6, 5], [5, 4], [4, 3]];
+
+const bin = (v, w) => v.toString(2).padStart(w, "0");
+// Семибитными частями строки: в нагрузке 33 бита, а побитовые операции в JS
+// 32-битные — старший бит молча потерялся бы.
+function checksum(bitstr){
+  let cs = 0x5B;
+  for (let i = 0; i < bitstr.length; i += 7)
+    cs ^= parseInt(bitstr.substr(i, 7).padEnd(7, "0"), 2);
+  return cs & 0x7F;
+}
+function makeCode(st){
+  const day = Math.max(0, Math.min(2047, Math.floor(
+      (Date.now() - EPOCH) / 86400000)));
+  const payload = bin(day, 11) + bin(Math.min(15, st.typesDone), 4) +
+                  bin(Math.min(15, st.cleanTypes), 4) +
+                  bin(Math.min(127, st.solved), 7) +
+                  bin(Math.min(127, st.wrong), 7);
+  const bitstr = payload + bin(checksum(payload), 7);
+  let out = "";
+  for (let i = 0; i < 40; i += 5)
+    out += ALPHABET[parseInt(bitstr.substr(i, 5), 2)];
+  return PREFIX + "-" + out.slice(0, 4) + "-" + out.slice(4);
+}
+
+/* ---------------------------------------------------------- состояние */
+const N = HW_TYPES.length;
+const rng = tRng((Date.now() ^ (Math.random() * 1e9)) >>> 0);
+const st = {
+  streak: Array(N).fill(0),
+  done: Array(N).fill(false),
+  clean: Array(N).fill(true),
+  solved: 0, wrong: 0,
+  cur: null, answered: false, retry: null
+};
+Object.defineProperty(st, "typesDone",
+  {get(){ return st.done.filter(Boolean).length; }});
+Object.defineProperty(st, "cleanTypes",
+  {get(){ return st.done.filter((d, i) => d && st.clean[i]).length; }});
+
+function markFor(n){
+  for (const [need, m] of SCALE) if (n >= need) return m;
+  return null;
+}
+/* После ошибки — тот же тип: разбор только что показан, применить его надо по
+   горячему. Иначе — любой незакрытый. */
+function pickType(){
+  if (st.retry !== null && !st.done[st.retry]) return st.retry;
+  const open = [];
+  for (let i = 0; i < N; i++) if (!st.done[i]) open.push(i);
+  if (!open.length) return null;
+  return open[tRand(rng, 0, open.length - 1)];
+}
+/* ==== FRZ: вставлено freeze.py, руками не править ==== */
+/* Код задачи — картинкой, прямо в браузере.
+   Вставляется freeze.py --sync между маркерами FRZ. Руками в html не править.
+
+   Тренажёр, ДЗ и проверочная рисуют код каждой задачи сами при открытии, и
+   заморозить его при выкладке нельзя — его ещё нет. Поэтому страница
+   рисует код на canvas и вставляет <img>: скопировать мышкой и запустить в
+   IDLE не выйдет — задача снова про чтение (Света, 14.09.2026).
+
+   Стиль тот же, что у блоков <pre>: Consolas 15px, тёмный фон, комментарий
+   после # серо-голубой. Рисуем в двойном размере — чётко на любом экране. */
+function frz(code) {
+  var S = 2, SIZE = 15, LEAD = 22, PX = 14, PY = 12;
+  var lines = String(code).replace(/\r/g, '').split('\n');
+  var c = document.createElement('canvas'), g = c.getContext('2d');
+  var font = (SIZE * S) + 'px Consolas, "Cascadia Mono", "Courier New", monospace';
+  g.font = font;
+  var w = 0;
+  for (var i = 0; i < lines.length; i++) w = Math.max(w, g.measureText(lines[i]).width);
+  c.width = Math.ceil(w) + 2 * PX * S;
+  c.height = lines.length * LEAD * S + 2 * PY * S;
+  g.fillStyle = '#1e2430';
+  g.fillRect(0, 0, c.width, c.height);
+  g.font = font;                       /* смена размера сбрасывает шрифт */
+  g.textBaseline = 'middle';
+  for (var k = 0; k < lines.length; k++) {
+    var y = PY * S + k * LEAD * S + LEAD * S / 2;
+    var line = lines[k], at = line.indexOf('#');
+    var head = at < 0 ? line : line.slice(0, at), tail = at < 0 ? '' : line.slice(at);
+    g.fillStyle = '#e7ecf5';
+    g.fillText(head, PX * S, y);
+    if (tail) {
+      g.fillStyle = '#8fa6c4';
+      g.fillText(tail, PX * S + g.measureText(head).width, y);
+    }
+  }
+  if (!document.getElementById('frz-css')) {
+    var st = document.createElement('style');
+    st.id = 'frz-css';
+    st.textContent = 'img.frz-b{display:block;max-width:100%;height:auto;'
+                   + 'border-radius:10px;margin:8px 0}';
+    document.head.appendChild(st);
+  }
+  return '<img class="frz-b" width="' + (c.width / S) + '" height="' + (c.height / S)
+       + '" alt="код задачи — читай с экрана" src="' + c.toDataURL('image/png') + '">';
+}
+/* ==== /FRZ ==== */
+
+function esc(s){ return String(s).replace(/[&<>]/g, c =>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+/* ------------------------------------------------------------- экран */
+function paintProgress(){
+  const box = document.getElementById("types");
+  box.innerHTML = "";
+  HW_TYPES.forEach((name, i) => {
+    const c = document.createElement("span");
+    c.className = "chip" + (st.done[i] ? " done"
+                          : (st.cur && st.cur.hwType === i ? " cur" : ""));
+    c.textContent = name + (st.done[i] ? " ✓" : "");
+    box.appendChild(c);
+  });
+  const m = markFor(st.typesDone);
+  const sb = document.getElementById("scorebox");
+  sb.className = "score" + (m ? " m" + m : "");
+  document.getElementById("mark").textContent = m || "—";
+  document.getElementById("stats").textContent =
+    "закрыто типов: " + st.typesDone + " из " + N +
+    " · решено задач: " + st.solved + " · ошибок: " + st.wrong +
+    (st.typesDone < MIN_TYPES
+      ? " · до кода работы осталось закрыть " + (MIN_TYPES - st.typesDone) : "");
+}
+
+function nextTask(){
+  const type = pickType();
+  if (type === null) { finish(); return; }
+  st.cur = hwMake(type, rng);
+  st.answered = false;
+  const t = st.cur;
+  const hint = t.hint
+    ? '<details><summary>Подсказка</summary><p>' + t.hint + '</p></details>' : "";
+  document.getElementById("area").innerHTML =
+    '<div class="card" id="task">' +
+      '<p class="tag">' + HW_TYPES[type] +
+        (st.retry === type ? ' · ещё раз, тот же тип' : '') + '</p>' +
+      (t.code ? frz(t.code) : '') +
+      (t.input !== undefined
+        ? '<p class="inp">Вход: <code>' + esc(t.input).replace(/\n/g, '</code>, затем <code>') + '</code></p>'
+        : '') +
+      '<p>' + (t.question || "Что напечатает программа?") + '</p>' +
+      '<div class="row">' +
+        '<input type="text" id="ans" autocomplete="off" spellcheck="false">' +
+        '<button class="primary" id="go">Проверить</button>' +
+      '</div>' +
+      hint +
+      '<div class="verdict" id="v"></div>' +
+    '</div>';
+  document.getElementById("go").addEventListener("click", judge);
+  document.getElementById("ans").addEventListener("keydown", e => {
+    if (e.key === "Enter") judge();
+  });
+  document.getElementById("ans").focus();
+  paintProgress();
+}
+
+function judge(){
+  if (st.answered) { nextTask(); return; }
+  const raw = document.getElementById("ans").value;
+  if (!raw.trim()) return;
+  const t = st.cur, type = t.hwType;
+  const res = hwVerdict(t, raw);
+  const card = document.getElementById("task");
+  const v = document.getElementById("v");
+  st.answered = true;
+  document.getElementById("go").textContent = "Дальше";
+  document.getElementById("ans").disabled = true;
+  if (res.ok){
+    st.solved++;
+    st.streak[type]++;
+    st.retry = null;
+    card.className = "card ok";
+    v.className = "verdict ok";
+    let text = "Верно. " + (res.why ? res.why + " " : "") + (t.explain || "");
+    if (st.streak[type] >= NEED_STREAK){
+      st.done[type] = true;
+      text += " Тип закрыт.";
+    }
+    v.innerHTML = text;
+  } else {
+    st.wrong++;
+    st.streak[type] = 0;
+    st.clean[type] = false;
+    st.retry = type;
+    card.className = "card err";
+    v.className = "verdict err";
+    v.innerHTML = "Пока нет" + (res.why ? " — " + res.why : "") +
+      ". " + (t.explain || "") +
+      " Следующая задача — того же типа.";
+  }
+  paintProgress();
+}
+
+function finish(){
+  const m = markFor(st.typesDone);
+  const code = st.typesDone >= MIN_TYPES ? makeCode(st) : null;
+  const more = st.typesDone < N
+    ? '<button id="more">Закрыть ещё типы</button>' : "";
+  document.getElementById("area").innerHTML =
+    '<div class="card">' +
+      '<h2>Работа окончена</h2>' +
+      '<p>Закрыто типов: <b>' + st.typesDone + '</b> из ' + N +
+        '. Решено задач: ' + st.solved + ', ошибок: ' + st.wrong + '.' +
+        (m ? ' Наработано на <b>' + m + '</b>.' : '') + '</p>' +
+      (code
+        ? '<p>Твой код работы:</p><div class="code">' + code + '</div>' +
+          '<div class="fields">' +
+            '<div><label for="fam">Фамилия</label>' +
+              '<input type="text" id="fam" autocomplete="off"></div>' +
+            '<div><label for="kls">Класс</label>' +
+              '<input type="text" id="kls" autocomplete="off"></div>' +
+          '</div>' +
+          '<div class="row"><button id="send" class="primary">Сдать работу</button></div>' +
+          '<p class="stats">Кнопка откроет форму: фамилия, класс и код уже ' +
+            'будут вписаны — останется нажать «Отправить».</p>'
+        : '<div class="note">Закрыто меньше ' + MIN_TYPES +
+          ' типов — кода работы нет. Закрой ещё хотя бы ' +
+          (MIN_TYPES - st.typesDone) + ', и он появится.</div>') +
+      '<div class="row">' + more + '</div>' +
+    '</div>';
+  const b = document.getElementById("more");
+  if (b) b.addEventListener("click", nextTask);
+  wireSend(code);
+}
+
+function wireSend(code){
+  const btn = document.getElementById("send");
+  if (!btn) return;
+  const fam = document.getElementById("fam"), kls = document.getElementById("kls");
+  try {
+    fam.value = localStorage.getItem("fam") || "";
+    kls.value = localStorage.getItem("kls") || "";
+  } catch (e) {}
+  btn.addEventListener("click", () => {
+    if (!fam.value.trim()){ fam.focus(); return; }
+    try {
+      localStorage.setItem("fam", fam.value.trim());
+      localStorage.setItem("kls", kls.value.trim());
+    } catch (e) {}
+    const url = FORM.replace("ФАМИЛИЯ", encodeURIComponent(fam.value.trim()))
+                    .replace("КЛАСС", encodeURIComponent(kls.value.trim()))
+                    .replace("КОД", encodeURIComponent(code));
+    window.open(url, "_blank", "noopener");
+  });
+}
+
+paintProgress();
+nextTask();
+</script>
+<p class="ai-mark" style="margin:34px auto 0;max-width:860px;padding-top:12px;border-top:1px solid #d9dce6;color:#5c6070;font:13px/1.5 "Segoe UI",system-ui,sans-serif">Материалы подготовлены с использованием технологий искусственного интеллекта.</p>
+</body>
+</html>

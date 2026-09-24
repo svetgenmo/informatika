@@ -49,6 +49,12 @@ h1{font-size:1.5em;line-height:1.15;margin:0;color:#1f5fa8}
    карточках без картинки. */
 .body img{display:block;max-width:100%;max-height:68mm;width:auto;
           margin:1.5mm auto;border-radius:1.5mm}
+/* Длинная программа-разбор в подсказке размечена как <div class="cols">
+   с двумя <pre>. На экране это два столбика шириной в пол-страницы, а
+   здесь — половинки карточки: A5 узкая, и в один столбец программа на
+   семьдесят строк уводит автоподбор кегля в нечитаемые шесть пунктов. */
+.body .cols{display:flex;gap:3mm;align-items:flex-start}
+.body .cols pre{flex:1 1 0;min-width:0}
 .body table{border-collapse:collapse;margin:1.5mm 0;font-size:.9em}
 .body th,.body td{border:1px solid #d9dce6;padding:.5mm 1.6mm;
                   text-align:center}
@@ -90,36 +96,26 @@ footer a,footer .url{color:#1f5fa8;text-decoration:none}
       <p class="sub">Задание 6 ЕГЭ: циклические алгоритмы для исполнителя</p>
     </header>
     <div class="body">
-<h3>Черепаха и turtle: перевод один в один</h3>
-  <table class="steps">
-    <tr><th>Черепаха</th><th>Python</th></tr>
-    <tr><td>Вперёд <i>n</i></td><td><code>forward(n)</code></td></tr>
-    <tr><td>Назад <i>n</i></td><td><code>backward(n)</code></td></tr>
-    <tr><td>Направо <i>m</i></td><td><code>right(m)</code></td></tr>
-    <tr><td>Налево <i>m</i></td><td><code>left(m)</code></td></tr>
-    <tr><td>Поднять хвост</td><td><code>penup()</code></td></tr>
-    <tr><td>Опустить хвост</td><td><code>pendown()</code></td></tr>
-    <tr><td>Повтори <i>k</i> [ … ]</td><td><code>for i in range(k):</code></td></tr>
-  </table>
-  <p><b>Две поправки.</b> turtle в начале смотрит вправо, а Черепаха вверх —
-     значит первой строкой <code>setheading(90)</code>. Где Черепаха сейчас,
-     говорят <code>xcor()</code> и <code>ycor()</code>; их и собираем.</p>
-  <h3>Каркас: рамка фигуры</h3>
+<h3>Полное решение: демоверсия 2027</h3>
+  <p>Черепаха чертит прямоугольник, поднимает хвост, переходит и чертит второй;
+     спрашивают точки с целыми координатами внутри пересечения, включая
+     границу. Вся программа целиком — в своей задаче меняются только числа и
+     последняя строка:</p>
+  <div class="cols">
 <pre><code>from turtle import *
-
-mnx = 0
-mxx = 0
+mnx = 0               # рамка: границы
+mxx = 0               # фигуры по x и y
 mny = 0
 mxy = 0
 
-def sbros():                 # начать рамку с текущей точки
+def sbros():          # начать рамку
     global mnx, mxx, mny, mxy
     mnx = round(xcor())
     mxx = mnx
     mny = round(ycor())
     mxy = mny
 
-def metka():                 # растянуть рамку до текущей точки
+def metka():          # растянуть рамку
     global mnx, mxx, mny, mxy
     x = round(xcor())
     y = round(ycor())
@@ -129,19 +125,51 @@ def metka():                 # растянуть рамку до текущей
     mxy = max(mxy, y)
 
 speed(0)
-setheading(90)</code></pre>
-  <p><code>sbros()</code> ставится перед фигурой, <code>metka()</code> — после
-     каждого <code>forward</code> и <code>backward</code>. Закончили фигуру —
-     переписали границы в свои переменные:
-     <code>ax1 = mnx</code>, <code>ax2 = mxx</code>, <code>ay1 = mny</code>,
-     <code>ay2 = mxy</code>. Перед второй фигурой <code>sbros()</code> ещё
-     раз. <code>round</code> нужен потому, что turtle считает через синусы и
-     вместо 30 бывает 29.999999999999996.</p>
-  <h3>Пересечение двух рамок</h3>
-<pre><code>lx = max(ax1, bx1)           # левая граница
-rx = min(ax2, bx2)           # правая
-ny = max(ay1, by1)           # нижняя
-vy = min(ay2, by2)           # верхняя</code></pre>
+setheading(90)        # Черепаха — вверх
+# первая фигура: 24 и 30, шесть раз
+sbros()               # рамка с нуля
+for i in range(6):
+    forward(24)
+    metka()           # угол отмечен
+    right(90)
+    forward(30)
+    metka()
+    right(90)</code></pre>
+<pre><code>ax1 = mnx             # рамка первой
+ax2 = mxx             # фигуры готова
+ay1 = mny
+ay2 = mxy
+penup()               # переход: следа
+forward(2)            # нет, и в рамку
+right(90)             # он не входит
+forward(10)
+left(90)
+pendown()
+# вторая фигура: 75 и 71, тоже 6 раз
+sbros()               # рамка заново
+for i in range(6):
+    forward(75)
+    metka()
+    right(90)
+    forward(71)
+    metka()
+    right(90)
+bx1 = mnx             # рамка второй
+bx2 = mxx             # фигуры
+by1 = mny
+by2 = mxy
+lx = max(ax1, bx1)    # пересечение:
+rx = min(ax2, bx2)    # левая — самая
+ny = max(ay1, by1)    # правая из левых,
+vy = min(ay2, by2)    # и так все четыре
+# точек на одну больше, чем длина
+print((rx - lx + 1) * (vy - ny + 1))
+done()</code></pre>
+  </div>
+  <p><code>sbros()</code> — перед каждой фигурой, <code>metka()</code> — после
+     каждого <code>forward</code> и <code>backward</code>. <code>round</code>
+     нужен потому, что turtle считает через синусы и вместо 30 бывает
+     29.999999999999996. Эта программа печатает <b>483</b>.</p>
   <h3>Что писать под вопрос</h3>
   <table class="steps">
     <tr><th>Спрашивают</th><th>Что писать</th></tr>
@@ -156,16 +184,6 @@ vy = min(ay2, by2)           # верхняя</code></pre>
   </table>
   <p>Точек по оси всегда на <b>одну больше</b>, чем длина: от 0 до 3 — это
      четыре точки, а длина три. Отсюда и «плюс один».</p>
-  <h3>Когда фигура не прямоугольник</h3>
-  <p>Если фигура одна и у неё есть выемка — рамка не поможет: разбей её на
-     <b>два прямоугольника</b>, сосчитай точки строго внутри каждого и
-     добавь точки на их общей стороне (для фигуры они внутренние).
-     Чтобы увидеть вершины, печатай <code>round(xcor())</code> и
-     <code>round(ycor())</code> после каждого шага.</p>
-  <p>Если в алгоритме повороты на 135 и 45 — фигура наклонная, вершины
-     нецелые, и просят площадь. Тогда запоминай координаты четырёх вершин и
-     считай площадь двумя треугольниками:
-     <code>abs((bx-ax)*(cy-ay) - (cx-ax)*(by-ay)) / 2</code>.</p>
   <h3>Три ловушки</h3>
   <ul>
     <li><b>Нечётное «Повтори»</b> — рамка обходится за два повтора, поэтому
@@ -175,10 +193,6 @@ vy = min(ay2, by2)           # верхняя</code></pre>
       Переписывай команды как есть, разбираться руками не нужно;</li>
     <li><b>«плюс один»</b> — точки и площадь отличаются ровно на него.</li>
   </ul>
-  <h3>Откуда эти задачи</h3>
-  <p><b>Задачи авторские, составлены в форме задания 6 ЕГЭ по информатике.</b>
-     Форма задания и способ решения — как на экзамене, а условия написаны
-     своими словами. Алгоритм и числа каждый раз новые.</p>
     </div>
     <footer>Тренажёр и разбор темы: <span class="url">https://svetgenmo.github.io/informatika/11/cherepaha/</span><br>Материалы подготовлены с использованием технологий искусственного интеллекта.</footer>
   </div>
@@ -189,36 +203,26 @@ vy = min(ay2, by2)           # верхняя</code></pre>
       <p class="sub">Задание 6 ЕГЭ: циклические алгоритмы для исполнителя</p>
     </header>
     <div class="body">
-<h3>Черепаха и turtle: перевод один в один</h3>
-  <table class="steps">
-    <tr><th>Черепаха</th><th>Python</th></tr>
-    <tr><td>Вперёд <i>n</i></td><td><code>forward(n)</code></td></tr>
-    <tr><td>Назад <i>n</i></td><td><code>backward(n)</code></td></tr>
-    <tr><td>Направо <i>m</i></td><td><code>right(m)</code></td></tr>
-    <tr><td>Налево <i>m</i></td><td><code>left(m)</code></td></tr>
-    <tr><td>Поднять хвост</td><td><code>penup()</code></td></tr>
-    <tr><td>Опустить хвост</td><td><code>pendown()</code></td></tr>
-    <tr><td>Повтори <i>k</i> [ … ]</td><td><code>for i in range(k):</code></td></tr>
-  </table>
-  <p><b>Две поправки.</b> turtle в начале смотрит вправо, а Черепаха вверх —
-     значит первой строкой <code>setheading(90)</code>. Где Черепаха сейчас,
-     говорят <code>xcor()</code> и <code>ycor()</code>; их и собираем.</p>
-  <h3>Каркас: рамка фигуры</h3>
+<h3>Полное решение: демоверсия 2027</h3>
+  <p>Черепаха чертит прямоугольник, поднимает хвост, переходит и чертит второй;
+     спрашивают точки с целыми координатами внутри пересечения, включая
+     границу. Вся программа целиком — в своей задаче меняются только числа и
+     последняя строка:</p>
+  <div class="cols">
 <pre><code>from turtle import *
-
-mnx = 0
-mxx = 0
+mnx = 0               # рамка: границы
+mxx = 0               # фигуры по x и y
 mny = 0
 mxy = 0
 
-def sbros():                 # начать рамку с текущей точки
+def sbros():          # начать рамку
     global mnx, mxx, mny, mxy
     mnx = round(xcor())
     mxx = mnx
     mny = round(ycor())
     mxy = mny
 
-def metka():                 # растянуть рамку до текущей точки
+def metka():          # растянуть рамку
     global mnx, mxx, mny, mxy
     x = round(xcor())
     y = round(ycor())
@@ -228,19 +232,51 @@ def metka():                 # растянуть рамку до текущей
     mxy = max(mxy, y)
 
 speed(0)
-setheading(90)</code></pre>
-  <p><code>sbros()</code> ставится перед фигурой, <code>metka()</code> — после
-     каждого <code>forward</code> и <code>backward</code>. Закончили фигуру —
-     переписали границы в свои переменные:
-     <code>ax1 = mnx</code>, <code>ax2 = mxx</code>, <code>ay1 = mny</code>,
-     <code>ay2 = mxy</code>. Перед второй фигурой <code>sbros()</code> ещё
-     раз. <code>round</code> нужен потому, что turtle считает через синусы и
-     вместо 30 бывает 29.999999999999996.</p>
-  <h3>Пересечение двух рамок</h3>
-<pre><code>lx = max(ax1, bx1)           # левая граница
-rx = min(ax2, bx2)           # правая
-ny = max(ay1, by1)           # нижняя
-vy = min(ay2, by2)           # верхняя</code></pre>
+setheading(90)        # Черепаха — вверх
+# первая фигура: 24 и 30, шесть раз
+sbros()               # рамка с нуля
+for i in range(6):
+    forward(24)
+    metka()           # угол отмечен
+    right(90)
+    forward(30)
+    metka()
+    right(90)</code></pre>
+<pre><code>ax1 = mnx             # рамка первой
+ax2 = mxx             # фигуры готова
+ay1 = mny
+ay2 = mxy
+penup()               # переход: следа
+forward(2)            # нет, и в рамку
+right(90)             # он не входит
+forward(10)
+left(90)
+pendown()
+# вторая фигура: 75 и 71, тоже 6 раз
+sbros()               # рамка заново
+for i in range(6):
+    forward(75)
+    metka()
+    right(90)
+    forward(71)
+    metka()
+    right(90)
+bx1 = mnx             # рамка второй
+bx2 = mxx             # фигуры
+by1 = mny
+by2 = mxy
+lx = max(ax1, bx1)    # пересечение:
+rx = min(ax2, bx2)    # левая — самая
+ny = max(ay1, by1)    # правая из левых,
+vy = min(ay2, by2)    # и так все четыре
+# точек на одну больше, чем длина
+print((rx - lx + 1) * (vy - ny + 1))
+done()</code></pre>
+  </div>
+  <p><code>sbros()</code> — перед каждой фигурой, <code>metka()</code> — после
+     каждого <code>forward</code> и <code>backward</code>. <code>round</code>
+     нужен потому, что turtle считает через синусы и вместо 30 бывает
+     29.999999999999996. Эта программа печатает <b>483</b>.</p>
   <h3>Что писать под вопрос</h3>
   <table class="steps">
     <tr><th>Спрашивают</th><th>Что писать</th></tr>
@@ -255,16 +291,6 @@ vy = min(ay2, by2)           # верхняя</code></pre>
   </table>
   <p>Точек по оси всегда на <b>одну больше</b>, чем длина: от 0 до 3 — это
      четыре точки, а длина три. Отсюда и «плюс один».</p>
-  <h3>Когда фигура не прямоугольник</h3>
-  <p>Если фигура одна и у неё есть выемка — рамка не поможет: разбей её на
-     <b>два прямоугольника</b>, сосчитай точки строго внутри каждого и
-     добавь точки на их общей стороне (для фигуры они внутренние).
-     Чтобы увидеть вершины, печатай <code>round(xcor())</code> и
-     <code>round(ycor())</code> после каждого шага.</p>
-  <p>Если в алгоритме повороты на 135 и 45 — фигура наклонная, вершины
-     нецелые, и просят площадь. Тогда запоминай координаты четырёх вершин и
-     считай площадь двумя треугольниками:
-     <code>abs((bx-ax)*(cy-ay) - (cx-ax)*(by-ay)) / 2</code>.</p>
   <h3>Три ловушки</h3>
   <ul>
     <li><b>Нечётное «Повтори»</b> — рамка обходится за два повтора, поэтому
@@ -274,10 +300,6 @@ vy = min(ay2, by2)           # верхняя</code></pre>
       Переписывай команды как есть, разбираться руками не нужно;</li>
     <li><b>«плюс один»</b> — точки и площадь отличаются ровно на него.</li>
   </ul>
-  <h3>Откуда эти задачи</h3>
-  <p><b>Задачи авторские, составлены в форме задания 6 ЕГЭ по информатике.</b>
-     Форма задания и способ решения — как на экзамене, а условия написаны
-     своими словами. Алгоритм и числа каждый раз новые.</p>
     </div>
     <footer>Тренажёр и разбор темы: <span class="url">https://svetgenmo.github.io/informatika/11/cherepaha/</span><br>Материалы подготовлены с использованием технологий искусственного интеллекта.</footer>
   </div>
