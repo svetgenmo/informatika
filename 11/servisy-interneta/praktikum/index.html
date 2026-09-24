@@ -708,6 +708,17 @@ const TRIP_CITIES = [
 ];
 
 const TRIP_MONTH = "октября";
+const TRIP_MONTH_NEXT = "ноября";
+const TRIP_MONTH_LEN = 31;
+
+/* Дата выезда легко уезжает за конец месяца: заезд 27-го плюс шесть ночей —
+   это 2 ноября, а не «33 октября» (так и вылезло на уроке 24.09.2026).
+   Считаем день сквозным номером от 1 октября, а подписываем с переносом. */
+function tripDate(day) {
+  return day <= TRIP_MONTH_LEN
+    ? day + " " + TRIP_MONTH
+    : (day - TRIP_MONTH_LEN) + " " + TRIP_MONTH_NEXT;
+}
 
 /* Номер варианта — из фамилии: у соседей города разные, а у одного
    человека он не скачет от нажатия кнопки (см. variant-by-surname). */
@@ -732,7 +743,11 @@ function tripVariant(surname, shift) {
     checkin: checkin,
     checkout: checkin + nights,
     nights: nights,
-    dates: checkin + " " + TRIP_MONTH + " — " + (checkin + nights) + " " + TRIP_MONTH
+    /* checkin и checkout — сквозные номера дней (могут быть больше 31),
+       inText и outText — то, что показывают ученику. */
+    inText: tripDate(checkin),
+    outText: tripDate(checkin + nights),
+    dates: tripDate(checkin) + " — " + tripDate(checkin + nights)
   };
 }
 
@@ -917,8 +932,8 @@ function tripCheck(id, v, ctx, variant) {
         "ожидается от 500 до 30000 ₽.");
     if (v.nights !== variant.nights)
       return tripBad("Ночей получилось " + v.nights + ", а между заездом " +
-        variant.checkin + " " + TRIP_MONTH + " и выездом " + variant.checkout +
-        " " + TRIP_MONTH + " их " + variant.nights + ". Гостиница берёт плату " +
+        variant.inText + " и выездом " + variant.outText +
+        " их " + variant.nights + ". Гостиница берёт плату " +
         "за НОЧИ, а не за дни: заезжаешь утром последнего дня — ночевать уже " +
         "не остаёшься. Ошибка на одну ночь — это тысячи рублей.");
     if (v.total !== v.nights * v.night)
@@ -1149,8 +1164,7 @@ function showVariant(){
   }
   variant = tripVariant(trip.surname, trip.shift);
   box.innerHTML = "Едем в <b>" + esc(variant.city.to) + "</b>. Заезд <b>" +
-    variant.checkin + " " + TRIP_MONTH + "</b>, выезд <b>" +
-    variant.checkout + " " + TRIP_MONTH + "</b>.";
+    variant.inText + "</b>, выезд <b>" + variant.outText + "</b>.";
 }
 
 function setSurname(){
@@ -1290,8 +1304,8 @@ function downloadTrip(){
     "td.money{text-align:right;white-space:nowrap}tr.total td{font-weight:700;" +
     "background:#f6f7fb}p.small{color:#5c6070;font-size:14px}</style></head><body>" +
     "<h1>Смета поездки в " + esc(variant.city.to) + "</h1>" +
-    "<p>" + esc(trip.surname) + ". Заезд " + variant.checkin + " " + TRIP_MONTH +
-    ", выезд " + variant.checkout + " " + TRIP_MONTH + " (" + variant.nights +
+    "<p>" + esc(trip.surname) + ". Заезд " + variant.inText +
+    ", выезд " + variant.outText + " (" + variant.nights +
     " ноч.).</p><table><tr><th>Статья</th><th>Что нашлось</th><th>Сколько</th></tr>" +
     rows + (s.money ? '<tr class="total"><td>Итого на одного</td><td></td>' +
     '<td class="money">' + tripMoney(s.money) + "</td></tr>" : "") + "</table>" +
