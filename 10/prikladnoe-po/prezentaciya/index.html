@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Работа с прикладным программным обеспечением — презентация</title>
+<meta name="description" content="Разбор темы «Работа с прикладным программным обеспечением», 10 класс: выбор программы под задачу, формат файла и обмен работой, системы автоматизированного проектирования, размер как параметр, программы по специализации. И постановка практикума — список, таблица и приложение в реферате.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E10%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ink)}
+body{font:20px/1.5 "Segoe UI",system-ui,sans-serif;overflow:hidden}
+
+.deck{position:relative;height:100vh;width:100vw}
+.slide{position:absolute;inset:0;display:none;flex-direction:column;
+       justify-content:center;padding:60px 80px;max-width:1100px;
+       margin:0 auto}
+.slide.active{display:flex}
+.slide h1{font-size:42px;margin:0 0 18px}
+.slide h2{font-size:30px;margin:0 0 20px;color:var(--accent)}
+.kicker{font-size:15px;letter-spacing:.1em;text-transform:uppercase;
+        color:var(--muted);font-weight:700;margin:0 0 8px}
+.slide p{font-size:22px;margin:10px 0;color:var(--ink)}
+.slide p.lead{font-size:26px;color:var(--muted)}
+.slide ul{font-size:22px;padding-left:30px}
+.slide li{margin:8px 0}
+
+.box{border:2px solid var(--line);border-radius:14px;padding:18px 24px;
+     background:var(--card);margin:14px 0}
+.box.ok{border-color:var(--ok-line);background:var(--ok-bg)}
+.box.hi{border-color:var(--hi-line);background:var(--hi-bg)}
+.box b{color:var(--ink)}
+.box p{font-size:20px;margin:6px 0}
+
+/* ---- карточки в ряд ---- */
+
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin:18px 0}
+.three .c{border:2px solid var(--line);border-radius:12px;padding:14px 18px;
+          font-size:18px;background:#fff}
+.three .c b{display:block;margin-bottom:6px;color:var(--accent);
+            font-size:20px}
+.three .c small{color:var(--muted);font-size:15px}
+
+.nav{position:fixed;bottom:0;left:0;right:0;display:flex;
+     align-items:center;gap:14px;padding:10px 24px;font-size:14px;
+     color:var(--muted);background:linear-gradient(transparent,#fff 40%)}
+.dots{display:flex;gap:7px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--line)}
+.dot.cur{background:var(--accent)}
+.hint{margin-left:auto}
+.zone{position:fixed;top:0;bottom:40px;width:15%;z-index:2;cursor:pointer}
+.zone.l{left:0}.zone.r{right:0}
+
+/* Колода рассчитана на проектор; на узком экране (кто-то откроет её с
+   телефона) карточки в ряд незачем ужимать до нечитаемых огрызков —
+   они встают одна под другой. */
+@media (max-width:900px){
+  .slide{padding:40px 24px}
+  .slide h1{font-size:32px} .slide h2{font-size:24px}
+  .slide p,.slide ul{font-size:19px}
+  .three{grid-template-columns:1fr}
+}
+
+/* ---- размер шрифта на проекторе: A− / A+ ---- */
+.zoom{display:inline-flex;align-items:center;gap:3px;margin-left:8px}
+.zoom button{padding:5px 9px;font-size:14px;min-width:36px;line-height:1}
+.zoom .z{color:var(--muted);font-size:14px;min-width:46px;text-align:center;
+         font-variant-numeric:tabular-nums}
+.slide{overflow-y:auto}
+kbd{font:600 17px/1 Consolas,monospace;background:#fff;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:2px 6px;white-space:nowrap}
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+<section class="slide active">
+  <p class="kicker">10 класс &middot; урок 5</p>
+  <h1>Работа с прикладным программным обеспечением</h1>
+  <p class="lead">Как выбрать программу под задачу и почему у инженера,
+     бухгалтера и музыканта они разные. Отдельно — САПР, где у линии есть
+     размер. Во второй половине урока реферат обрастает списком, таблицей
+     и приложением.</p>
+</section>
+
+<section class="slide">
+  <p class="kicker">Напоминание с урока 3</p>
+  <h2>Прикладная программа решает задачу человека</h2>
+  <div class="three">
+    <div class="c"><b>Системные</b>
+      обслуживают сам компьютер: операционная система, драйверы,
+      антивирус, архиватор.</div>
+    <div class="c"><b>Прикладные</b>
+      решают задачу человека: текст, таблица, чертёж, звук, учёт.</div>
+    <div class="c"><b>Системы программирования</b>
+      делают новые программы: транслятор, редактор кода, отладчик.</div>
+  </div>
+  <div class="box ok"><b>Ради прикладных программ компьютер и покупают.</b>
+     Всё остальное — условие их работы.</div>
+</section>
+
+<section class="slide">
+  <p class="kicker">Инструмент под задачу</p>
+  <h2>Что с данными делают — тем и работают</h2>
+  <div class="three">
+    <div class="c"><b>Оформить текст</b>
+      многостраничная работа по требованиям → текстовый процессор, стили.</div>
+    <div class="c"><b>Посчитать</b>
+      числа, зависимости, диаграммы → электронная таблица.</div>
+    <div class="c"><b>Найти и связать</b>
+      много однотипных записей → база данных.</div>
+  </div>
+  <div class="three">
+    <div class="c"><b>Изображение</b>
+      фотография, рисунок, коллаж → графический редактор.</div>
+    <div class="c"><b>Чертёж с размерами</b>
+      деталь, узел, сборка → САПР.</div>
+    <div class="c"><b>Карта</b>
+      объекты с координатами и свойствами → геоинформационная система.</div>
+  </div>
+</section>
+
+<section class="slide">
+  <p class="kicker">Как понять, что выбрал не то</p>
+  <h2>Делаешь руками то, что программа делает сама</h2>
+  <ul>
+    <li>Набрал таблицу в текстовом процессоре — и <b>пересчитываешь
+        итоги вручную</b> после каждой правки.</li>
+    <li>Подбираешь шрифт у каждого заголовка вместо <b>одного стиля</b> на
+        все.</li>
+    <li>Перечерчиваешь деталь заново, потому что <b>изменился один
+        размер</b>.</li>
+  </ul>
+  <div class="box hi"><b>Правильный результат не доказывает, что
+     инструмент был верный.</b> Его можно получить и в неподходящей
+     программе — вдвое дольше и без возможности быстро исправить.</div>
+</section>
+
+<section class="slide">
+  <p class="kicker">Обмен работой</p>
+  <h2>Свой формат и формат для обмена</h2>
+  <p>Свой формат программы хранит <b>всё</b>: и данные, и оформление. Но
+     открыть его сможет только она.</p>
+  <div class="three">
+    <div class="c"><b>.docx, .xlsx, .cdw</b>
+      родной формат: всё на месте, правится дальше.</div>
+    <div class="c"><b>PDF</b>
+      чтобы <b>смотреть и печатать</b>: выглядит одинаково везде, править
+      почти нельзя.</div>
+    <div class="c"><b>CSV</b>
+      чтобы отдать таблицу <b>значениями</b>: формулы и цвета теряются.</div>
+  </div>
+  <div class="box hi"><b>Чем проще формат, тем больше программ его
+     откроют — и тем меньше в нём останется оформления.</b> Формат меняют
+     командой «Сохранить как», а не исправлением расширения.</div>
+</section>
+
+<section class="slide">
+  <p class="kicker">САПР</p>
+  <h2>Система автоматизированного проектирования</h2>
+  <p>Программа, в которой создают чертежи и объёмные модели изделий.
+     Автоматизируется не замысел, а расчёты и оформление:</p>
+  <ul>
+    <li>по модели <b>сама строит</b> проекции и разрезы;</li>
+    <li>считает объём, массу, площадь поверхности;</li>
+    <li>проверяет, <b>не пересекаются</b> ли детали в сборке;</li>
+    <li>оформляет чертёж по правилам: рамка, размеры, спецификация.</li>
+  </ul>
+  <div class="box ok"><b>Каким быть изделию, решает человек.</b> Программа
+     не знает, какой вид главный и где нужен разрез, — правила черчения
+     остаются на конструкторе.</div>
+</section>
+
+<section class="slide">
+  <p class="kicker">Главное про САПР</p>
+  <h2>Размер — это параметр, а не надпись</h2>
+  <div class="three" style="grid-template-columns:1fr 1fr">
+    <div class="c"><b>В графическом редакторе</b>
+      линия — набор точек. «40 мм» рядом с ней — просто текст. Изменил
+      текст — линия осталась прежней: чертёж врёт.</div>
+    <div class="c"><b>В САПР</b>
+      у линии есть параметр длины и <b>связи</b> с другими линиями:
+      параллельность, равенство, совпадение точек. Изменил 40 на 60 —
+      перестроилось всё, что от этого зависит.</div>
+  </div>
+  <div class="box hi"><b>Поэтому в САПР не чертят «на глаз».</b> Чем
+     больше задано размеров и связей, тем <b>легче</b> потом правка: без
+     них каждый элемент придётся двигать руками.</div>
+</section>
+
+<section class="slide">
+  <p class="kicker">По специализации</p>
+  <h2>У каждой области свои программы</h2>
+  <div class="three">
+    <div class="c"><b>Инженер</b>
+      САПР: чертёж, модель, сборка, спецификация.</div>
+    <div class="c"><b>Бухгалтер</b>
+      программы учёта: проводки, отчётность, зарплата.</div>
+    <div class="c"><b>Музыкант</b>
+      звуковой редактор: дорожки, сведение, обработка.</div>
+  </div>
+  <div class="box ok"><b>Осваивают их через типовые задачи области, а не
+     через перечень команд меню.</b> Навык в одной программе помогает в
+     другой того же класса: слой, привязка, размерная линия есть в любой —
+     переучивать приходится названия и расположение команд.</div>
+</section>
+
+<section class="slide">
+  <p class="kicker">Главное на сегодня</p>
+  <h2>Номера не набирают руками — ни в списке, ни в таблице</h2>
+  <div class="three">
+    <div class="c"><b>Список источников</b>
+      кнопка «Нумерация». Ушёл источник из середины — остальные
+      перенумеруются сами.</div>
+    <div class="c"><b>Название таблицы</b>
+      «Ссылки → Вставить название». Номер — поле, как у рисунка.</div>
+    <div class="c"><b>Приложение</b>
+      «ПРИЛОЖЕНИЕ 1»: на него ссылаются по номеру.</div>
+  </div>
+  <div class="box ok"><b>Это то же правило, что для содержания на уроке 3
+     и подписей рисунков на уроке 4.</b> Третий раз подряд — значит, не
+     приём одной задачи, а способ работы с документом.</div>
+</section>
+
+<section class="slide">
+  <p class="kicker">Главное на сегодня</p>
+  <h2>Подпись рисунка снизу, название таблицы сверху</h2>
+  <p>Строки приложения «название — пояснение» просятся в таблицу: в ней
+     видно соответствие, и глазу не нужно искать, где кончается одно и
+     начинается другое.</p>
+  <div class="three">
+    <div class="c"><b>Шапка</b>
+      первая строка: что в каком столбце, полужирным.</div>
+    <div class="c"><b>Название над таблицей</b>
+      «Таблица 1 — …», слева, без отступа.</div>
+    <div class="c"><b>Ссылка в тексте</b>
+      «…приведены в приложении 1». Без неё незачем туда смотреть.</div>
+  </div>
+  <p class="lead">Открывайте страницу практикума: шаг 2 — источники
+     списком.</p>
+</section>
+
+
+</div>
+
+<div class="nav">
+
+  <span id="pos">1 / 10</span>
+  <span class="zoom" title="Размер шрифта на экране: клавиши + и −"><button id="zoomOut" title="Мельче (клавиша −)">A−</button><span class="z" id="zoomVal"></span><button id="zoomIn" title="Крупнее (клавиша +)">A+</button></span>
+  <div class="dots" id="dots"></div>
+  <span class="hint">← → или клик по краям экрана &middot; F11 — во весь экран</span>
+</div>
+<div class="zone l" id="prevZone"></div>
+<div class="zone r" id="nextZone"></div>
+
+<script>
+"use strict";
+const slides = Array.from(document.querySelectorAll(".slide"));
+const dotsBox = document.getElementById("dots");
+slides.forEach((_, i) => {
+  const d = document.createElement("span");
+  d.className = "dot" + (i === 0 ? " cur" : "");
+  dotsBox.appendChild(d);
+});
+const dots = Array.from(dotsBox.children);
+let cur = 0;
+
+function go(i){
+  if (i < 0 || i >= slides.length) return;
+  slides[cur].classList.remove("active");
+  dots[cur].classList.remove("cur");
+  cur = i;
+  slides[cur].classList.add("active");
+  dots[cur].classList.add("cur");
+  document.getElementById("pos").textContent = `${cur + 1} / ${slides.length}`;
+}
+
+document.addEventListener("keydown", e => {
+  if (["ArrowRight", "PageDown", " "].includes(e.key)) go(cur + 1);
+  else if (["ArrowLeft", "PageUp"].includes(e.key)) go(cur - 1);
+  else if (e.key === "Home") go(0);
+  else if (e.key === "End") go(slides.length - 1);
+});
+document.getElementById("prevZone").addEventListener("click", () => go(cur - 1));
+document.getElementById("nextZone").addEventListener("click", () => go(cur + 1));
+
+/* ---- размер шрифта на проекторе ----
+   Zoom только на области слайда: zoom на body растягивает 100vh, и панель
+   уезжает за экран (проверено 17.09.2026). Шаг запоминается в
+   localStorage и общий для всех презентаций: один раз подобрала на
+   проекторе — дальше везде так. ZOOM_BASE — стартовый масштаб этой колоды:
+   у колод с базовым кеглем 20px он выше, чем у 24px. */
+const ZOOM_BASE = 1.15;
+const ZOOM_KEY = "slides-zoom-step";
+let zoomStep = 0;
+try { zoomStep = Math.max(-3, Math.min(6, parseInt(localStorage.getItem(ZOOM_KEY), 10) || 0)); }
+catch (e) {}
+function applyZoom(){
+  const z = Math.round(ZOOM_BASE * Math.pow(1.1, zoomStep) * 100) / 100;
+  document.querySelectorAll(".slide").forEach(el => { el.style.zoom = z; });
+  document.getElementById("zoomVal").textContent = Math.round(z * 100) + "%";
+}
+function setZoom(d){
+  zoomStep = Math.max(-3, Math.min(6, zoomStep + d));
+  try { localStorage.setItem(ZOOM_KEY, String(zoomStep)); } catch (e) {}
+  applyZoom();
+}
+document.getElementById("zoomIn").addEventListener("click", () => setZoom(1));
+document.getElementById("zoomOut").addEventListener("click", () => setZoom(-1));
+document.addEventListener("keydown", e => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key === "+" || e.key === "=") setZoom(1);
+  else if (e.key === "-" || e.key === "_") setZoom(-1);
+  else return;
+  e.preventDefault();
+});
+applyZoom();
+</script>
+<p class="ai-mark" style="position:fixed;bottom:2px;right:14px;margin:0;color:#b7bccb;font:11px/1 'Segoe UI',system-ui,sans-serif">Материалы подготовлены с использованием технологий искусственного интеллекта.</p>
+</body>
+</html>
