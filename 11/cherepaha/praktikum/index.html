@@ -489,13 +489,17 @@ function cPyStep(s, mark, pad) {
    его целиком значит утопить в нём саму задачу (слайд уезжал на два
    экрана). В разборе на странице программа остаётся ПОЛНОЙ: её ученик
    набирает и запускает, и самотест её тоже запускает. */
+/* Строки здесь короче, чем в полной программе, и это не придирка к виду:
+   слайд разбора — две колонки грида, и широкая строка кода раздвигает свою
+   колонку, отбирая место у соседней. С прежним комментарием на всю строку
+   картинка пересечения ужималась до 220 точек (24.09). */
 const C_HEAD_SHORT = [
   'from turtle import *',
   '',
-  '# подпрограммы sbros() и metka() — с прошлого слайда',
+  '# sbros() и metka() — с прошлого слайда',
   '',
   'speed(0)',
-  'setheading(90)               # Черепаха смотрит вверх, turtle — вправо'
+  'setheading(90)        # Черепаха смотрит вверх'
 ];
 
 function cPyFrames(prog, short) {
@@ -611,14 +615,88 @@ function cPyPar(a, b, turn) {
    След Черепахи на координатной сетке: две фигуры разного цвета, общая
    часть закрашена. Картинка не решает задачу — она показывается только в
    разборе, когда ответ уже сдан. */
-function cPic(figs, hi) {
+/* Подписи длин сторон. Нужны там, где фигуру разбирают руками и по картинке
+   надо увидеть, из каких прямоугольников она составлена (слайд про Г-образную,
+   просьба Светы 24.09). Метка ставится у середины отрезка и отодвигается от
+   центра фигуры наружу; повторный проход по тому же отрезку — рамка обходится
+   по нескольку раз — не подписывается второй раз. */
+function cDims(f, PX, PY, cx, cy) {
+  let out = '';
+  const seen = {};
+  for (let i = 0; i + 1 < f.length; i++) {
+    const a = f[i], b = f[i + 1];
+    const len = Math.round(Math.hypot(b[0] - a[0], b[1] - a[1]));
+    if (!len) continue;
+    const mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2;
+    const key = mx + ':' + my;
+    if (seen[key]) continue;
+    seen[key] = 1;
+    const dx = mx - cx, dy = my - cy, k = Math.hypot(dx, dy) || 1;
+    const x = Number(PX(mx)) + 17 * dx / k;
+    const y = Number(PY(my)) - 17 * dy / k + 5;
+    out += '<text x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" font-size="15"' +
+           ' fill="#5c6070" text-anchor="middle">' + len + '</text>';
+  }
+  return out;
+}
+
+/* Подписи границ у осей — ИМЕНАМИ ПЕРЕМЕННЫХ из программы: ax1, ax2, ay1,
+   ay2 у первой рамки, bx1 … by2 у второй, цветом своей фигуры (решение
+   Светы 24.09: числа на чертеже читались как длины сторон, а нужно было
+   видеть, откуда в коде берётся каждая граница). Засечка стоит на своём
+   месте, подпись отодвигается, если две сошлись: у демоверсии 2027 нижние
+   границы рамок — 0 и 2, между ними шесть точек экрана. */
+function cAxes(figs, PX, PY, W, H) {
+  const COL = ['#1f5fa8', '#b3261e'];
+  const xs = [], ys = [];
+  figs.forEach(function (f, i) {
+    const b = cBox(f), p = String.fromCharCode(97 + i), c = COL[i % 2];
+    xs.push({at: Number(PX(b.x1)), t: p + 'x1', c: c});
+    xs.push({at: Number(PX(b.x2)), t: p + 'x2', c: c});
+    ys.push({at: Number(PY(b.y1)), t: p + 'y1', c: c});
+    ys.push({at: Number(PY(b.y2)), t: p + 'y2', c: c});
+  });
+  xs.sort((a, b) => a.at - b.at);
+  ys.sort((a, b) => b.at - a.at);          // снизу вверх: экранный y убывает
+  const base = Math.min(Number(PY(0)), H - 22);
+  const left = Math.max(Number(PX(0)), 40);
+  let out = '', prev = -1e9;
+  for (const m of xs) {
+    let x = m.at;
+    if (x - prev < 34) x = prev + 34;
+    prev = x;
+    out += '<line x1="' + m.at.toFixed(1) + '" y1="' + base + '" x2="' + m.at.toFixed(1) +
+           '" y2="' + (base + 5) + '" stroke="#b9bece"/>' +
+           '<text x="' + x.toFixed(1) + '" y="' + (base + 20) + '" font-size="15"' +
+           ' font-weight="600" fill="' + m.c + '" text-anchor="middle">' + m.t + '</text>';
+  }
+  prev = 1e9;
+  for (const m of ys) {
+    let y = m.at;
+    if (prev - y < 17) y = prev - 17;
+    prev = y;
+    out += '<line x1="' + (left - 5) + '" y1="' + m.at.toFixed(1) + '" x2="' + left +
+           '" y2="' + m.at.toFixed(1) + '" stroke="#b9bece"/>' +
+           '<text x="' + (left - 9) + '" y="' + (y + 5).toFixed(1) + '" font-size="15"' +
+           ' font-weight="600" fill="' + m.c + '" text-anchor="end">' + m.t + '</text>';
+  }
+  return out;
+}
+
+/* opt — что добавить к следу: {dims: true} подписывает длины сторон,
+   {coords: true} — имена границ (ax1 … by2) у осей. Без opt картинка прежняя:
+   в задачах она показывается в разборе и лишних чисел там не нужно. */
+function cPic(figs, hi, opt) {
   let x1 = Infinity, x2 = -Infinity, y1 = Infinity, y2 = -Infinity;
   for (const f of figs) {
     const b = cBox(f);
     x1 = Math.min(x1, b.x1); x2 = Math.max(x2, b.x2);
     y1 = Math.min(y1, b.y1); y2 = Math.max(y2, b.y2);
   }
-  const padw = Math.max(4, (x2 - x1) * 0.08), padh = Math.max(4, (y2 - y1) * 0.08);
+  /* Полям добавляется запас, когда по краям встают подписи: иначе нижняя
+     и верхняя метки вылезают за картинку и обрезаются (проверено на демо). */
+  const pad = 0.08 + (opt && (opt.dims || opt.coords) ? 0.06 : 0);
+  const padw = Math.max(4, (x2 - x1) * pad), padh = Math.max(4, (y2 - y1) * pad);
   x1 -= padw; x2 += padw; y1 -= padh; y2 += padh;
   const W = 460, H = Math.max(180, Math.min(320, Math.round(W * (y2 - y1) / (x2 - x1))));
   const sx = W / (x2 - x1), sy = H / (y2 - y1);
@@ -643,7 +721,12 @@ function cPic(figs, hi) {
     const pts = f.map(p => PX(p[0]) + ',' + PY(p[1])).join(' ');
     out += '<polyline points="' + pts + '" fill="none" stroke="' + cols[i % 2] +
            '" stroke-width="2"/>';
+    if (opt && opt.dims) {
+      const b = cBox(f);
+      out += cDims(f, PX, PY, (b.x1 + b.x2) / 2, (b.y1 + b.y2) / 2);
+    }
   });
+  if (opt && opt.coords) out += cAxes(figs, PX, PY, W, H);
   out += '<circle cx="' + PX(0) + '" cy="' + PY(0) + '" r="3.5" fill="#1b1b1f"/>';
   return out + '</svg>';
 }
@@ -886,6 +969,7 @@ function fMake(type, rng) {
       part: C_PART[type],
       alg: cText(t.prog),
       pic: cPic(t.figs, type <= 4 ? t.I : null),
+      figs: t.figs,               // для слайда: та же картинка, но с длинами
       question: cQuestion(t.prog, type),
       answer: String(t.val),
       form: 'num',
@@ -971,11 +1055,18 @@ function cShow(prog, type) {
 }
 
 /* Только картинка: нужна на слайде, где след объясняют до всякого кода. */
-function cShowPic(prog, hi) {
+function cShowPic(prog, hi, opt) {
+  return '<pre class="alg">' + cText(prog) + '</pre>' + cJustPic(prog, hi, opt);
+}
+
+/* Тот же след, но без текста алгоритма: на слайдах разбора условие уже
+   показано раньше, а картинка нужна рядом с программой — иначе числа в
+   ответе не с чем сличить глазами (просьба Светы 24.09). */
+function cJustPic(prog, hi, opt) {
   const figs = cRun(prog);
   let box = null;
   if (hi && figs.length === 2) box = cCross(cBox(figs[0]), cBox(figs[1]));
-  return '<pre class="alg">' + cText(prog) + '</pre>' + cPic(figs, box);
+  return cPic(figs, box, opt);
 }
 
 /* Слайд-разбор идёт в две колонки (example-slide-two-columns): слева условие
@@ -984,6 +1075,7 @@ function cShowPic(prog, hi) {
 function cShowCode(prog, type) {
   return '<pre><code>' + cEsc(cPyTwo(prog, type, true)) + '</code></pre>';
 }
+
 
 function cTaskPic(t) { return '<pre class="alg">' + t.alg + '</pre>' + t.pic; }
 function cTaskCode(t) { return '<pre><code>' + cEsc(t.code) + '</code></pre>'; }
