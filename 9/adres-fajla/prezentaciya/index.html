@@ -167,7 +167,7 @@ ul.plain li{margin:8px 0}
                            .exwrap .task{position:static} }
 
 /* разбор примера рисунком: ленты, плитки ответа, сверка с эталоном */
-.xpic svg.xstrip{display:block;width:auto;max-width:100%;height:auto;max-height:11vh}
+.xpic svg.xstrip{width:auto!important;max-width:100%;max-height:11vh}
 .step.xs{padding:6px 14px}
 .step.xs .cap{margin-bottom:2px}
 .xtiles{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0}
@@ -190,7 +190,7 @@ ul.plain li{margin:8px 0}
 .xres .xt{min-width:34px;font-size:22px;border-width:2px;border-radius:8px}
 .xres .xtiles{margin:2px 0}
 .xres .xaddr{font-size:17px;color:var(--muted)}
-.xres svg.xstrip{max-height:8vh}
+.xres svg.xstrip{width:auto!important;max-height:8vh}
 
 /* ---- размер шрифта на проекторе: A− / A+ ---- */
 .zoom{display:inline-flex;align-items:center;gap:3px;margin-left:8px}
@@ -731,6 +731,166 @@ function verdict(t, raw){
 }
 
 
+/* ============================================ разбор рисунком
+   Света, 26.09.2026: «никто читать не будет, нужна красивая яркая сверка
+   с эталоном» — и на слайдах-примерах, и в подсказках тренажёра. Лента —
+   та же, что на слайдах с объяснением (deck_slides.py strip): буквы
+   окрашены по частям схемы, под фрагментом его номер. Стили — прямо в
+   разметке: рисунок одинаков на всех страницах, какие бы классы там ни
+   были. Живёт здесь, потому что страниц с разбором четыре.
+============================================================ */
+const XCOL = {proto: "#1f5fa8", sep: "#5c6070", srv: "#137a41", file: "#a3480f"};
+const XCAP = {proto: "протокол", srv: "сервер", file: "файл"};
+const xEsc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
+                           .replace(/>/g, "&gt;");
+
+function xRoles(m){
+  const a = m.proto.length, b = a + 3, c = b + m.srv.length + 1 + m.zone.length;
+  return [...m.address].map((_, i) => i < a ? "proto" : i < b ? "sep"
+      : i < c ? "srv" : i === c ? "sep" : "file");
+}
+// буквы каждого фрагмента — в цвете той части адреса, где он стоит в эталоне
+function xFragRoles(m){
+  const roles = xRoles(m), out = {};
+  let at = 0;
+  m.parts.forEach(p => { if (!out[p]) out[p] = roles.slice(at, at + p.length);
+                         at += p.length; });
+  return out;
+}
+// роль фрагмента — по первой «значащей» букве (у «ftp:/» это протокол)
+function xRoleOfFrag(fr, f){
+  const r = (fr[f] || []).find(x => x !== "sep");
+  return r || "sep";
+}
+
+/* parts — фрагменты подряд; opt.nums — номера под ними; opt.caps — подписи
+   частей схемы; opt.mark — позиции в красной рамке; opt.fill — заливка
+   позиций (сверка: зелёная / красная); opt.frag — красить по фрагменту,
+   а не по месту (для чужой, неверной склейки). */
+function xStrip(m, parts, opt){
+  opt = opt || {};
+  const roles = xRoles(m), fr = xFragRoles(m);
+  const cw = 16.5, font = 30, pad = 10, gap = 9, top = 8, bh = 54;
+  let x = 6, pos = 0, out = "";
+  const capX = {};
+  parts.forEach((p, k) => {
+    const w = p.length * cw + 2 * pad;
+    const hot = opt.mark && opt.mark.has(k);
+    const fill = opt.fill ? opt.fill[k] : "#fff";
+    out += '<rect x="' + x + '" y="' + top + '" width="' + w + '" height="' + bh
+         + '" rx="9" fill="' + fill + '" stroke="' + (hot ? "#b3261e" : "#9aa0b4")
+         + '" stroke-width="' + (hot ? 4 : 1.8) + '"/>';
+    let spans = "";
+    [...p].forEach((ch, i) => {
+      const r = opt.frag ? ((fr[p] || [])[i] || "sep")
+              : (pos + i < roles.length ? roles[pos + i] : "sep");
+      spans += '<tspan fill="' + XCOL[r] + '">' + xEsc(ch) + '</tspan>';
+      if (r !== "sep") (capX[r] = capX[r] || []).push(x + pad + i * cw + cw / 2);
+    });
+    out += '<text x="' + (x + pad) + '" y="' + (top + 38) + '" font-size="' + font
+         + '" font-weight="700" font-family="Consolas, monospace">' + spans + '</text>';
+    if (opt.nums){
+      const cx = x + w / 2;
+      out += '<circle cx="' + cx + '" cy="' + (top + bh + 24) + '" r="17" fill="#eaf1fa"'
+           + ' stroke="#1f5fa8" stroke-width="2.2"/><text x="' + cx + '" y="'
+           + (top + bh + 32) + '" text-anchor="middle" font-size="22" font-weight="700"'
+           + ' fill="#16181d" font-family="Segoe UI, sans-serif">' + opt.nums[k] + '</text>';
+    }
+    pos += p.length;
+    x += w + gap;
+  });
+  if (opt.caps)
+    Object.keys(capX).forEach(r => {
+      const xs = capX[r];
+      const cx = Math.max(62, Math.min(x - 50, (Math.min(...xs) + Math.max(...xs)) / 2));
+      out += '<text x="' + cx + '" y="' + (top + bh + 32) + '" text-anchor="middle"'
+           + ' font-size="22" font-weight="700" font-family="Segoe UI, sans-serif" fill="'
+           + XCOL[r] + '">' + XCAP[r] + '</text>';
+    });
+  const H = top + bh + (opt.nums || opt.caps ? 50 : 10);
+  return '<svg class="xstrip" viewBox="0 0 ' + x + ' ' + H + '" role="img" aria-label="'
+       + xEsc(parts.join("")) + '" style="display:block;width:' + Math.round(x * 0.62)
+       + 'px;max-width:100%;height:auto">' + out + '</svg>';
+}
+
+// цифры ответа плитками, каждая в цвете своей части адреса; ok[k] === false —
+// плитка красная
+function xTiles(m, digits, ok, small){
+  const fr = xFragRoles(m);
+  const size = small ? "22px" : "32px", minw = small ? "34px" : "48px";
+  return '<div style="display:flex;gap:8px;flex-wrap:wrap;margin:6px 0">'
+    + [...digits].map((d, k) => {
+      const f = m.frags[+d - 1];
+      const c = f === undefined ? "#5c6070" : XCOL[xRoleOfFrag(fr, f)];
+      const bad = ok && ok[k] === false;
+      return '<span style="display:inline-block;min-width:' + minw + ';text-align:center;'
+        + 'font:700 ' + size + '/1.2 Consolas,monospace;border-radius:10px;padding:2px 8px;'
+        + 'border:3px solid ' + (bad ? "#b3261e" : c) + ';color:' + (bad ? "#b3261e" : c)
+        + ';background:' + (bad ? "#fbd9d6" : ok ? "#d9f2e3" : "#fff") + '">'
+        + xEsc(d) + '</span>';
+    }).join("") + '</div>';
+}
+
+// что особенного в задаче — короткими яркими ярлыками, а не абзацем
+function xBadges(t){
+  const m = t.meta, out = [];
+  const trap = NAMES.proto.concat(NAMES.zone, NAMES.ext);
+  const chip = (txt, bg) => '<span style="font:700 17px/1 Segoe UI,system-ui,sans-serif;'
+      + 'border-radius:30px;padding:6px 14px;color:#fff;background:' + bg + '">'
+      + xEsc(txt) + '</span>';
+  if (trap.includes(m.srv)) out.push(chip(m.srv + " — это сервер", XCOL.srv));
+  if (trap.includes(m.f)) out.push(chip(m.f + " — это файл", XCOL.file));
+  const k = m.parts.filter(p => p === "/").length;
+  if (k > 1) out.push(chip("«/» × " + k, "#b3261e"));
+  if (t.key === "colon-slashes") out.push(chip("«//» — целиком", "#b3261e"));
+  if (t.key === "slash-to-server") out.push(chip("«/» у сервера", "#b3261e"));
+  return out.length ? '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">'
+                      + out.join("") + '</div>' : "";
+}
+
+// позиции, на которые смотреть: повторная «/», «//», ловушка-имя
+function xMarks(t){
+  const m = t.meta, trap = NAMES.proto.concat(NAMES.zone, NAMES.ext), s = new Set();
+  const slashes = m.parts.filter(q => q === "/").length;
+  m.parts.forEach((p, k) => {
+    const bare = p.replace(/[.\/:]/g, "");
+    if ((p === "/" && slashes > 1) || p === "//" ||
+        (t.key === "slash-to-server" && (p === ":/" || (p[0] === "/" && p.length > 1))) ||
+        (trap.includes(bare) && (bare === m.srv || bare === m.f)))
+      s.add(k);
+  });
+  return s;
+}
+
+const xCap = s => '<div style="font:700 13px/1.2 Segoe UI,system-ui,sans-serif;'
+    + 'letter-spacing:.08em;text-transform:uppercase;color:#5c6070;margin:8px 0 2px">'
+    + s + '</div>';
+
+// Схема, нарезка с номерами и эталон — три картинки.
+function xSolution(t){
+  const m = t.meta;
+  const scheme = [m.proto, "://", m.srv + "." + m.zone, "/", m.f + "." + m.ext];
+  const nums = m.parts.map(p => m.frags.indexOf(p) + 1);
+  return xCap("1 · схема") + xStrip(m, scheme, {caps: true})
+       + xCap("2 · режем на фрагменты") + xStrip(m, m.parts, {nums: nums, mark: xMarks(t)})
+       + xBadges(t)
+       + xCap("3 · эталон") + xTiles(m, t.answer);
+}
+
+// Сверка чужого ответа с эталоном: плитки зелёные и красные по местам и
+// лента того, что склеилось из этих цифр. Пусто — если ответ не из цифр
+// списка (про это скажет вердикт словами).
+function xCompare(t, given){
+  const m = t.meta;
+  given = String(given || "").trim();
+  if (!/^\d+$/.test(given) || [...given].some(d => +d < 1 || +d > m.n)) return "";
+  const ok = [...given].map((d, k) => d === t.answer[k]);
+  const parts = [...given].map(d => m.frags[+d - 1]);
+  const fill = ok.map(v => v ? "#d9f2e3" : "#fbd9d6");
+  return xCap("твой ответ") + xTiles(m, given, ok, true)
+       + xStrip(m, parts, {fill: fill, frag: true});
+}
+
 /* ============================================ условие картинкой
    Условие рисуется на canvas, а не выводится тегами: с картинки нельзя
    выделить текст и отправить его в нейросеть — только прочитать и решить
@@ -854,134 +1014,16 @@ function condition(t){
       : `<p>${segsHtml(b.segs)}</p>`).join("");
 }
 
-/* ---- разбор примера — рисунком, а не словами (Света, 26.09.2026:
-   «никто читать не будет, нужна красивая яркая сверка с эталоном»).
-   Лента — та же, что на слайдах с объяснением (deck_slides.py strip):
-   буквы окрашены по частям схемы, под фрагментом его номер. */
-const XCOL = {proto: "#1f5fa8", sep: "#5c6070", srv: "#137a41", file: "#a3480f"};
-const XCAP = {proto: "протокол", srv: "сервер", file: "файл"};
-
-function xRoles(m){
-  const a = m.proto.length, b = a + 3, c = b + m.srv.length + 1 + m.zone.length;
-  return [...m.address].map((_, i) => i < a ? "proto" : i < b ? "sep"
-      : i < c ? "srv" : i === c ? "sep" : "file");
-}
-// роль фрагмента — по первой «значащей» букве (у «ftp:/» это протокол)
-function xRoleOf(roles, from, len){
-  for (let i = from; i < from + len; i++) if (roles[i] !== "sep") return roles[i];
-  return "sep";
-}
-
-/* parts — фрагменты подряд; opt.nums — номера под ними; opt.caps — подписи
-   частей схемы; opt.mark — позиции в красной рамке; opt.fill — заливка
-   каждой позиции (сверка: зелёная / красная). */
-function xStrip(m, parts, opt){
-  opt = opt || {};
-  const roles = xRoles(m), cw = 16.5, font = 30, pad = 10, gap = 9, top = 8, bh = 54;
-  let x = 6, pos = 0, out = "";
-  const capX = {};
-  parts.forEach((p, k) => {
-    const w = p.length * cw + 2 * pad;
-    const hot = opt.mark && opt.mark.has(k);
-    const fill = opt.fill ? opt.fill[k] : "#fff";
-    out += `<rect x="${x}" y="${top}" width="${w}" height="${bh}" rx="9" fill="${fill}"
-              stroke="${hot ? "#b3261e" : "#9aa0b4"}" stroke-width="${hot ? 4 : 1.8}"/>`;
-    let spans = "";
-    [...p].forEach((ch, i) => {
-      const r = opt.fragRoles ? (opt.fragRoles[p] || [])[i] || "sep"
-              : pos + i < roles.length ? roles[pos + i] : "sep";
-      spans += `<tspan fill="${XCOL[r]}">${esc(ch)}</tspan>`;
-      if (r !== "sep"){
-        const cx = x + pad + i * cw + cw / 2;
-        (capX[r] = capX[r] || []).push(cx);
-      }
-    });
-    out += `<text x="${x + pad}" y="${top + 38}" font-size="${font}" font-weight="700"
-              font-family="Consolas, monospace">${spans}</text>`;
-    if (opt.nums){
-      const cx = x + w / 2;
-      out += `<circle cx="${cx}" cy="${top + bh + 24}" r="17" fill="#eaf1fa" stroke="#1f5fa8"
-                stroke-width="2.2"/><text x="${cx}" y="${top + bh + 32}" text-anchor="middle"
-                font-size="22" font-weight="700" fill="#16181d">${opt.nums[k]}</text>`;
-    }
-    pos += p.length;
-    x += w + gap;
-  });
-  if (opt.caps)
-    Object.keys(capX).forEach(r => {
-      const xs = capX[r];
-      const cx = Math.max(62, Math.min(x - 50, (Math.min(...xs) + Math.max(...xs)) / 2));
-      out += `<text x="${cx}" y="${top + bh + 32}"
-                text-anchor="middle" font-size="22" font-weight="700"
-                fill="${XCOL[r]}">${XCAP[r]}</text>`;
-    });
-  const H = top + bh + (opt.nums || opt.caps ? 50 : 10);
-  return `<svg class="xstrip" viewBox="0 0 ${x} ${H}" role="img"
-            aria-label="${esc(parts.join(""))}">${out}</svg>`;
-}
-
-// цифры ответа плитками, каждая в цвете своей части адреса
-function xTiles(m, digits, marks){
-  const roles = xRoles(m);
-  let pos = 0;
-  return `<div class="xtiles">` + [...digits].map((d, k) => {
-    const f = m.frags[+d - 1] || "";
-    const r = xRoleOf(roles, pos, f.length);
-    pos += f.length;
-    const bad = marks && marks[k] === false;
-    return `<span class="xt${bad ? " bad" : ""}" style="--c:${XCOL[r]}">${esc(d)}</span>`;
-  }).join("") + `</div>`;
-}
-
-// что особенного в задаче — короткими яркими ярлыками, а не абзацем
-function xBadges(t){
-  const m = t.meta, out = [];
-  const trap = NAMES.proto.concat(NAMES.zone, NAMES.ext);
-  if (trap.includes(m.srv)) out.push(`<span class="xb srv">${esc(m.srv)} — это сервер</span>`);
-  if (trap.includes(m.f)) out.push(`<span class="xb file">${esc(m.f)} — это файл</span>`);
-  const k = m.parts.filter(p => p === "/").length;
-  if (k > 1) out.push(`<span class="xb warn">«/» × ${k}</span>`);
-  if (t.key === "colon-slashes") out.push(`<span class="xb warn">«//» — целиком</span>`);
-  if (t.key === "slash-to-server") out.push(`<span class="xb warn">«/» у сервера</span>`);
-  return out.length ? `<div class="xbadges">${out.join("")}</div>` : "";
-}
-
-function xMarks(t){
-  const m = t.meta, trap = NAMES.proto.concat(NAMES.zone, NAMES.ext), s = new Set();
-  m.parts.forEach((p, k) => {
-    if ((p === "/" && m.parts.filter(q => q === "/").length > 1) || p === "//" ||
-        (t.key === "slash-to-server" && (p === ":/" || p[0] === "/" && p.length > 1)) ||
-        trap.includes(p.replace(/\./g, "")) && (p.replace(/\./g, "") === m.srv || p.replace(/\./g, "") === m.f))
-      s.add(k);
-  });
-  return s;
-}
-
-// Сверка ответа класса с эталоном: лента по их цифрам, каждая позиция
-// зелёная или красная, и большой знак — совпало или нет.
-function xCompare(el, t){
-  const m = t.meta, box = el.querySelector(".xres");
+// Сверка ответа класса с эталоном: большой знак, плитки и лента — общие
+// с тренажёром (xCompare в gen.py).
+function xCheck(el, t){
+  const box = el.querySelector(".xres");
   const given = el.querySelector(".xin").value.trim();
   if (!given){ box.innerHTML = ""; return; }
-  if (!/^\d+$/.test(given) || [...given].some(d => +d < 1 || +d > m.n)){
-    box.innerHTML = `<div class="xverd bad">✗ только цифры от 1 до ${m.n}, подряд</div>`;
-    return;
-  }
-  const parts = [...given].map(d => m.frags[+d - 1]);
-  const ok = [...given].map((d, k) => d === t.answer[k]);
+  const pic = xCompare(t, given);
   const all = given === t.answer;
-  const fill = ok.map(v => v ? "#d9f2e3" : "#fbd9d6");
-  // буквы фрагмента — в цвете той части адреса, где он стоит в эталоне
-  const roles = xRoles(m), fragRoles = {};
-  let at = 0;
-  m.parts.forEach(p => { if (!fragRoles[p]) fragRoles[p] = roles.slice(at, at + p.length);
-                         at += p.length; });
-  box.innerHTML =
-    `<div class="xverd ${all ? "ok" : "bad"}">${all ? "✓ совпало с эталоном"
-        : "✗ не совпало"}</div>` +
-    xTiles(m, given, ok) +
-    `<div class="xpic">${xStrip(m, parts, {fill: fill, fragRoles: fragRoles})}</div>` +
-    (all ? "" : `<div class="xaddr">вышло <code>${esc(parts.join(""))}</code></div>`);
+  box.innerHTML = `<div class="xverd ${all ? "ok" : "bad"}">${all ? "✓ совпало с эталоном"
+        : pic ? "✗ не совпало" : "✗ только цифры от 1 до " + t.meta.n + ", подряд"}</div>` + pic;
 }
 
 function buildExample(el){
@@ -1015,9 +1057,9 @@ function buildExample(el){
   // набор ответа не должен листать слайды и менять шрифт
   inp.addEventListener("keydown", e => {
     e.stopPropagation();
-    if (e.key === "Enter") xCompare(el, t);
+    if (e.key === "Enter") xCheck(el, t);
   });
-  el.querySelector(".xgo").addEventListener("click", () => xCompare(el, t));
+  el.querySelector(".xgo").addEventListener("click", () => xCheck(el, t));
   // условие выше экрана закреплять нельзя — см. fitExamples() в конце файла;
   // через таймер: к этому моменту слайд показан и масштаб применён
   setTimeout(() => { if (typeof fitExamples === "function") fitExamples(); }, 0);

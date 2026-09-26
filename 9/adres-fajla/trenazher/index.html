@@ -477,6 +477,166 @@ function verdict(t, raw){
 }
 
 
+/* ============================================ разбор рисунком
+   Света, 26.09.2026: «никто читать не будет, нужна красивая яркая сверка
+   с эталоном» — и на слайдах-примерах, и в подсказках тренажёра. Лента —
+   та же, что на слайдах с объяснением (deck_slides.py strip): буквы
+   окрашены по частям схемы, под фрагментом его номер. Стили — прямо в
+   разметке: рисунок одинаков на всех страницах, какие бы классы там ни
+   были. Живёт здесь, потому что страниц с разбором четыре.
+============================================================ */
+const XCOL = {proto: "#1f5fa8", sep: "#5c6070", srv: "#137a41", file: "#a3480f"};
+const XCAP = {proto: "протокол", srv: "сервер", file: "файл"};
+const xEsc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
+                           .replace(/>/g, "&gt;");
+
+function xRoles(m){
+  const a = m.proto.length, b = a + 3, c = b + m.srv.length + 1 + m.zone.length;
+  return [...m.address].map((_, i) => i < a ? "proto" : i < b ? "sep"
+      : i < c ? "srv" : i === c ? "sep" : "file");
+}
+// буквы каждого фрагмента — в цвете той части адреса, где он стоит в эталоне
+function xFragRoles(m){
+  const roles = xRoles(m), out = {};
+  let at = 0;
+  m.parts.forEach(p => { if (!out[p]) out[p] = roles.slice(at, at + p.length);
+                         at += p.length; });
+  return out;
+}
+// роль фрагмента — по первой «значащей» букве (у «ftp:/» это протокол)
+function xRoleOfFrag(fr, f){
+  const r = (fr[f] || []).find(x => x !== "sep");
+  return r || "sep";
+}
+
+/* parts — фрагменты подряд; opt.nums — номера под ними; opt.caps — подписи
+   частей схемы; opt.mark — позиции в красной рамке; opt.fill — заливка
+   позиций (сверка: зелёная / красная); opt.frag — красить по фрагменту,
+   а не по месту (для чужой, неверной склейки). */
+function xStrip(m, parts, opt){
+  opt = opt || {};
+  const roles = xRoles(m), fr = xFragRoles(m);
+  const cw = 16.5, font = 30, pad = 10, gap = 9, top = 8, bh = 54;
+  let x = 6, pos = 0, out = "";
+  const capX = {};
+  parts.forEach((p, k) => {
+    const w = p.length * cw + 2 * pad;
+    const hot = opt.mark && opt.mark.has(k);
+    const fill = opt.fill ? opt.fill[k] : "#fff";
+    out += '<rect x="' + x + '" y="' + top + '" width="' + w + '" height="' + bh
+         + '" rx="9" fill="' + fill + '" stroke="' + (hot ? "#b3261e" : "#9aa0b4")
+         + '" stroke-width="' + (hot ? 4 : 1.8) + '"/>';
+    let spans = "";
+    [...p].forEach((ch, i) => {
+      const r = opt.frag ? ((fr[p] || [])[i] || "sep")
+              : (pos + i < roles.length ? roles[pos + i] : "sep");
+      spans += '<tspan fill="' + XCOL[r] + '">' + xEsc(ch) + '</tspan>';
+      if (r !== "sep") (capX[r] = capX[r] || []).push(x + pad + i * cw + cw / 2);
+    });
+    out += '<text x="' + (x + pad) + '" y="' + (top + 38) + '" font-size="' + font
+         + '" font-weight="700" font-family="Consolas, monospace">' + spans + '</text>';
+    if (opt.nums){
+      const cx = x + w / 2;
+      out += '<circle cx="' + cx + '" cy="' + (top + bh + 24) + '" r="17" fill="#eaf1fa"'
+           + ' stroke="#1f5fa8" stroke-width="2.2"/><text x="' + cx + '" y="'
+           + (top + bh + 32) + '" text-anchor="middle" font-size="22" font-weight="700"'
+           + ' fill="#16181d" font-family="Segoe UI, sans-serif">' + opt.nums[k] + '</text>';
+    }
+    pos += p.length;
+    x += w + gap;
+  });
+  if (opt.caps)
+    Object.keys(capX).forEach(r => {
+      const xs = capX[r];
+      const cx = Math.max(62, Math.min(x - 50, (Math.min(...xs) + Math.max(...xs)) / 2));
+      out += '<text x="' + cx + '" y="' + (top + bh + 32) + '" text-anchor="middle"'
+           + ' font-size="22" font-weight="700" font-family="Segoe UI, sans-serif" fill="'
+           + XCOL[r] + '">' + XCAP[r] + '</text>';
+    });
+  const H = top + bh + (opt.nums || opt.caps ? 50 : 10);
+  return '<svg class="xstrip" viewBox="0 0 ' + x + ' ' + H + '" role="img" aria-label="'
+       + xEsc(parts.join("")) + '" style="display:block;width:' + Math.round(x * 0.62)
+       + 'px;max-width:100%;height:auto">' + out + '</svg>';
+}
+
+// цифры ответа плитками, каждая в цвете своей части адреса; ok[k] === false —
+// плитка красная
+function xTiles(m, digits, ok, small){
+  const fr = xFragRoles(m);
+  const size = small ? "22px" : "32px", minw = small ? "34px" : "48px";
+  return '<div style="display:flex;gap:8px;flex-wrap:wrap;margin:6px 0">'
+    + [...digits].map((d, k) => {
+      const f = m.frags[+d - 1];
+      const c = f === undefined ? "#5c6070" : XCOL[xRoleOfFrag(fr, f)];
+      const bad = ok && ok[k] === false;
+      return '<span style="display:inline-block;min-width:' + minw + ';text-align:center;'
+        + 'font:700 ' + size + '/1.2 Consolas,monospace;border-radius:10px;padding:2px 8px;'
+        + 'border:3px solid ' + (bad ? "#b3261e" : c) + ';color:' + (bad ? "#b3261e" : c)
+        + ';background:' + (bad ? "#fbd9d6" : ok ? "#d9f2e3" : "#fff") + '">'
+        + xEsc(d) + '</span>';
+    }).join("") + '</div>';
+}
+
+// что особенного в задаче — короткими яркими ярлыками, а не абзацем
+function xBadges(t){
+  const m = t.meta, out = [];
+  const trap = NAMES.proto.concat(NAMES.zone, NAMES.ext);
+  const chip = (txt, bg) => '<span style="font:700 17px/1 Segoe UI,system-ui,sans-serif;'
+      + 'border-radius:30px;padding:6px 14px;color:#fff;background:' + bg + '">'
+      + xEsc(txt) + '</span>';
+  if (trap.includes(m.srv)) out.push(chip(m.srv + " — это сервер", XCOL.srv));
+  if (trap.includes(m.f)) out.push(chip(m.f + " — это файл", XCOL.file));
+  const k = m.parts.filter(p => p === "/").length;
+  if (k > 1) out.push(chip("«/» × " + k, "#b3261e"));
+  if (t.key === "colon-slashes") out.push(chip("«//» — целиком", "#b3261e"));
+  if (t.key === "slash-to-server") out.push(chip("«/» у сервера", "#b3261e"));
+  return out.length ? '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">'
+                      + out.join("") + '</div>' : "";
+}
+
+// позиции, на которые смотреть: повторная «/», «//», ловушка-имя
+function xMarks(t){
+  const m = t.meta, trap = NAMES.proto.concat(NAMES.zone, NAMES.ext), s = new Set();
+  const slashes = m.parts.filter(q => q === "/").length;
+  m.parts.forEach((p, k) => {
+    const bare = p.replace(/[.\/:]/g, "");
+    if ((p === "/" && slashes > 1) || p === "//" ||
+        (t.key === "slash-to-server" && (p === ":/" || (p[0] === "/" && p.length > 1))) ||
+        (trap.includes(bare) && (bare === m.srv || bare === m.f)))
+      s.add(k);
+  });
+  return s;
+}
+
+const xCap = s => '<div style="font:700 13px/1.2 Segoe UI,system-ui,sans-serif;'
+    + 'letter-spacing:.08em;text-transform:uppercase;color:#5c6070;margin:8px 0 2px">'
+    + s + '</div>';
+
+// Схема, нарезка с номерами и эталон — три картинки.
+function xSolution(t){
+  const m = t.meta;
+  const scheme = [m.proto, "://", m.srv + "." + m.zone, "/", m.f + "." + m.ext];
+  const nums = m.parts.map(p => m.frags.indexOf(p) + 1);
+  return xCap("1 · схема") + xStrip(m, scheme, {caps: true})
+       + xCap("2 · режем на фрагменты") + xStrip(m, m.parts, {nums: nums, mark: xMarks(t)})
+       + xBadges(t)
+       + xCap("3 · эталон") + xTiles(m, t.answer);
+}
+
+// Сверка чужого ответа с эталоном: плитки зелёные и красные по местам и
+// лента того, что склеилось из этих цифр. Пусто — если ответ не из цифр
+// списка (про это скажет вердикт словами).
+function xCompare(t, given){
+  const m = t.meta;
+  given = String(given || "").trim();
+  if (!/^\d+$/.test(given) || [...given].some(d => +d < 1 || +d > m.n)) return "";
+  const ok = [...given].map((d, k) => d === t.answer[k]);
+  const parts = [...given].map(d => m.frags[+d - 1]);
+  const fill = ok.map(v => v ? "#d9f2e3" : "#fbd9d6");
+  return xCap("твой ответ") + xTiles(m, given, ok, true)
+       + xStrip(m, parts, {fill: fill, frag: true});
+}
+
 /* ============================================ условие картинкой
    Условие рисуется на canvas, а не выводится тегами: с картинки нельзя
    выделить текст и отправить его в нейросеть — только прочитать и решить
@@ -698,10 +858,10 @@ function captureDrafts(){
 const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
                           .replace(/>/g, "&gt;");
 
-// Разбор — это ход решения, а не объявление ответа.
+// Разбор — рисунком (Света, 26.09.2026: «подсказки объяснения тоже
+// визуал»): своя склейка зелёным и красным, схема, нарезка, эталон.
 function steps(t, open){
-  const list = t.steps.map(s => `<li>${esc(s)}</li>`).join("");
-  const body = `<ol>${list}</ol><div class="rule">${esc(t.rule)}</div>`;
+  const body = (t.status === "err" ? xCompare(t, t.given) : "") + xSolution(t);
   if (open) return `<div class="why">${body}</div>`;
   return `<details class="steps"><summary>как это решается</summary>
           <div class="why">${body}</div></details>`;
