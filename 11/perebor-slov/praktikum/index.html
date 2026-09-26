@@ -537,7 +537,41 @@ function fCode(rows) {
 const F_VAR = {even: 'even', odd: 'odd', big: 'big', vowel: 'vow', cons: 'cons'};
 
 /* Условие -> выражение Python над строкой w (и строки перед if, если нужны). */
-function fPy(c, pre) {
+/* Второй способ для соседей (правка Светы 26.09): в копии s все цифры
+   одной группы заменяются одной цифрой, и «плохая пара» становится
+   куском строки: нечётные -> '1', и тогда «нечётная рядом с нулём» — это
+   '01' или '10'. Годится там, где пара задана группами цифр. */
+function fCanReplace(c) {
+  return c.k === 'alt' || (c.k === 'adjPair' && !(c.a === c.b && c.a.length === 1));
+}
+
+function fReplaceLines(pre, chars, to, note) {
+  const q = s => "'" + s + "'";
+  const rest = chars.split('').filter(x => x !== to).join('');
+  if (!pre.some(r => r[0] === '    s = w')) pre.push(['    s = w', 'копия: w ещё нужен']);
+  if (!rest) return;
+  pre.push(['    for c in ' + q(rest) + ':', note]);
+  pre.push(['        s = s.replace(c, ' + q(to) + ')', '']);
+}
+
+function fPy(c, pre, repl) {
+  const q0 = s => "'" + s + "'";
+  if (repl && fCanReplace(c)) {
+    if (c.k === 'alt') {
+      const odd = c.alpha.split('').filter(x => c.set.indexOf(x) < 0).join('');
+      fReplaceLines(pre, c.set, '0', 'чётные -> 0');
+      fReplaceLines(pre, odd, '1', 'нечётные -> 1');
+      return "s.count('00') == 0 and s.count('11') == 0";
+    }
+    if (c.a === c.b) {                         // две из одной группы рядом
+      fReplaceLines(pre, c.a, '0', 'чётные -> 0');
+      return "s.count('00') == 0";
+    }
+    const one = c.b.length === 1 ? c.b : c.a, many = c.b.length === 1 ? c.a : c.b;
+    const to = many.indexOf('1') >= 0 ? '1' : many[0];
+    fReplaceLines(pre, many, to, 'нечётные -> ' + to);
+    return 's.count(' + q0(one + to) + ') == 0 and s.count(' + q0(to + one) + ') == 0';
+  }
   const q = s => "'" + s + "'";
   if (c.k === 'cnt') {
     const cmp = {eq: ' == ', le: ' <= ', ge: ' >= '}[c.op];
@@ -589,15 +623,27 @@ function fNote(c) {
   if (c.k === 'start') return (c.neg ? 'не ' : '') + 'начинается ' + c.noun.st1;
   if (c.k === 'end') return (c.neg ? 'не ' : '') + 'оканчивается ' + c.noun.en1;
   if (c.k === 'distinct') return 'все символы разные';
-  if (c.k === 'adjPair' && c.a === c.b) return 'нет двух ' + c.a + ' подряд';
+  if (c.k === 'adjPair' && c.a === c.b && c.a.length === 1) return 'нет двух ' + c.a + ' подряд';
+  if (c.k === 'adjPair' && c.a === c.b) return 'нет двух чётных рядом';
+  if (c.k === 'adjPair') return 'нечётная не рядом с ' + (c.b.length === 1 ? c.b : c.a);
+  if (c.k === 'alt') return 'чётность чередуется';
+  if (c.k === 'adjSame') return 'нет одинаковых подряд';
   return 'соседи в порядке';
 }
 
 /* Программа целиком. ask: 'count' | 'first' | 'last'; parity: null | 0 | 1
    (остаток n % 2 у нужного номера). */
-function fProgram(spec, ask, parity) {
+function fProgram(spec, ask, parity, repl) {
   const pre = [];
-  const tests = spec.conds.map(c => [fPy(c, pre), fNote(c)]);
+  /* Условие второго способа «s.count(..) == 0 and s.count(..) == 0» —
+     по куску на строку, как на слайде. */
+  const tests = [];
+  spec.conds.forEach(c => {
+    const e = fPy(c, pre, repl);
+    if (repl && fCanReplace(c) && e.indexOf(' and ') > 0)
+      e.split(' and ').forEach((x, i) => tests.push([x, i ? '' : fNote(c)]));
+    else tests.push([e, fNote(c)]);
+  });
   if (spec.num) tests.unshift(["w[0] != '0'", 'без нуля впереди']);
   if (parity !== null && parity !== undefined)
     tests.unshift(['n % 2 == ' + parity, parity ? 'номер нечётный' : 'номер чётный']);
@@ -796,11 +842,11 @@ function fType1(rng) {
     }
     if (kind === 'evenEven') conds.push(fCond('adjPair', {a: even, b: even, what: 'цифр',
         say: 'никакие две чётные цифры не стоят рядом'}));
-    if (kind === 'alt') conds.push(fCond('alt', {set: even}));
+    if (kind === 'alt') conds.push(fCond('alt', {set: even, alpha: alpha}));
     if (kind === 'altDistinct') {
       if (sh.b < 8 || sh.L > 5) continue;
       conds.push(fCond('distinct', {what: 'цифр'}));
-      conds.push(fCond('alt', {set: even}));
+      conds.push(fCond('alt', {set: even, alpha: alpha}));
     }
     if (kind === 'twoX') {
       if (!withCnt || conds[0].op === 'eq' && conds[0].n === 1) continue;
@@ -812,8 +858,18 @@ function fType1(rng) {
     if (want < 40 || want > 200000) continue;
     if (want === r.countAny) continue;
     const verb = tPick(rng, ['Сколько существует', 'Определите количество']);
+    /* Второй способ — заменой, где пара задана группами цифр. */
+    const byRepl = conds.some(fCanReplace);
+    const how2 = !byRepl ? '' : kind === 'oddZero'
+      ? 'все нечётные цифры в копии <code>s</code> заменяем на 1 — тогда «нечётная рядом с нулём» ' +
+        'это кусок <code>01</code> или <code>10</code>'
+      : kind === 'evenEven'
+      ? 'все чётные цифры в копии <code>s</code> заменяем на 0 — тогда «две чётные рядом» это кусок <code>00</code>'
+      : 'в копии <code>s</code> чётные цифры заменяем на 0, нечётные на 1 — тогда «две одной чётности ' +
+        'рядом» это кусок <code>00</code> или <code>11</code>';
     return {
       form: 'num', part: 'числа',
+      code2: byRepl ? fProgram(spec, 'count', null, true) : '',
       question: '<p>' + verb + ' ' + fBaseWord(sh.b) + ' ' + F_LEN_NUM[sh.L] +
         ' чисел, в записи которых ' + fJoin(conds, 'nom') + (verb[0] === 'С' ? '?' : '.') + '</p>' +
         '<p class="ask">В ответе запишите целое число.</p>',
@@ -822,7 +878,9 @@ function fType1(rng) {
       explain: fExplainHead(spec) + '<p>В записи подходящего числа</p>' +
         fCondList(spec, 'nom') + '<p>Условие на <b>соседей</b> проверяется проходом ' +
         'по всем парам «цифра и следующая за ней»: одна плохая пара — и число ' +
-        'выбывает. Таких чисел <b>' + fSp(want) + '</b>.</p>[[CODE]]',
+        'выбывает. Таких чисел <b>' + fSp(want) + '</b>.</p>[[CODE]]' +
+        (byRepl ? '<p><b>Второй способ — замена.</b> ' + how2 + '. Меняем копию: первую цифру ' +
+          'и количество цифр проверяем по исходной <code>w</code>. Ответ тот же.</p>[[CODE2]]' : ''),
       meta: {spec: spec, ask: 'count', parity: null, want: want,
              traps: fTraps(spec, 'count', null, r)}
     };
@@ -1155,7 +1213,9 @@ function frz(code) {
    нарисованная frz() — копировать мышкой нечего, набирать надо руками
    (template-as-image). */
 function why(t){
-  return t.code ? t.explain.replace('[[CODE]]', frz(t.code)) : t.explain;
+  let s = t.code ? t.explain.replace('[[CODE]]', frz(t.code)) : t.explain;
+  /* Второй способ (замена) — вторая картинка, если он есть у задачи. */
+  return s.replace('[[CODE2]]', t.code2 ? frz(t.code2) : '');
 }
 
 function esc(s){ return String(s).replace(/[&<>]/g, c =>
