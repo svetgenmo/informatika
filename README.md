@@ -60,6 +60,7 @@
     - [Алгоритм достраивает число](https://svetgenmo.github.io/informatika/11/postroenie-chisla/) — Задание 5 ЕГЭ: анализ алгоритма для исполнителя
     - [Исполнитель Черепаха](https://svetgenmo.github.io/informatika/11/cherepaha/) — Задание 6 ЕГЭ: циклические алгоритмы для исполнителя
     - [Кодирование звука и изображения](https://svetgenmo.github.io/informatika/11/zvuk-i-izobrazhenie/) — Задание 7 ЕГЭ: объём звукового файла и растрового изображения
+    - [Перебор слов и чисел](https://svetgenmo.github.io/informatika/11/perebor-slov/) — Задание 8 ЕГЭ: сколько слов и чисел подходит и под каким номером слово стоит в списке
   - *Практикумы по программе*
     - [Количество информации и сжатие данных](https://svetgenmo.github.io/informatika/11/informaciya-i-szhatie/) — Обзорный практикум по содержанию ФГОС к первой паре 11 класса
     - [Код Хаффмана и условие Фано](https://svetgenmo.github.io/informatika/11/kod-huffmana/) — Обзорный практикум по содержанию ФГОС ко второй паре 11 класса
