@@ -1140,9 +1140,14 @@ function wireMail(){
    проверка отказывала честным. Теперь у двух учеников с одинаковым
    результатом коды разные, а чужой код к своей фамилии не подходит. */
 let CURRENT_CODE = "";
+// Фамилию и класс страница помнит между заходами (hw-fam / hw-kls — те же
+// ключи, что у ДЗ других классов). Компьютер в классе общий, поэтому
+// подставленную фамилию просим проверить. REMEMBERED — что подставили.
+let REMEMBERED = "";
 function wireCode(){
   const fam = document.getElementById("fam");
   const box = document.getElementById("code");
+  const hint = document.getElementById("famhint");
   const update = () => {
     const f = fam ? fam.value.trim() : "";
     CURRENT_CODE = box && surnameKey(f) ? makeCode(st, f) : "";
@@ -1150,6 +1155,9 @@ function wireCode(){
       box.textContent = CURRENT_CODE || "впиши фамилию — появится код";
       box.classList.toggle("wait", !CURRENT_CODE);
     }
+    if (hint) hint.textContent = REMEMBERED && f === REMEMBERED
+      ? "Фамилию подставил этот компьютер с прошлого раза — проверь, что она твоя."
+      : "";
   };
   if (fam) fam.addEventListener("input", update);
   update();
@@ -1170,6 +1178,10 @@ function wireSendB(){
       return;
     }
     const k = document.getElementById("kls").value.trim() || "11";
+    try {
+      localStorage.setItem("hw-fam", f);
+      localStorage.setItem("hw-kls", k);
+    } catch (e) {}
     const url = FORM.replace("ФАМИЛИЯ", encodeURIComponent(f))
                     .replace("КЛАСС", encodeURIComponent(k))
                     .replace("КОД", encodeURIComponent(CURRENT_CODE));
@@ -1188,8 +1200,13 @@ function finish(){
   const ready = st.typesDone >= MIN_TYPES;
   const famOld = document.getElementById("fam");
   const klsOld = document.getElementById("kls");
-  const fam = famOld ? famOld.value : "";
-  const kls = klsOld ? klsOld.value : "11";
+  let fam = famOld ? famOld.value : "";
+  let kls = klsOld ? klsOld.value : "11";
+  if (!famOld) try {
+    REMEMBERED = localStorage.getItem("hw-fam") || "";
+    fam = REMEMBERED;
+    kls = localStorage.getItem("hw-kls") || kls;
+  } catch (e) {}
   const box = document.getElementById("result");
   box.innerHTML =
     '<div class="card">' +
@@ -1212,6 +1229,7 @@ function finish(){
             '<div><label for="kls">Класс</label>' +
               '<input type="text" id="kls" autocomplete="off"></div>' +
           '</div>' +
+          '<p class="stats" id="famhint"></p>' +
           '<div class="row"><button id="send" class="primary">Сдать работу</button></div>' +
           '<p class="stats" id="sendnote"></p>' +
           MAILBOX
