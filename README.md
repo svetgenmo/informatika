@@ -29,6 +29,7 @@
   - [Значение логического выражения](https://svetgenmo.github.io/informatika/9/logicheskoe-vyrazhenie/) — Задание 3 ОГЭ и демоверсия 2027: И, ИЛИ, НЕ на числовой прямой и свойства числа
   - [Кратчайший путь по таблице](https://svetgenmo.github.io/informatika/9/kratchajshij-put/) — Задание 4 ОГЭ и демоверсия 2027: таблица дорог, граф и путь на нём, условие «через пункт»
   - [Исполнитель с командами](https://svetgenmo.github.io/informatika/9/ispolnitel-s-komandami/) — Задание 5 ОГЭ и демоверсия 2027: составить программу из двух команд или найти число b
+  - [Адрес файла в Интернете](https://svetgenmo.github.io/informatika/9/adres-fajla/) — Задание 7 ОГЭ: собрать адрес файла из фрагментов и записать их номера
   - *Практикумы по программе*
     - [Глобальная сеть Интернет: IP-адреса и большие данные](https://svetgenmo.github.io/informatika/9/globalnaya-set-internet/) — Обзорный практикум по программе ФГОС, урок без доступа в интернет
     - [Информационная безопасность](https://svetgenmo.github.io/informatika/9/informacionnaya-bezopasnost/) — Обзорный практикум по программе ФГОС: угрозы, аутентификация, личные данные, фишинг, кибербуллинг
