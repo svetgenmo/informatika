@@ -1,0 +1,991 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Адрес файла в Интернете — презентация</title>
+<meta name="description" content="Презентация к заданию 7 ОГЭ по информатике, 9 класс: схема адреса файла в Интернете, шесть способов разрезать адрес на фрагменты, имена-ловушки.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E7%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#16181d; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);overflow:hidden;
+     font:24px/1.45 "Segoe UI",system-ui,sans-serif}
+.mono{font-family:Consolas,"Courier New",monospace}
+
+.deck{height:100vh;display:flex;flex-direction:column}
+.stage{flex:1 1 auto;overflow-y:auto;padding:34px 56px 12px}
+.slide{display:none;max-width:1100px;margin:0 auto}
+.slide.on{display:block}
+
+h1{font-size:50px;line-height:1.1;margin:0 0 18px;text-wrap:balance}
+h2{font-size:36px;line-height:1.15;margin:0 0 20px;text-wrap:balance}
+.eyebrow{font-size:16px;letter-spacing:.1em;text-transform:uppercase;
+         color:var(--accent);font-weight:700;margin:0 0 8px}
+.lead{font-size:26px;color:var(--muted);margin:0 0 24px}
+.lead b{color:var(--ink)}
+p.note{margin-top:22px;color:var(--muted);font-size:21px}
+
+.bar{flex:0 0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+     border-top:1px solid var(--line);background:var(--card);padding:12px 24px}
+.bar .spacer{flex:1 1 auto}
+.count{color:var(--muted);font-size:17px;font-variant-numeric:tabular-nums}
+.keys{color:var(--muted);font-size:15px}
+.keys kbd{font:600 13px/1 Consolas,monospace;border:1px solid var(--line);
+     border-bottom-width:2px;border-radius:5px;padding:2px 6px;
+     background:#fff;color:var(--ink)}
+button{font:600 18px/1 inherit;padding:12px 20px;border-radius:10px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);
+       cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.35;cursor:default;border-color:var(--line);
+                color:var(--muted);background:#fff}
+button:focus-visible{outline:3px solid #a9c6e8;outline-offset:2px}
+
+/* ---- блоки разбора ---- */
+.task{border:3px solid var(--accent);border-radius:16px;padding:18px 24px;
+      background:var(--card);font-size:25px;margin:0 0 20px}
+.task p{margin:8px 0}
+.task .ask{margin-top:12px;font-weight:600}
+.steps{display:flex;flex-direction:column;gap:14px}
+.step{border:1px solid var(--line);border-radius:12px;padding:16px 22px;
+      background:#fff;font-size:23px}
+.step.hint{background:var(--hi-bg);border-color:var(--hi-line);color:var(--hi)}
+.step.answer{background:var(--ok-bg);border-color:var(--ok-line);
+             color:var(--ok);font-size:29px;font-weight:700}
+.step .cap{display:block;font-size:15px;letter-spacing:.08em;
+           text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.step.hint .cap{color:var(--hi)}
+.step.answer .cap{color:var(--ok)}
+.step b{color:var(--ink)}
+
+/* ---- само выражение ---- */
+.expr{font-size:32px;text-align:center;margin:18px 0;line-height:1.45}
+.expr.small{font-size:26px}
+.task .expr{margin:12px 0}
+
+/* ---- числовая прямая ---- */
+.axis{margin:10px 0 6px}
+.axis svg{display:block;width:100%;height:auto}
+.axis .cap{font-size:19px;color:var(--muted);margin:2px 0 10px}
+
+/* ---- разбор по значениям ---- */
+table.grid{border-collapse:collapse;font-size:22px;width:100%}
+table.grid td,table.grid th{border:1px solid var(--line);padding:10px 16px;
+     text-align:left;vertical-align:top}
+table.grid th{background:var(--card);color:var(--muted);font-size:17px;
+     letter-spacing:.05em;text-transform:uppercase;font-weight:600}
+table.grid td.k{font-weight:700;color:var(--accent);white-space:nowrap}
+table.grid td.y{color:var(--ok);font-weight:700}
+table.grid td.n{color:var(--err);font-weight:700}
+
+ol.vsteps{list-style:none;counter-reset:v;margin:0;padding:0;
+          display:flex;flex-direction:column;gap:12px}
+ol.vsteps li{counter-increment:v;display:flex;gap:18px;align-items:flex-start;
+             border:1px solid var(--line);border-left:5px solid var(--accent);
+             border-radius:12px;padding:14px 22px;background:#fff}
+ol.vsteps li::before{content:counter(v);flex:0 0 44px;height:44px;
+     border-radius:50%;background:var(--accent);color:#fff;
+     font:700 24px/44px Consolas,monospace;text-align:center}
+ol.vsteps li b{color:var(--accent)}
+ol.vsteps li .txt{font-size:23px;padding-top:6px}
+ol.vsteps li .txt small{display:block;font-size:19px;color:var(--muted);
+     margin-top:4px}
+
+ul.cards{list-style:none;padding:0;margin:0;display:grid;
+         grid-template-columns:repeat(2,1fr);gap:14px 24px}
+ul.cards li{border:1px solid var(--line);border-radius:12px;
+            padding:14px 20px;font-size:23px;background:#fff}
+ul.cards li b{color:var(--accent)}
+ul.cards li small{display:block;font-size:19px;color:var(--muted);
+                  margin-top:4px}
+ul.plain{margin:0;padding-left:26px;font-size:24px}
+ul.plain li{margin:8px 0}
+
+.two{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.box{border:1px solid var(--line);border-radius:14px;padding:18px 22px;
+     background:#fff}
+.box.warm{background:var(--hi-bg);border-color:var(--hi-line)}
+.box.cool{background:var(--ok-bg);border-color:var(--ok-line)}
+.box h3{margin:0 0 8px;font-size:26px;color:var(--accent)}
+.box.warm h3{color:var(--hi)}
+.box.cool h3{color:var(--ok)}
+.box p{margin:6px 0;font-size:21px}
+.box ul{margin:6px 0 0;padding-left:22px;font-size:21px}
+
+@media (max-width:820px){
+  body{font-size:18px}
+  .stage{padding:20px 18px 8px}
+  h1{font-size:32px} h2{font-size:25px} .lead{font-size:20px}
+  .task{font-size:20px} .step{font-size:19px}
+  .expr{font-size:23px} .expr.small{font-size:20px}
+  ul.cards,.two{grid-template-columns:1fr}
+  ol.vsteps li .txt{font-size:19px}
+}
+
+/* ---- задание 7: адрес по схеме ---- */
+.side{display:flex;gap:36px;align-items:flex-start;margin:14px 0}
+.side p{margin:0 0 12px;font-size:23px}
+.side p.q{font-size:23px}
+.side .grow{flex:1 1 0;min-width:0}
+.fragbox{flex:0 0 auto;border:2px solid var(--accent);border-radius:12px;
+         background:var(--card);padding:10px 20px;font-size:24px;
+         font-weight:700;line-height:1.6;white-space:nowrap}
+.fragbox .n{display:inline-block;width:30px;height:30px;line-height:28px;
+            border:1.5px solid var(--muted);border-radius:50%;
+            text-align:center;font-size:18px;margin-right:12px;
+            background:#fff;vertical-align:2px}
+.stripbox{background:var(--card);border:1px solid var(--line);
+          border-radius:12px;padding:12px 16px}
+.stripbox.wide{margin:6px 0 14px}
+.box .stripbox{padding:8px 10px;margin:6px 0}
+/* высота ограничена экраном: на 768 строках слайд обязан влезать без
+   прокрутки даже при шрифте 110% */
+.stripbox svg{display:block;width:100%;height:auto;max-height:24vh}
+.stripbox p.legend{font-size:18px;color:var(--muted);margin:8px 0 0}
+.task .cmds{font-weight:700;margin:6px 0 6px 28px;line-height:1.5;
+            font-family:Consolas,monospace}
+/* Слайд-пример: условие слева и на месте, шаги разбора справа. Иначе на
+   последнем шаге фрагменты уже уехали за край, а без них шаг не прочитать. */
+.exwrap{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);
+        gap:28px;align-items:start}
+.exwrap .task{position:sticky;top:0;font-size:19px;padding:12px 18px}
+.exwrap .task p{margin:5px 0}
+.exwrap .step{padding:10px 18px;font-size:21px}
+.exwrap .steps{gap:10px}
+@media (max-width:1000px){ .exwrap{grid-template-columns:1fr}
+                           .exwrap .task{position:static} }
+
+/* ---- размер шрифта на проекторе: A− / A+ ---- */
+.zoom{display:inline-flex;align-items:center;gap:3px;margin-left:8px}
+.zoom button{padding:8px 10px;font-size:15px;min-width:36px;line-height:1}
+.zoom .z{color:var(--muted);font-size:15px;min-width:46px;text-align:center;
+         font-variant-numeric:tabular-nums}
+
+/* ---- слайд-пример в две колонки ---- */
+/* Условие слева и на месте, шаги разбора справа. Иначе на пятом шаге
+   условие уже уехало за край, а без него шаг не прочитать. Правится в
+   lessons/9/two_columns.py, не здесь. */
+.exwrap{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);
+        gap:28px;align-items:start}
+.exwrap .task{position:sticky;top:0;font-size:19px;line-height:1.4;
+              padding:10px 18px;margin:0;min-width:0}
+.exwrap .task p{margin:5px 0}
+.exwrap .task .ask{margin-top:8px}
+/* колонка узкая: таблицы и длинные цепочки обязаны в неё влезать */
+.exwrap .task table{font-size:.85em;max-width:100%}
+.exwrap .task table.codetable{font-size:15px}
+.exwrap .task table.codetable td{padding:4px 6px;min-width:0}
+.exwrap .task table.codetable td.c{font-size:14px;letter-spacing:0}
+.exwrap .task table.roads{font-size:18px;margin:6px 0}
+.exwrap .task table.roads td,.exwrap .task table.roads th{width:42px;height:29px}
+.exwrap .task .chain,.exwrap .task .chains,.exwrap .task .expr{
+        overflow-wrap:anywhere;font-size:.95em}
+/* условие не помещается в экран целиком — закрепление снимает
+   fitExamples(): такое условие прокручивается вместе с шагами */
+.exwrap .task.tall{position:static}
+.exwrap .step{padding:10px 18px;font-size:21px}
+.exwrap .steps{gap:10px}
+@media (max-width:1000px){ .exwrap{grid-template-columns:1fr}
+                           .exwrap .task{position:static} }
+/* ---- /слайд-пример в две колонки ---- */
+</style>
+</head>
+<body>
+<div class="deck">
+<div class="stage" id="stage">
+
+  <!-- 1 ------------------------------------------------------------- -->
+  <section class="slide on">
+    <p class="eyebrow">ОГЭ, задание 7</p>
+    <h1>Адрес файла в Интернете</h1>
+    <p class="lead">Седьмое задание экзамена. Адрес файла разрезан на
+       <b>фрагменты</b>, у каждого свой номер. Надо собрать адрес и записать
+       номера подряд.</p>
+    <div class="side">
+      <div class="fragbox"><div><span class="n">1</span><span class="mono">star</span></div><div><span class="n">2</span><span class="mono">.gif</span></div><div><span class="n">3</span><span class="mono">/</span></div><div><span class="n">4</span><span class="mono">http</span></div><div><span class="n">5</span><span class="mono">.org</span></div><div><span class="n">6</span><span class="mono">://</span></div><div><span class="n">7</span><span class="mono">moon</span></div></div>
+      <p class="q">Файл <b>star.gif</b> лежит на сервере <b>moon.org</b>. Доступ к файлу осуществляется по протоколу <b>http</b>. Фрагменты адреса файла закодированы цифрами от 1 до 7. Запишите последовательность этих цифр, кодирующую адрес указанного файла в сети Интернет.</p>
+    </div>
+    <p class="note">Задание стоит 1 балл и решается за минуту — если знать
+       схему адреса. Без неё фрагменты складываются «на глаз», и балл
+       теряется на одной косой черте.</p>
+  </section>
+
+  <!-- 2 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">схема</p>
+    <h2>Адрес файла всегда устроен одинаково</h2>
+    <div class="stripbox wide"><svg viewBox="0 0 592 106" role="img" aria-label="http://moon.org/star.gif"><rect x="6.0" y="8" width="94.0" height="50" rx="8" fill="#fff" stroke="#9aa0b4" stroke-width="1.6"/><text x="15.0" y="43" font-size="34" font-weight="700" font-family="Consolas, monospace"><tspan fill="#1f5fa8">h</tspan><tspan fill="#1f5fa8">t</tspan><tspan fill="#1f5fa8">t</tspan><tspan fill="#1f5fa8">p</tspan></text><rect x="108.0" y="8" width="75.0" height="50" rx="8" fill="#fff" stroke="#9aa0b4" stroke-width="1.6"/><text x="117.0" y="43" font-size="34" font-weight="700" font-family="Consolas, monospace"><tspan fill="#5c6070">:</tspan><tspan fill="#5c6070">/</tspan><tspan fill="#5c6070">/</tspan></text><rect x="191.0" y="8" width="170.0" height="50" rx="8" fill="#fff" stroke="#9aa0b4" stroke-width="1.6"/><text x="200.0" y="43" font-size="34" font-weight="700" font-family="Consolas, monospace"><tspan fill="#137a41">m</tspan><tspan fill="#137a41">o</tspan><tspan fill="#137a41">o</tspan><tspan fill="#137a41">n</tspan><tspan fill="#137a41">.</tspan><tspan fill="#137a41">o</tspan><tspan fill="#137a41">r</tspan><tspan fill="#137a41">g</tspan></text><rect x="369.0" y="8" width="37.0" height="50" rx="8" fill="#fff" stroke="#9aa0b4" stroke-width="1.6"/><text x="378.0" y="43" font-size="34" font-weight="700" font-family="Consolas, monospace"><tspan fill="#5c6070">/</tspan></text><rect x="414.0" y="8" width="170.0" height="50" rx="8" fill="#fff" stroke="#9aa0b4" stroke-width="1.6"/><text x="423.0" y="43" font-size="34" font-weight="700" font-family="Consolas, monospace"><tspan fill="#a3480f">s</tspan><tspan fill="#a3480f">t</tspan><tspan fill="#a3480f">a</tspan><tspan fill="#a3480f">r</tspan><tspan fill="#a3480f">.</tspan><tspan fill="#a3480f">g</tspan><tspan fill="#a3480f">i</tspan><tspan fill="#a3480f">f</tspan></text><text x="53.0" y="88" text-anchor="middle" font-size="19" font-weight="700" fill="#1f5fa8">протокол</text><text x="276.0" y="88" text-anchor="middle" font-size="19" font-weight="700" fill="#137a41">сервер</text><text x="499.0" y="88" text-anchor="middle" font-size="19" font-weight="700" fill="#a3480f">файл</text></svg></div>
+    <div class="two">
+      <div class="box cool">
+        <h3>Три части и два разделителя</h3>
+        <p><b style="color:#1f5fa8">протокол</b> <span class="mono">://</span>
+           <b style="color:#137a41">сервер</b> <span class="mono">/</span>
+           <b style="color:#a3480f">файл</b></p>
+        <p>Сервер — имя и доменная зона: <span class="mono">moon.org</span>.
+           Файл — имя и расширение: <span class="mono">star.gif</span>.</p>
+      </div>
+      <div class="box warm">
+        <h3>Протоколы на экзамене</h3>
+        <p><span class="mono">http</span>, <span class="mono">https</span>, <span class="mono">ftp</span>. Какой — сказано в
+           условии, угадывать не надо.</p>
+      </div>
+    </div>
+    <p class="note">Первым делом пишем адрес <b>целиком</b>, по схеме:
+       <span class="mono">http://moon.org/star.gif</span>. Только потом ищем фрагменты.</p>
+  </section>
+
+  <!-- 3 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">главный приём</p>
+    <h2>Режем готовый адрес слева направо</h2>
+    <div class="side">
+      <div class="fragbox"><div><span class="n">1</span><span class="mono">star</span></div><div><span class="n">2</span><span class="mono">.gif</span></div><div><span class="n">3</span><span class="mono">/</span></div><div><span class="n">4</span><span class="mono">http</span></div><div><span class="n">5</span><span class="mono">.org</span></div><div><span class="n">6</span><span class="mono">://</span></div><div><span class="n">7</span><span class="mono">moon</span></div></div>
+      <div class="grow stripbox"><svg viewBox="0 0 558 106" role="img" aria-label="http://moon.org/star.gif"><rect x="6.0" y="8" width="79.6" height="50" rx="8" fill="#fff" stroke="#9aa0b4" stroke-width="1.6"/><text x="15.0" y="43" font-size="28" font-weight="700" font-family="Consolas, monospace"><tspan fill="#1f5fa8">h</tspan><tspan fill="#1f5fa8">t</tspan><tspan fill="#1f5fa8">t</tspan><tspan fill="#1f5fa8">p</tspan></text><circle cx="45.8" cy="80" r="15" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="2"/><text x="45.8" y="87" text-anchor="middle" font-size="19" font-weight="700" fill="#1b1b1f">4</text><rect x="93.6" y="8" width="64.2" height="50" rx="8" fill="#fff" stroke="#9aa0b4" stroke-width="1.6"/><text x="102.6" y="43" font-size="28" font-weight="700" font-family="Consolas, monospace"><tspan fill="#5c6070">:</tspan><tspan fill="#5c6070">/</tspan><tspan fill="#5c6070">/</tspan></text><circle cx="125.7" cy="80" r="15" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="2"/><text x="125.7" y="87" text-anchor="middle" font-size="19" font-weight="700" fill="#1b1b1f">6</text><rect x="165.8" y="8" width="79.6" height="50" rx="8" fill="#fff" stroke="#9aa0b4" stroke-width="1.6"/><text x="174.8" y="43" font-size="28" font-weight="700" font-family="Consolas, monospace"><tspan fill="#137a41">m</tspan><tspan fill="#137a41">o</tspan><tspan fill="#137a41">o</tspan><tspan fill="#137a41">n</tspan></text><circle cx="205.6" cy="80" r="15" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="2"/><text x="205.6" y="87" text-anchor="middle" font-size="19" font-weight="700" fill="#1b1b1f">7</text><rect x="253.4" y="8" width="79.6" height="50" rx="8" fill="#fff" stroke="#9aa0b4" stroke-width="1.6"/><text x="262.4" y="43" font-size="28" font-weight="700" font-family="Consolas, monospace"><tspan fill="#137a41">.</tspan><tspan fill="#137a41">o</tspan><tspan fill="#137a41">r</tspan><tspan fill="#137a41">g</tspan></text><circle cx="293.2" cy="80" r="15" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="2"/><text x="293.2" y="87" text-anchor="middle" font-size="19" font-weight="700" fill="#1b1b1f">5</text><rect x="341.0" y="8" width="33.4" height="50" rx="8" fill="#fff" stroke="#9aa0b4" stroke-width="1.6"/><text x="350.0" y="43" font-size="28" font-weight="700" font-family="Consolas, monospace"><tspan fill="#5c6070">/</tspan></text><circle cx="357.7" cy="80" r="15" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="2"/><text x="357.7" y="87" text-anchor="middle" font-size="19" font-weight="700" fill="#1b1b1f">3</text><rect x="382.4" y="8" width="79.6" height="50" rx="8" fill="#fff" stroke="#9aa0b4" stroke-width="1.6"/><text x="391.4" y="43" font-size="28" font-weight="700" font-family="Consolas, monospace"><tspan fill="#a3480f">s</tspan><tspan fill="#a3480f">t</tspan><tspan fill="#a3480f">a</tspan><tspan fill="#a3480f">r</tspan></text><circle cx="422.2" cy="80" r="15" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="2"/><text x="422.2" y="87" text-anchor="middle" font-size="19" font-weight="700" fill="#1b1b1f">1</text><rect x="470.0" y="8" width="79.6" height="50" rx="8" fill="#fff" stroke="#9aa0b4" stroke-width="1.6"/><text x="479.0" y="43" font-size="28" font-weight="700" font-family="Consolas, monospace"><tspan fill="#a3480f">.</tspan><tspan fill="#a3480f">g</tspan><tspan fill="#a3480f">i</tspan><tspan fill="#a3480f">f</tspan></text><circle cx="509.8" cy="80" r="15" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="2"/><text x="509.8" y="87" text-anchor="middle" font-size="19" font-weight="700" fill="#1b1b1f">2</text></svg>
+        <p class="legend">Под каждым куском — номер фрагмента из списка.
+           Номера слева направо и есть ответ: <b class="mono">4675312</b>.</p>
+      </div>
+    </div>
+    <p class="note">Проверка — обратный ход: склеить фрагменты по своим
+       цифрам и прочитать, что вышло. Фрагментов семь — значит, каждая цифра
+       от 1 до 7 стоит в ответе ровно один раз.</p>
+  </section>
+
+  <!-- 4 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">главная ловушка</p>
+    <h2>Имя совпадает с зоной или расширением</h2>
+    <div class="side">
+      <div class="fragbox"><div><span class="n">1</span><span class="mono">ftp</span></div><div><span class="n">2</span><span class="mono">gif</span></div><div><span class="n">3</span><span class="mono">.ru</span></div><div><span class="n">4</span><span class="mono">.jpg</span></div><div><span class="n">5</span><span class="mono">net</span></div><div><span class="n">6</span><span class="mono">/</span></div><div><span class="n">7</span><span class="mono">://</span></div></div>
+      <div class="grow stripbox"><svg viewBox="0 0 496 106" role="img" aria-label="ftp://gif.ru/net.jpg"><rect x="6.0" y="8" width="64.2" height="50" rx="8" fill="#fff" stroke="#9aa0b4" stroke-width="1.6"/><text x="15.0" y="43" font-size="28" font-weight="700" font-family="Consolas, monospace"><tspan fill="#1f5fa8">f</tspan><tspan fill="#1f5fa8">t</tspan><tspan fill="#1f5fa8">p</tspan></text><circle cx="38.1" cy="80" r="15" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="2"/><text x="38.1" y="87" text-anchor="middle" font-size="19" font-weight="700" fill="#1b1b1f">1</text><rect x="78.2" y="8" width="64.2" height="50" rx="8" fill="#fff" stroke="#9aa0b4" stroke-width="1.6"/><text x="87.2" y="43" font-size="28" font-weight="700" font-family="Consolas, monospace"><tspan fill="#5c6070">:</tspan><tspan fill="#5c6070">/</tspan><tspan fill="#5c6070">/</tspan></text><circle cx="110.3" cy="80" r="15" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="2"/><text x="110.3" y="87" text-anchor="middle" font-size="19" font-weight="700" fill="#1b1b1f">7</text><rect x="150.4" y="8" width="64.2" height="50" rx="8" fill="#fff" stroke="#b3261e" stroke-width="3.5"/><text x="159.4" y="43" font-size="28" font-weight="700" font-family="Consolas, monospace"><tspan fill="#137a41">g</tspan><tspan fill="#137a41">i</tspan><tspan fill="#137a41">f</tspan></text><circle cx="182.5" cy="80" r="15" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="2"/><text x="182.5" y="87" text-anchor="middle" font-size="19" font-weight="700" fill="#1b1b1f">2</text><rect x="222.6" y="8" width="64.2" height="50" rx="8" fill="#fff" stroke="#9aa0b4" stroke-width="1.6"/><text x="231.6" y="43" font-size="28" font-weight="700" font-family="Consolas, monospace"><tspan fill="#137a41">.</tspan><tspan fill="#137a41">r</tspan><tspan fill="#137a41">u</tspan></text><circle cx="254.7" cy="80" r="15" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="2"/><text x="254.7" y="87" text-anchor="middle" font-size="19" font-weight="700" fill="#1b1b1f">3</text><rect x="294.8" y="8" width="33.4" height="50" rx="8" fill="#fff" stroke="#9aa0b4" stroke-width="1.6"/><text x="303.8" y="43" font-size="28" font-weight="700" font-family="Consolas, monospace"><tspan fill="#5c6070">/</tspan></text><circle cx="311.5" cy="80" r="15" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="2"/><text x="311.5" y="87" text-anchor="middle" font-size="19" font-weight="700" fill="#1b1b1f">6</text><rect x="336.2" y="8" width="64.2" height="50" rx="8" fill="#fff" stroke="#b3261e" stroke-width="3.5"/><text x="345.2" y="43" font-size="28" font-weight="700" font-family="Consolas, monospace"><tspan fill="#a3480f">n</tspan><tspan fill="#a3480f">e</tspan><tspan fill="#a3480f">t</tspan></text><circle cx="368.3" cy="80" r="15" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="2"/><text x="368.3" y="87" text-anchor="middle" font-size="19" font-weight="700" fill="#1b1b1f">5</text><rect x="408.4" y="8" width="79.6" height="50" rx="8" fill="#fff" stroke="#9aa0b4" stroke-width="1.6"/><text x="417.4" y="43" font-size="28" font-weight="700" font-family="Consolas, monospace"><tspan fill="#a3480f">.</tspan><tspan fill="#a3480f">j</tspan><tspan fill="#a3480f">p</tspan><tspan fill="#a3480f">g</tspan></text><circle cx="448.2" cy="80" r="15" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="2"/><text x="448.2" y="87" text-anchor="middle" font-size="19" font-weight="700" fill="#1b1b1f">4</text></svg>
+        <p class="legend">Файл <b>net.jpg</b> на сервере <b>gif.ru</b>:
+           сервер называется как расширение картинки, файл — как доменная
+           зона. Решает <b>место в схеме</b>, а не слово.</p>
+      </div>
+    </div>
+    <p class="note">Так бывает почти в каждом варианте: <span class="mono">ru.txt</span> на
+       сервере <span class="mono">htm.com</span>, файл <span class="mono">http.doc</span>. Сервер — сразу
+       после <span class="mono">://</span>, файл — в конце, после одиночной <span class="mono">/</span>.
+       Перепутаешь — выйдет <span class="mono">1754623</span> вместо <span class="mono">1723654</span>.</p>
+  </section>
+
+  <!-- 5 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">как ещё режут адрес</p>
+    <h2>Точка приклеена к имени</h2>
+    <div class="side">
+      <div class="fragbox"><div><span class="n">1</span><span class="mono">://</span></div><div><span class="n">2</span><span class="mono">https</span></div><div><span class="n">3</span><span class="mono">info.</span></div><div><span class="n">4</span><span class="mono">rus</span></div><div><span class="n">5</span><span class="mono">.xls</span></div><div><span class="n">6</span><span class="mono">/</span></div><div><span class="n">7</span><span class="mono">com</span></div></div>
+      <div class="grow stripbox"><svg viewBox="0 0 558 106" role="img" aria-label="https://info.com/rus.xls"><rect x="6.0" y="8" width="95.0" height="50" rx="8" fill="#fff" stroke="#9aa0b4" stroke-width="1.6"/><text x="15.0" y="43" font-size="28" font-weight="700" font-family="Consolas, monospace"><tspan fill="#1f5fa8">h</tspan><tspan fill="#1f5fa8">t</tspan><tspan fill="#1f5fa8">t</tspan><tspan fill="#1f5fa8">p</tspan><tspan fill="#1f5fa8">s</tspan></text><circle cx="53.5" cy="80" r="15" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="2"/><text x="53.5" y="87" text-anchor="middle" font-size="19" font-weight="700" fill="#1b1b1f">2</text><rect x="109.0" y="8" width="64.2" height="50" rx="8" fill="#fff" stroke="#9aa0b4" stroke-width="1.6"/><text x="118.0" y="43" font-size="28" font-weight="700" font-family="Consolas, monospace"><tspan fill="#5c6070">:</tspan><tspan fill="#5c6070">/</tspan><tspan fill="#5c6070">/</tspan></text><circle cx="141.1" cy="80" r="15" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="2"/><text x="141.1" y="87" text-anchor="middle" font-size="19" font-weight="700" fill="#1b1b1f">1</text><rect x="181.2" y="8" width="95.0" height="50" rx="8" fill="#fff" stroke="#b3261e" stroke-width="3.5"/><text x="190.2" y="43" font-size="28" font-weight="700" font-family="Consolas, monospace"><tspan fill="#137a41">i</tspan><tspan fill="#137a41">n</tspan><tspan fill="#137a41">f</tspan><tspan fill="#137a41">o</tspan><tspan fill="#137a41">.</tspan></text><circle cx="228.7" cy="80" r="15" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="2"/><text x="228.7" y="87" text-anchor="middle" font-size="19" font-weight="700" fill="#1b1b1f">3</text><rect x="284.2" y="8" width="64.2" height="50" rx="8" fill="#fff" stroke="#b3261e" stroke-width="3.5"/><text x="293.2" y="43" font-size="28" font-weight="700" font-family="Consolas, monospace"><tspan fill="#137a41">c</tspan><tspan fill="#137a41">o</tspan><tspan fill="#137a41">m</tspan></text><circle cx="316.3" cy="80" r="15" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="2"/><text x="316.3" y="87" text-anchor="middle" font-size="19" font-weight="700" fill="#1b1b1f">7</text><rect x="356.4" y="8" width="33.4" height="50" rx="8" fill="#fff" stroke="#9aa0b4" stroke-width="1.6"/><text x="365.4" y="43" font-size="28" font-weight="700" font-family="Consolas, monospace"><tspan fill="#5c6070">/</tspan></text><circle cx="373.1" cy="80" r="15" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="2"/><text x="373.1" y="87" text-anchor="middle" font-size="19" font-weight="700" fill="#1b1b1f">6</text><rect x="397.8" y="8" width="64.2" height="50" rx="8" fill="#fff" stroke="#9aa0b4" stroke-width="1.6"/><text x="406.8" y="43" font-size="28" font-weight="700" font-family="Consolas, monospace"><tspan fill="#a3480f">r</tspan><tspan fill="#a3480f">u</tspan><tspan fill="#a3480f">s</tspan></text><circle cx="429.9" cy="80" r="15" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="2"/><text x="429.9" y="87" text-anchor="middle" font-size="19" font-weight="700" fill="#1b1b1f">4</text><rect x="470.0" y="8" width="79.6" height="50" rx="8" fill="#fff" stroke="#9aa0b4" stroke-width="1.6"/><text x="479.0" y="43" font-size="28" font-weight="700" font-family="Consolas, monospace"><tspan fill="#a3480f">.</tspan><tspan fill="#a3480f">x</tspan><tspan fill="#a3480f">l</tspan><tspan fill="#a3480f">s</tspan></text><circle cx="509.8" cy="80" r="15" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="2"/><text x="509.8" y="87" text-anchor="middle" font-size="19" font-weight="700" fill="#1b1b1f">5</text></svg>
+        <p class="legend"><span class="mono">info.</span> и <span class="mono">com</span> вместо
+           <span class="mono">info</span> и <span class="mono">.com</span>. Фрагмент с точкой в конце —
+           начало имени, без точки — его хвост.</p>
+      </div>
+    </div>
+    <p class="note">В одной задаче точка может стоять по-разному у сервера и
+       у файла: здесь <span class="mono">info.</span> + <span class="mono">com</span>, но <span class="mono">rus</span> +
+       <span class="mono">.xls</span>. Ответ: <b class="mono">2137645</b>.</p>
+  </section>
+
+  <!-- 6 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">как ещё режут адрес</p>
+    <h2>«://» разрезан на «http:» и «//»</h2>
+    <div class="side">
+      <div class="fragbox"><div><span class="n">1</span><span class="mono">txt</span></div><div><span class="n">2</span><span class="mono">.org</span></div><div><span class="n">3</span><span class="mono">//</span></div><div><span class="n">4</span><span class="mono">http:</span></div><div><span class="n">5</span><span class="mono">park.</span></div><div><span class="n">6</span><span class="mono">ftp</span></div><div><span class="n">7</span><span class="mono">/</span></div></div>
+      <div class="grow stripbox"><svg viewBox="0 0 542 106" role="img" aria-label="http://ftp.org/park.txt"><rect x="6.0" y="8" width="95.0" height="50" rx="8" fill="#fff" stroke="#b3261e" stroke-width="3.5"/><text x="15.0" y="43" font-size="28" font-weight="700" font-family="Consolas, monospace"><tspan fill="#1f5fa8">h</tspan><tspan fill="#1f5fa8">t</tspan><tspan fill="#1f5fa8">t</tspan><tspan fill="#1f5fa8">p</tspan><tspan fill="#5c6070">:</tspan></text><circle cx="53.5" cy="80" r="15" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="2"/><text x="53.5" y="87" text-anchor="middle" font-size="19" font-weight="700" fill="#1b1b1f">4</text><rect x="109.0" y="8" width="48.8" height="50" rx="8" fill="#fff" stroke="#b3261e" stroke-width="3.5"/><text x="118.0" y="43" font-size="28" font-weight="700" font-family="Consolas, monospace"><tspan fill="#5c6070">/</tspan><tspan fill="#5c6070">/</tspan></text><circle cx="133.4" cy="80" r="15" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="2"/><text x="133.4" y="87" text-anchor="middle" font-size="19" font-weight="700" fill="#1b1b1f">3</text><rect x="165.8" y="8" width="64.2" height="50" rx="8" fill="#fff" stroke="#9aa0b4" stroke-width="1.6"/><text x="174.8" y="43" font-size="28" font-weight="700" font-family="Consolas, monospace"><tspan fill="#137a41">f</tspan><tspan fill="#137a41">t</tspan><tspan fill="#137a41">p</tspan></text><circle cx="197.9" cy="80" r="15" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="2"/><text x="197.9" y="87" text-anchor="middle" font-size="19" font-weight="700" fill="#1b1b1f">6</text><rect x="238.0" y="8" width="79.6" height="50" rx="8" fill="#fff" stroke="#9aa0b4" stroke-width="1.6"/><text x="247.0" y="43" font-size="28" font-weight="700" font-family="Consolas, monospace"><tspan fill="#137a41">.</tspan><tspan fill="#137a41">o</tspan><tspan fill="#137a41">r</tspan><tspan fill="#137a41">g</tspan></text><circle cx="277.8" cy="80" r="15" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="2"/><text x="277.8" y="87" text-anchor="middle" font-size="19" font-weight="700" fill="#1b1b1f">2</text><rect x="325.6" y="8" width="33.4" height="50" rx="8" fill="#fff" stroke="#9aa0b4" stroke-width="1.6"/><text x="334.6" y="43" font-size="28" font-weight="700" font-family="Consolas, monospace"><tspan fill="#5c6070">/</tspan></text><circle cx="342.3" cy="80" r="15" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="2"/><text x="342.3" y="87" text-anchor="middle" font-size="19" font-weight="700" fill="#1b1b1f">7</text><rect x="367.0" y="8" width="95.0" height="50" rx="8" fill="#fff" stroke="#9aa0b4" stroke-width="1.6"/><text x="376.0" y="43" font-size="28" font-weight="700" font-family="Consolas, monospace"><tspan fill="#a3480f">p</tspan><tspan fill="#a3480f">a</tspan><tspan fill="#a3480f">r</tspan><tspan fill="#a3480f">k</tspan><tspan fill="#a3480f">.</tspan></text><circle cx="414.5" cy="80" r="15" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="2"/><text x="414.5" y="87" text-anchor="middle" font-size="19" font-weight="700" fill="#1b1b1f">5</text><rect x="470.0" y="8" width="64.2" height="50" rx="8" fill="#fff" stroke="#9aa0b4" stroke-width="1.6"/><text x="479.0" y="43" font-size="28" font-weight="700" font-family="Consolas, monospace"><tspan fill="#a3480f">t</tspan><tspan fill="#a3480f">x</tspan><tspan fill="#a3480f">t</tspan></text><circle cx="502.1" cy="80" r="15" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="2"/><text x="502.1" y="87" text-anchor="middle" font-size="19" font-weight="700" fill="#1b1b1f">1</text></svg>
+        <p class="legend">Двоеточие приклеено к протоколу, две косые — свой
+           фрагмент. Одиночная <span class="mono">/</span> — только перед файлом.</p>
+      </div>
+    </div>
+    <p class="note">Можно собрать тот же адрес, взяв <span class="mono">/</span> дважды
+       вместо <span class="mono">//</span>: <span class="mono">47762751</span>. Но тогда <span class="mono">//</span> остался
+       без дела, а в адрес идут <b>все</b> фрагменты. Ответ:
+       <b class="mono">4362751</b>.</p>
+  </section>
+
+  <!-- 7 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">цифры повторяются</p>
+    <h2>Косая черта нужна два или три раза</h2>
+    <div class="two">
+      <div class="box cool">
+        <h3>Шесть фрагментов — семь цифр</h3>
+        <div class="stripbox"><svg viewBox="0 0 448 106" role="img" aria-label="ftp://htm.net/cat.doc"><rect x="6.0" y="8" width="80.0" height="50" rx="8" fill="#fff" stroke="#9aa0b4" stroke-width="1.6"/><text x="15.0" y="43" font-size="23" font-weight="700" font-family="Consolas, monospace"><tspan fill="#1f5fa8">f</tspan><tspan fill="#1f5fa8">t</tspan><tspan fill="#1f5fa8">p</tspan><tspan fill="#5c6070">:</tspan><tspan fill="#5c6070">/</tspan></text><circle cx="46.0" cy="80" r="15" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="2"/><text x="46.0" y="87" text-anchor="middle" font-size="19" font-weight="700" fill="#1b1b1f">6</text><rect x="94.0" y="8" width="30.4" height="50" rx="8" fill="#fff" stroke="#b3261e" stroke-width="3.5"/><text x="103.0" y="43" font-size="23" font-weight="700" font-family="Consolas, monospace"><tspan fill="#5c6070">/</tspan></text><circle cx="109.2" cy="80" r="15" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="2"/><text x="109.2" y="87" text-anchor="middle" font-size="19" font-weight="700" fill="#1b1b1f">3</text><rect x="132.4" y="8" width="55.2" height="50" rx="8" fill="#fff" stroke="#9aa0b4" stroke-width="1.6"/><text x="141.4" y="43" font-size="23" font-weight="700" font-family="Consolas, monospace"><tspan fill="#137a41">h</tspan><tspan fill="#137a41">t</tspan><tspan fill="#137a41">m</tspan></text><circle cx="160.0" cy="80" r="15" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="2"/><text x="160.0" y="87" text-anchor="middle" font-size="19" font-weight="700" fill="#1b1b1f">1</text><rect x="195.6" y="8" width="67.6" height="50" rx="8" fill="#fff" stroke="#9aa0b4" stroke-width="1.6"/><text x="204.6" y="43" font-size="23" font-weight="700" font-family="Consolas, monospace"><tspan fill="#137a41">.</tspan><tspan fill="#137a41">n</tspan><tspan fill="#137a41">e</tspan><tspan fill="#137a41">t</tspan></text><circle cx="229.4" cy="80" r="15" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="2"/><text x="229.4" y="87" text-anchor="middle" font-size="19" font-weight="700" fill="#1b1b1f">2</text><rect x="271.2" y="8" width="30.4" height="50" rx="8" fill="#fff" stroke="#b3261e" stroke-width="3.5"/><text x="280.2" y="43" font-size="23" font-weight="700" font-family="Consolas, monospace"><tspan fill="#5c6070">/</tspan></text><circle cx="286.4" cy="80" r="15" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="2"/><text x="286.4" y="87" text-anchor="middle" font-size="19" font-weight="700" fill="#1b1b1f">3</text><rect x="309.6" y="8" width="55.2" height="50" rx="8" fill="#fff" stroke="#9aa0b4" stroke-width="1.6"/><text x="318.6" y="43" font-size="23" font-weight="700" font-family="Consolas, monospace"><tspan fill="#a3480f">c</tspan><tspan fill="#a3480f">a</tspan><tspan fill="#a3480f">t</tspan></text><circle cx="337.2" cy="80" r="15" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="2"/><text x="337.2" y="87" text-anchor="middle" font-size="19" font-weight="700" fill="#1b1b1f">4</text><rect x="372.8" y="8" width="67.6" height="50" rx="8" fill="#fff" stroke="#9aa0b4" stroke-width="1.6"/><text x="381.8" y="43" font-size="23" font-weight="700" font-family="Consolas, monospace"><tspan fill="#a3480f">.</tspan><tspan fill="#a3480f">d</tspan><tspan fill="#a3480f">o</tspan><tspan fill="#a3480f">c</tspan></text><circle cx="406.6" cy="80" r="15" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="2"/><text x="406.6" y="87" text-anchor="middle" font-size="19" font-weight="700" fill="#1b1b1f">5</text></svg></div>
+        <p><span class="mono">ftp:/</span> несёт одну косую, вторую и черту перед файлом
+           даёт фрагмент <span class="mono">/</span>: <b class="mono">6312345</b>.</p>
+      </div>
+      <div class="box cool">
+        <h3>Шесть фрагментов — восемь цифр</h3>
+        <div class="stripbox"><svg viewBox="0 0 536 106" role="img" aria-label="https://star.info/moon.gif"><rect x="6.0" y="8" width="92.4" height="50" rx="8" fill="#fff" stroke="#9aa0b4" stroke-width="1.6"/><text x="15.0" y="43" font-size="23" font-weight="700" font-family="Consolas, monospace"><tspan fill="#1f5fa8">h</tspan><tspan fill="#1f5fa8">t</tspan><tspan fill="#1f5fa8">t</tspan><tspan fill="#1f5fa8">p</tspan><tspan fill="#1f5fa8">s</tspan><tspan fill="#5c6070">:</tspan></text><circle cx="52.2" cy="80" r="15" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="2"/><text x="52.2" y="87" text-anchor="middle" font-size="19" font-weight="700" fill="#1b1b1f">4</text><rect x="106.4" y="8" width="30.4" height="50" rx="8" fill="#fff" stroke="#b3261e" stroke-width="3.5"/><text x="115.4" y="43" font-size="23" font-weight="700" font-family="Consolas, monospace"><tspan fill="#5c6070">/</tspan></text><circle cx="121.6" cy="80" r="15" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="2"/><text x="121.6" y="87" text-anchor="middle" font-size="19" font-weight="700" fill="#1b1b1f">6</text><rect x="144.8" y="8" width="30.4" height="50" rx="8" fill="#fff" stroke="#b3261e" stroke-width="3.5"/><text x="153.8" y="43" font-size="23" font-weight="700" font-family="Consolas, monospace"><tspan fill="#5c6070">/</tspan></text><circle cx="160.0" cy="80" r="15" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="2"/><text x="160.0" y="87" text-anchor="middle" font-size="19" font-weight="700" fill="#1b1b1f">6</text><rect x="183.2" y="8" width="80.0" height="50" rx="8" fill="#fff" stroke="#9aa0b4" stroke-width="1.6"/><text x="192.2" y="43" font-size="23" font-weight="700" font-family="Consolas, monospace"><tspan fill="#137a41">s</tspan><tspan fill="#137a41">t</tspan><tspan fill="#137a41">a</tspan><tspan fill="#137a41">r</tspan><tspan fill="#137a41">.</tspan></text><circle cx="223.2" cy="80" r="15" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="2"/><text x="223.2" y="87" text-anchor="middle" font-size="19" font-weight="700" fill="#1b1b1f">5</text><rect x="271.2" y="8" width="67.6" height="50" rx="8" fill="#fff" stroke="#9aa0b4" stroke-width="1.6"/><text x="280.2" y="43" font-size="23" font-weight="700" font-family="Consolas, monospace"><tspan fill="#137a41">i</tspan><tspan fill="#137a41">n</tspan><tspan fill="#137a41">f</tspan><tspan fill="#137a41">o</tspan></text><circle cx="305.0" cy="80" r="15" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="2"/><text x="305.0" y="87" text-anchor="middle" font-size="19" font-weight="700" fill="#1b1b1f">1</text><rect x="346.8" y="8" width="30.4" height="50" rx="8" fill="#fff" stroke="#b3261e" stroke-width="3.5"/><text x="355.8" y="43" font-size="23" font-weight="700" font-family="Consolas, monospace"><tspan fill="#5c6070">/</tspan></text><circle cx="362.0" cy="80" r="15" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="2"/><text x="362.0" y="87" text-anchor="middle" font-size="19" font-weight="700" fill="#1b1b1f">6</text><rect x="385.2" y="8" width="80.0" height="50" rx="8" fill="#fff" stroke="#9aa0b4" stroke-width="1.6"/><text x="394.2" y="43" font-size="23" font-weight="700" font-family="Consolas, monospace"><tspan fill="#a3480f">m</tspan><tspan fill="#a3480f">o</tspan><tspan fill="#a3480f">o</tspan><tspan fill="#a3480f">n</tspan><tspan fill="#a3480f">.</tspan></text><circle cx="425.2" cy="80" r="15" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="2"/><text x="425.2" y="87" text-anchor="middle" font-size="19" font-weight="700" fill="#1b1b1f">3</text><rect x="473.2" y="8" width="55.2" height="50" rx="8" fill="#fff" stroke="#9aa0b4" stroke-width="1.6"/><text x="482.2" y="43" font-size="23" font-weight="700" font-family="Consolas, monospace"><tspan fill="#a3480f">g</tspan><tspan fill="#a3480f">i</tspan><tspan fill="#a3480f">f</tspan></text><circle cx="500.8" cy="80" r="15" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="2"/><text x="500.8" y="87" text-anchor="middle" font-size="19" font-weight="700" fill="#1b1b1f">2</text></svg></div>
+        <p>К протоколу приклеено только двоеточие — все три косые из
+           фрагмента <span class="mono">/</span>: <b class="mono">46651632</b>.</p>
+      </div>
+    </div>
+    <p class="note">Фрагментов меньше, чем кусков адреса, — ищите, какой
+       нужен дважды. Потеряешь черту — выйдет <span class="mono">631245</span>, и адрес
+       склеится без неё.</p>
+  </section>
+
+  <!-- 8 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">как ещё режут адрес</p>
+    <h2>Косая приклеена к серверу</h2>
+    <div class="side">
+      <div class="fragbox"><div><span class="n">1</span><span class="mono">:/</span></div><div><span class="n">2</span><span class="mono">jpg</span></div><div><span class="n">3</span><span class="mono">http</span></div><div><span class="n">4</span><span class="mono">winter.</span></div><div><span class="n">5</span><span class="mono">/images.</span></div><div><span class="n">6</span><span class="mono">/</span></div><div><span class="n">7</span><span class="mono">org</span></div></div>
+      <div class="grow stripbox"><svg viewBox="0 0 619 106" role="img" aria-label="http://images.org/winter.jpg"><rect x="6.0" y="8" width="79.6" height="50" rx="8" fill="#fff" stroke="#9aa0b4" stroke-width="1.6"/><text x="15.0" y="43" font-size="28" font-weight="700" font-family="Consolas, monospace"><tspan fill="#1f5fa8">h</tspan><tspan fill="#1f5fa8">t</tspan><tspan fill="#1f5fa8">t</tspan><tspan fill="#1f5fa8">p</tspan></text><circle cx="45.8" cy="80" r="15" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="2"/><text x="45.8" y="87" text-anchor="middle" font-size="19" font-weight="700" fill="#1b1b1f">3</text><rect x="93.6" y="8" width="48.8" height="50" rx="8" fill="#fff" stroke="#b3261e" stroke-width="3.5"/><text x="102.6" y="43" font-size="28" font-weight="700" font-family="Consolas, monospace"><tspan fill="#5c6070">:</tspan><tspan fill="#5c6070">/</tspan></text><circle cx="118.0" cy="80" r="15" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="2"/><text x="118.0" y="87" text-anchor="middle" font-size="19" font-weight="700" fill="#1b1b1f">1</text><rect x="150.4" y="8" width="141.2" height="50" rx="8" fill="#fff" stroke="#b3261e" stroke-width="3.5"/><text x="159.4" y="43" font-size="28" font-weight="700" font-family="Consolas, monospace"><tspan fill="#5c6070">/</tspan><tspan fill="#137a41">i</tspan><tspan fill="#137a41">m</tspan><tspan fill="#137a41">a</tspan><tspan fill="#137a41">g</tspan><tspan fill="#137a41">e</tspan><tspan fill="#137a41">s</tspan><tspan fill="#137a41">.</tspan></text><circle cx="221.0" cy="80" r="15" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="2"/><text x="221.0" y="87" text-anchor="middle" font-size="19" font-weight="700" fill="#1b1b1f">5</text><rect x="299.6" y="8" width="64.2" height="50" rx="8" fill="#fff" stroke="#9aa0b4" stroke-width="1.6"/><text x="308.6" y="43" font-size="28" font-weight="700" font-family="Consolas, monospace"><tspan fill="#137a41">o</tspan><tspan fill="#137a41">r</tspan><tspan fill="#137a41">g</tspan></text><circle cx="331.7" cy="80" r="15" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="2"/><text x="331.7" y="87" text-anchor="middle" font-size="19" font-weight="700" fill="#1b1b1f">7</text><rect x="371.8" y="8" width="33.4" height="50" rx="8" fill="#fff" stroke="#9aa0b4" stroke-width="1.6"/><text x="380.8" y="43" font-size="28" font-weight="700" font-family="Consolas, monospace"><tspan fill="#5c6070">/</tspan></text><circle cx="388.5" cy="80" r="15" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="2"/><text x="388.5" y="87" text-anchor="middle" font-size="19" font-weight="700" fill="#1b1b1f">6</text><rect x="413.2" y="8" width="125.8" height="50" rx="8" fill="#fff" stroke="#9aa0b4" stroke-width="1.6"/><text x="422.2" y="43" font-size="28" font-weight="700" font-family="Consolas, monospace"><tspan fill="#a3480f">w</tspan><tspan fill="#a3480f">i</tspan><tspan fill="#a3480f">n</tspan><tspan fill="#a3480f">t</tspan><tspan fill="#a3480f">e</tspan><tspan fill="#a3480f">r</tspan><tspan fill="#a3480f">.</tspan></text><circle cx="476.1" cy="80" r="15" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="2"/><text x="476.1" y="87" text-anchor="middle" font-size="19" font-weight="700" fill="#1b1b1f">4</text><rect x="547.0" y="8" width="64.2" height="50" rx="8" fill="#fff" stroke="#9aa0b4" stroke-width="1.6"/><text x="556.0" y="43" font-size="28" font-weight="700" font-family="Consolas, monospace"><tspan fill="#a3480f">j</tspan><tspan fill="#a3480f">p</tspan><tspan fill="#a3480f">g</tspan></text><circle cx="579.1" cy="80" r="15" fill="#eaf1fa" stroke="#1f5fa8" stroke-width="2"/><text x="579.1" y="87" text-anchor="middle" font-size="19" font-weight="700" fill="#1b1b1f">2</text></svg>
+        <p class="legend"><span class="mono">:/</span> — двоеточие и первая косая,
+           <span class="mono">/images.</span> — вторая косая и начало сервера.</p>
+      </div>
+    </div>
+    <p class="note">Слово «images» здесь — не папка, а имя сервера
+       <span class="mono">images.org</span>. Собирайте по схеме, а не по знакомым словам. Ответ:
+       <b class="mono">3157642</b>.</p>
+  </section>
+
+  <!-- 9 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">порядок работы</p>
+    <h2>Четыре шага — и не наоборот</h2>
+    <ol class="vsteps">
+      <li><div class="txt"><b>Написать адрес целиком по схеме.</b>
+          <small>протокол :// сервер / файл — из условия, не из
+                 фрагментов.</small></div></li>
+      <li><div class="txt"><b>Резать его слева направо на фрагменты из
+          списка.</b> <small>Под каждым куском — его номер.</small></div></li>
+      <li><div class="txt"><b>Сосчитать: все ли фрагменты в деле.</b>
+          <small>Фрагментов меньше, чем кусков, — какой-то нужен
+                 дважды.</small></div></li>
+      <li><div class="txt"><b>Склеить по своим цифрам и прочитать.</b>
+          <small>В ответ — только цифры подряд.</small></div></li>
+    </ol>
+  </section>
+
+  <!-- 10 ------------------------------------------------------------ -->
+  <section class="slide">
+    <p class="eyebrow">где теряют балл</p>
+    <h2>Четыре ошибки, и все ловятся проверкой</h2>
+    <div class="two">
+      <div class="box warm">
+        <h3>Сервер и файл местами</h3>
+        <p>Имя совпало с зоной — и файл встал сразу после <span class="mono">://</span>.
+           Смотрите на место в схеме.</p>
+      </div>
+      <div class="box warm">
+        <h3>Потеряли косую</h3>
+        <p>Фрагмент <span class="mono">/</span> нужен дважды, а номер записали один раз —
+           адрес склеился без черты.</p>
+      </div>
+      <div class="box warm">
+        <h3>Фрагмент остался без дела</h3>
+        <p><span class="mono">//</span> собрали из двух <span class="mono">/</span>. Адрес тот же, но ответ
+           другой: в дело идут все фрагменты.</p>
+      </div>
+      <div class="box warm">
+        <h3>Записали лишнее</h3>
+        <p>«4 6 7 5 3 1 2», «4,6,7…», сам адрес.
+           Ответ сверяет машина: только <span class="mono">4675312</span>.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11-13: примеры собирает генератор ------------------------------ -->
+  <section class="slide" data-ex data-type="1"></section>
+  <section class="slide" data-ex data-type="3"></section>
+  <section class="slide" data-ex data-type="5"></section>
+
+  <!-- 14 ------------------------------------------------------------ -->
+  <section class="slide">
+    <p class="eyebrow">итог</p>
+    <h2>Схема, потом фрагменты</h2>
+    <div class="two">
+      <div class="box cool">
+        <h3>Схема</h3>
+        <p><b>протокол</b> <span class="mono">://</span> <b>сервер</b> <span class="mono">/</span> <b>файл</b></p>
+        <p>Сервер сразу после <span class="mono">://</span>, файл — в конце</p>
+        <p>Имя-ловушка ничего не меняет: решает место</p>
+      </div>
+      <div class="box warm">
+        <h3>Фрагменты</h3>
+        <p>Резать готовый адрес слева направо</p>
+        <p>Все фрагменты в деле; «/» может понадобиться дважды и трижды</p>
+        <p>Склеить по своим цифрам и прочитать</p>
+      </div>
+    </div>
+    <p class="note">Дальше — тренажёр: двенадцать задач, по две на каждый из
+       шести способов разрезать адрес. Имена у всех свои, страница сама
+       склеит фрагменты по вашим цифрам и покажет, что вышло.</p>
+  </section>
+
+</div>
+
+<div class="bar">
+  <button id="prev">← Назад</button>
+  <button id="next">Вперёд →</button>
+  <span class="count" id="count"></span>
+  <span class="zoom" title="Размер шрифта на экране: клавиши + и −"><button id="zoomOut" title="Мельче (клавиша −)">A−</button><span class="z" id="zoomVal"></span><button id="zoomIn" title="Крупнее (клавиша +)">A+</button></span>
+  <span class="spacer"></span>
+  <button id="step" class="primary" hidden>Показать</button>
+  <button id="reroll" hidden>Другой пример</button>
+  <span class="ai-mark" style="color:#5c6070;font-size:13px">Материалы подготовлены с использованием технологий искусственного интеллекта.</span>
+  <span class="keys"><kbd>→</kbd> слайд &middot;
+        <kbd>Пробел</kbd> шаг &middot; <kbd>F11</kbd> во весь экран</span>
+</div>
+</div>
+
+<script>
+"use strict";
+
+/* ==== БАЗА: вставлено gen.py, руками не править ==== */
+const TYPES = [
+  {"id": 0, "key": "classic", "n": 7, "len": 7, "name": "«://» целиком, точка у зоны", "rule": "Адрес собирается по схеме: протокол, «://», сервер, «/», имя файла. Здесь каждый кусок схемы — отдельный фрагмент, а точка стоит в начале зоны и расширения: «.ru», «.txt». Каждый фрагмент идёт в адрес ровно один раз."},
+  {"id": 1, "key": "dot-left", "n": 7, "len": 7, "name": "точка приклеена к имени", "rule": "Точка стоит не перед зоной, а после имени: «txt.» и «com» вместо «txt» и «.com». Смотри на точку: фрагмент с точкой в конце — начало имени сервера или файла, без точки — его окончание. Порядок частей адреса тот же."},
+  {"id": 2, "key": "colon-slashes", "n": 7, "len": 7, "name": "«://» разрезан на «http:» и «//»", "rule": "Двоеточие приклеено к протоколу («http:»), а две косые черты стоят отдельным фрагментом «//». Не перепутай «//» после протокола с одиночной «/», которая отделяет сервер от имени файла."},
+  {"id": 3, "key": "slash-twice", "n": 6, "len": 7, "name": "«/» нужна дважды", "rule": "Фрагментов шесть, а кусков адреса семь: протокол записан с двоеточием и одной косой («ftp:/»), вторую косую берут из фрагмента «/». Он же отделяет сервер от файла — значит, его номер стоит в ответе дважды. Цифры в ответе могут повторяться."},
+  {"id": 4, "key": "slash-thrice", "n": 6, "len": 8, "name": "«/» нужна трижды", "rule": "К протоколу приклеено только двоеточие («ftp:»), а все три косые черты адреса — «//» после протокола и «/» перед файлом — берутся из одного фрагмента «/». Его номер пишут три раза, и в ответе восемь цифр при шести фрагментах."},
+  {"id": 5, "key": "slash-to-server", "n": 7, "len": 7, "name": "косая приклеена к серверу", "rule": "«://» разрезан на «:/» и вторую косую, а она приклеена к началу имени сервера: «/images.». Собирай адрес по схеме, а не по словам: после протокола — «:/», затем фрагмент, который начинается с «/» и продолжает адрес сервером."}
+];
+
+const NAMES = {"proto": ["http", "https", "ftp"], "zone": ["ru", "com", "net", "org", "info"], "ext": ["txt", "doc", "jpg", "gif", "htm", "xls"], "word": ["summer", "winter", "hello", "privet", "cat", "dog", "game", "math", "rus", "spring", "water", "foto", "smile", "city", "home", "letter", "pochta", "weather", "store", "images", "hub", "big", "last", "obr", "school", "news", "book", "music", "sport", "moon", "star", "park", "tt"]};
+
+const TYPES_TOTAL = TYPES.length;
+
+/* Источник случайности — один на все страницы темы. Тренажёр, ДЗ и
+   презентация оставляют Math.random: задачи новые при каждом открытии.
+   Проверочная подменяет RND генератором по фамилии — тогда вариант у
+   ученика один и тот же, сколько бы раз он ни перезагрузил страницу. */
+let RND = Math.random;
+const randInt = (lo, hi) => lo + Math.floor(RND() * (hi - lo + 1));
+const pick = arr => arr[randInt(0, arr.length - 1)];
+const maybe = p => RND() < p;
+
+function shuffle(arr){
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--){
+    const j = randInt(0, i);
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+const sample = (arr, k) => shuffle(arr).slice(0, k);
+
+/* ------------------------------------------------------ сборка адреса */
+
+const TRAP = NAMES.proto.concat(NAMES.zone, NAMES.ext);
+
+// Имя сервера или файла. trap — взять слово, совпадающее с протоколом,
+// зоной или расширением (ru.txt, http.doc, txt.com).
+const nameOf = trap => trap ? pick(TRAP) : pick(NAMES.word);
+
+// Имя с «хвостом» (зоной или расширением) — двумя фрагментами. Точка либо
+// в начале хвоста («.ru»), либо в конце имени («net.»).
+const split2 = (name, tail, left) => left ? [name + ".", tail]
+                                          : [name, "." + tail];
+
+// Число способов собрать строку s из фрагментов, пустив в дело КАЖДЫЙ
+// (повторы разрешены). Так читается задание и на экзамене: у «http:» и
+// «//» адрес можно собрать и через «/» дважды, но тогда «//» остался бы
+// лишним — ответ из критериев всегда тот, где использованы все
+// фрагменты. Задача годится, только если такой способ ровно один.
+function parses(s, frags){
+  const full = (1 << frags.length) - 1;
+  const memo = new Map();
+  const go = (i, mask) => {
+    if (i === s.length) return mask === full ? 1 : 0;
+    const k = i + ":" + mask;
+    if (memo.has(k)) return memo.get(k);
+    let n = 0;
+    frags.forEach((f, j) => { if (s.startsWith(f, i)) n += go(i + f.length, mask | (1 << j)); });
+    memo.set(k, n);
+    return n;
+  };
+  return go(0, 0);
+}
+
+function partsFor(key, g){
+  const L = () => maybe(0.5);
+  const P = g.proto;
+  if (key === "classic")
+    return [P, "://"].concat(split2(g.srv, g.zone, false), ["/"],
+                             split2(g.f, g.ext, false));
+  if (key === "dot-left"){
+    // хотя бы одна точка приклеена к имени: так во всех задачах замера
+    const mode = pick([[true, true], [true, false], [false, true]]);
+    return [P, "://"].concat(split2(g.srv, g.zone, mode[0]), ["/"],
+                             split2(g.f, g.ext, mode[1]));
+  }
+  if (key === "colon-slashes")
+    return [P + ":", "//"].concat(split2(g.srv, g.zone, L()), ["/"],
+                                  split2(g.f, g.ext, L()));
+  if (key === "slash-twice")
+    return [P + ":/", "/"].concat(split2(g.srv, g.zone, L()), ["/"],
+                                  split2(g.f, g.ext, L()));
+  if (key === "slash-thrice")
+    return [P + ":", "/", "/"].concat(split2(g.srv, g.zone, L()), ["/"],
+                                      split2(g.f, g.ext, L()));
+  if (key === "slash-to-server")
+    return [P, ":/", "/" + g.srv + ".", g.zone, "/"].concat(
+                                      split2(g.f, g.ext, true));
+  throw new Error(key);
+}
+
+function tryMake(type){
+  // что совпадает: в 7 задачах из 10 одно из имён — «ловушка»
+  const trap = maybe(0.7) ? pick(["srv", "f", "both"]) : "";
+  const g = {
+    proto: pick(NAMES.proto),
+    srv: nameOf(trap === "srv" || trap === "both"),
+    zone: pick(NAMES.zone),
+    f: nameOf(trap === "f" || trap === "both"),
+    ext: pick(NAMES.ext)
+  };
+  if (g.srv === g.zone || g.f === g.ext) return null;     // net.net, doc.doc — не бывает
+  if (g.srv === g.f && !maybe(0.15)) return null;         // foto на foto.ru — редкость
+  const parts = partsFor(type.key, g);
+  const address = g.proto + "://" + g.srv + "." + g.zone + "/" + g.f + "." + g.ext;
+  if (parts.join("") !== address) return null;
+  const uniq = [...new Set(parts)];
+  if (uniq.length !== type.n || parts.length !== type.len) return null;
+  const frags = shuffle(uniq);
+  if (parses(address, frags) !== 1) return null;
+  const answer = parts.map(p => frags.indexOf(p) + 1).join("");
+
+  const t = {
+    type: type.id, key: type.key, name: type.name, rule: type.rule,
+    answer: answer
+  };
+  // обрамление своё (own-wording), термины экзамена — дословно
+  const frame = pick([["Файл ", " лежит на сервере "],
+                      ["Файл ", " хранится на сервере "],
+                      ["Учитель выложил файл ", " на сервер "],
+                      ["Одноклассник выложил файл ", " на сервер "]]);
+  t.blocks = [
+    {k: "p", segs: [N(frame[0]), B(g.f + "." + g.ext), N(frame[1]),
+                    B(g.srv + "." + g.zone),
+                    N(". Доступ к файлу осуществляется по протоколу "),
+                    B(g.proto), N(".")]},
+    {k: "p", segs: [N("Фрагменты адреса файла закодированы цифрами от 1 до "
+                      + type.n + ":")]},
+    {k: "cmds", lines: frags.map((f, i) => (i + 1) + ") " + f)},
+    {k: "p", segs: [N("Запишите последовательность этих цифр, кодирующую "
+                      + "адрес указанного файла в сети Интернет.")]}
+  ];
+  t.tail = "В ответ — цифры подряд.";
+  t.howto = "Только цифры, без пробелов, запятых и самого адреса.";
+  t.meta = {proto: g.proto, srv: g.srv, zone: g.zone, f: g.f, ext: g.ext,
+            address: address, parts: parts, frags: frags, n: type.n};
+  t.steps = addressSteps(t);
+  t.plain = t.blocks.map(b => b.k === "cmds" ? b.lines.join("; ") + "."
+                         : b.segs.map(s => s.t).join("")).join(" ");
+  return t;
+}
+
+const B = s => ({t: s, b: 1});
+const N = s => ({t: s, b: 0});
+
+/* ------------------------------------------------------------- разбор */
+
+function addressSteps(t){
+  const m = t.meta, steps = [];
+  steps.push("Адрес файла в Интернете собирается по схеме: протокол, «://», "
+      + "сервер, «/», имя файла. Здесь: " + m.address + ".");
+  steps.push("Режем адрес слева направо на фрагменты из списка: "
+      + m.parts.map(p => p + " (" + (m.frags.indexOf(p) + 1) + ")").join(" · ")
+      + ".");
+  const what = w => NAMES.proto.includes(w) ? "с протоколом"
+                  : NAMES.zone.includes(w) ? "с доменной зоной" : "с расширением";
+  const trapped = [];
+  if (TRAP.includes(m.f)) trapped.push("имя файла «" + m.f + "» совпадает " + what(m.f));
+  if (TRAP.includes(m.srv)) trapped.push("имя сервера «" + m.srv + "» совпадает " + what(m.srv));
+  if (trapped.length)
+    steps.push("Ловушка: " + trapped.join(", а ") + ". Место в адресе "
+        + "определяет схема, а не слово: сервер идёт сразу после «://», "
+        + "файл — после одиночной «/».");
+  if (t.key === "slash-twice" || t.key === "slash-thrice"){
+    const k = m.parts.filter(p => p === "/").length;
+    steps.push("Фрагмент «/» в адресе нужен " + (k === 2 ? "дважды" : "трижды")
+        + " — его номер " + (m.frags.indexOf("/") + 1) + " стоит в ответе "
+        + (k === 2 ? "два" : "три") + " раза. Цифр в ответе "
+        + m.parts.length + ", а фрагментов " + m.n + ".");
+  }
+  if (t.key === "colon-slashes")
+    steps.push("«//» — отдельный фрагмент; из двух «/» эту пару не собирают: "
+        + "тогда «//» остался бы без дела, а в адрес идут все фрагменты.");
+  if (t.key === "slash-to-server")
+    steps.push("Вторая косая черта из «://» приклеена к серверу: после «:/» "
+        + "идёт «/" + m.srv + ".».");
+  steps.push("Проверка: склеиваем фрагменты по цифрам — "
+      + m.parts.join("") + ". Совпало со схемой. Ответ: " + t.answer + ".");
+  return steps;
+}
+
+function makeTask(typeId){
+  const type = TYPES[typeId];
+  for (let i = 0; i < 200000; i++){
+    const t = tryMake(type);
+    if (t) return t;
+  }
+  throw new Error("не собралась задача типа " + type.key);
+}
+
+/* ------------------------------------------------------------ проверка
+   Ответ проверяется СБОРКОЙ: страница склеивает фрагменты по цифрам
+   ученика и показывает, какой адрес вышел. Верный ответ один (разбор
+   единственный, это проверено при отборе), поэтому сверка со строкой
+   ответа и сборка дают один вердикт, но подсказку даёт только сборка.
+   Запись — знак в знак: на экзамене ответ читает машина. */
+
+const code = s => "<code>" + String(s).replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</code>";
+
+function verdict(t, raw){
+  const given = String(raw).trim();
+  if (!given) return null;
+  const m = t.meta;
+  if (given === t.answer) return {ok: true, hint: null};
+
+  if (!/^\d+$/.test(given)){
+    const squeezed = given.replace(/[\s.,;\-]/g, "");
+    if (/^\d+$/.test(squeezed))
+      return {ok: false, hint: "Цифры пишут <b>подряд</b>, без пробелов и "
+              + "запятых: " + code(squeezed.slice(0, 3) + "…") + ", а не «"
+              + given.slice(0, 6) + "…». Ответ читает машина."};
+    return {ok: false, hint: "В ответе — только <b>цифры</b>, номера "
+            + "фрагментов. Сам адрес писать не нужно."};
+  }
+  const bad = given.split("").find(d => +d < 1 || +d > m.n);
+  if (bad !== undefined)
+    return {ok: false, hint: "Фрагментов всего " + m.n + ": цифры в ответе — "
+            + "<b>от 1 до " + m.n + "</b>, а у тебя есть «" + bad + "»."};
+
+  const built = given.split("").map(d => m.frags[+d - 1]).join("");
+  if (built === m.address){
+    // адрес собран, но не из всех фрагментов: «//» заменили двумя «/»
+    const unused = m.frags.filter((f, i) => !given.includes(String(i + 1)));
+    return {ok: false, hint: "Адрес собран верно, но фрагмент "
+            + code(unused[0] || "?") + " остался без дела. В ответ идут "
+            + "<b>все</b> фрагменты — возьми его вместо того, чем ты его "
+            + "заменил."};
+  }
+  const got = "По твоей записи получается " + code(built) + ", а нужен адрес "
+            + code(m.address) + ".";
+
+  const slashes = m.parts.filter(p => p === "/").length;
+  const mine = given.split("").filter(d => m.frags[+d - 1] === "/").length;
+  if (slashes > 1 && mine < slashes)
+    return {ok: false, hint: "Фрагмент «/» в этом адресе нужен <b>"
+            + (slashes === 2 ? "дважды" : "трижды") + "</b>, а в списке он "
+            + "один — его номер пишут столько раз, сколько он нужен. " + got};
+
+  const swapped = m.proto + "://" + m.f + "." + m.ext + "/" + m.srv + "." + m.zone;
+  if (built === swapped)
+    return {ok: false, hint: "<b>Перепутаны сервер и файл</b>: сразу после "
+            + "протокола идёт сервер (" + code(m.srv + "." + m.zone) + "), а "
+            + "имя файла — в конце, после одиночной «/». " + got};
+
+  if (slashes === 1){
+    const unused = m.frags.filter((f, i) => !given.includes(String(i + 1)));
+    if (unused.length)
+      return {ok: false, hint: "Не использован фрагмент " + code(unused[0])
+              + ": в этой задаче в адрес идёт <b>каждый</b>. " + got};
+  }
+  if (!built.startsWith(m.proto))
+    return {ok: false, hint: "Адрес начинается с <b>протокола</b> — "
+            + code(m.proto) + ". " + got};
+  return {ok: false, hint: got};
+}
+
+
+/* ============================================ условие картинкой
+   Условие рисуется на canvas, а не выводится тегами: с картинки нельзя
+   выделить текст и отправить его в нейросеть — только прочитать и решить
+   самому. Имена и фрагменты набраны полужирным, как в вариантах.
+
+   Рисование живёт здесь, а не в html, потому что страниц с условиями
+   несколько: тренажёр, ДЗ, проверочная.
+============================================================ */
+const COND_W = 680;
+const COND_FONT = ['17px "Segoe UI", system-ui, sans-serif',
+                   '700 17px "Segoe UI", system-ui, sans-serif',
+                   'italic 16px "Segoe UI", system-ui, sans-serif'];
+const COND_LINE = 26;
+
+function tokens(segs){
+  const out = [];
+  segs.forEach(s => {
+    String(s.t).split(/(\s+)/).forEach(w => {
+      if (w !== "") out.push({t: w, b: s.b});
+    });
+  });
+  return out;
+}
+
+function layout(ctx, segs, fonts, maxWidth){
+  const lines = [];
+  let cur = [], w = 0;
+  tokens(segs).forEach(tok => {
+    ctx.font = fonts[tok.b];
+    const tw = ctx.measureText(tok.t).width;
+    if (cur.length && w + tw > maxWidth && !/^\s+$/.test(tok.t)){
+      lines.push(cur);
+      cur = [];
+      w = 0;
+    }
+    if (!cur.length && /^\s+$/.test(tok.t)) return;   // пробел в начале
+    cur.push(tok);
+    w += tw;
+  });
+  if (cur.length) lines.push(cur);
+  return lines;
+}
+
+function drawLine(ctx, line, fonts, x, y){
+  line.forEach(tok => {
+    ctx.font = fonts[tok.b];
+    ctx.fillText(tok.t, x, y);
+    x += ctx.measureText(tok.t).width;
+  });
+}
+
+function renderCondition(t){
+  const m = document.createElement("canvas").getContext("2d");
+  const width = COND_W;
+
+  // блоки приводим к одному виду: строки сегментов с отступом
+  const plan = [];
+  let H = 0;
+  t.blocks.forEach(b => {
+    if (b.k === "cmds"){
+      plan.push({x: 28, lines: b.lines.map(l => [{t: l, b: 1}]), gap: 8});
+      H += b.lines.length * COND_LINE + 8;
+      return;
+    }
+    const segs = b.i ? b.segs.map(s => ({t: s.t, b: 2})) : b.segs;
+    const lines = layout(m, segs, COND_FONT, width);
+    plan.push({x: 0, lines: lines, gap: 8});
+    H += lines.length * COND_LINE + 8;
+  });
+
+  const dpr = Math.max(1, window.devicePixelRatio || 1);
+  const canvas = document.createElement("canvas");
+  canvas.width = width * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width = width + "px";
+  canvas.setAttribute("role", "img");
+  canvas.setAttribute("aria-label", conditionText(t));
+
+  const ctx = canvas.getContext("2d");
+  ctx.scale(dpr, dpr);
+  ctx.textBaseline = "top";
+  ctx.fillStyle = "#1b1b1f";
+
+  let y = 0;
+  plan.forEach(b => {
+    b.lines.forEach(line => {
+      drawLine(ctx, line, COND_FONT, b.x, y);
+      y += COND_LINE;
+    });
+    y += b.gap;
+  });
+  return canvas;
+}
+
+// Текст условия для программы чтения с экрана: картинка картинкой, но
+// незрячий ученик должен получить то же самое.
+function conditionText(t){
+  return t.plain;
+}
+
+/* ==== /БАЗА ==== */
+
+/* ------------------------------------------------------------------
+   Слайды-примеры собираются тем же генератором, что и тренажёр: значит,
+   на доске разбирается ровно та задача, какая потом достанется ученику.
+   Кнопка «Другой пример» перебрасывает числа — можно разобрать два-три
+   подряд, не уходя со слайда.
+------------------------------------------------------------------ */
+
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
+                          .replace(/>/g, "&gt;");
+
+// Условие на слайде — обычным html: с проектора не копируют. Имена и
+// фрагменты полужирным, как в вариантах.
+const segsHtml = segs => segs.map(s =>
+    s.b ? `<b>${esc(s.t)}</b>` : esc(s.t)).join("");
+
+function condition(t){
+  return t.blocks.map(b => b.k === "cmds"
+      ? `<div class="cmds">${b.lines.map(l => `<div>${esc(l)}</div>`).join("")}</div>`
+      : `<p>${segsHtml(b.segs)}</p>`).join("");
+}
+
+function buildExample(el){
+  const id = +el.dataset.type;
+  const t = makeTask(id);
+  const steps = t.steps.map((s, i) =>
+      `<div class="step" hidden><span class="cap">шаг ${i + 1}</span>
+         ${esc(s)}</div>`).join("");
+
+  el.innerHTML =
+    `<p class="eyebrow">разбираем вместе</p>
+     <h2>Пример: ${esc(t.name)}</h2>
+     <div class="exwrap">
+       <div class="task">${condition(t)}
+         <div class="ask">${esc(t.tail)}</div></div>
+       <div class="steps">
+         <div class="step hint" hidden><span class="cap">о чём задача</span>
+           ${esc(t.rule)}</div>
+         ${steps}
+         <div class="step answer" hidden><span class="cap">ответ</span>
+           ${esc(t.answer)}</div>
+       </div>
+     </div>`;
+  // условие выше экрана закреплять нельзя — см. fitExamples() в конце файла;
+  // через таймер: к этому моменту слайд показан и масштаб применён
+  setTimeout(() => { if (typeof fitExamples === "function") fitExamples(); }, 0);
+  el.dataset.answer = t.answer;
+}
+
+/* ------------------------------------------------------------------
+   Управление колодой: стрелки листают слайды, пробел раскрывает
+   очередной шаг разбора и только потом уходит дальше.
+------------------------------------------------------------------ */
+
+const slides = [...document.querySelectorAll(".slide")];
+let cur = 0;
+let shown = 0;
+
+const isExample = i => slides[i].hasAttribute("data-ex");
+const stepsOf = i => [...slides[i].querySelectorAll(".steps > .step")];
+
+function show(i){
+  slides[cur].classList.remove("on");
+  cur = Math.max(0, Math.min(slides.length - 1, i));
+  slides[cur].classList.add("on");
+  if (isExample(cur) && !slides[cur].dataset.answer) buildExample(slides[cur]);
+  shown = stepsOf(cur).filter(el => !el.hidden).length;
+  document.getElementById("stage").scrollTop = 0;
+  sync();
+}
+
+function sync(){
+  const total = stepsOf(cur).length;
+  const ex = isExample(cur);
+  document.getElementById("count").textContent =
+      `${cur + 1} / ${slides.length}`;
+  document.getElementById("prev").disabled = cur === 0;
+  document.getElementById("next").disabled = cur === slides.length - 1;
+
+  const stepBtn = document.getElementById("step");
+  stepBtn.hidden = total === 0;
+  document.getElementById("reroll").hidden = !ex;
+  if (total){
+    stepBtn.disabled = shown >= total;
+    stepBtn.textContent =
+        shown === 0 ? (ex ? "Показать разбор" : "Раскрыть")
+      : shown >= total ? (ex ? "Разобрано" : "Всё открыто")
+      : `Дальше (${shown}/${total})`;
+  }
+}
+
+function nextStep(){
+  const steps = stepsOf(cur);
+  if (shown >= steps.length) return false;
+  steps[shown].hidden = false;
+  steps[shown].scrollIntoView({block: "nearest", behavior: "smooth"});
+  shown++;
+  sync();
+  return true;
+}
+
+document.getElementById("prev").addEventListener("click", () => show(cur - 1));
+document.getElementById("next").addEventListener("click", () => show(cur + 1));
+document.getElementById("step").addEventListener("click", nextStep);
+document.getElementById("reroll").addEventListener("click", () => {
+  buildExample(slides[cur]); shown = 0; sync();
+});
+
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowRight" || e.key === "PageDown"){ show(cur + 1); }
+  else if (e.key === "ArrowLeft" || e.key === "PageUp"){ show(cur - 1); }
+  else if (e.key === " " || e.key === "Enter"){
+    // пробел ведёт урок: шаг за шагом, потом на следующий слайд
+    if (!nextStep()) show(cur + 1);
+  } else return;
+  e.preventDefault();
+});
+
+show(0);
+
+/* ---- размер шрифта на проекторе ----
+   Zoom только на области слайда: zoom на body растягивает 100vh, и панель
+   уезжает за экран (проверено 17.09.2026). Шаг запоминается в
+   localStorage и общий для всех презентаций: один раз подобрала на
+   проекторе — дальше везде так. ZOOM_BASE — стартовый масштаб этой колоды:
+   у колод с базовым кеглем 20px он выше, чем у 24px. */
+const ZOOM_BASE = 1.1;
+const ZOOM_KEY = "slides-zoom-step";
+let zoomStep = 0;
+try { zoomStep = Math.max(-3, Math.min(6, parseInt(localStorage.getItem(ZOOM_KEY), 10) || 0)); }
+catch (e) {}
+function applyZoom(){
+  const z = Math.round(ZOOM_BASE * Math.pow(1.1, zoomStep) * 100) / 100;
+  document.getElementById("stage").style.zoom = z;
+  document.getElementById("zoomVal").textContent = Math.round(z * 100) + "%";
+}
+function setZoom(d){
+  zoomStep = Math.max(-3, Math.min(6, zoomStep + d));
+  try { localStorage.setItem(ZOOM_KEY, String(zoomStep)); } catch (e) {}
+  applyZoom();
+}
+document.getElementById("zoomIn").addEventListener("click", () => setZoom(1));
+document.getElementById("zoomOut").addEventListener("click", () => setZoom(-1));
+document.addEventListener("keydown", e => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key === "+" || e.key === "=") setZoom(1);
+  else if (e.key === "-" || e.key === "_") setZoom(-1);
+  else return;
+  e.preventDefault();
+});
+applyZoom();
+
+/* ==== ДВЕ КОЛОНКИ: вставлено two_columns.py, руками не править ==== */
+/* Закреплять можно только условие, которое помещается в экран целиком.
+   Меряем видимые прямоугольники (на области слайда стоит zoom, и
+   clientHeight с ним не дружит) и вычитаем внутренние отступы области.
+   Проверка повторяется при смене шрифта и размера окна. */
+function fitExamples(){
+  const stage = document.getElementById("stage");
+  if (!stage) return;
+  const sr = stage.getBoundingClientRect();
+  const cs = getComputedStyle(stage);
+  const k = stage.offsetHeight ? sr.height / stage.offsetHeight : 1;
+  const room = sr.height
+             - (parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom)) * k - 8;
+  document.querySelectorAll(".slide.on .exwrap .task").forEach(tk => {
+    tk.classList.remove("tall");
+    if (tk.getBoundingClientRect().height > room) tk.classList.add("tall");
+  });
+}
+window.addEventListener("resize", fitExamples);
+["zoomIn", "zoomOut"].forEach(id => {
+  const b = document.getElementById(id);
+  if (b) b.addEventListener("click", () => setTimeout(fitExamples, 0));
+});
+document.addEventListener("keydown", e => {
+  if ("+=-_".indexOf(e.key) >= 0) setTimeout(fitExamples, 0);
+});
+setTimeout(fitExamples, 0);
+/* ==== /ДВЕ КОЛОНКИ ==== */
+</script>
+</body>
+</html>
