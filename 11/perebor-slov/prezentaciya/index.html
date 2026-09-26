@@ -337,6 +337,96 @@ print(k)
 </section>
 
 <section class="slide">
+  <span class="tag">числа · второй способ</span>
+  <h2>Соседи короче: замена</h2>
+  <div class="two">
+    <div>
+      <p>Все нечётные цифры заменяем одной — <code>'1'</code>. Тогда «нечётная
+         рядом с нулём» — это просто кусок <code>'01'</code> или
+         <code>'10'</code> в строке.</p>
+<pre><code>    s = w                    <span class="c"># копия: w ещё нужен</span>
+    for c in '135':
+        s = s.replace(c, '1')
+    if (w[0] != '0' and
+            w.count('0') == 1 and
+            s.count('01') == 0 and
+            s.count('10') == 0):
+        k += 1
+<span class="out">550</span></code></pre>
+    </div>
+    <div>
+      <table class="mini">
+        <tr><th>w</th><th>s</th><th></th></tr>
+        <tr><td><code>24053</code></td><td><code>24011</code></td><td>есть <code>'01'</code> — мимо</td></tr>
+        <tr><td><code>30422</code></td><td><code>10422</code></td><td>есть <code>'10'</code> — мимо</td></tr>
+        <tr><td><code>34022</code></td><td><code>14022</code></td><td>подходит</td></tr>
+      </table>
+      <div class="box warn"><h3>Меняем копию</h3>
+        <p>После замены в <code>s</code> не видно, какие были цифры. Поэтому
+           <code>w[0]</code> и <code>w.count('0')</code> проверяем по
+           исходной строке <code>w</code>.</p></div>
+      <p class="fnote">Ответ тот же, 550. Оба способа верны — выбирай,
+         какой понятнее.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">слова</span>
+  <h2>Каждая буква ровно один раз</h2>
+  <div class="two">
+    <div class="cond">
+      <p>Шестибуквенные слова из букв <b>Л, И, С, Т, О, К</b> по алфавиту.
+         Номер первого слова <b>с нечётным номером</b>, которое начинается с
+         С и в котором <b>каждая буква встречается ровно один раз</b>?</p>
+    </div>
+    <div class="steps">
+      <ol>
+        <li class="step" hidden>Букв 6 и длина 6: значит <b>все буквы
+            разные</b>, ни одна не повторяется и не пропущена.</li>
+        <li class="step" hidden><code>set(w)</code> склеивает повторы:
+            <code>set('СИКОТЛ')</code> — 6 букв, <code>set('СИКОТС')</code> — 5.</li>
+        <li class="step" hidden>Условие: <span class="key">len(set(w)) == len(w)</span></li>
+        <li class="step" hidden>Без <code>set</code>: флаг <code>ok</code> и
+            <code>w.count(c) == 1</code> для каждой <code>c in w</code>.</li>
+        <li class="step" hidden>Номер — из <b>полного</b> списка:
+            <code>product</code>, а не перестановки.</li>
+      </ol>
+      <div class="step box good" hidden><h3>Ответ: 31461 (слово СИКОТЛ)</h3></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">слова</span>
+  <h2>Почему не permutations</h2>
+  <div class="two">
+    <div>
+<pre><code>n = 0
+for w in product('ИКЛОСТ', repeat=6):
+    w = ''.join(w)
+    n += 1
+    if (n % 2 == 1 and
+            w[0] == 'С' and
+            len(set(w)) == len(w)):
+        print(n)
+        break
+<span class="out">31461</span></code></pre>
+    </div>
+    <div>
+      <div class="box bad"><h3>permutations нумерует по-своему</h3>
+        <p><code>permutations('ИКЛОСТ')</code> выдаёт только 720 слов без
+           повторов, и номер там свой — <b>481</b>. А в списке из условия
+           между ними стоят слова с повторами (ИИИИИИ, ИИИИИК…).</p></div>
+      <div class="box good" style="margin-top:14px"><h3>Правило</h3>
+        <p>Спрашивают <b>номер</b> — перебираем <b>весь</b> список через
+           <code>product</code> и отбираем условием. Спрашивают только
+           <b>сколько</b> — можно и <code>permutations</code>.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
   <span class="tag">шпаргалка</span>
   <h2>Что писать под условие</h2>
   <table class="mini">
