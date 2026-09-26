@@ -1409,9 +1409,14 @@ function wireMail(){
    проверка отказывала честным. Теперь у двух учеников с одинаковым
    результатом коды разные, а чужой код к своей фамилии не подходит. */
 let CURRENT_CODE = "";
+// Фамилию и класс страница помнит между заходами (hw-fam / hw-kls — те же
+// ключи, что у ДЗ других классов). Компьютер в классе общий, поэтому
+// подставленную фамилию просим проверить. REMEMBERED — что подставили.
+let REMEMBERED = "";
 function wireCode(){
   const fam = document.getElementById("fam");
   const box = document.getElementById("code");
+  const hint = document.getElementById("famhint");
   const update = () => {
     const f = fam ? fam.value.trim() : "";
     CURRENT_CODE = box && surnameKey(f) ? makeCode(st, f) : "";
@@ -1419,6 +1424,9 @@ function wireCode(){
       box.textContent = CURRENT_CODE || "впиши фамилию — появится код";
       box.classList.toggle("wait", !CURRENT_CODE);
     }
+    if (hint) hint.textContent = REMEMBERED && f === REMEMBERED
+      ? "Фамилию подставил этот компьютер с прошлого раза — проверь, что она твоя."
+      : "";
   };
   if (fam) fam.addEventListener("input", update);
   update();
@@ -1439,6 +1447,10 @@ function wireSendB(){
       return;
     }
     const k = document.getElementById("kls").value.trim() || "11";
+    try {
+      localStorage.setItem("hw-fam", f);
+      localStorage.setItem("hw-kls", k);
+    } catch (e) {}
     const url = FORM.replace("ФАМИЛИЯ", encodeURIComponent(f))
                     .replace("КЛАСС", encodeURIComponent(k))
                     .replace("КОД", encodeURIComponent(CURRENT_CODE));
@@ -1474,6 +1486,7 @@ function finish(){
             '<div><label for="kls">Класс</label>' +
               '<input type="text" id="kls" autocomplete="off" value="11"></div>' +
           '</div>' +
+          '<p class="stats" id="famhint"></p>' +
           '<div class="row"><button id="send" class="primary">Сдать работу</button></div>' +
           '<p class="stats" id="sendnote"></p>' +
           MAILBOX
@@ -1484,6 +1497,13 @@ function finish(){
     '</div>';
   const b = document.getElementById("more");
   if (b) b.addEventListener("click", nextTask);
+  // Итог рисуется заново с пустыми полями — подставляем запомненное.
+  const famEl = document.getElementById("fam");
+  if (famEl) try {
+    REMEMBERED = localStorage.getItem("hw-fam") || "";
+    famEl.value = REMEMBERED;
+    document.getElementById("kls").value = localStorage.getItem("hw-kls") || "11";
+  } catch (e) {}
   wireCode();
   wireSendB();
   wireMail();
