@@ -138,6 +138,7 @@ button:focus-visible{outline:3px solid #a9c6e8;outline-offset:2px}
        border-radius:14px;padding:20px 24px;margin-bottom:16px}
 .round h2{margin:0 0 8px;font-size:22px;color:var(--accent)}
 .round p{margin:6px 0}
+.code.wait{font-size:18px;letter-spacing:0;color:#888}
 .code{font:700 34px/1.1 Consolas,monospace;letter-spacing:3px;
       color:var(--ink);background:#fff;border:2px solid var(--ok-line);
       border-radius:10px;padding:14px 18px;margin:14px 0;
@@ -326,16 +327,43 @@ function checksum(bits){
   return cs & 0x7F;
 }
 
+/* Фамилия в коде (Света, 26.09.2026). Фамилию понимаем как первое
+   слово строчными, ё -> е: «Ермакович Анжелика» и «ермакович» дают один
+   код. Из неё получаются 40 бит (FNV-1a и xorshift32), которыми код
+   перемешивается. Та же арифметика живёт в homework.py — surname_stream. */
+function surnameKey(s){
+  return String(s || "").toLowerCase().replace(/ё/g, "е")
+    .split(/[^а-яa-z-]+/).find(w => w.replace(/-/g, "")) || "";
+}
+
+function surnameStream(fam){
+  const s = surnameKey(fam);
+  if (!s) return "0".repeat(40);
+  let h = 0x811C9DC5;
+  for (const ch of s){
+    h ^= ch.charCodeAt(0);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  const step = x => { x ^= x << 13; x ^= x >>> 17; x ^= x << 5; return x >>> 0; };
+  let x = h || 0x9E3779B9;
+  for (let i = 0; i < 4; i++) x = step(x);
+  const w1 = x = step(x), w2 = step(x);
+  return (bin(w1, 32) + bin(w2, 32)).slice(0, 40);
+}
+
 // cleanTypes здесь — верные в первом круге: по ним homework.py и считает
 // отметку (Topic.first_round), добор даёт не больше балла сверху.
-function makeCode(st){
+function makeCode(st, fam){
   const day = Math.max(0, Math.min(2047, Math.floor(
       (Date.now() - EPOCH) / 86400000)));
   const payload = bin(day, 11) + bin(Math.min(15, st.typesDone), 4) +
                   bin(Math.min(15, st.cleanTypes), 4) +
                   bin(Math.min(127, st.solved), 7) +
                   bin(Math.min(127, st.wrong), 7);
-  const bits = payload + bin(checksum(payload), 7);
+  const plain = payload + bin(checksum(payload), 7);
+  const key = surnameStream(fam);
+  let bits = "";
+  for (let i = 0; i < 40; i++) bits += plain[i] === key[i] ? "0" : "1";
   let out = "";
   for (let i = 0; i < 40; i += 5) out += ALPHABET[parseInt(bits.substr(i, 5), 2)];
   return "FP-" + out.slice(0, 4) + "-" + out.slice(4);
@@ -613,38 +641,62 @@ function render(){
   } else btn.focus();
 }
 
-/* Кнопка «Сдать»: фамилию и класс страница помнит между заходами, код
-   подставляет сам. Переписывать код руками больше не нужно — именно на
-   переписывании и брались «код не разобрался». */
-function wireSend(code){
+/* Кнопка «Сдать». Код привязан к фамилии (Света, 26.09.2026): пока
+   фамилия не вписана, кода нет, а вписанная подмешивается в код. Раньше
+   безошибочный прогон давал один код на весь класс, и проверка
+   отказывала честным. Теперь у двух учеников с одинаковым результатом
+   коды разные, а чужой код к своей фамилии не подходит.
+   Фамилию и класс страница помнит между заходами, но компьютер в классе
+   общий — подставленную фамилию просим проверить. Код в форму уходит сам:
+   переписывание руками и было источником «код не разобрался». */
+let CURRENT_CODE = "";
+function wireSend(){
   const fam = document.getElementById("fam");
-  if (!fam) return;
   const kls = document.getElementById("kls");
+  const box = document.getElementById("code");
+  const send = document.getElementById("send");
   const note = document.getElementById("sendnote");
-  // Класс страница не подставляет: одну и ту же страницу открывают
-  // разные классы параллели. Но что вписали в прошлый раз — помнит.
-  try {
-    fam.value = localStorage.getItem("hw-fam") || "";
+  const hint = document.getElementById("famhint");
+  let remembered = "";
+  if (fam) try {
+    remembered = localStorage.getItem("hw-fam") || "";
+    fam.value = remembered;
     kls.value = localStorage.getItem("hw-kls") || "";
   } catch (e) {}
-  document.getElementById("send").addEventListener("click", () => {
-    const f = fam.value.trim(), k = kls.value.trim();
-    if (!f || !k){
+  const update = () => {
+    const f = fam ? fam.value.trim() : "";
+    CURRENT_CODE = surnameKey(f) ? makeCode(st, f) : "";
+    if (box){
+      box.textContent = CURRENT_CODE || "впиши фамилию — появится код";
+      box.classList.toggle("wait", !CURRENT_CODE);
+    }
+    if (hint) hint.textContent = remembered && f === remembered
+      ? "Фамилию подставил этот компьютер с прошлого раза — проверь, что она твоя."
+      : "";
+  };
+  if (fam) fam.addEventListener("input", update);
+  update();
+  if (!send) return;
+  send.addEventListener("click", () => {
+    const k = kls.value.trim();
+    if (!CURRENT_CODE || !k){
       note.textContent = "Впиши фамилию и класс — иначе непонятно, "
                        + "чья это работа.";
-      (f ? kls : fam).focus();
+      (CURRENT_CODE ? kls : fam).focus();
       return;
     }
     try {
-      localStorage.setItem("hw-fam", f);
+      localStorage.setItem("hw-fam", fam.value.trim());
       localStorage.setItem("hw-kls", k);
     } catch (e) {}
-    const url = FORM.replace("ФАМИЛИЯ", encodeURIComponent(f))
+    const url = FORM.replace("ФАМИЛИЯ", encodeURIComponent(fam.value.trim()))
                     .replace("КЛАСС", encodeURIComponent(k))
-                    .replace("КОД", encodeURIComponent(code));
+                    .replace("КОД", encodeURIComponent(CURRENT_CODE));
     window.open(url, "_blank", "noopener");
-    note.textContent = "Форма открылась в новой вкладке. Не забудь нажать "
-                     + "в ней «Отправить».";
+    note.innerHTML = "Форма открылась в новой вкладке. Работа сдана, только "
+      + "когда в форме нажата «Отправить». Вкладка не открылась — "
+      + '<a href="' + url + '" target="_blank" rel="noopener">открой форму '
+      + "по этой ссылке</a>.";
   });
 }
 
@@ -681,7 +733,6 @@ function renderFinish(){
   renderTypes();
   const done = st.typesDone, mark = markNow(), cap = capMark();
   const all = done >= TYPES_TOTAL;
-  const code = makeCode(st);
   const canRaise = !all && mark < cap;
 
   // Остановиться можно на любой ступени, поэтому «дальше» — не подачка,
@@ -702,20 +753,30 @@ function renderFinish(){
          ${TYPES_TOTAL} &middot; закрыто поворотов: <b>${done}</b> &middot;
          решено задач: <b>${st.solved}</b> &middot;
          ошибок: <b>${st.wrong}</b></p>
-      <div class="code">${code}</div>
-      <p class="stats">Это код твоей работы. Он у каждого свой и зависит
-         от того, сколько и как ты решал.</p>
+      <div class="code" id="code"></div>
+      <p class="stats">Это код твоей работы. Он собран из твоей фамилии и
+         того, сколько и как ты решал: у соседа с тем же результатом
+         код другой. Поменяешь фамилию — поменяется и код.</p>
       ${FORM ? `<div class="send">
         <label>Фамилия
           <input id="fam" autocomplete="off" placeholder="как в журнале"></label>
         <label>Класс
           <input id="kls" autocomplete="off" placeholder="7б"
                  style="width:110px"></label>
+        <p class="stats note" id="famhint"></p>
         <button id="send" class="primary">Сдать работу</button>
         <p class="stats note" id="sendnote">Кнопка откроет форму: фамилия,
            класс и код уже будут вписаны — останется нажать
            «Отправить».</p>
-      </div>` : `<ol class="todo">
+      </div>` : `<div class="send">
+        <label>Фамилия
+          <input id="fam" autocomplete="off" placeholder="как в журнале"></label>
+        <label>Класс
+          <input id="kls" autocomplete="off" placeholder="7б"
+                 style="width:110px"></label>
+        <p class="stats note" id="famhint"></p>
+      </div>
+      <ol class="todo">
         <li>Открой форму сдачи:<br>
             <a href="https://forms.gle/gKBZNb5rVbcv65Ls5" target="_blank" rel="noopener">https://forms.gle/gKBZNb5rVbcv65Ls5</a></li>
         <li>Впиши фамилию, класс и этот код — <b>ровно как здесь</b>.</li>
@@ -723,7 +784,7 @@ function renderFinish(){
     </div>
     <div class="row">${more}</div>`;
 
-  wireSend(code);
+  wireSend();
   const back = document.getElementById("back");
   if (back) back.addEventListener("click", nextTask);
   document.getElementById("again").addEventListener("click", restart);

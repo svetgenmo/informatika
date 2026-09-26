@@ -91,6 +91,7 @@ button:disabled{opacity:.4;cursor:default;border-color:var(--line);color:var(--m
 .why{margin-top:8px;font-size:15.5px;color:var(--ink);font-weight:400;display:block}
 .note{border:1px solid var(--hi-line);background:var(--hi-bg);border-radius:10px;
       padding:11px 15px;margin:12px 0;font-size:15.5px}
+.code.wait{font-size:18px;letter-spacing:0;color:#888}
 .code{font:700 26px/1.2 Consolas,monospace;letter-spacing:.06em;
       background:var(--card);border:2px dashed var(--accent);border-radius:12px;
       padding:16px;text-align:center;margin:12px 0;user-select:all}
@@ -1061,14 +1062,41 @@ function checksum(bitstr){
 /* Принимает состояние аргументом и ничего не знает про страницу: этот
    кусок (от const ALPHABET до пометки «состояние») общий движок
    homework.py вырезает и запускает в node, сверяя с разбором на Python. */
-function makeCode(st){
+/* Фамилия в коде (Света, 26.09.2026). Фамилию понимаем как первое
+   слово строчными, ё -> е: «Ермакович Анжелика» и «ермакович» дают один
+   код. Из неё получаются 40 бит (FNV-1a и xorshift32), которыми код
+   перемешивается. Та же арифметика живёт в homework.py — surname_stream. */
+function surnameKey(s){
+  return String(s || "").toLowerCase().replace(/ё/g, "е")
+    .split(/[^а-яa-z-]+/).find(w => w.replace(/-/g, "")) || "";
+}
+
+function surnameStream(fam){
+  const s = surnameKey(fam);
+  if (!s) return "0".repeat(40);
+  let h = 0x811C9DC5;
+  for (const ch of s){
+    h ^= ch.charCodeAt(0);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  const step = x => { x ^= x << 13; x ^= x >>> 17; x ^= x << 5; return x >>> 0; };
+  let x = h || 0x9E3779B9;
+  for (let i = 0; i < 4; i++) x = step(x);
+  const w1 = x = step(x), w2 = step(x);
+  return (bin(w1, 32) + bin(w2, 32)).slice(0, 40);
+}
+
+function makeCode(st, fam){
   const day = Math.max(0, Math.min(2047, Math.floor(
       (Date.now() - EPOCH) / 86400000)));
   const payload = bin(day, 11) + bin(Math.min(15, st.typesDone), 4) +
                   bin(Math.min(15, st.cleanTypes), 4) +
                   bin(Math.min(127, st.solved), 7) +
                   bin(Math.min(127, st.wrong), 7);
-  const bitstr = payload + bin(checksum(payload), 7);
+  const plain = payload + bin(checksum(payload), 7);
+  const key = surnameStream(fam);
+  let bitstr = "";
+  for (let i = 0; i < 40; i++) bitstr += plain[i] === key[i] ? "0" : "1";
   let out = "";
   for (let i = 0; i < 40; i += 5)
     out += ALPHABET[parseInt(bitstr.substr(i, 5), 2)];
@@ -1451,14 +1479,13 @@ function renderFinalButton(){
   document.getElementById("getcode").addEventListener("click", showFinal);
 }
 
-function codeNow(){
+function codeNow(fam){
   return makeCode({typesDone: totalScore(), cleanTypes: stepsDone(),
                    solved: test ? test.solved : 0,
-                   wrong: test ? test.wrong : 0});
+                   wrong: test ? test.wrong : 0}, fam);
 }
 
 function showFinal(){
-  const code = codeNow();
   const score = totalScore(), m = markFor(score);
   const box = document.getElementById("final");
   box.setAttribute("data-open", "1");
@@ -1468,23 +1495,59 @@ function showFinal(){
       ". Быстрая проверка: <b>" + testDone() + "</b> из " + T_COUNT +
       (bonus() ? " (плюс балл)" : "") + ". Отметка <b>" + m + "</b>.</p>" +
     "<p>Код работы — его и надо сдать:</p>" +
-    '<div class="code">' + code + "</div>" +
-    '<div class="note">Переписывать код руками не нужно: впиши фамилию и ' +
-      "класс, и кнопка откроет форму с уже подставленным кодом.</div>" +
+    '<div class="code" id="code"></div>' +
+    '<div class="note">Это код твоей работы. Он собран из твоей фамилии и ' +
+      "того, сколько и как ты решал: у соседа с тем же результатом код " +
+      "другой. Поменяешь фамилию — поменяется и код. Переписывать код " +
+      "руками не нужно: впиши фамилию и класс, и кнопка откроет форму с " +
+      "уже подставленным кодом.</div>" +
     '<div class="fields"><div><label for="fam2">Фамилия и имя</label>' +
       '<input type="text" id="fam2" autocomplete="off" value="' +
       esc(trip.surname) + '"></div>' +
       '<div><label for="kls">Класс</label>' +
       '<input type="text" id="kls" autocomplete="off" value="11"></div></div>' +
+    '<p class="stats" id="famhint"></p>' +
     '<div class="row"><button id="send" class="primary">Сдать работу</button>' +
-    '<button id="back" class="small">Вернуться и доделать</button></div></div>';
+    '<button id="back" class="small">Вернуться и доделать</button></div>' +
+    '<p class="stats" id="sendnote"></p></div>';
+  /* Код привязан к фамилии (Света, 26.09.2026): пока фамилия не вписана,
+     кода нет, а вписанная подмешивается в код и пересчитывает его на
+     каждой букве. У двух учеников с одинаковым результатом коды разные,
+     а чужой код к своей фамилии не подходит. Фамилию сюда подставляет
+     вариант; если он взят из памяти компьютера — просим проверить. */
+  const famEl = document.getElementById("fam2");
+  const codeBox = document.getElementById("code");
+  const hint = document.getElementById("famhint");
+  let current = "";
+  const update = function(){
+    const f = famEl.value.trim();
+    current = surnameKey(f) ? codeNow(f) : "";
+    codeBox.textContent = current || "впиши фамилию — появится код";
+    codeBox.classList.toggle("wait", !current);
+    hint.textContent = STORED_SURNAME && f === STORED_SURNAME
+      ? "Фамилию подставил этот компьютер с прошлого раза — проверь, что она твоя."
+      : "";
+  };
+  famEl.addEventListener("input", update);
+  update();
   document.getElementById("send").addEventListener("click", function(){
-    const fam = document.getElementById("fam2").value.trim();
-    if (!fam) { document.getElementById("fam2").focus(); return; }
+    const note = document.getElementById("sendnote");
+    const fam = famEl.value.trim();
+    if (!current) {
+      note.textContent = "Впиши фамилию — без неё кода нет и непонятно, "
+                       + "чья это работа.";
+      famEl.focus();
+      return;
+    }
     const kls = document.getElementById("kls").value.trim() || "11";
-    window.open(FORM.replace("ФАМИЛИЯ", encodeURIComponent(fam))
+    const url = FORM.replace("ФАМИЛИЯ", encodeURIComponent(fam))
                     .replace("КЛАСС", encodeURIComponent(kls))
-                    .replace("КОД", encodeURIComponent(code)), "_blank");
+                    .replace("КОД", encodeURIComponent(current));
+    window.open(url, "_blank", "noopener");
+    note.innerHTML = "Форма открылась в новой вкладке. Работа сдана, только "
+      + "когда в форме нажата «Отправить». Вкладка не открылась — "
+      + '<a href="' + url + '" target="_blank" rel="noopener">открой форму '
+      + "по этой ссылке</a>.";
   });
   document.getElementById("back").addEventListener("click", function(){
     box.removeAttribute("data-open");
@@ -1512,6 +1575,8 @@ document.getElementById("filein").addEventListener("change", function(e){
 });
 
 load();
+// что компьютер помнил с прошлого раза — для подписи у кода
+const STORED_SURNAME = trip.surname || "";
 if (trip.surname) document.getElementById("fam").value = trip.surname;
 showVariant();
 renderSteps();
