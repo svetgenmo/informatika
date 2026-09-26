@@ -166,6 +166,32 @@ ul.plain li{margin:8px 0}
 @media (max-width:1000px){ .exwrap{grid-template-columns:1fr}
                            .exwrap .task{position:static} }
 
+/* разбор примера рисунком: ленты, плитки ответа, сверка с эталоном */
+.xpic svg.xstrip{display:block;width:auto;max-width:100%;height:auto;max-height:11vh}
+.step.xs{padding:6px 14px}
+.step.xs .cap{margin-bottom:2px}
+.xtiles{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0}
+.xt{display:inline-block;min-width:54px;text-align:center;
+    font:700 34px/1.2 Consolas,monospace;color:var(--c);background:#fff;
+    border:3px solid var(--c);border-radius:12px;padding:2px 8px}
+.xt.bad{background:#fbd9d6;border-color:#b3261e;color:#b3261e}
+.xbadges{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+.xb{font:700 18px/1 "Segoe UI",system-ui,sans-serif;border-radius:30px;
+    padding:6px 14px;color:#fff;background:#5c6070}
+.xb.srv{background:#137a41}.xb.file{background:#a3480f}.xb.warn{background:#b3261e}
+.xcheck{display:flex;gap:10px;margin-top:12px}
+.xcheck .xin{font:700 26px/1 Consolas,monospace;width:210px;padding:8px 12px;
+             border:2px solid var(--line);border-radius:10px;letter-spacing:2px}
+.xcheck .xin:focus{outline:none;border-color:var(--accent)}
+.steps .xres:empty{display:none}
+.steps .xres{border:3px dashed var(--accent);border-radius:12px;padding:6px 16px 10px;background:#fff}
+.xres .xverd{font:800 24px/1.2 "Segoe UI",system-ui,sans-serif;margin:4px 0 2px}
+.xres .xverd.ok{color:var(--ok)}.xres .xverd.bad{color:var(--err)}
+.xres .xt{min-width:34px;font-size:22px;border-width:2px;border-radius:8px}
+.xres .xtiles{margin:2px 0}
+.xres .xaddr{font-size:17px;color:var(--muted)}
+.xres svg.xstrip{max-height:8vh}
+
 /* ---- размер шрифта на проекторе: A− / A+ ---- */
 .zoom{display:inline-flex;align-items:center;gap:3px;margin-left:8px}
 .zoom button{padding:8px 10px;font-size:15px;min-width:36px;line-height:1}
@@ -828,27 +854,170 @@ function condition(t){
       : `<p>${segsHtml(b.segs)}</p>`).join("");
 }
 
+/* ---- разбор примера — рисунком, а не словами (Света, 26.09.2026:
+   «никто читать не будет, нужна красивая яркая сверка с эталоном»).
+   Лента — та же, что на слайдах с объяснением (deck_slides.py strip):
+   буквы окрашены по частям схемы, под фрагментом его номер. */
+const XCOL = {proto: "#1f5fa8", sep: "#5c6070", srv: "#137a41", file: "#a3480f"};
+const XCAP = {proto: "протокол", srv: "сервер", file: "файл"};
+
+function xRoles(m){
+  const a = m.proto.length, b = a + 3, c = b + m.srv.length + 1 + m.zone.length;
+  return [...m.address].map((_, i) => i < a ? "proto" : i < b ? "sep"
+      : i < c ? "srv" : i === c ? "sep" : "file");
+}
+// роль фрагмента — по первой «значащей» букве (у «ftp:/» это протокол)
+function xRoleOf(roles, from, len){
+  for (let i = from; i < from + len; i++) if (roles[i] !== "sep") return roles[i];
+  return "sep";
+}
+
+/* parts — фрагменты подряд; opt.nums — номера под ними; opt.caps — подписи
+   частей схемы; opt.mark — позиции в красной рамке; opt.fill — заливка
+   каждой позиции (сверка: зелёная / красная). */
+function xStrip(m, parts, opt){
+  opt = opt || {};
+  const roles = xRoles(m), cw = 16.5, font = 30, pad = 10, gap = 9, top = 8, bh = 54;
+  let x = 6, pos = 0, out = "";
+  const capX = {};
+  parts.forEach((p, k) => {
+    const w = p.length * cw + 2 * pad;
+    const hot = opt.mark && opt.mark.has(k);
+    const fill = opt.fill ? opt.fill[k] : "#fff";
+    out += `<rect x="${x}" y="${top}" width="${w}" height="${bh}" rx="9" fill="${fill}"
+              stroke="${hot ? "#b3261e" : "#9aa0b4"}" stroke-width="${hot ? 4 : 1.8}"/>`;
+    let spans = "";
+    [...p].forEach((ch, i) => {
+      const r = opt.fragRoles ? (opt.fragRoles[p] || [])[i] || "sep"
+              : pos + i < roles.length ? roles[pos + i] : "sep";
+      spans += `<tspan fill="${XCOL[r]}">${esc(ch)}</tspan>`;
+      if (r !== "sep"){
+        const cx = x + pad + i * cw + cw / 2;
+        (capX[r] = capX[r] || []).push(cx);
+      }
+    });
+    out += `<text x="${x + pad}" y="${top + 38}" font-size="${font}" font-weight="700"
+              font-family="Consolas, monospace">${spans}</text>`;
+    if (opt.nums){
+      const cx = x + w / 2;
+      out += `<circle cx="${cx}" cy="${top + bh + 24}" r="17" fill="#eaf1fa" stroke="#1f5fa8"
+                stroke-width="2.2"/><text x="${cx}" y="${top + bh + 32}" text-anchor="middle"
+                font-size="22" font-weight="700" fill="#16181d">${opt.nums[k]}</text>`;
+    }
+    pos += p.length;
+    x += w + gap;
+  });
+  if (opt.caps)
+    Object.keys(capX).forEach(r => {
+      const xs = capX[r];
+      const cx = Math.max(62, Math.min(x - 50, (Math.min(...xs) + Math.max(...xs)) / 2));
+      out += `<text x="${cx}" y="${top + bh + 32}"
+                text-anchor="middle" font-size="22" font-weight="700"
+                fill="${XCOL[r]}">${XCAP[r]}</text>`;
+    });
+  const H = top + bh + (opt.nums || opt.caps ? 50 : 10);
+  return `<svg class="xstrip" viewBox="0 0 ${x} ${H}" role="img"
+            aria-label="${esc(parts.join(""))}">${out}</svg>`;
+}
+
+// цифры ответа плитками, каждая в цвете своей части адреса
+function xTiles(m, digits, marks){
+  const roles = xRoles(m);
+  let pos = 0;
+  return `<div class="xtiles">` + [...digits].map((d, k) => {
+    const f = m.frags[+d - 1] || "";
+    const r = xRoleOf(roles, pos, f.length);
+    pos += f.length;
+    const bad = marks && marks[k] === false;
+    return `<span class="xt${bad ? " bad" : ""}" style="--c:${XCOL[r]}">${esc(d)}</span>`;
+  }).join("") + `</div>`;
+}
+
+// что особенного в задаче — короткими яркими ярлыками, а не абзацем
+function xBadges(t){
+  const m = t.meta, out = [];
+  const trap = NAMES.proto.concat(NAMES.zone, NAMES.ext);
+  if (trap.includes(m.srv)) out.push(`<span class="xb srv">${esc(m.srv)} — это сервер</span>`);
+  if (trap.includes(m.f)) out.push(`<span class="xb file">${esc(m.f)} — это файл</span>`);
+  const k = m.parts.filter(p => p === "/").length;
+  if (k > 1) out.push(`<span class="xb warn">«/» × ${k}</span>`);
+  if (t.key === "colon-slashes") out.push(`<span class="xb warn">«//» — целиком</span>`);
+  if (t.key === "slash-to-server") out.push(`<span class="xb warn">«/» у сервера</span>`);
+  return out.length ? `<div class="xbadges">${out.join("")}</div>` : "";
+}
+
+function xMarks(t){
+  const m = t.meta, trap = NAMES.proto.concat(NAMES.zone, NAMES.ext), s = new Set();
+  m.parts.forEach((p, k) => {
+    if ((p === "/" && m.parts.filter(q => q === "/").length > 1) || p === "//" ||
+        (t.key === "slash-to-server" && (p === ":/" || p[0] === "/" && p.length > 1)) ||
+        trap.includes(p.replace(/\./g, "")) && (p.replace(/\./g, "") === m.srv || p.replace(/\./g, "") === m.f))
+      s.add(k);
+  });
+  return s;
+}
+
+// Сверка ответа класса с эталоном: лента по их цифрам, каждая позиция
+// зелёная или красная, и большой знак — совпало или нет.
+function xCompare(el, t){
+  const m = t.meta, box = el.querySelector(".xres");
+  const given = el.querySelector(".xin").value.trim();
+  if (!given){ box.innerHTML = ""; return; }
+  if (!/^\d+$/.test(given) || [...given].some(d => +d < 1 || +d > m.n)){
+    box.innerHTML = `<div class="xverd bad">✗ только цифры от 1 до ${m.n}, подряд</div>`;
+    return;
+  }
+  const parts = [...given].map(d => m.frags[+d - 1]);
+  const ok = [...given].map((d, k) => d === t.answer[k]);
+  const all = given === t.answer;
+  const fill = ok.map(v => v ? "#d9f2e3" : "#fbd9d6");
+  // буквы фрагмента — в цвете той части адреса, где он стоит в эталоне
+  const roles = xRoles(m), fragRoles = {};
+  let at = 0;
+  m.parts.forEach(p => { if (!fragRoles[p]) fragRoles[p] = roles.slice(at, at + p.length);
+                         at += p.length; });
+  box.innerHTML =
+    `<div class="xverd ${all ? "ok" : "bad"}">${all ? "✓ совпало с эталоном"
+        : "✗ не совпало"}</div>` +
+    xTiles(m, given, ok) +
+    `<div class="xpic">${xStrip(m, parts, {fill: fill, fragRoles: fragRoles})}</div>` +
+    (all ? "" : `<div class="xaddr">вышло <code>${esc(parts.join(""))}</code></div>`);
+}
+
 function buildExample(el){
   const id = +el.dataset.type;
-  const t = makeTask(id);
-  const steps = t.steps.map((s, i) =>
-      `<div class="step" hidden><span class="cap">шаг ${i + 1}</span>
-         ${esc(s)}</div>`).join("");
+  const t = makeTask(id), m = t.meta;
+  const scheme = [m.proto, "://", m.srv + "." + m.zone, "/", m.f + "." + m.ext];
+  const nums = m.parts.map(p => m.frags.indexOf(p) + 1);
 
   el.innerHTML =
     `<p class="eyebrow">разбираем вместе</p>
      <h2>Пример: ${esc(t.name)}</h2>
      <div class="exwrap">
        <div class="task">${condition(t)}
-         <div class="ask">${esc(t.tail)}</div></div>
+         <div class="xcheck">
+           <input class="xin" type="text" inputmode="numeric" autocomplete="off"
+                  spellcheck="false" placeholder="ответ класса">
+           <button class="xgo">Сверить</button>
+         </div></div>
        <div class="steps">
-         <div class="step hint" hidden><span class="cap">о чём задача</span>
-           ${esc(t.rule)}</div>
-         ${steps}
-         <div class="step answer" hidden><span class="cap">ответ</span>
-           ${esc(t.answer)}</div>
+         <div class="xres"></div>
+         <div class="step xs" hidden><span class="cap">1 · схема</span>
+           <div class="xpic">${xStrip(m, scheme, {caps: true})}</div></div>
+         <div class="step xs" hidden><span class="cap">2 · режем на фрагменты</span>
+           <div class="xpic">${xStrip(m, m.parts, {nums: nums, mark: xMarks(t)})}</div>
+           ${xBadges(t)}</div>
+         <div class="step answer xs" hidden><span class="cap">3 · эталон</span>
+           ${xTiles(m, t.answer)}</div>
        </div>
      </div>`;
+  const inp = el.querySelector(".xin");
+  // набор ответа не должен листать слайды и менять шрифт
+  inp.addEventListener("keydown", e => {
+    e.stopPropagation();
+    if (e.key === "Enter") xCompare(el, t);
+  });
+  el.querySelector(".xgo").addEventListener("click", () => xCompare(el, t));
   // условие выше экрана закреплять нельзя — см. fitExamples() в конце файла;
   // через таймер: к этому моменту слайд показан и масштаб применён
   setTimeout(() => { if (typeof fitExamples === "function") fitExamples(); }, 0);
