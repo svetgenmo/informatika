@@ -1,0 +1,513 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Задание 8 ЕГЭ: перебор слов и чисел — презентация</title>
+<meta name="description" content="Презентация к разбору задания 8 ЕГЭ в 11 классе (углублённый): перебор слов и чисел через product, буквы по алфавиту, номер слова и его чётность, разбор демоверсии 2027 в Python, первое и последнее подходящее слово, числа как слова из цифр и ноль впереди, условия на соседние цифры, пять ловушек.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E11%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ink)}
+body{font:20px/1.5 "Segoe UI",system-ui,sans-serif}
+.deck{height:100vh;display:flex;flex-direction:column}
+.stage{flex:1 1 auto;overflow-y:auto;padding:34px 56px 12px}
+.slide{display:none;max-width:1100px;margin:0 auto}
+.slide.on{display:block}
+
+h1{font-size:48px;line-height:1.1;margin:0 0 18px;text-wrap:balance}
+h2{font-size:34px;line-height:1.15;margin:0 0 18px;text-wrap:balance}
+.lead{font-size:23px;color:var(--muted);margin:0 0 24px}
+p{margin:0 0 14px}
+ul{margin:0 0 14px;padding-left:28px}
+li{margin:8px 0}
+code{font-family:Consolas,"Cascadia Mono",monospace;background:var(--card);
+     border:1px solid var(--line);border-radius:6px;padding:1px 7px;font-size:.92em}
+pre{font-family:Consolas,"Cascadia Mono",monospace;background:#1e2430;color:#e7ecf5;
+    padding:16px 20px;border-radius:12px;font-size:20px;line-height:1.45;
+    overflow-x:auto;margin:10px 0}
+pre code{background:none;border:0;padding:0;color:inherit;font-size:inherit}
+pre .c{color:#8fa6c4}
+pre .out{color:#9dd4b4}
+pre .hl{color:#ffd479}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;align-items:start}
+.box{border:1px solid var(--line);border-radius:14px;padding:16px 20px;background:#fff}
+.box h3{margin:0 0 8px;font-size:22px}
+.good{border-color:var(--ok-line);background:var(--ok-bg)}
+.bad{border-color:var(--err-line);background:var(--err-bg)}
+.warn{border-color:var(--hi-line);background:var(--hi-bg)}
+.big{font-size:25px}
+table{border-collapse:collapse;font-size:19px;margin:10px 0}
+th,td{border:1px solid var(--line);padding:7px 14px;text-align:left}
+th{background:var(--card)}
+table.mini th,table.mini td{padding:6px 12px}
+.key{color:var(--accent);font-weight:700}
+.step[hidden]{display:none}
+.tag{display:inline-block;background:var(--accent);color:#fff;border-radius:20px;
+     padding:3px 14px;font-size:16px;font-weight:700;margin-bottom:12px}
+.tag.gray{background:var(--muted)}
+.bar{flex:0 0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+     border-top:1px solid var(--line);background:var(--card);padding:12px 24px}
+.bar .spacer{flex:1 1 auto}
+.count{color:var(--muted);font-size:17px;font-variant-numeric:tabular-nums}
+.keys{color:var(--muted);font-size:15px}
+.keys kbd{font:600 13px/1 Consolas,monospace;border:1px solid var(--line);
+          border-bottom-width:2px;border-radius:5px;padding:2px 6px;background:#fff}
+button{font:600 17px/1 inherit;padding:11px 18px;border-radius:10px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);color:var(--muted)}
+
+/* ---- размер шрифта на проекторе: A− / A+ ---- */
+.zoom{display:inline-flex;align-items:center;gap:3px;margin-left:8px}
+.zoom button{padding:8px 10px;font-size:15px;min-width:36px;line-height:1}
+.zoom .z{color:var(--muted);font-size:15px;min-width:46px;text-align:center;
+         font-variant-numeric:tabular-nums}
+
+/* ---- условие задачи на слайде: слева от разбора, на своём месте ---- */
+.cond{border:1px solid var(--line);border-radius:14px;padding:16px 20px;
+      background:var(--card);font-size:19px}
+.cond p:last-child{margin-bottom:0}
+.ladder{font:600 21px/1.9 Consolas,monospace}
+.ladder span{color:var(--accent)}
+.fnote{color:var(--muted);font-size:17px}
+ol{margin:0 0 14px;padding-left:28px}
+</style>
+</head>
+<body>
+<div class="deck">
+<div class="stage" id="stage">
+
+<section class="slide on">
+  <h1>Задание 8:<br>перебор слов и чисел</h1>
+  <p class="lead">Из заданных букв составили все слова — сколько из них подходит
+  и под каким номером нужное стоит в списке.<br>
+  Всё задание — <b>один перебор</b> и <b>пара строк условий</b>.</p>
+  <p>Базовый уровень, один балл. Ответ — одно целое число.</p>
+</section>
+
+<section class="slide">
+  <span class="tag">условие</span>
+  <h2>Как это выглядит на экзамене</h2>
+  <div class="two">
+    <div class="cond">
+      <p>Все <b>пятибуквенные</b> слова из букв <b>А, К, Ц, Е, Н, Т</b>
+         записаны в алфавитном порядке и пронумерованы:</p>
+      <p style="font-family:Consolas,monospace">1. ААААА &nbsp; 2. ААААЕ &nbsp; 3. ААААК<br>
+         4. ААААН &nbsp; 5. ААААТ &nbsp; 6. ААААЦ &nbsp; …</p>
+      <p>Под каким номером стоит <b>первое</b> слово <b>с чётным номером</b>,
+         которое не начинается с букв А, Е или К и содержит хотя бы одну
+         букву Т?</p>
+    </div>
+    <div>
+      <div class="box"><h3>Что дано</h3>
+        <p>Набор букв, длина слова и условия. Слов 6<sup>5</sup> = 7776 —
+           руками не перебрать, машине — доля секунды.</p></div>
+      <div class="box warn" style="margin-top:14px"><h3>Где теряют балл</h3>
+        <p>Не в условиях, а в <b>порядке букв</b> и в <b>номере</b>: буквы в
+           условии идут вразнобой, а список — по алфавиту.</p></div>
+    </div>
+  </div>
+  <p class="fnote">Вторая половина задач — про числа: «сколько семеричных
+     пятизначных чисел…». Это те же слова, только из цифр.</p>
+</section>
+
+<section class="slide">
+  <span class="tag">формы</span>
+  <h2>О чём спрашивают</h2>
+  <table>
+    <tr><th>Сколько чисел</th><td>условие на состав цифр: ровно две чётные, не
+        более двух цифр 7, не оканчиваются на 2 или 6</td></tr>
+    <tr><th>Сколько чисел</th><td>условие на <b>соседей</b>: нет одинаковых
+        подряд, нечётная не стоит рядом с нулём</td></tr>
+    <tr><th>Сколько слов</th><td>кодовые слова: не начинается с гласной, не
+        оканчивается согласной</td></tr>
+    <tr><th>Номер первого</th><td>первое подходящее слово в алфавитном
+        списке, часто — с чётным номером</td></tr>
+    <tr><th>Номер последнего</th><td>последнее подходящее, часто — с нечётным
+        номером</td></tr>
+    <tr><th>Сколько в списке</th><td>сколько подходящих слов с нечётными
+        номерами</td></tr>
+  </table>
+  <p class="fnote">Замер по 14 задачам экзаменов 2024–2027: числа — 7, список —
+     6, кодовые слова — 1. Шесть форм — шесть задач практикума.</p>
+</section>
+
+<section class="slide">
+  <span class="tag">инструмент</span>
+  <h2>product перебирает все слова</h2>
+  <div class="two">
+    <div>
+<pre><code>from itertools import *
+for w in product('АБ', repeat=3):
+    w = ''.join(w)
+    print(w)</code></pre>
+      <p><code>product</code> даёт кортеж букв <code>('А', 'Б', 'А')</code>,
+         <code>''.join</code> склеивает его в строку <code>'АБА'</code>.</p>
+    </div>
+    <div>
+<pre><code><span class="out">ААА
+ААБ
+АБА
+АББ
+БАА
+БАБ
+ББА
+БББ</span></code></pre>
+      <div class="box good"><h3>Это и есть алфавитный список</h3>
+        <p>Последняя буква меняется быстрее всех — как в словаре. Номер
+           слова — просто счётчик.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">ловушка №1</span>
+  <h2>Буквы — по алфавиту</h2>
+  <div class="two">
+    <div class="box bad"><h3>Как в условии: 'АКЦЕНТ'</h3>
+<pre><code>1. ААААА
+2. ААААК   <span class="c"># а в условии ААААЕ</span>
+3. ААААЦ</code></pre>
+      <p>Порядок другой — и все номера другие. Ответ выйдет <b>2598</b>
+         вместо 3914.</p></div>
+    <div class="box good"><h3>По алфавиту: 'АЕКНТЦ'</h3>
+<pre><code>1. ААААА
+2. ААААЕ
+3. ААААК</code></pre>
+      <p>Совпало с началом списка в условии. <b>Сверяй всегда</b>: условие
+         само показывает первые строки.</p></div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">номер</span>
+  <h2>Номер слова — счётчик n</h2>
+  <div class="two">
+    <div>
+<pre><code>n = 0
+for w in product('АЕКНТЦ', repeat=5):
+    w = ''.join(w)
+    n += 1         <span class="c"># ДО проверки</span>
+    if ...:</code></pre>
+    </div>
+    <div>
+      <ul>
+        <li><code>n += 1</code> стоит <b>до</b> проверки: у первого слова
+            номер 1, как в списке;</li>
+        <li>«с чётным номером» — <code>n % 2 == 0</code>, «с нечётным» —
+            <code>n % 2 == 1</code>;</li>
+        <li>чётность — свойство <b>номера</b>, а не слова и не счёта
+            подходящих.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">разбор</span>
+  <h2>Демоверсия 2027: по шагам</h2>
+  <div class="two">
+    <div class="cond">
+      <p>Буквы <b>А, К, Ц, Е, Н, Т</b>, слова из 5 букв, алфавитный список.</p>
+      <p><b>Первое</b> слово <b>с чётным номером</b>, которое не начинается с
+         А, Е или К и содержит хотя бы одну Т.</p>
+    </div>
+    <div class="steps">
+      <ol>
+        <li class="step" hidden>Буквы по алфавиту: <span class="key">'АЕКНТЦ'</span>,
+            <code>repeat=5</code></li>
+        <li class="step" hidden>Номер: <code>n += 1</code> на каждом слове</li>
+        <li class="step" hidden>Чётный номер: <span class="key">n % 2 == 0</span></li>
+        <li class="step" hidden>Не начинается с А, Е, К:
+            <span class="key">w[0] not in 'АЕК'</span></li>
+        <li class="step" hidden>Хотя бы одна Т:
+            <span class="key">w.count('Т') >= 1</span></li>
+        <li class="step" hidden>Первое — <code>print(n)</code> и сразу
+            <code>break</code></li>
+      </ol>
+      <div class="step box good" hidden><h3>Ответ: 3914</h3>
+        <p class="fnote">Это слово НААТЕ. Без чётности вышло бы 3893 (НАААТ) —
+           условие на номер решает.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">инструмент</span>
+  <h2>То же самое в Python</h2>
+<pre><code>from itertools import *
+n = 0                                  <span class="c"># номер слова в списке</span>
+for w in product('АЕКНТЦ', repeat=5):  <span class="c"># буквы ПО АЛФАВИТУ</span>
+    w = ''.join(w)
+    n += 1
+    if (n % 2 == 0 and                 <span class="c"># номер чётный</span>
+            w[0] not in 'АЕК' and      <span class="c"># не начинается с А, Е, К</span>
+            w.count('Т') >= 1):        <span class="c"># хотя бы одна Т</span>
+        print(n)                       <span class="c"># первое — и сразу стоп</span>
+        break
+<span class="out">3914</span></code></pre>
+  <p class="fnote">Длинное условие удобно разбить по строкам в скобках — по
+     условию на строку, с комментарием.</p>
+</section>
+
+<section class="slide">
+  <span class="tag">конец программы</span>
+  <h2>Первое, последнее, сколько</h2>
+  <div class="three">
+    <div class="box"><h3>Первое</h3>
+<pre><code>    if ...:
+        print(n)
+        break</code></pre>
+      <p>Нашли — печатаем и выходим.</p></div>
+    <div class="box"><h3>Последнее</h3>
+<pre><code>    if ...:
+        last = n
+print(last)</code></pre>
+      <p>Запоминаем каждое, в конце в <code>last</code> — последнее.</p></div>
+    <div class="box"><h3>Сколько</h3>
+<pre><code>    if ...:
+        k += 1
+print(k)</code></pre>
+      <p>Считаем. <code>k = 0</code> до цикла.</p></div>
+  </div>
+  <p class="fnote">В демоверсии «последнее» вместо «первого» дало бы 7770 —
+     перепутать концы программы стоит балла.</p>
+</section>
+
+<section class="slide">
+  <span class="tag">числа</span>
+  <h2>Число — это слово из цифр</h2>
+  <div class="two">
+    <div class="cond">
+      <p>Сколько существует <b>восьмеричных пятизначных</b> чисел, которые
+         не начинаются с нечётной цифры и содержат ровно две цифры 7?</p>
+    </div>
+    <div>
+<pre><code>k = 0
+for w in product('01234567', repeat=5):
+    w = ''.join(w)
+    if (w[0] != '0' and          <span class="c"># без нуля впереди</span>
+            w[0] not in '1357' and
+            w.count('7') == 2):
+        k += 1
+print(k)
+<span class="out">882</span></code></pre>
+    </div>
+  </div>
+  <div class="box warn"><h3>Ноль впереди</h3>
+    <p><code>'00717'</code> — не пятизначное число. У 15-ричной цифры —
+       <code>'0123456789ABCDE'</code>.</p></div>
+</section>
+
+<section class="slide">
+  <span class="tag">числа</span>
+  <h2>Соседние цифры: флаг ok</h2>
+  <div class="two">
+    <div class="cond">
+      <p>Сколько <b>шестеричных пятизначных</b> чисел, в записи которых ровно
+         одна цифра 0, при этом никакая нечётная цифра не стоит рядом с
+         нулём?</p>
+    </div>
+    <div>
+<pre><code>    ok = True
+    for i in range(len(w) - 1):
+        a, b = w[i], w[i + 1]
+        if ((a == '0' and b in '135') or
+                (b == '0' and a in '135')):
+            ok = False
+    if w[0] != '0' and w.count('0') == 1 and ok:
+        k += 1
+<span class="out">550</span></code></pre>
+    </div>
+  </div>
+  <p class="fnote">Тот же флаг <code>ok</code>, что в задании 1: одна плохая
+     пара — и число выбывает. Нет двух Ц рядом — короче:
+     <code>'ЦЦ' not in w</code>.</p>
+</section>
+
+<section class="slide">
+  <span class="tag">шпаргалка</span>
+  <h2>Что писать под условие</h2>
+  <table class="mini">
+    <tr><th>В условии</th><th>В программе</th></tr>
+    <tr><td>ровно две буквы Т · не более одной С</td><td><code>w.count('Т') == 2</code> · <code>w.count('С') &lt;= 1</code></td></tr>
+    <tr><td>не начинается с букв А, Е или К</td><td><code>w[0] not in 'АЕК'</code></td></tr>
+    <tr><td>оканчивается цифрами 2 или 6</td><td><code>w[-1] in '26'</code></td></tr>
+    <tr><td>ни одной из букв В, Е, К</td><td><code>'В' not in w and 'Е' not in w and 'К' not in w</code></td></tr>
+    <tr><td>ровно две чётные цифры</td><td>счётчик <code>even</code> в цикле по <code>w</code></td></tr>
+    <tr><td>каждая буква ровно один раз</td><td><code>len(set(w)) == len(w)</code></td></tr>
+    <tr><td>кодовое слово не начинается с гласной</td><td><code>w[0] not in 'АЕ'</code> — гласные из <b>этого</b> набора</td></tr>
+  </table>
+</section>
+
+<section class="slide">
+  <span class="tag">ловушки</span>
+  <h2>Пять ловушек</h2>
+  <ol>
+    <li><b>Буквы не по алфавиту.</b> Сверь первые строки перебора с началом
+        списка в условии.</li>
+    <li><b>Номер с нуля.</b> <code>n += 1</code> до проверки.</li>
+    <li><b>Ноль впереди.</b> <code>w[0] != '0'</code> у любых «N-значных чисел».</li>
+    <li><b>Чётность.</b> <code>n % 2</code> — номер, а не буква.</li>
+    <li><b>Первое или последнее.</b> <code>break</code> против <code>last = n</code>.</li>
+  </ol>
+  <p class="fnote">Страница практикума узнаёт эти ошибки по ответу и
+     подсказывает, какая из них случилась.</p>
+</section>
+
+<section class="slide">
+  <span class="tag gray">практикум</span>
+  <h2>Что дальше</h2>
+  <p>Шесть задач — по одной на каждую форму вопроса, все на экране сразу,
+     порядок свой. Ошибся — появится разбор и программа, которая решает
+     именно эту задачу, а кнопка «Новые числа» даст такую же с другими
+     буквами.</p>
+  <table>
+    <tr><th>Числа</th><td>состав цифр · соседние цифры</td></tr>
+    <tr><th>Слова</th><td>кодовые слова · номер первого · номер последнего ·
+        сколько в списке</td></tr>
+  </table>
+  <p class="fnote">Отметка практикума: шесть задач — «5», пять — «4»,
+     четыре — «3».</p>
+</section>
+
+<section class="slide">
+  <span class="tag">дома</span>
+  <h2>Домашняя работа</h2>
+  <p>Те же шесть форм вопроса, по одной задаче на каждую. Тип закрывается
+     одним верным ответом; ошибся — придёт такая же задача с другими
+     буквами.</p>
+  <div class="two">
+    <div>
+      <div class="box"><h3>Как сдать</h3>
+        <p>От четырёх закрытых типов появится <b>код работы</b> вида
+           <code>SL-XXXX-XXXX</code> и кнопка «Сдать работу».</p>
+        <p>Вторая кнопка открывает письмо: к коду прикладываются
+           <b>снимки своих программ</b> и того, что они напечатали.</p></div>
+    </div>
+    <div>
+      <div class="box good"><h3>Зачем снимок</h3>
+        <p>Число можно получить и не написав программу. Снимок кода
+           показывает, что приём ваш, — поэтому он и просится вместе с
+           ответом.</p>
+        <p class="fnote">Отметка: шесть типов — «5», пять — «4»,
+           четыре — «3». В начале следующей пары — проверочная из пяти
+           задач.</p></div>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<div class="bar">
+  <button id="prev">← Назад</button>
+  <button id="step" class="primary">Раскрыть</button>
+  <button id="next">Вперёд →</button>
+  <span class="count" id="count"></span>
+  <span class="zoom" title="Размер шрифта на экране: клавиши + и −"><button id="zoomOut" title="Мельче (клавиша −)">A−</button><span class="z" id="zoomVal"></span><button id="zoomIn" title="Крупнее (клавиша +)">A+</button></span>
+  <div class="spacer"></div>
+  <span class="ai-mark" style="color:#5c6070;font-size:13px">Материалы подготовлены с использованием технологий искусственного интеллекта.</span>
+  <span class="keys"><kbd>Пробел</kbd> раскрыть и дальше ·
+    <kbd>←</kbd> <kbd>→</kbd> слайды</span>
+</div>
+</div>
+
+<script>
+const slides = [...document.querySelectorAll(".slide")];
+let cur = 0, shown = 0;
+
+const stepsOf = i => [...slides[i].querySelectorAll(".steps > .step")];
+
+function show(i){
+  slides[cur].classList.remove("on");
+  cur = Math.max(0, Math.min(slides.length - 1, i));
+  slides[cur].classList.add("on");
+  shown = stepsOf(cur).filter(el => !el.hidden).length;
+  document.getElementById("stage").scrollTop = 0;
+  sync();
+}
+
+function sync(){
+  const total = stepsOf(cur).length;
+  document.getElementById("count").textContent = `${cur + 1} / ${slides.length}`;
+  document.getElementById("prev").disabled = cur === 0;
+  document.getElementById("next").disabled = cur === slides.length - 1;
+  const b = document.getElementById("step");
+  b.hidden = total === 0;
+  if (total){
+    b.disabled = shown >= total;
+    b.textContent = shown >= total ? "Всё открыто"
+                  : shown === 0 ? "Раскрыть" : `Дальше (${shown}/${total})`;
+  }
+}
+
+function nextStep(){
+  const steps = stepsOf(cur);
+  if (shown >= steps.length) return false;
+  steps[shown].hidden = false;
+  steps[shown].scrollIntoView({block: "nearest", behavior: "smooth"});
+  shown++;
+  sync();
+  return true;
+}
+
+document.getElementById("prev").addEventListener("click", () => show(cur - 1));
+document.getElementById("next").addEventListener("click", () => show(cur + 1));
+document.getElementById("step").addEventListener("click", nextStep);
+
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowRight" || e.key === "PageDown"){ show(cur + 1); }
+  else if (e.key === "ArrowLeft" || e.key === "PageUp"){ show(cur - 1); }
+  else if (e.key === " " || e.key === "Enter"){
+    if (!nextStep()) show(cur + 1);
+  } else return;
+  e.preventDefault();
+});
+
+show(0);
+
+/* ---- размер шрифта на проекторе ----
+   Zoom только на области слайда: zoom на body растягивает 100vh, и панель
+   уезжает за экран (проверено 17.09.2026). Шаг запоминается в
+   localStorage и общий для всех презентаций: один раз подобрала на
+   проекторе — дальше везде так. ZOOM_BASE — стартовый масштаб этой колоды:
+   у колод с базовым кеглем 20px он выше, чем у 24px. */
+const ZOOM_BASE = 1.2;
+const ZOOM_KEY = "slides-zoom-step";
+let zoomStep = 0;
+try { zoomStep = Math.max(-3, Math.min(6, parseInt(localStorage.getItem(ZOOM_KEY), 10) || 0)); }
+catch (e) {}
+function applyZoom(){
+  const z = Math.round(ZOOM_BASE * Math.pow(1.1, zoomStep) * 100) / 100;
+  document.getElementById("stage").style.zoom = z;
+  document.getElementById("zoomVal").textContent = Math.round(z * 100) + "%";
+}
+function setZoom(d){
+  zoomStep = Math.max(-3, Math.min(6, zoomStep + d));
+  try { localStorage.setItem(ZOOM_KEY, String(zoomStep)); } catch (e) {}
+  applyZoom();
+}
+document.getElementById("zoomIn").addEventListener("click", () => setZoom(1));
+document.getElementById("zoomOut").addEventListener("click", () => setZoom(-1));
+document.addEventListener("keydown", e => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key === "+" || e.key === "=") setZoom(1);
+  else if (e.key === "-" || e.key === "_") setZoom(-1);
+  else return;
+  e.preventDefault();
+});
+applyZoom();
+</script>
+</body>
+</html>
