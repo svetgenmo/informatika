@@ -93,6 +93,27 @@ input[type=text]:disabled{background:#f1f2f6;color:var(--muted)}
 details.steps{margin:10px 0 0 40px;border:none;background:none;padding:0}
 details.steps summary{font-size:14px;color:var(--accent);font-weight:600}
 
+/* ---- разбор графом (правка Светы 26.09.2026) ---- */
+.gsol{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+      gap:12px;margin:4px 0 8px}
+.gfig{margin:0;border:2px solid var(--line);border-radius:12px;
+      padding:8px 10px;background:#fff}
+.gfig.bad{border-color:var(--err-line)}
+.gfig.good{border-color:var(--ok-line)}
+.gfig svg,.gdemo svg{display:block;width:100%;height:auto}
+.gfig figcaption{font-size:14px;line-height:1.35;margin-top:4px;
+                 color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:5px 6px;align-items:center}
+.chipcap{font-size:13px;color:var(--muted);margin-right:2px}
+.chip{font:600 13px/1.2 Consolas,"Courier New",monospace;
+      border:1px solid var(--line);border-radius:6px;padding:3px 7px;
+      background:#fff;color:var(--ink)}
+.chip b{color:var(--accent)}
+.chip.best{border-color:var(--ok-line);background:var(--ok-bg)}
+.chip.best b{color:var(--ok)}
+.gdemo{max-width:420px;margin:8px 0}
+.gdemo figcaption{font-size:14px;color:var(--muted)}
+
 /* Условие задачи — картинкой: не выделяется и не копируется в поисковик
    или в нейросеть, прочитать и разобрать приходится самому. Таблица
    дорог в виде текста вставляется в любой чат одним движением — а с
@@ -130,7 +151,7 @@ code{font:600 15px/1.4 Consolas,"Courier New",monospace;
    самого короткого пути. Разное в них — <b>сколько пунктов</b>, <b>есть
    ли прямая дорога</b> и надо ли пройти <b>через заданный пункт</b>.
    Условие — картинка, скопировать его не получится: таблицу читаем
-   глазами, дерево путей рисуем в тетради.</p>
+   глазами, граф рисуем в тетради.</p>
 
 <div class="panel">
   <div class="mark">
@@ -164,14 +185,19 @@ code{font:600 15px/1.4 Consolas,"Courier New",monospace;
   <ol>
     <li>Прочитать вопрос до конца: откуда, куда и нет ли слов
         <b>«проходящего через пункт»</b>.</li>
-    <li>Нарисовать <b>дерево путей</b>: от начального пункта — ветка по
-        каждой дороге, от каждого нового пункта — снова ветки. В пункт,
-        где уже были, не возвращаться. Ветка кончается в конечном
-        пункте или в тупике.</li>
-    <li>У каждой ветки, дошедшей до конца, написать <b>сумму</b>.</li>
-    <li>Если есть «через пункт» — вычеркнуть ветки, где его нет.</li>
-    <li>Выбрать наименьшую сумму. Это ответ.</li>
+    <li>Нарисовать таблицу <b>графом</b>: каждый пункт — кружок, каждое
+        число — линия между двумя пунктами, длину подписать на линии.
+        Сколько чисел выше закрашенных клеток, столько и линий.</li>
+    <li>Провести по графу все пути от начала до конца, не заходя в пункт
+        дважды, и у каждого написать <b>сумму</b>.</li>
+    <li>Если есть «через пункт» — оставить только пути через него.</li>
+    <li>Выбрать наименьшую сумму и <b>обвести этот путь цветом</b>.
+        Это ответ.</li>
   </ol>
+  <figure class="gdemo" style="max-width:300px;margin:6px 0"><!-- граф:help --><svg class="graph" viewBox="-4 -9 688 278" role="img" aria-label="Граф дорог: A–B 2, A–C 3, A–F 16, B–D 5, C–D 3, D–E 2, D–F 7, E–F 3"><g font-family="Segoe UI, system-ui, sans-serif"><path d="M50,130 L195,45" stroke="#9aa1b3" stroke-width="3" fill="none"/><path d="M50,130 L195,215" stroke="#9aa1b3" stroke-width="3" fill="none"/><path d="M50,130 Q340.0,240.0 630,130" stroke="#9aa1b3" stroke-width="3" fill="none"/><path d="M195,45 L345,130" stroke="#9aa1b3" stroke-width="3" fill="none"/><path d="M195,215 L345,130" stroke="#9aa1b3" stroke-width="3" fill="none"/><path d="M345,130 L490,45" stroke="#9aa1b3" stroke-width="3" fill="none"/><path d="M345,130 L630,130" stroke="#9aa1b3" stroke-width="3" fill="none"/><path d="M490,45 L630,130" stroke="#9aa1b3" stroke-width="3" fill="none"/><path d="M50,130 L195,215" stroke="#137a41" stroke-width="10" stroke-linecap="round" fill="none" opacity="0.9"/><path d="M195,215 L345,130" stroke="#137a41" stroke-width="10" stroke-linecap="round" fill="none" opacity="0.9"/><path d="M345,130 L490,45" stroke="#137a41" stroke-width="10" stroke-linecap="round" fill="none" opacity="0.9"/><path d="M490,45 L630,130" stroke="#137a41" stroke-width="10" stroke-linecap="round" fill="none" opacity="0.9"/><rect x="108.5" y="72.5" width="28" height="30" rx="7" fill="#fff" stroke="#d9dce6" stroke-width="1.5"/><text x="122.5" y="94.5" text-anchor="middle" font-size="22" font-weight="700" fill="#1f5fa8">2</text><rect x="108.5" y="157.5" width="28" height="30" rx="7" fill="#fff" stroke="#137a41" stroke-width="2.5"/><text x="122.5" y="179.5" text-anchor="middle" font-size="22" font-weight="700" fill="#137a41">3</text><rect x="321.0" y="170.0" width="38" height="30" rx="7" fill="#fff" stroke="#d9dce6" stroke-width="1.5"/><text x="340.0" y="192.0" text-anchor="middle" font-size="22" font-weight="700" fill="#1f5fa8">16</text><rect x="256.0" y="72.5" width="28" height="30" rx="7" fill="#fff" stroke="#d9dce6" stroke-width="1.5"/><text x="270.0" y="94.5" text-anchor="middle" font-size="22" font-weight="700" fill="#1f5fa8">5</text><rect x="256.0" y="157.5" width="28" height="30" rx="7" fill="#fff" stroke="#137a41" stroke-width="2.5"/><text x="270.0" y="179.5" text-anchor="middle" font-size="22" font-weight="700" fill="#137a41">3</text><rect x="403.5" y="72.5" width="28" height="30" rx="7" fill="#fff" stroke="#137a41" stroke-width="2.5"/><text x="417.5" y="94.5" text-anchor="middle" font-size="22" font-weight="700" fill="#137a41">2</text><rect x="473.5" y="115.0" width="28" height="30" rx="7" fill="#fff" stroke="#d9dce6" stroke-width="1.5"/><text x="487.5" y="137.0" text-anchor="middle" font-size="22" font-weight="700" fill="#1f5fa8">7</text><rect x="546.0" y="72.5" width="28" height="30" rx="7" fill="#fff" stroke="#137a41" stroke-width="2.5"/><text x="560.0" y="94.5" text-anchor="middle" font-size="22" font-weight="700" fill="#137a41">3</text><circle cx="50" cy="130" r="24" fill="#e6f5ec" stroke="#1b1b1f" stroke-width="4"/><text x="50" y="138" text-anchor="middle" font-size="24" font-weight="700" fill="#1b1b1f">A</text><circle cx="195" cy="45" r="24" fill="#fff" stroke="#1b1b1f" stroke-width="2.5"/><text x="195" y="53" text-anchor="middle" font-size="24" font-weight="700" fill="#1b1b1f">B</text><circle cx="195" cy="215" r="24" fill="#e6f5ec" stroke="#1b1b1f" stroke-width="2.5"/><text x="195" y="223" text-anchor="middle" font-size="24" font-weight="700" fill="#1b1b1f">C</text><circle cx="345" cy="130" r="24" fill="#e6f5ec" stroke="#1b1b1f" stroke-width="2.5"/><text x="345" y="138" text-anchor="middle" font-size="24" font-weight="700" fill="#1b1b1f">D</text><circle cx="490" cy="45" r="24" fill="#e6f5ec" stroke="#1b1b1f" stroke-width="2.5"/><text x="490" y="53" text-anchor="middle" font-size="24" font-weight="700" fill="#1b1b1f">E</text><circle cx="630" cy="130" r="24" fill="#e6f5ec" stroke="#1b1b1f" stroke-width="4"/><text x="630" y="138" text-anchor="middle" font-size="24" font-weight="700" fill="#1b1b1f">F</text></g></svg><!-- /граф:help -->
+    <figcaption>Пример: из A в F. Пути 12, 14, 13, 16 и 11 — кратчайший
+       A–C–D–E–F = 3 + 3 + 2 + 3 = 11 (зелёный), хотя дорог в нём больше
+       всех.</figcaption></figure>
 
   <h3>Три ловушки</h3>
   <table>
@@ -217,11 +243,11 @@ code{font:600 15px/1.4 Consolas,"Courier New",monospace;
 
 /* ==== БАЗА: вставлено gen.py, руками не править ==== */
 const TYPES = [
-  {"id": 0, "key": "plain5", "n": 5, "via": false, "name": "пять пунктов, прямой дороги нет", "rule": "Таблица — это список дорог: число на пересечении строки и столбца — длина дороги между этими пунктами, пустая клетка — дороги нет. Пути перебирают деревом: из начала по каждой дороге, дальше так же, не заходя в один пункт дважды. У каждого пути считают сумму и берут наименьшую."},
+  {"id": 0, "key": "plain5", "n": 5, "via": false, "name": "пять пунктов, прямой дороги нет", "rule": "Таблица — это список дорог: число на пересечении строки и столбца — длина дороги между этими пунктами, пустая клетка — дороги нет. Рисуем её графом и проводим по нему все пути из начала в конец, не заходя в пункт дважды. У каждого пути считаем сумму и берём наименьшую."},
   {"id": 1, "key": "direct5", "n": 5, "via": false, "name": "пять пунктов, есть прямая дорога", "rule": "Прямая дорога — такой же путь, как остальные: у неё тоже есть длина, и её сравнивают с обходными. Бывает, что обход короче, бывает, что нет — узнать это можно, только посчитав все пути до конца."},
-  {"id": 2, "key": "plain6", "n": 6, "via": false, "name": "шесть пунктов, кратчайший путь", "rule": "Чем больше пунктов, тем важнее порядок: дерево строят от начала, ветку за веткой, и у каждой ветки сразу пишут сумму. Самый короткий путь часто самый «длинный» по числу дорог: четыре короткие дороги выходят меньше одной большой."},
+  {"id": 2, "key": "plain6", "n": 6, "via": false, "name": "шесть пунктов, кратчайший путь", "rule": "Чем больше пунктов, тем важнее порядок: пути по графу проводят от начала по очереди, не пропуская ни одного, и у каждого сразу пишут сумму. Самый короткий путь часто самый «длинный» по числу дорог: четыре короткие дороги выходят меньше одной большой."},
   {"id": 3, "key": "via5", "n": 5, "via": true, "name": "через пункт, пять пунктов", "rule": "«Проходящего через пункт» — это отбор: из всех путей остаются только те, где этот пункт есть. Самый короткий путь вообще может идти мимо — тогда он не годится, каким бы коротким ни был."},
-  {"id": 4, "key": "via6", "n": 6, "via": true, "name": "через пункт, шесть пунктов", "rule": "Удобно строить дерево как обычно, а потом вычеркнуть ветки, в которых нужного пункта нет. Из оставшихся берут путь с наименьшей суммой. Прямая дорога через пункт не проходит — она отпадает сразу."},
+  {"id": 4, "key": "via6", "n": 6, "via": true, "name": "через пункт, шесть пунктов", "rule": "Пути по графу проводят как обычно, а оставляют только те, что задевают нужный пункт — на графе он в рамке. Из них берут путь с наименьшей суммой. Прямая дорога через пункт не проходит — она отпадает сразу."},
   {"id": 5, "key": "cross6", "n": 6, "via": true, "name": "через пункт — и без повторов", "rule": "Соблазн — найти кратчайший путь до пункта, кратчайший от него и сложить. Так можно, только если отрезки не пересекаются. Побывать в пункте разрешено один раз — и если оба отрезка идут через один и тот же пункт, такой путь запрещён, а настоящий ответ больше."}
 ];
 
@@ -282,7 +308,7 @@ function pathSum(W, p){
 // «Жадный» ход: из каждого пункта по самой короткой дороге туда, где ещё
 // не был. Частая ошибка — и не всегда ошибка: в половине экзаменационных
 // задач так выходит верно. Поэтому это подсказка, а не условие отбора.
-function greedyLen(W, s, f){
+function greedyPath(W, s, f){
   const seen = [s];
   let cur = s, len = 0;
   while (cur !== f){
@@ -293,7 +319,11 @@ function greedyLen(W, s, f){
     if (best < 0) return null;
     len += W[cur][best]; seen.push(best); cur = best;
   }
-  return len;
+  return {p: seen, len: len};
+}
+function greedyLen(W, s, f){
+  const g = greedyPath(W, s, f);
+  return g ? g.len : null;
 }
 
 function connected(W){
@@ -405,33 +435,44 @@ function tryMake(type){
      Ответы, к которым приводят типичные сбои. Те, что совпали с верным,
      в подсказки не идут: такая ошибка в этой задаче не видна.        */
   const foils = [];
-  const add = (a, why) => {
+  // hl — какой путь этой ошибки показать на графе красным (graphSvg)
+  const add = (a, why, hl) => {
     if (a === null || a === undefined) return;
     a = String(a);
     if (a === t.answer || foils.some(q => q.a === a)) return;
-    foils.push({a: a, why: why});
+    foils.push({a: a, why: why, hl: hl});
   };
+  const red = p => ({paths: [{p: p, c: "err", dash: true}]});
   const S = LETTERS[s], F = LETTERS[f], X = type.via ? LETTERS[x] : "";
+  // пункт, где сходятся кратчайшие отрезки «до X» и «от X» (тип cross6)
+  const twice = type.via
+      ? toX.p.find(v => v !== x && fromX.p.indexOf(v) >= 0) : undefined;
+  const pieces = type.via
+      ? {paths: [{p: toX.p, c: "to"}, {p: fromX.p, c: "from"}],
+         twice: twice === undefined ? -1 : twice} : null;
+  const fewPath = ok.find(p => p.p.length === fewest && p.len === minhop);
+  const greedy = greedyPath(W, s, f);
   if (type.via){
     add(walk, "Такая длина выходит, если сложить кратчайший путь до "
         + "пункта <b>" + X + "</b> и кратчайший путь от него. Но эти отрезки "
         + "проходят через один и тот же пункт, а каждый пункт можно "
-        + "посетить <b>только один раз</b>.");
+        + "посетить <b>только один раз</b>.", pieces);
     add(free, "Это кратчайший путь вообще, но он <b>не проходит через "
-        + "пункт " + X + "</b>. Нужны только пути, где этот пункт есть.");
+        + "пункт " + X + "</b>. Нужны только пути, где этот пункт есть.",
+        red(paths[0].p));
   }
   if (W[s][f])
     add(W[s][f], "Это длина прямой дороги " + S + "\u2013" + F + ". Она "
         + "есть в таблице, но " + (type.via ? "через пункт <b>" + X
         + "</b> не проходит." : "в обход выходит <b>короче</b>: сложи "
-        + "дороги обходных путей."));
+        + "дороги обходных путей."), red([s, f]));
   add(minhop, "Это путь с наименьшим числом дорог. А спрашивают самый "
       + "короткий <b>по километрам</b>: несколько коротких дорог бывают "
-      + "меньше одной длинной.");
-  add(greedyLen(W, s, f), "Похоже, путь выбран так: из каждого пункта по "
+      + "меньше одной длинной.", red(fewPath.p));
+  add(greedy && greedy.len, "Похоже, путь выбран так: из каждого пункта по "
       + "самой короткой дороге. Так кратчайший путь не находят — короткая "
       + "дорога в начале может завести на длинную в конце. Нужно "
-      + "<b>сравнить суммы всех путей</b>.");
+      + "<b>сравнить суммы всех путей</b>.", greedy && red(greedy.p));
   t.foils = foils;
   t.lens = ok.map(p => p.len);
 
@@ -443,9 +484,9 @@ function tryMake(type){
       if (W[i][j]) list.push(LETTERS[i] + "\u2013" + LETTERS[j] + " " + W[i][j]);
   steps.push("Читаем таблицу как список дорог: " + list.join(", ")
              + ". Пустая клетка — дороги нет.");
-  steps.push("Строим дерево путей из " + S + " в " + F + ": от " + S
-             + " по каждой дороге, дальше так же, не заходя в один пункт "
-             + "дважды. Всего путей — " + paths.length + ".");
+  steps.push("Рисуем граф и проводим по нему все пути из " + S + " в "
+             + F + ", не заходя в один пункт дважды. Всего путей — "
+             + paths.length + ".");
   if (type.via)
     steps.push("Оставляем только те, что проходят через " + X + ": их "
                + ok.length + ". Остальные не годятся, даже если короче"
@@ -473,6 +514,48 @@ function tryMake(type){
   steps.push("Самый короткий путь — " + pathName(best.p) + ", его длина "
              + ans + ".");
   t.steps = steps;
+
+  /* ------------------------------------------------ разбор рисунком
+     Правка Светы 26.09.2026: ученикам понятнее граф, как на слайде 3, а
+     словами выходит громоздко. Разбор — это картинки одного и того же
+     графа: сначала сам граф, потом соблазн красным, потом ответ зелёным.
+     Здесь только ЧТО выделить (номера пунктов), рисует graphSvg().
+     Тексты — подписи к картинке, одна-две строки, не пересказ.       */
+  const pics = [];
+  pics.push({cap: "Рисуем таблицу графом: пункт — кружок, число — линия "
+      + "между пунктами (дорог " + list.length + "). Едем из " + S + " в "
+      + F + (type.via ? ", обязательно через " + X + " (он в рамке)" : "")
+      + ".", hl: {paths: []}});
+  let trap = null;
+  if (type.key === "cross6")
+    trap = {cap: "Соблазн: до " + X + " — " + pathName(toX.p) + " = "
+        + toX.len + ", от " + X + " — " + pathName(fromX.p) + " = "
+        + fromX.len + ", вместе " + walk + ". Но в пункт " + LETTERS[twice]
+        + " так заходим дважды — нельзя.", hl: pieces};
+  else if (type.via && free < ans)
+    trap = {cap: "Путь " + pathName(paths[0].p) + " = " + free
+        + " короче, но идёт мимо " + X + " — не годится.",
+        hl: red(paths[0].p)};
+  else if (W[s][f] && W[s][f] !== ans)
+    trap = {cap: "Прямая дорога " + S + "–" + F + " = " + W[s][f]
+        + (type.via ? " — не проходит через " + X
+                    : " — длиннее, чем в обход") + ".",
+        hl: red([s, f])};
+  else if (W[s][f] === ans){
+    const d = paths.find(p => p.p.length > 2);
+    trap = {cap: "Лучший обход " + pathName(d.p) + " = " + pathSum(W, d.p)
+        + " = " + d.len + " — длиннее прямой дороги.", hl: red(d.p)};
+  } else if (fewPath.len !== ans)
+    trap = {cap: "Меньше всего дорог в пути " + pathName(fewPath.p)
+        + ", но он длиннее: " + pathSum(W, fewPath.p) + " = " + fewPath.len
+        + ".", hl: red(fewPath.p)};
+  if (trap) pics.push(trap);
+  pics.push({cap: "Кратчайший путь " + pathName(best.p) + ": "
+      + (best.p.length > 2 ? pathSum(W, best.p) + " = " : "") + ans + ".",
+      hl: {paths: [{p: best.p, c: "ok"}]}});
+  t.pics = pics;
+  t.trap = trap;
+  t.okp = ok.map(p => p.p);          // годные пути по возрастанию длины
 
   /* --------------------------------------------------------- условие */
   const names = LETTERS.slice(0, n).split("");
@@ -532,17 +615,20 @@ function verdict(t, raw){
             + "цифры: без «км», без слов и пробелов."};
 
   for (const f of t.foils)
-    if (given === f.a) return {ok: false, hint: f.why};
+    if (given === f.a) return {ok: false, hint: f.why, hl: f.hl};
 
+  // hl — путь, к которому, похоже, пришёл ученик: его рисуем красным
   if (t.lens.indexOf(+given) >= 0)
     return {ok: false, hint: "Путь такой длины есть, но он <b>не самый "
-            + "короткий</b>. Проверь, все ли пути выписаны."};
+            + "короткий</b>. Проверь, все ли пути выписаны.",
+            hl: {paths: [{p: t.okp[t.lens.indexOf(+given)], c: "err",
+                          dash: true}]}};
   if (+given < +t.answer)
     return {ok: false, hint: "Пути такой длины в таблице нет — он вышел "
             + "короче настоящего. Проверь, что каждая дорога пути в "
             + "таблице <b>есть</b> (клетка не пустая) и что сложение "
             + "верное."};
-  return {ok: false, hint: "Не сходится. Выпиши все пути деревом и у "
+  return {ok: false, hint: "Не сходится. Проведи по графу все пути и у "
           + "каждого посчитай сумму — и сверь каждое число с таблицей."};
 }
 
@@ -684,6 +770,288 @@ function conditionText(t){
   return t.plain;
 }
 
+/* ============================================ решение графом
+   Граф рисуется из той же матрицы W, что и таблица условия, поэтому с
+   ней не расходится. Вид — как на слайде 3 презентации: кружки пунктов,
+   серые линии дорог, длины на линиях. Выделение (hl) — какие пути
+   закрасить: ok — зелёный ответ, err — красная ошибка, to/from — два
+   отрезка «до пункта» и «от пункта» в ловушке с повтором.
+
+   Где стоят пункты, решает перебор: начало слева, конец справа,
+   остальные — по свободным местам сетки; берётся расстановка, где меньше
+   всего пересечений и линий через чужой кружок. Случайности тут нет:
+   одна и та же задача всегда нарисована одинаково, RND не трогается
+   (иначе у проверочной поехал бы вариант по фамилии).
+============================================================ */
+const G_R = 24;
+const G_COL = {ok: "#137a41", err: "#b3261e", to: "#1f5fa8", from: "#8a3fb0"};
+const G_BG = {ok: "#e6f5ec", err: "#fdecea", to: "#eaf1fa", from: "#f4ebfa"};
+const G_VIA = "#c26a00";
+
+function graphEdges(W){
+  const e = [];
+  for (let i = 0; i < W.length; i++)
+    for (let j = i + 1; j < W.length; j++)
+      if (W[i][j]) e.push([i, j, W[i][j]]);
+  return e;
+}
+
+function segDist(p, a, b){
+  const dx = b[0] - a[0], dy = b[1] - a[1], L = dx * dx + dy * dy;
+  let u = L ? ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / L : 0;
+  u = Math.max(0, Math.min(1, u));
+  return Math.hypot(p[0] - a[0] - u * dx, p[1] - a[1] - u * dy);
+}
+
+function segCross(a, b, c, d){
+  const o = (p, q, r) => Math.sign((q[0] - p[0]) * (r[1] - p[1])
+                                   - (q[1] - p[1]) * (r[0] - p[0]));
+  return o(a, b, c) * o(a, b, d) < 0 && o(c, d, a) * o(c, d, b) < 0;
+}
+
+function graphLayout(W, s, f){
+  const n = W.length, E = graphEdges(W);
+  const XS = [50, 215, 380, 545], YS = [50, 160, 270];
+  // места: две средние колонки целиком, по краям — только углы (штраф)
+  const slots = [];
+  [1, 2].forEach(c => YS.forEach(y => slots.push([XS[c], y, 0])));
+  [0, 3].forEach(c => [YS[0], YS[2]].forEach(y => slots.push([XS[c], y, 3])));
+  // сколько дорог от начала: дальние пункты стоят правее
+  const hop = new Array(n).fill(99), q = [s];
+  hop[s] = 0;
+  while (q.length){
+    const v = q.shift();
+    for (let c = 0; c < n; c++)
+      if (W[v][c] && hop[c] === 99){ hop[c] = hop[v] + 1; q.push(c); }
+  }
+  const mid = [...Array(n).keys()].filter(i => i !== s && i !== f);
+  const pos = new Array(n);
+  pos[s] = [XS[0], YS[1], 0];
+  pos[f] = [XS[3], YS[1], 0];
+  const used = new Array(slots.length).fill(false);
+  let best = null, bestScore = Infinity;
+
+  const score = () => {
+    let sc = 0;
+    mid.forEach(i => { sc += pos[i][2]; });
+    for (let i = 0; i < E.length; i++){
+      const a = pos[E[i][0]], b = pos[E[i][1]];
+      sc += Math.hypot(b[0] - a[0], b[1] - a[1]) / 150;
+      for (let v = 0; v < n; v++)
+        if (v !== E[i][0] && v !== E[i][1] && segDist(pos[v], a, b) < G_R + 16)
+          sc += 14;
+      for (let j = i + 1; j < E.length; j++){
+        const e = E[i], g = E[j];
+        if (e[0] === g[0] || e[0] === g[1] || e[1] === g[0] || e[1] === g[1])
+          continue;
+        if (segCross(a, b, pos[g[0]], pos[g[1]])) sc += 10;
+      }
+    }
+    mid.forEach(i => mid.forEach(j => {
+      if (hop[i] < hop[j] && pos[i][0] > pos[j][0]) sc += 1;
+    }));
+    return sc;
+  };
+  const rec = k => {
+    if (k === mid.length){
+      const sc = score();
+      if (sc < bestScore - 1e-9){ bestScore = sc; best = pos.map(p => p.slice(0, 2)); }
+      return;
+    }
+    for (let i = 0; i < slots.length; i++){
+      if (used[i]) continue;
+      used[i] = true; pos[mid[k]] = slots[i]; rec(k + 1); used[i] = false;
+    }
+  };
+  rec(0);
+  return best;
+}
+
+// Дорога прямой линией, а если линия задевает чужой кружок — дугой.
+// Дуга выгибается наружу, от середины рисунка.
+function graphRoute(pos, a, b){
+  const A = pos[a], B = pos[b];
+  const others = pos.filter((_, i) => i !== a && i !== b);
+  const cx = pos.reduce((z, p) => z + p[0], 0) / pos.length;
+  const cy = pos.reduce((z, p) => z + p[1], 0) / pos.length;
+  const L = Math.hypot(B[0] - A[0], B[1] - A[1]);
+  let nx = -(B[1] - A[1]) / L, ny = (B[0] - A[0]) / L;
+  const mx = (A[0] + B[0]) / 2, my = (A[1] + B[1]) / 2;
+  if ((mx - cx) * nx + (my - cy) * ny < 0){ nx = -nx; ny = -ny; }
+  const at = (k, u) => {
+    const qx = mx + nx * k, qy = my + ny * k;
+    return [(1 - u) * (1 - u) * A[0] + 2 * (1 - u) * u * qx + u * u * B[0],
+            (1 - u) * (1 - u) * A[1] + 2 * (1 - u) * u * qy + u * u * B[1]];
+  };
+  const clear = k => {
+    for (let i = 1; i < 30; i++){
+      const p = at(k, i / 30);
+      if (others.some(o => Math.hypot(p[0] - o[0], p[1] - o[1]) < G_R + 12))
+        return false;
+    }
+    return true;
+  };
+  let k = 0;
+  for (const c of [0, 70, -70, 110, -110, 160, -160, 220, -220, 290])
+    if (clear(c)){ k = c; break; }
+  const lab = at(k, 0.5);
+  const d = k === 0
+      ? `M${A[0]},${A[1]} L${B[0]},${B[1]}`
+      : `M${A[0]},${A[1]} Q${(mx + nx * k).toFixed(1)},${(my + ny * k).toFixed(1)} ${B[0]},${B[1]}`;
+  const pts = [];
+  for (let i = 0; i <= 10; i++) pts.push(at(k, i / 10));
+  return {d: d, lx: lab[0], ly: lab[1], pts: pts, k: k, at: u => at(k, u)};
+}
+
+// t — задача (нужны W, s, f, x); hl — что выделить; opts.pos — свои
+// координаты пунктов (слайды с заранее нарисованным графом).
+function graphSvg(t, hl, opts){
+  hl = hl || {};
+  opts = opts || {};
+  const W = t.W, n = W.length;
+  const pos = opts.pos || graphLayout(W, t.s, t.f);
+  const E = graphEdges(W);
+  const route = {};
+  E.forEach(e => { route[e[0] + "-" + e[1]] = graphRoute(pos, e[0], e[1]); });
+  const R = (a, b) => route[Math.min(a, b) + "-" + Math.max(a, b)];
+
+  // подписи длин: середина линии, а если место занято чужой подписью или
+  // кружком — сдвиг вдоль линии. Сначала прямые, дуги (обычно длинная
+  // прямая дорога) подстраиваются под них.
+  const placed = [];
+  E.slice().sort((e, g) => (R(e[0], e[1]).k ? 1 : 0) - (R(g[0], g[1]).k ? 1 : 0))
+   .forEach(e => {
+    const r = R(e[0], e[1]);
+    const free = q => placed.every(z => Math.hypot(q[0] - z[0], q[1] - z[1]) >= 40)
+        && pos.every(z => Math.hypot(q[0] - z[0], q[1] - z[1]) >= G_R + 20);
+    for (const u of [0.5, 0.4, 0.6, 0.32, 0.68, 0.25, 0.75]){
+      const q = r.at(u);
+      if (free(q)){ r.lx = q[0]; r.ly = q[1]; break; }
+    }
+    placed.push([r.lx, r.ly]);
+  });
+
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  const grow = (x, y, m) => { x0 = Math.min(x0, x - m); x1 = Math.max(x1, x + m);
+                              y0 = Math.min(y0, y - m); y1 = Math.max(y1, y + m); };
+  pos.forEach(p => grow(p[0], p[1], G_R + 30));
+  E.forEach(e => R(e[0], e[1]).pts.forEach(p => grow(p[0], p[1], 20)));
+
+  const out = [];
+  E.forEach(e => out.push(`<path d="${R(e[0], e[1]).d}" stroke="#9aa1b3" `
+      + `stroke-width="3" fill="none"/>`));
+
+  // выделенные пути: первый толще, второй тоньше поверх — так видны оба,
+  // даже если идут по одной дороге
+  const edgeCol = {}, nodeCol = {};
+  (hl.paths || []).forEach((pp, k) => {
+    const col = G_COL[pp.c], w = k === 0 ? 10 : 5;
+    for (let i = 1; i < pp.p.length; i++){
+      const a = pp.p[i - 1], b = pp.p[i];
+      out.push(`<path d="${R(a, b).d}" stroke="${col}" stroke-width="${w}" `
+          + `stroke-linecap="round" fill="none" opacity="0.9"`
+          + (pp.dash ? ` stroke-dasharray="14 10"` : "") + `/>`);
+      const key = Math.min(a, b) + "-" + Math.max(a, b);
+      if (!edgeCol[key]) edgeCol[key] = pp.c;
+    }
+    pp.p.forEach(v => { if (!nodeCol[v]) nodeCol[v] = pp.c; });
+  });
+
+  E.forEach(e => {
+    const r = R(e[0], e[1]), c = edgeCol[e[0] + "-" + e[1]];
+    const col = c ? G_COL[c] : "#1f5fa8";
+    const wd = String(e[2]).length > 1 ? 38 : 28;
+    out.push(`<rect x="${(r.lx - wd / 2).toFixed(1)}" y="${(r.ly - 15).toFixed(1)}" `
+        + `width="${wd}" height="30" rx="7" fill="#fff" stroke="${c ? col : "#d9dce6"}" `
+        + `stroke-width="${c ? 2.5 : 1.5}"/>`
+        + `<text x="${r.lx.toFixed(1)}" y="${(r.ly + 7).toFixed(1)}" text-anchor="middle" `
+        + `font-size="22" font-weight="700" fill="${col}">${e[2]}</text>`);
+  });
+
+  for (let v = 0; v < n; v++){
+    const [x, y] = pos[v];
+    const twice = hl.twice === v;
+    const fill = twice ? G_BG.err : nodeCol[v] ? G_BG[nodeCol[v]] : "#fff";
+    if (t.x === v)
+      out.push(`<circle cx="${x}" cy="${y}" r="${G_R + 7}" fill="none" `
+          + `stroke="${G_VIA}" stroke-width="3.5"/>`);
+    if (twice){
+      // надпись — туда, где дальше всего от подписей дорог и кружков
+      const spots = [[0, -G_R - 14], [0, G_R + 26], [G_R + 42, 6], [-G_R - 42, 6]];
+      let bestSpot = spots[0], room = -1;
+      spots.forEach(o => {
+        const q = [x + o[0], y + o[1]];
+        const near = Math.min(...placed.map(z => Math.hypot(q[0] - z[0], q[1] - z[1])),
+            ...pos.filter((_, i) => i !== v).map(z => Math.hypot(q[0] - z[0], q[1] - z[1])));
+        if (near > room){ room = near; bestSpot = o; }
+      });
+      grow(x + bestSpot[0], y + bestSpot[1], 40);
+      out.push(`<circle cx="${x}" cy="${y}" r="${G_R + 7}" fill="none" `
+          + `stroke="${G_COL.err}" stroke-width="3.5" stroke-dasharray="6 4"/>`
+          + `<text x="${x + bestSpot[0]}" y="${y + bestSpot[1]}" text-anchor="middle" `
+          + `font-size="16" font-weight="700" fill="${G_COL.err}" paint-order="stroke" `
+          + `stroke="#fff" stroke-width="4">дважды</text>`);
+    }
+    const end = v === t.s || v === t.f;
+    out.push(`<circle cx="${x}" cy="${y}" r="${G_R}" fill="${fill}" `
+        + `stroke="#1b1b1f" stroke-width="${end ? 4 : 2.5}"/>`
+        + `<text x="${x}" y="${y + 8}" text-anchor="middle" font-size="24" `
+        + `font-weight="700" fill="#1b1b1f">${LETTERS[v]}</text>`);
+  }
+
+  const label = opts.label || "Граф дорог: " + E.map(e =>
+      LETTERS[e[0]] + "–" + LETTERS[e[1]] + " " + e[2]).join(", ");
+  return `<svg class="graph" viewBox="${x0.toFixed(0)} ${y0.toFixed(0)} `
+      + `${(x1 - x0).toFixed(0)} ${(y1 - y0).toFixed(0)}" role="img" `
+      + `aria-label="${label}"><g font-family="Segoe UI, system-ui, sans-serif">`
+      + out.join("") + `</g></svg>`;
+}
+
+// Разбор рисунком для тренажёра и ДЗ: слева красным — путь, к которому,
+// похоже, пришёл ученик (hl из verdict; нет его — типичная ловушка
+// задачи), справа зелёным — ответ. Ниже все годные пути с суммами.
+function graphSolution(t, given, hl){
+  const q = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
+                          .replace(/>/g, "&gt;");
+  const figs = [];
+  let wrong = t.trap;
+  if (hl){
+    const one = hl.paths.length === 1 ? hl.paths[0].p : null;
+    wrong = {hl: hl, cap: "Твой ответ " + given
+        + (one ? " — это путь " + pathName(one) + " = "
+                 + (one.length > 2 ? pathSum(t.W, one) + " = " : "") + given
+               : " — два отрезка сложены через пункт "
+                 + LETTERS[hl.twice] + " дважды") + "."};
+  }
+  if (wrong)
+    figs.push(`<figure class="gfig bad">${graphSvg(t, wrong.hl)}`
+        + `<figcaption>${q(wrong.cap)}</figcaption></figure>`);
+  const ans = t.pics[t.pics.length - 1];
+  figs.push(`<figure class="gfig good">${graphSvg(t, ans.hl)}`
+      + `<figcaption>${q(ans.cap)}</figcaption></figure>`);
+  const chips = t.okp.map((p, i) => `<span class="chip${i ? "" : " best"}">`
+      + `${q(pathName(p))} <b>${t.lens[i]}</b></span>`).join("");
+  return `<div class="gsol">${figs.join("")}</div>`
+      + `<div class="chips"><span class="chipcap">все пути`
+      + (t.x >= 0 ? " через " + LETTERS[t.x] : "") + `:</span>${chips}</div>`;
+}
+
+// Готовая задача по списку дорог — для слайдов и подсказки, где граф
+// заранее известен: "AB2 AC3 …".
+function graphTask(roads, s, f, x){
+  const E = roads.split(/\s+/).filter(z => z);
+  let n = 0;
+  E.forEach(e => { n = Math.max(n, LETTERS.indexOf(e[0]) + 1, LETTERS.indexOf(e[1]) + 1); });
+  const W = [];
+  for (let i = 0; i < n; i++) W.push(new Array(n).fill(0));
+  E.forEach(e => {
+    const a = LETTERS.indexOf(e[0]), b = LETTERS.indexOf(e[1]);
+    W[a][b] = W[b][a] = +e.slice(2);
+  });
+  return {W: W, s: LETTERS.indexOf(s), f: LETTERS.indexOf(f),
+          x: x ? LETTERS.indexOf(x) : -1};
+}
+
 /* ==== /БАЗА ==== */
 
 /* ------------------------------------------------------------- оценка
@@ -762,6 +1130,7 @@ function check(i){
   const v = verdict(t, given);
   t.given = given;
   t.hint = v.hint;
+  t.hl = v.hl || null;
   t.status = v.ok ? "ok" : "err";
   if (t.status === "ok" && !t.extra) firstRoundRight++;
 
@@ -806,10 +1175,12 @@ function captureDrafts(){
 const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
                           .replace(/>/g, "&gt;");
 
-// Разбор — это ход решения, а не объявление ответа.
+// Разбор — это ход решения, а не объявление ответа. С 26.09.2026 он
+// рисунком (правка Светы): граф задачи, красным — куда свернул ученик,
+// зелёным — кратчайший путь; словами только правило типа.
 function steps(t, open){
-  const list = t.steps.map(s => `<li>${esc(s)}</li>`).join("");
-  const body = `<ol>${list}</ol><div class="rule">${esc(t.rule)}</div>`;
+  const body = graphSolution(t, t.given, t.hl)
+             + `<div class="rule">${esc(t.rule)}</div>`;
   if (open) return `<div class="why">${body}</div>`;
   return `<details class="steps"><summary>как это решается</summary>
           <div class="why">${body}</div></details>`;

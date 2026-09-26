@@ -27,7 +27,7 @@
   - [Информационный объём текста](https://svetgenmo.github.io/informatika/9/obem-teksta/) — Задание 1 ОГЭ: вычеркнутое слово
   - [Кодирование и декодирование информации](https://svetgenmo.github.io/informatika/9/kodirovanie-dekodirovanie/) — Задание 2 ОГЭ и демоверсия 2027: кодовая таблица и разбор цепочки
   - [Значение логического выражения](https://svetgenmo.github.io/informatika/9/logicheskoe-vyrazhenie/) — Задание 3 ОГЭ и демоверсия 2027: И, ИЛИ, НЕ на числовой прямой и свойства числа
-  - [Кратчайший путь по таблице](https://svetgenmo.github.io/informatika/9/kratchajshij-put/) — Задание 4 ОГЭ и демоверсия 2027: таблица дорог, дерево путей, условие «через пункт»
+  - [Кратчайший путь по таблице](https://svetgenmo.github.io/informatika/9/kratchajshij-put/) — Задание 4 ОГЭ и демоверсия 2027: таблица дорог, граф и путь на нём, условие «через пункт»
   - [Исполнитель с командами](https://svetgenmo.github.io/informatika/9/ispolnitel-s-komandami/) — Задание 5 ОГЭ и демоверсия 2027: составить программу из двух команд или найти число b
   - *Практикумы по программе*
     - [Глобальная сеть Интернет: IP-адреса и большие данные](https://svetgenmo.github.io/informatika/9/globalnaya-set-internet/) — Обзорный практикум по программе ФГОС, урок без доступа в интернет
