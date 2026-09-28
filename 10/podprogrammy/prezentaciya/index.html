@@ -1,0 +1,1027 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Подпрограммы: процедуры и функции — презентация</title>
+<meta name="description" content="Презентация к десятому занятию 10 класса (углублённый): def, параметры и аргументы, return, процедура и функция, None, локальные имена, ранний return внутри цикла, функция-признак, функция из функций, строка документации; три примера с разбором рисунком и сверкой ответа класса.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E10%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ink)}
+body{font:20px/1.5 "Segoe UI",system-ui,sans-serif}
+.deck{height:100vh;display:flex;flex-direction:column}
+.stage{flex:1 1 auto;overflow-y:auto;padding:34px 56px 12px}
+.slide{display:none;max-width:1100px;margin:0 auto}
+.slide.on{display:block}
+
+h1{font-size:50px;line-height:1.1;margin:0 0 18px;text-wrap:balance}
+h2{font-size:36px;line-height:1.15;margin:0 0 20px;text-wrap:balance}
+.lead{font-size:24px;color:var(--muted);margin:0 0 26px}
+.eyebrow{font:700 14px/1 "Segoe UI",system-ui,sans-serif;letter-spacing:.1em;
+         text-transform:uppercase;color:var(--accent);margin:0 0 8px}
+p{margin:0 0 14px}
+ul,ol{margin:0 0 14px;padding-left:28px}
+li{margin:8px 0}
+code{font-family:Consolas,"Cascadia Mono",monospace;background:var(--card);
+     border:1px solid var(--line);border-radius:6px;padding:1px 7px;font-size:.92em}
+pre{font-family:Consolas,"Cascadia Mono",monospace;background:#1e2430;color:#e7ecf5;
+    padding:16px 20px;border-radius:12px;font-size:22px;line-height:1.45;
+    overflow-x:auto;margin:10px 0}
+pre code{background:none;border:0;padding:0;color:inherit;font-size:inherit}
+pre .c{color:#8fa6c4}
+pre .out{color:#9dd4b4}
+pre .hl{color:#ffd479}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+.box{border:1px solid var(--line);border-radius:14px;padding:16px 20px;background:#fff}
+.box h3{margin:0 0 8px;font-size:22px}
+.good{border-color:var(--ok-line);background:var(--ok-bg)}
+.bad{border-color:var(--err-line);background:var(--err-bg)}
+.warn{border-color:var(--hi-line);background:var(--hi-bg)}
+.big{font-size:26px}
+table{border-collapse:collapse;width:100%;font-size:22px;margin:10px 0}
+th,td{border:1px solid var(--line);padding:9px 14px;text-align:left}
+th{background:var(--card)}
+.step[hidden]{display:none}
+.bar{flex:0 0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+     border-top:1px solid var(--line);background:var(--card);padding:12px 24px}
+.bar .spacer{flex:1 1 auto}
+.count{color:var(--muted);font-size:17px;font-variant-numeric:tabular-nums}
+.keys{color:var(--muted);font-size:15px}
+.keys kbd{font:600 13px/1 Consolas,monospace;border:1px solid var(--line);
+          border-bottom-width:2px;border-radius:5px;padding:2px 6px;background:#fff}
+button{font:600 17px/1 inherit;padding:11px 18px;border-radius:10px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);color:var(--muted)}
+
+/* ---- размер шрифта на проекторе: A− / A+ ---- */
+.zoom{display:inline-flex;align-items:center;gap:3px;margin-left:8px}
+.zoom button{padding:8px 10px;font-size:15px;min-width:36px;line-height:1}
+.zoom .z{color:var(--muted);font-size:15px;min-width:46px;text-align:center;
+         font-variant-numeric:tabular-nums}
+
+/* ---- слайд-пример: условие слева на месте, разбор справа ---- */
+.exwrap{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:22px;align-items:start}
+.exwrap .task{position:sticky;top:0;font-size:19px;padding:12px 18px}
+.exwrap .task.tall{position:static}
+.exwrap .task pre{font-size:19px;padding:12px 16px}
+.exwrap .task p{margin:6px 0}
+.exwrap .steps{display:flex;flex-direction:column;gap:10px}
+.exwrap .step{border:1px solid var(--line);border-radius:14px;padding:10px 18px;font-size:19px;background:#fff}
+@media (max-width:1000px){ .exwrap{grid-template-columns:1fr} .exwrap .task{position:static} }
+.xcheck{display:flex;gap:10px;margin-top:12px}
+.xcheck .xin{font:700 24px/1 Consolas,monospace;width:240px;padding:8px 12px;
+             border:2px solid var(--line);border-radius:10px}
+.xcheck .xin:focus{outline:none;border-color:var(--accent)}
+.steps .xres:empty{display:none}
+.steps .xres{border:3px dashed var(--accent);border-radius:12px;padding:6px 16px 10px;background:#fff}
+.xres .xverd{font:800 24px/1.2 "Segoe UI",system-ui,sans-serif;margin:4px 0 2px}
+.xres .xverd.ok{color:var(--ok)}
+.xres .xverd.bad{color:var(--err)}
+.xres .xwhy{color:var(--muted);font-size:16px}
+</style>
+</head>
+<body>
+<div class="deck">
+<div class="stage" id="stage">
+<section class="slide on">
+  <h1>Подпрограммы: процедуры и функции</h1>
+  <p class="lead">Кусок программы получает имя, вход и выход — и дальше его
+  зовут, а не переписывают. 10 класс, углублённый уровень — занятие десятое.</p>
+  <p>Уроки 19–20 плана, «Подпрограммы (процедуры и функции)», одной парой. В
+  прошлый раз мы звали чужие функции из <code>math</code> и <code>random</code>.
+  Сегодня пишем свои.</p>
+</section>
+
+<section class="slide">
+  <h2>Чужие функции мы уже знаем</h2>
+  <table>
+    <tr><th>Вызов</th><th>Вход</th><th>Выход</th></tr>
+    <tr><td><code>isqrt(50)</code></td><td>число</td><td>целый корень: 7</td></tr>
+    <tr><td><code>gcd(12, 18)</code></td><td>два числа</td><td>их НОД: 6</td></tr>
+    <tr><td><code>randint(1, 6)</code></td><td>границы</td><td>случайное число</td></tr>
+  </table>
+  <div class="steps">
+    <div class="step" hidden>
+      <p class="big">У каждой — <b>имя</b>, <b>вход</b> и <b>выход</b>. Как она
+      устроена внутри, мы не знаем и знать не обязаны.</p>
+    </div>
+    <div class="step" hidden>
+      <div class="box good">Сегодня делаем так же со своими кусками: сумма цифр,
+      «простое ли число», НОД — пишем один раз и дальше просто зовём.</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>def: имя, параметры, return</h2>
+  <div class="two">
+    <pre><code>def area(w, h):
+    s = w * h
+    return s
+
+print(area(3, 5))</code></pre>
+    <div class="box">
+      <p><code>area</code> — имя, <code>w</code> и <code>h</code> —
+      <b>параметры</b> (вход), <code>return s</code> — выход.</p>
+    </div>
+  </div>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="box warn"><code>def</code> только <b>запоминает</b> функцию —
+      ничего не считает. Считать она начнёт при вызове.</div>
+    </div>
+    <div class="step" hidden>
+      <p class="big">Вызов <code>area(3, 5)</code>: <b>аргументы</b> 3 и 5 по
+      порядку встают в параметры — <code>w = 3</code>, <code>h = 5</code>.
+      <code>return</code> отдаёт 15 туда, где стоял вызов.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>return отдаёт значение в выражение</h2>
+  <pre><code>x = area(2, 4) + 1          <span class="c"># 8 + 1 = 9</span>
+if area(3, 3) > 5:          <span class="c"># 9 > 5 — да</span>
+    print("большая")
+print(area(area(1, 2), 3))  <span class="c"># сначала area(1, 2) = 2, потом area(2, 3) = 6</span></code></pre>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="box good">Вызов функции — это просто <b>значение</b>. Его можно
+      сложить, сравнить, передать в другой вызов.</div>
+    </div>
+    <div class="step" hidden>
+      <p class="big">Вызов внутри вызова считается <b>первым</b>: сначала аргументы,
+      потом сама функция.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Процедура и функция</h2>
+  <table>
+    <tr><th></th><th>Процедура</th><th>Функция</th></tr>
+    <tr><td>что делает</td><td><b>делает</b>: печатает, рисует</td>
+        <td><b>считает</b> и отдаёт через <code>return</code></td></tr>
+    <tr><td>что возвращает</td><td><code>None</code> — «ничего»</td><td>число, True, False…</td></tr>
+    <tr><td>как зовут</td><td>строкой: <code>show(5)</code></td>
+        <td>в выражении: <code>y = f(5) + 1</code></td></tr>
+  </table>
+  <div class="steps">
+    <div class="step" hidden>
+      <p class="big">В Python обе пишутся через <code>def</code>. Разница — только
+      в <code>return</code>.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Откуда берётся None</h2>
+  <div class="two">
+    <pre><code>def show(x):
+    print(x * 2)
+
+r = show(4)
+print(r)
+print(r + 1)</code></pre>
+    <div class="box">
+      <p>На экране <b>8</b> — это печатает сама <code>show</code>.</p>
+    </div>
+  </div>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="box warn">Потом <b>None</b>: <code>return</code> нет, и функция
+      отдаёт «ничего». Его и положили в <code>r</code>.</div>
+    </div>
+    <div class="step" hidden>
+      <div class="box bad"><code>r + 1</code> — <code>TypeError</code>: к None
+      число не прибавить. Напечатанное нельзя использовать дальше — поэтому
+      считающая функция <b>возвращает</b>, а не печатает.</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-ex data-type="1"></section>
+
+<section class="slide">
+  <h2>У каждой функции свои имена</h2>
+  <div class="two">
+    <pre><code>x = 5
+def f(x):
+    x = x * 2
+    return x
+
+y = f(x)
+print(x, y)</code></pre>
+    <div class="box">
+      <p>Внутри <code>f</code> своё <code>x</code> — параметр. Его удвоили, а
+      внешнее <code>x</code> осталось 5. На экране <b>5 10</b>.</p>
+    </div>
+  </div>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="box warn">Параметры и всё, что создано внутри, —
+      <b>локальные</b>: снаружи их нет, <code>NameError</code>.</div>
+    </div>
+    <div class="step" hidden>
+      <p class="big">В параметр приходит <b>копия</b> числа. Нужно новое значение
+      снаружи — забери его: <code>m = inc(m)</code>.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-ex data-type="2"></section>
+
+<section class="slide">
+  <h2>return обрывает функцию сразу</h2>
+  <div class="two">
+    <pre><code>def is_prime(n):
+    if n &lt; 2:
+        return False
+    d = 2
+    while d * d &lt;= n:
+        if n % d == 0:
+            return False
+        d = d + 1
+    return True</code></pre>
+    <div class="box">
+      <p>Нашёлся делитель — ответ уже ясен: <code>return False</code>, и цикл
+      дальше не крутится.</p>
+    </div>
+  </div>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="box good">«Нашёл» — <code>return</code> <b>внутри</b> цикла,
+      «не нашёл» — <code>return</code> <b>после</b> цикла.</div>
+    </div>
+    <div class="step" hidden>
+      <div class="box bad">Частая ошибка: <code>else: return True</code> внутри
+      цикла. Функция ответит на первом же витке — и 9 станет «простым».</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-ex data-type="5"></section>
+
+<section class="slide">
+  <h2>Функция из функций</h2>
+  <div class="two">
+    <pre><code>def nod(a, b):
+    """НОД — алгоритм Евклида."""
+    while b > 0:
+        t = a % b
+        a = b
+        b = t
+    return a
+
+def nok(a, b):
+    return a // nod(a, b) * b</code></pre>
+    <div class="box">
+      <p><code>nok</code> зовёт <code>nod</code>: одна проверенная функция
+      становится кирпичом для следующей.</p>
+    </div>
+  </div>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="box good">Строка в тройных кавычках — <b>документация</b>.
+      <code>help(nod)</code> покажет её, как у <code>math.isqrt</code> в прошлый
+      раз.</div>
+    </div>
+    <div class="step" hidden>
+      <p class="big">Функция, которая отвечает True или False, — <b>признак</b>:
+      <code>if is_prime(x):</code> читается как фраза.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Три ошибки, которые даст Python</h2>
+  <table>
+    <tr><th>Что написали</th><th>Что скажет Python</th></tr>
+    <tr><td>позвали функцию выше её <code>def</code></td><td><code>NameError</code> — такого имени ещё нет</td></tr>
+    <tr><td><code>f(1, 2, 3)</code> при <code>def f(a, b)</code></td><td><code>TypeError</code> — не то число аргументов</td></tr>
+    <tr><td><code>print(c)</code> снаружи, а <code>c</code> создана внутри</td><td><code>NameError</code> — локальная</td></tr>
+  </table>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="box good">Отсюда порядок программы: <b>сначала все def</b>,
+      потом основная часть — ввод, циклы с вызовами, вывод.</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Что делаем сегодня</h2>
+  <ol>
+    <li><b>Тренажёр</b> — шесть задач: что вернёт функция, процедура и функция,
+        локальные имена, функция в цикле, какая строка упадёт, ранний return.</li>
+    <li><b>Три программы</b>, в каждой своя функция с оговорённым именем:
+        <code>digsum(n)</code>, <code>is_prime(n)</code>, <code>nod(a, b)</code>
+        и <code>nok(a, b)</code>.</li>
+    <li><b>Проверка оболочкой</b> — <code>Проверка.bat</code>: девять наборов
+        данных на программу, а потом оболочка <b>зовёт твою функцию напрямую</b> и
+        смотрит, что она вернула.</li>
+  </ol>
+  <p>Отметка: три задания — «5», два — «4», одно — «3». Попыток сколько угодно.</p>
+</section>
+
+<section class="slide">
+  <h1>За работу</h1>
+  <p class="lead">Сначала тренажёр, потом три программы.</p>
+  <p>Домашнее задание — на странице «Домашнее задание»: шесть типов задач на
+  чтение функций, Python дома не нужен. В начале следующей пары — проверочная по
+  этим же типам.</p>
+</section>
+
+</div>
+
+<div class="bar">
+  <button id="prev">← Назад</button>
+  <button id="step" class="primary">Раскрыть</button>
+  <button id="next">Вперёд →</button>
+  <button id="reroll" hidden>Другие числа</button>
+  <span class="count" id="count"></span>
+  <span class="zoom" title="Размер шрифта на экране: клавиши + и −"><button id="zoomOut" title="Мельче (клавиша −)">A−</button><span class="z" id="zoomVal"></span><button id="zoomIn" title="Крупнее (клавиша +)">A+</button></span>
+  <div class="spacer"></div>
+  <span class="ai-mark" style="color:#5c6070;font-size:13px">Материалы подготовлены с использованием технологий искусственного интеллекта.</span>
+  <span class="keys"><kbd>Пробел</kbd> раскрыть и дальше ·
+    <kbd>←</kbd> <kbd>→</kbd> слайды</span>
+</div>
+</div>
+
+<script>
+/* ==== ТИПЫ: вставлено gen.py, руками не править ==== */
+/* Подпрограммы: процедуры и функции — источник правды для тренажёра
+   практикума, ДЗ и проверочной. Вставляется скриптом gen.py --sync между
+   маркерами. Руками в html не править.
+
+   Шесть типов задач — уроки 19–20 плана («Подпрограммы (процедуры и
+   функции)»):
+     0 «что вернёт функция»   — вызовы, порядок аргументов, вызов внутри вызова
+     1 «процедура и функция»  — print внутри против return; откуда берётся None
+     2 «локальные имена»      — параметр и переменная внутри функции против
+                                переменной снаружи
+     3 «функция в цикле»      — функция-признак зовётся для каждого числа
+     4 «какая строка упадёт»  — вызов до def, не то число аргументов, чужая
+                                локальная переменная, None в арифметике
+     5 «ранний return»        — return посреди цикла обрывает и цикл, и функцию
+
+   Ответ каждой задачи страница считает сама, а gen.py --selftest берёт
+   исполняемый текст задачи (src) КАК ЕСТЬ и исполняет настоящим Python:
+   напечатанное обязано совпасть с ответом, а список вызовов (meta.calls:
+   имя, аргументы, что вернула) — с тем, что Python на самом деле вызывал.
+   Для типа 4 сверяется номер упавшей строки.
+
+   Разбор — рисунком (Света, 26.09.2026: «подсказки объяснения тоже
+   визуал»): tSolution рисует вызовы и то, что они вернули, tCompare —
+   ответ ученика плитками, зелёным и красным по местам. Одни и те же
+   функции для тренажёра, ДЗ, проверочной и слайдов.
+
+   Списков в коде задач нет: класс их не проходил. Кортежей тоже —
+   функция возвращает одно значение. */
+
+const T_TYPES = [
+  'что вернёт функция',
+  'процедура и функция',
+  'локальные имена',
+  'функция в цикле',
+  'какая строка упадёт',
+  'ранний return'
+];
+const T_PER_TYPE = 1;      /* задач каждого типа в наборе: один проход, правило Светы 21.09.2026 */
+
+/* Одна строка-подпись к разбору: приём, а не пересказ решения. */
+const T_HINTS = [
+  'Подставь: первый аргумент встаёт в первый параметр, второй — во второй. Вызов внутри вызова считается первым.',
+  'print показывает, return отдаёт. Функция без return отдаёт None — его и печатает print.',
+  'У функции свои имена. Присваивание внутри не трогает переменную снаружи, а параметр — копия значения.',
+  'Функция зовётся для каждого числа отдельно. Выпиши числа и отметь, где она вернула True.',
+  'Ищи, чего нет в момент выполнения строки: функции, переменной, нужного числа аргументов, значения вместо None.',
+  'return сразу выходит из функции — цикл дальше не крутится. Иди по виткам до первой находки.'
+];
+
+function tRng(seed) {
+  let s = seed >>> 0;
+  return function () {
+    s = (s * 1664525 + 1013904223) >>> 0;
+    return s / 4294967296;
+  };
+}
+function tRand(rng, a, b) { return a + Math.floor(rng() * (b - a + 1)); }
+function tPick(rng, arr) { return arr[tRand(rng, 0, arr.length - 1)]; }
+function tShuffle(rng, arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = tRand(rng, 0, i);
+    const tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+  }
+  return a;
+}
+
+/* --------------------------------------------- арифметика по правилам Python */
+function pyDiv(a, b) { return Math.floor(a / b); }                 /* a // b */
+function pyMod(a, b) { return a - b * Math.floor(a / b); }         /* a % b  */
+/* как Python печатает значение: True, False, None, число */
+function pyShow(v) {
+  if (v === null) return 'None';
+  if (v === true) return 'True';
+  if (v === false) return 'False';
+  return String(v);
+}
+function numbered(lines) {
+  return lines.map((l, i) => String(i + 1).padStart(2, ' ') + '  ' + l).join('\n');
+}
+/* запись вызова: имя и аргументы, что вернула (null — None) */
+const call = (fn, args, ret) => ({ fn, args, ret });
+
+/* ----------------------------------------------- тип 0: что вернёт функция */
+const BODIES = [
+  { txt: 'a * K + b',   f: (a, b, K) => a * K + b },
+  { txt: 'a * b - K',   f: (a, b, K) => a * b - K },
+  { txt: '(a + b) * K', f: (a, b, K) => (a + b) * K },
+  { txt: 'a - b * K',   f: (a, b, K) => a - b * K },
+  { txt: 'a // K + b',  f: (a, b, K) => pyDiv(a, K) + b }
+];
+
+function m0(rng) {
+  const body = tPick(rng, BODIES);
+  const K = tRand(rng, 2, 5);
+  const fn = tPick(rng, ['f', 'calc', 'mix', 'g']);
+  const F = (a, b) => body.f(a, b, K);
+  const p = tRand(rng, 2, 9);
+  let q = tRand(rng, 1, 9);
+  if (q === p) q = p === 9 ? 1 : p + 1;
+  const r = tRand(rng, 1, 9);
+  const def = 'def ' + fn + '(a, b):\n    return ' + body.txt.replace('K', K) + '\n';
+  const shape = tRand(rng, 0, 2);
+  let tail, out, calls, cap;
+  if (shape === 0) {
+    tail = 'print(' + fn + '(' + p + ', ' + q + '))\nprint(' + fn + '(' + q + ', ' + p + '))';
+    out = [F(p, q), F(q, p)];
+    calls = [call(fn, [p, q], F(p, q)), call(fn, [q, p], F(q, p))];
+    cap = 'Аргументы переставлены — в a и b встают разные числа, и ответы разные.';
+  } else if (shape === 1) {
+    const x = F(p, q);
+    tail = 'x = ' + fn + '(' + p + ', ' + q + ')\nprint(x, ' + fn + '(x, ' + r + '))';
+    out = [x, F(x, r)];
+    calls = [call(fn, [p, q], x), call(fn, [x, r], F(x, r))];
+    cap = 'Результат первого вызова лёг в x, а x стал аргументом второго.';
+  } else {
+    const x = F(p, q);
+    tail = 'print(' + fn + '(' + fn + '(' + p + ', ' + q + '), ' + r + '))';
+    out = [F(x, r)];
+    calls = [call(fn, [p, q], x), call(fn, [x, r], F(x, r))];
+    cap = 'Сначала внутренний вызов: его результат — первый аргумент внешнего.';
+  }
+  const src = def + tail;
+  return {
+    code: src, src,
+    meta: { calls, kind: 'calls' },
+    question: 'Что напечатает программа? Числа через пробел, по порядку.',
+    answer: out.map(pyShow).join(' '),
+    explain: cap
+  };
+}
+
+/* ----------------------------------------------- тип 1: процедура и функция */
+function m1(rng) {
+  const shape = tRand(rng, 0, 3);
+  const k = tRand(rng, 2, 9);
+  let src, out, calls, cap;
+  if (shape === 0) {
+    const n = tRand(rng, 3, 40);
+    src = 'def show(x):\n    print(x * ' + k + ')\nr = show(' + n + ')\nprint(r)';
+    out = [n * k, null];
+    calls = [call('show', [n], null)];
+    cap = 'show печатает, но ничего не возвращает — в r лежит None.';
+  } else if (shape === 1) {
+    const m = tRand(rng, 2, 5);
+    const a = tRand(rng, 1, 9);
+    let b = tRand(rng, 1, 9);
+    if (b === a) b = a === 9 ? 1 : a + 1;
+    src = 'def f(x):\n    print(x + ' + k + ')\n    return x * ' + m
+        + '\ny = f(' + a + ') + f(' + b + ')\nprint(y)';
+    out = [a + k, b + k, a * m + b * m];
+    calls = [call('f', [a], a * m), call('f', [b], b * m)];
+    cap = 'Каждый вызов f сначала печатает, потом отдаёт число в сумму.';
+  } else if (shape === 2) {
+    const t = tRand(rng, 5, 30);
+    const a = t + tRand(rng, 1, 20);
+    const b = t - tRand(rng, 0, 4);
+    const first = tRand(rng, 0, 1) ? [a, b] : [b, a];
+    const G = (x) => (x > t ? x - t : null);
+    src = 'def g(x):\n    if x > ' + t + ':\n        return x - ' + t
+        + '\nprint(g(' + first[0] + '))\nprint(g(' + first[1] + '))';
+    out = [G(first[0]), G(first[1])];
+    calls = [call('g', [first[0]], G(first[0])), call('g', [first[1]], G(first[1]))];
+    cap = 'Когда условие ложно, до return дело не доходит — функция отдаёт None.';
+  } else {
+    const n = tRand(rng, 3, 40);
+    src = 'def h(x):\n    return x * ' + k + '\n    print(x)\nprint(h(' + n + '))';
+    out = [n * k];
+    calls = [call('h', [n], n * k)];
+    cap = 'После return функция закончилась: print(x) внутри не выполнится никогда.';
+  }
+  return {
+    code: src, src,
+    meta: { calls, kind: 'calls' },
+    question: 'Что появится на экране? Всё напечатанное через пробел, по порядку. '
+            + 'None, если он будет, пиши так, как его печатает Python.',
+    answer: out.map(pyShow).join(' '),
+    explain: cap
+  };
+}
+
+/* ----------------------------------------------- тип 2: локальные имена */
+function m2(rng) {
+  const shape = tRand(rng, 0, 3);
+  const k = tRand(rng, 2, 6);
+  const a = tRand(rng, 2, 15);
+  let src, out, calls, cap;
+  if (shape === 0) {
+    src = 'x = ' + a + '\ndef f(x):\n    x = x * ' + k + '\n    return x\ny = f(x)\nprint(x, y)';
+    out = [a, a * k];
+    calls = [call('f', [a], a * k)];
+    cap = 'Внутри f своё x — параметр. Его умножили, а внешнее x осталось ' + a + '.';
+  } else if (shape === 1) {
+    const b = tRand(rng, 2, 15);
+    src = 's = ' + a + '\ndef g(n):\n    s = n + ' + k + '\n    return s * 2\nprint(g(' + b + '), s)';
+    out = [(b + k) * 2, a];
+    calls = [call('g', [b], (b + k) * 2)];
+    cap = 's внутри g — своя, локальная. Снаружи s так и осталось ' + a + '.';
+  } else if (shape === 2) {
+    let b = tRand(rng, 2, 9);
+    if (b === a) b = a + 1;
+    const c = tRand(rng, 2, 9);
+    src = 'm = ' + a + '\ndef f(x):\n    return x * m\nm = ' + b + '\nprint(f(' + c + '))';
+    out = [c * b];
+    calls = [call('f', [c], c * b)];
+    cap = 'Своего m у f нет — берётся внешнее, и такое, каким оно стало к моменту вызова: ' + b + '.';
+  } else {
+    src = 'def inc(n):\n    n = n + ' + k + '\n    return n\nm = ' + a + '\ninc(m)\nprint(m, inc(m))';
+    out = [a, a + k];
+    calls = [call('inc', [a], a + k), call('inc', [a], a + k)];
+    cap = 'В n пришла копия числа. Первый вызов свой результат никуда не положил — m не изменилось.';
+  }
+  return {
+    code: src, src,
+    meta: { calls, kind: 'calls' },
+    question: 'Что напечатает программа? Числа через пробел, по порядку.',
+    answer: out.map(pyShow).join(' '),
+    explain: cap
+  };
+}
+
+/* ----------------------------------------------- тип 3: функция в цикле */
+const GOODS = [
+  { mk: (rng) => { const p = tRand(rng, 3, 7); return { p, r: tRand(rng, 0, p - 1) }; },
+    txt: (v) => 'return n % ' + v.p + ' == ' + v.r,
+    f: (n, v) => pyMod(n, v.p) === v.r,
+    range: (rng) => { const a = tRand(rng, 1, 40); return [a, a + tRand(rng, 14, 28)]; },
+    what: (v) => 'остаток от деления на ' + v.p + ' равен ' + v.r },
+  { mk: (rng) => ({ d: tRand(rng, 0, 9) }),
+    txt: (v) => 'return n % 10 == ' + v.d,
+    f: (n, v) => n % 10 === v.d,
+    range: (rng) => { const a = tRand(rng, 1, 150); return [a, a + tRand(rng, 25, 45)]; },
+    what: (v) => 'последняя цифра ' + v.d },
+  { mk: () => ({}),
+    txt: () => 'return n // 10 % 10 > n % 10',
+    f: (n) => pyMod(pyDiv(n, 10), 10) > n % 10,
+    range: (rng) => { const a = tRand(rng, 10, 70); return [a, a + tRand(rng, 12, 25)]; },
+    what: () => 'цифра десятков больше цифры единиц' },
+  { mk: (rng) => { const p = tRand(rng, 2, 7); let q = tRand(rng, 2, 7); if (q === p) q = p === 7 ? 3 : p + 1; return { p, q }; },
+    txt: (v) => 'return n % ' + v.p + ' == 0 or n % ' + v.q + ' == 0',
+    f: (n, v) => n % v.p === 0 || n % v.q === 0,
+    range: (rng) => { const a = tRand(rng, 1, 60); return [a, a + tRand(rng, 12, 24)]; },
+    what: (v) => 'делится на ' + v.p + ' или на ' + v.q }
+];
+
+function m3(rng) {
+  const calls = [];
+  if (tRand(rng, 0, 4) === 0) {
+    /* сумма значений, а не счёт: функция возвращает число */
+    const m = tRand(rng, 3, 6);
+    const a = tRand(rng, 1, 30), b = a + tRand(rng, 6, 12);
+    let s = 0;
+    for (let i = a; i <= b; i++) { const v = i % m; s += v; calls.push(call('f', [i], v)); }
+    const src = 'def f(n):\n    return n % ' + m + '\ns = 0\nfor i in range(' + a + ', ' + (b + 1)
+              + '):\n    s = s + f(i)\nprint(s)';
+    return {
+      code: src, src,
+      meta: { calls, kind: 'strip', sum: true },
+      question: 'Что напечатает программа?',
+      answer: '' + s,
+      explain: 'f зовётся для каждого i от ' + a + ' до ' + b + ' и отдаёт остаток; остатки складываются.'
+    };
+  }
+  const g = tPick(rng, GOODS);
+  const v = g.mk(rng);
+  const [a, b] = g.range(rng);
+  let c = 0;
+  for (let i = a; i <= b; i++) { const ok = g.f(i, v); if (ok) c++; calls.push(call('good', [i], ok)); }
+  if (c === 0) return m3(rng);
+  const src = 'def good(n):\n    ' + g.txt(v) + '\nc = 0\nfor i in range(' + a + ', ' + (b + 1)
+            + '):\n    if good(i):\n        c = c + 1\nprint(c)';
+  return {
+    code: src, src,
+    meta: { calls, kind: 'strip' },
+    question: 'Что напечатает программа?',
+    answer: '' + c,
+    explain: 'good(i) — вопрос «' + g.what(v) + '?» к каждому числу от ' + a + ' до ' + b
+           + '. True — ' + c + ' раз.'
+  };
+}
+
+/* ----------------------------------------------- тип 4: какая строка упадёт */
+const CRASH = ['none', 'argc', 'argc2', 'local', 'before', 'nonearith', 'noneok'];
+
+function m4(rng) {
+  const kind = tPick(rng, CRASH);
+  const K = tRand(rng, 2, 5), p = tRand(rng, 1, 9), q = tRand(rng, 1, 9), r = tRand(rng, 1, 9);
+  let lines, fail, why;
+  const def = ['def f(a, b):', '    c = a + b', '    return c * ' + K];
+  if (kind === 'nonearith' || kind === 'noneok') {
+    lines = ['def show(a):', '    print(a * ' + K + ')', 'y = show(' + p + ')',
+             kind === 'nonearith' ? 'print(y + 1)' : 'print(y)'];
+    fail = kind === 'nonearith' ? 4 : 0;
+    why = kind === 'nonearith'
+      ? 'show ничего не возвращает: в y лежит None, а к None нельзя прибавить 1 — TypeError.'
+      : 'Здесь всё законно: print(y) просто напечатает None.';
+  } else if (kind === 'before') {
+    lines = ['x = f(' + p + ', ' + q + ')'].concat(def, ['print(x)']);
+    fail = 1;
+    why = 'Функцию позвали раньше, чем Python дошёл до def, — NameError.';
+  } else {
+    lines = def.concat(['x = f(' + p + ', ' + q + ')', 'print(x)', 'print(f(x, ' + r + '))']);
+    fail = 0;
+    why = 'Все вызовы правильные: два аргумента, c не трогают снаружи.';
+    if (kind === 'argc') { lines[5] = 'print(f(x))'; fail = 6; why = 'f ждёт два аргумента, а дали один — TypeError.'; }
+    if (kind === 'argc2') { lines[3] = 'x = f(' + p + ', ' + q + ', ' + r + ')'; fail = 4; why = 'f ждёт два аргумента, а дали три — TypeError.'; }
+    if (kind === 'local') { lines[4] = 'print(c)'; fail = 5; why = 'c живёт только внутри f — снаружи такого имени нет, NameError.'; }
+  }
+  const src = lines.join('\n');
+  return {
+    code: numbered(lines), src,
+    meta: { fail, kind: 'crash', line: fail ? lines[fail - 1].trim() : '' },
+    question: 'Какая строка упадёт с ошибкой? Ответ — номер строки; если программа '
+            + 'отработает целиком, ответ 0.',
+    answer: '' + fail,
+    explain: why
+  };
+}
+
+/* ----------------------------------------------- тип 5: ранний return */
+function firstDiv(n) { for (let d = 2; d <= n; d++) if (n % d === 0) return d; return 0; }
+function isPrime(n) { for (let d = 2; d * d <= n; d++) if (n % d === 0) return false; return true; }
+
+function m5(rng) {
+  const shape = tRand(rng, 0, 2);
+  let src, xs, F, fn, cap;
+  if (shape === 0) {
+    fn = 'first';
+    src = 'def first(n):\n    d = 2\n    while d <= n:\n        if n % d == 0:\n            return d\n'
+        + '        d = d + 1\n    return 0\n';
+    let a;
+    do { a = tRand(rng, 20, 150); } while (!isPrime(a));
+    let b;
+    do { b = tRand(rng, 20, 150); } while (isPrime(b) || firstDiv(b) === 2);
+    xs = tShuffle(rng, [a, b]);
+    F = firstDiv;
+    cap = 'Первый же делитель — и return: цикл дальше не идёт. У простого числа первый делитель — оно само.';
+  } else if (shape === 1) {
+    const k = tRand(rng, 3, 6);
+    fn = 'find';
+    src = 'def find(n):\n    while n > 0:\n        if n % 10 > ' + k + ':\n            return n % 10\n'
+        + '        n = n // 10\n    return -1\n';
+    F = (n) => { while (n > 0) { if (n % 10 > k) return n % 10; n = pyDiv(n, 10); } return -1; };
+    let a;
+    do { a = tRand(rng, 1000, 99999); } while (F(a) === -1 || F(a) === Math.max(...String(a).split('').map(Number)));
+    let b = 0;
+    for (let i = 0, len = tRand(rng, 3, 4); i < len; i++) b = b * 10 + tRand(rng, i ? 0 : 1, k);
+    xs = tShuffle(rng, [a, b]);
+    cap = 'Цифры идут с конца числа; return на первой цифре больше ' + k
+        + ', а не на самой большой. Не нашлось — после цикла −1.';
+  } else {
+    fn = 'check';
+    src = 'def check(n):\n    d = 2\n    while d * d <= n:\n        if n % d == 0:\n'
+        + '            return False\n        d = d + 1\n    return True\n';
+    let a;
+    do { a = tRand(rng, 30, 400); } while (!isPrime(a));
+    let b;
+    do { b = tRand(rng, 30, 400); } while (isPrime(b) || firstDiv(b) < 5);
+    xs = tShuffle(rng, [a, b]);
+    F = isPrime;
+    cap = 'Нашёлся делитель — return False сразу. До return True доходит только тот, у кого делителей нет.';
+  }
+  src += 'print(' + fn + '(' + xs[0] + '), ' + fn + '(' + xs[1] + '))';
+  const outs = xs.map(F);
+  return {
+    code: src, src,
+    meta: { calls: xs.map((x, i) => call(fn, [x], outs[i])), kind: 'calls' },
+    question: 'Что напечатает программа? Через пробел, так, как печатает Python.',
+    answer: outs.map(pyShow).join(' '),
+    explain: cap
+  };
+}
+
+const T_MAKERS = [m0, m1, m2, m3, m4, m5];
+
+/* --------------------------------------------------------------- задачи */
+function tTask(type, rng) {
+  const m = T_MAKERS[type](rng);
+  const t = { type, code: m.code, src: m.src, answer: m.answer, explain: m.explain,
+              question: m.question || 'Что напечатает программа?' };
+  if (m.meta !== undefined) t.meta = m.meta;
+  return t;
+}
+
+/* Сверка ответа. Пробелы схлопываем, запятые между числами прощаем: «4, 17»
+   и «4 17» — одно и то же. Минус можно набрать и длинным «−». True, False и
+   None — как их печатает Python, с большой буквы. */
+function tNorm(s) {
+  return String(s).replace(/−/g, '-').replace(/[,;]/g, ' ')
+      .replace(/(\d)[.)](?=\s|$)/g, '$1')
+      .replace(/\s+/g, ' ').trim();
+}
+function tCheck(task, raw) {
+  return tNorm(raw) === tNorm(task.answer);
+}
+
+/* ================================================= разбор рисунком
+   Всё на инлайновых стилях: одна и та же картинка встаёт в практикум, ДЗ,
+   проверочную и на слайд, а стили у страниц разные. */
+const T_CAP = s => '<div style="font:700 12px/1.2 Segoe UI,system-ui,sans-serif;'
+    + 'letter-spacing:.08em;text-transform:uppercase;color:#5c6070;margin:10px 0 4px">'
+    + s + '</div>';
+const tEsc = s => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+
+/* плитка: значение в рамке; ok — зелёная, bad — красная, иначе нейтральная */
+function tTile(txt, how) {
+  const col = how === 'ok' ? ['#e6f5ec', '#137a41'] : how === 'bad' ? ['#fdecea', '#b3261e']
+            : how === 'muted' ? ['#f6f7fb', '#9aa0b0'] : ['#eaf1fa', '#1f5fa8'];
+  return '<span style="display:inline-block;min-width:34px;text-align:center;padding:4px 10px;'
+       + 'margin:2px 4px 2px 0;border:2px solid ' + col[1] + ';border-radius:8px;background:'
+       + col[0] + ';color:' + col[1] + ';font:700 18px/1.2 Consolas,monospace">' + tEsc(txt) + '</span>';
+}
+function tTiles(tokens, marks) {
+  return '<div>' + tokens.map((x, i) => tTile(x, marks ? marks[i] : '')).join('') + '</div>';
+}
+
+/* Строка «вызов → что вернул»: вызов моноширинным, результат плиткой. */
+function tCallRow(c) {
+  const ret = c.ret === null
+    ? tTile('None', 'muted') + '<span style="color:#9aa0b0;font-size:14px"> ничего не вернула</span>'
+    : tTile(pyShow(c.ret), '');
+  return '<div style="display:flex;align-items:center;gap:10px;margin:3px 0">'
+       + '<code style="font:600 17px/1.2 Consolas,monospace;background:#1e2430;color:#e7ecf5;'
+       + 'border-radius:7px;padding:5px 10px">' + tEsc(c.fn + '(' + c.args.join(', ') + ')')
+       + '</code><span style="font-size:20px;color:#5c6070">→</span>' + ret + '</div>';
+}
+
+/* Полоса чисел для «функции в цикле»: у каждого i — что вернула функция. */
+function tStrip(t) {
+  const cells = t.meta.calls.map(c => {
+    const on = c.ret === true || (t.meta.sum && c.ret !== 0);
+    const val = t.meta.sum ? String(c.ret) : (c.ret ? 'T' : '·');
+    return '<span style="display:inline-flex;flex-direction:column;align-items:center;'
+         + 'min-width:34px;margin:2px;border-radius:7px;padding:2px 3px;border:2px solid '
+         + (on ? '#137a41' : '#d9dce6') + ';background:' + (on ? '#e6f5ec' : '#fff') + '">'
+         + '<span style="font:600 14px/1.2 Consolas,monospace;color:#1b1b1f">' + c.args[0] + '</span>'
+         + '<span style="font:700 13px/1.2 Consolas,monospace;color:' + (on ? '#137a41' : '#9aa0b0')
+         + '">' + val + '</span></span>';
+  }).join('');
+  return '<div style="display:flex;flex-wrap:wrap">' + cells + '</div>';
+}
+
+/* noKey — без эталона: на слайде эталон раскрывается отдельным шагом. */
+function tSolution(t, noKey) {
+  let pic;
+  if (t.meta.kind === 'crash') {
+    pic = T_CAP('где падает')
+        + (t.meta.fail
+          ? tTile('строка ' + t.meta.fail, 'bad') + ' <code style="font:600 16px Consolas,monospace">'
+            + tEsc(t.meta.line) + '</code>'
+          : tTile('0', 'ok') + ' <span style="color:#137a41;font-weight:600">отработает целиком</span>');
+  } else if (t.meta.kind === 'strip') {
+    /* подпись идёт капсом — имён из кода в ней нет, иначе good станет GOOD */
+    pic = T_CAP(t.meta.sum ? 'что вернула функция для каждого числа'
+                           : 'каждое число цикла: зелёное — функция ответила «да» (T)')
+        + tStrip(t);
+  } else {
+    pic = T_CAP('вызовы по порядку') + t.meta.calls.map(tCallRow).join('');
+  }
+  return pic + '<div style="margin:6px 0 0;color:#5c6070;font-size:15px">' + tEsc(t.explain) + '</div>'
+       + (noKey ? '' : tKey(t));
+}
+function tKey(t) { return T_CAP('эталон') + tTiles(tNorm(t.answer).split(' ')); }
+
+/* Чужой ответ против эталона: по местам, зелёное совпало, красное — нет.
+   Лишнее — красным, недостающее — пустой красной плиткой. */
+function tCompare(t, given) {
+  const want = tNorm(t.answer).split(' ');
+  const got = tNorm(given).split(' ').filter(x => x !== '');
+  if (!got.length) return '';
+  const n = Math.max(want.length, got.length);
+  const toks = [], marks = [];
+  for (let i = 0; i < n; i++) {
+    toks.push(i < got.length ? got[i] : '?');
+    marks.push(i < got.length && got[i] === want[i] ? 'ok' : 'bad');
+  }
+  return T_CAP('твой ответ') + tTiles(toks, marks);
+}
+
+/* Набор для практикума: T_PER_TYPE кругов по всем типам, внутри круга типы
+   перемешаны — одинаковые не идут подряд. Круг один: тренажёр в части 1 —
+   разминка, время пары уходит на три программы. Второй круг — одной цифрой. */
+function tMake(seed) {
+  const rng = tRng(seed);
+  const out = [];
+  for (let round = 0; round < T_PER_TYPE; round++) {
+    const order = tShuffle(rng, [0, 1, 2, 3, 4, 5]);
+    for (let i = 0; i < order.length; i++) out.push(tTask(order[i], rng));
+  }
+  return out;
+}
+/* ==== /ТИПЫ ==== */
+
+/* ------------------------------------------------------------------
+   Слайды-примеры собирает генератор тренажёра: задача каждый раз новая,
+   разбор — тот же рисунок, что в тренажёре (tSolution), сверка ответа
+   класса — та же tCompare (Света, 26.09.2026: «красивая яркая сверка с
+   эталоном»). Код на слайде — текстом: с проектора не копируют.
+------------------------------------------------------------------ */
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
+                          .replace(/>/g, "&gt;");
+const exRng = tRng((Date.now() ^ (Math.random() * 1e9)) >>> 0);
+
+// Сверка знак в знак, как на экзамене: верное число через запятую — всё
+// равно «✗», но с причиной.
+function xCheck(el){
+  const t = el._task;
+  const box = el.querySelector(".xres");
+  const given = el.querySelector(".xin").value.trim();
+  if (!given){ box.innerHTML = ""; return; }
+  const exact = given === t.answer;
+  const near = !exact && tCheck(t, given);
+  box.innerHTML = '<div class="xverd ' + (exact ? "ok" : "bad") + '">'
+      + (exact ? "✓ совпало с эталоном" : "✗ не совпало") + '</div>'
+      + (near ? '<div class="xwhy">числа верные, но записаны не так: через пробел, без запятых</div>' : "")
+      + tCompare(t, given);
+}
+
+function buildExample(el){
+  const t = tTask(+el.dataset.type, exRng);
+  el._task = t;
+  el.innerHTML =
+    `<p class="eyebrow">разбираем вместе</p>
+     <h2>Пример: ${esc(T_TYPES[t.type])}</h2>
+     <div class="exwrap">
+       <div class="task box"><pre><code>${esc(t.code)}</code></pre>
+         <p>${t.question}</p>
+         <div class="xcheck">
+           <input class="xin" type="text" autocomplete="off" spellcheck="false"
+                  placeholder="ответ класса">
+           <button class="xgo">Сверить</button>
+         </div></div>
+       <div class="steps">
+         <div class="xres"></div>
+         <div class="step" hidden>${tSolution(t, true)}</div>
+         <div class="step" hidden>${tKey(t)}</div>
+       </div>
+     </div>`;
+  const inp = el.querySelector(".xin");
+  // набор ответа не должен листать слайды и менять шрифт
+  inp.addEventListener("keydown", e => {
+    e.stopPropagation();
+    if (e.key === "Enter") xCheck(el);
+  });
+  el.querySelector(".xgo").addEventListener("click", () => xCheck(el));
+  setTimeout(fitExamples, 0);
+}
+
+// Условие выше экрана закреплять нельзя: край уедет при прокрутке шагов.
+function fitExamples(){
+  const stage = document.getElementById("stage");
+  // offsetHeight и clientHeight — в одних и тех же единицах области слайда,
+  // zoom на них действует одинаково; 46 — внутренние отступы области
+  const room = stage.clientHeight - 46;
+  document.querySelectorAll(".exwrap .task").forEach(box => {
+    box.classList.remove("tall");
+    if (box.offsetHeight > room) box.classList.add("tall");
+  });
+}
+window.addEventListener("resize", fitExamples);
+
+/* ------------------------------------------------------------------
+   Управление колодой: стрелки листают слайды, пробел раскрывает
+   очередной шаг разбора и только потом уходит дальше.
+------------------------------------------------------------------ */
+const slides = [...document.querySelectorAll(".slide")];
+let cur = 0, shown = 0;
+
+const isExample = i => slides[i].hasAttribute("data-ex");
+const stepsOf = i => [...slides[i].querySelectorAll(".steps > .step")];
+
+function show(i){
+  slides[cur].classList.remove("on");
+  cur = Math.max(0, Math.min(slides.length - 1, i));
+  slides[cur].classList.add("on");
+  if (isExample(cur) && !slides[cur]._task) buildExample(slides[cur]);
+  shown = stepsOf(cur).filter(el => !el.hidden).length;
+  document.getElementById("stage").scrollTop = 0;
+  sync();
+}
+
+function sync(){
+  const total = stepsOf(cur).length;
+  const ex = isExample(cur);
+  document.getElementById("count").textContent = `${cur + 1} / ${slides.length}`;
+  document.getElementById("prev").disabled = cur === 0;
+  document.getElementById("next").disabled = cur === slides.length - 1;
+  document.getElementById("reroll").hidden = !ex;
+  const b = document.getElementById("step");
+  b.hidden = total === 0;
+  if (total){
+    b.disabled = shown >= total;
+    b.textContent = shown === 0 ? (ex ? "Показать разбор" : "Раскрыть")
+                  : shown >= total ? (ex ? "Разобрано" : "Всё открыто")
+                  : `Дальше (${shown}/${total})`;
+  }
+}
+
+function nextStep(){
+  const steps = stepsOf(cur);
+  if (shown >= steps.length) return false;
+  steps[shown].hidden = false;
+  steps[shown].scrollIntoView({block: "nearest", behavior: "smooth"});
+  shown++;
+  sync();
+  return true;
+}
+
+document.getElementById("prev").addEventListener("click", () => show(cur - 1));
+document.getElementById("next").addEventListener("click", () => show(cur + 1));
+document.getElementById("step").addEventListener("click", nextStep);
+document.getElementById("reroll").addEventListener("click", () => {
+  buildExample(slides[cur]);
+  shown = 0;
+  sync();
+});
+
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowRight" || e.key === "PageDown"){ show(cur + 1); }
+  else if (e.key === "ArrowLeft" || e.key === "PageUp"){ show(cur - 1); }
+  else if (e.key === " " || e.key === "Enter"){
+    if (!nextStep()) show(cur + 1);
+  } else return;
+  e.preventDefault();
+});
+
+show(0);
+
+/* ---- размер шрифта на проекторе ----
+   Zoom только на области слайда: zoom на body растягивает 100vh, и панель
+   уезжает за экран (проверено 17.09.2026). Шаг запоминается в
+   localStorage и общий для всех презентаций: один раз подобрала на
+   проекторе — дальше везде так. ZOOM_BASE — стартовый масштаб этой колоды:
+   у колод с базовым кеглем 20px он выше, чем у 24px. */
+const ZOOM_BASE = 1.2;
+const ZOOM_KEY = "slides-zoom-step";
+let zoomStep = 0;
+try { zoomStep = Math.max(-3, Math.min(6, parseInt(localStorage.getItem(ZOOM_KEY), 10) || 0)); }
+catch (e) {}
+function applyZoom(){
+  const z = Math.round(ZOOM_BASE * Math.pow(1.1, zoomStep) * 100) / 100;
+  document.getElementById("stage").style.zoom = z;
+  document.getElementById("zoomVal").textContent = Math.round(z * 100) + "%";
+  fitExamples();
+}
+function setZoom(d){
+  zoomStep = Math.max(-3, Math.min(6, zoomStep + d));
+  try { localStorage.setItem(ZOOM_KEY, String(zoomStep)); } catch (e) {}
+  applyZoom();
+}
+document.getElementById("zoomIn").addEventListener("click", () => setZoom(1));
+document.getElementById("zoomOut").addEventListener("click", () => setZoom(-1));
+document.addEventListener("keydown", e => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key === "+" || e.key === "=") setZoom(1);
+  else if (e.key === "-" || e.key === "_") setZoom(-1);
+  else return;
+  e.preventDefault();
+});
+applyZoom();
+</script>
+</body>
+</html>
