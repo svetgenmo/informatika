@@ -49,6 +49,7 @@ table{border-collapse:collapse;font-size:19px;margin:10px 0}
 th,td{border:1px solid var(--line);padding:7px 14px;text-align:left}
 th{background:var(--card)}
 table.mini th,table.mini td{padding:6px 12px}
+table.nowrap code{white-space:nowrap}
 .key{color:var(--accent);font-weight:700}
 .step[hidden]{display:none}
 .tag{display:inline-block;background:var(--accent);color:#fff;border-radius:20px;
@@ -298,7 +299,7 @@ s = bin(n)[2:]      <span class="c"># bin даёт '0b1101',
     ...
     r = int(t, 2)
     <span class="c">#print(n, s, t, r)</span>
-    <span class="hl">if r &gt; 95 and (best == 0 or r &lt; best):
+    <span class="hl">if r &gt; 95 and r &lt; best:
         best = r</span></code></pre>
     </div>
     <div class="step" hidden>
@@ -317,7 +318,7 @@ s = bin(n)[2:]      <span class="c"># bin даёт '0b1101',
 <pre><code>def to2(n):
     return f'{n:b}'
 
-best = 0
+<span class="hl">best = 10 ** 9</span>   <span class="c"># больше любого R</span>
 for n in range(1, 1001):
     s = to2(n)
     if n % 2 == 0:
@@ -326,7 +327,7 @@ for n in range(1, 1001):
         t = '1' + s + '00'
     r = int(t, 2)
     <span class="c">#print(n, s, t, r)</span>
-    <span class="hl">if r &gt; 95 and (best == 0 or r &lt; best):
+    <span class="hl">if r &gt; 95 and r &lt; best:
         best = r</span>
 print(best)</code></pre>
     </div>
@@ -334,8 +335,9 @@ print(best)</code></pre>
       <div class="steps">
         <div class="step" hidden>
           <p class="big">Печатает <span class="key">100</span>.</p>
-          <p><code>best == 0</code> — «ещё ничего не нашли»: первое подходящее
-             значение записываем без сравнения.</p>
+          <p>Ищем наименьшее — поэтому вначале в <code>best</code> кладём
+             <b>заведомо большое</b> число, больше любого <i>R</i>. Первое же
+             подходящее <i>R</i> окажется меньше и займёт его место.</p>
         </div>
         <div class="step" hidden>
           <p>Почему не годится «взять первое подходящее»: <i>R</i> растёт
@@ -356,50 +358,49 @@ print(best)</code></pre>
 
 <section class="slide">
   <span class="tag gray">как ещё пишут</span>
-  <h2>Отбор через <code>max</code> и <code>min</code></h2>
+  <h2>Поиск наименьшего и наибольшего: две записи</h2>
+  <p class="big">Вначале в переменную кладём значение, <b>противоположное
+     искомому</b>: ищем наименьшее — заведомо большое, наибольшее — ноль.</p>
   <div class="two eq">
     <div>
-      <h3>Через «ещё ничего не нашли»</h3>
-<pre><code>best = 0
+      <h3>Начальное значение и <code>&lt;</code>, <code>&gt;</code></h3>
+<pre><code>best = 10 ** 9   <span class="c"># больше любого R</span>
     ...
-    if r &gt; 95 and (best == 0 or r &lt; best):
+    if r &gt; 95 and r &lt; best:
         best = r
 print(best)</code></pre>
     </div>
     <div>
-      <h3>Через <code>min</code></h3>
-<pre><code>m = 10 ** 9   <span class="c"># больше любого R</span>
+      <h3>Начальное значение и <code>min</code>, <code>max</code></h3>
+<pre><code>best = 10 ** 9   <span class="c"># больше любого R</span>
     ...
     if r &gt; 95:
-        m = min(m, r)
-print(m)</code></pre>
+        best = min(best, r)
+print(best)</code></pre>
     </div>
   </div>
   <div class="steps">
     <div class="step" hidden>
-      <p>Разница только в том, <b>чем занять переменную до первого
-         значения</b>: для максимума хватает нуля, для минимума нужно
-         заведомо большое число. Дальше <code>max</code> и <code>min</code>
-         сами решают, менять ли её.</p>
-    </div>
-    <div class="step" hidden>
-      <table class="mini">
-        <tr><th>Спрашивают</th><th>Вначале</th><th>В цикле</th></tr>
-        <tr><td>наименьшее <i>R</i> больше <i>T</i></td><td><code>m = 10 ** 9</code></td>
-          <td><code>if r &gt; T: m = min(m, r)</code></td></tr>
-        <tr><td>наибольшее <i>R</i> не больше <i>T</i></td><td><code>m = 0</code></td>
-          <td><code>if r &lt;= T: m = max(m, r)</code></td></tr>
-        <tr><td>наименьшее <i>N</i> с <i>R</i> ≥ <i>T</i></td><td><code>m = 10 ** 9</code></td>
-          <td><code>if r &gt;= T: m = min(m, n)</code></td></tr>
-        <tr><td>наибольшее <i>N</i> с <i>R</i> ≤ <i>T</i></td><td><code>m = 0</code></td>
-          <td><code>if r &lt;= T: m = max(m, n)</code></td></tr>
+      <table class="mini nowrap">
+        <tr><th>Ищем</th><th>Вначале</th><th>Через <code>&lt;</code>, <code>&gt;</code></th><th>Через <code>min</code>, <code>max</code></th></tr>
+        <tr><td>наименьшее <i>R</i></td><td><code>best = 10 ** 9</code></td>
+          <td><code>and r &lt; best: best = r</code></td>
+          <td><code>best = min(best, r)</code></td></tr>
+        <tr><td>наибольшее <i>R</i></td><td><code>best = 0</code></td>
+          <td><code>and r &gt; best: best = r</code></td>
+          <td><code>best = max(best, r)</code></td></tr>
+        <tr><td>наименьшее <i>N</i></td><td><code>best = 10 ** 9</code></td>
+          <td><code>and n &lt; best: best = n</code></td>
+          <td><code>best = min(best, n)</code></td></tr>
+        <tr><td>наибольшее <i>N</i></td><td><code>best = 0</code></td>
+          <td><code>and n &gt; best: best = n</code></td>
+          <td><code>best = max(best, n)</code></td></tr>
       </table>
     </div>
     <div class="step" hidden>
       <div class="box good"><p>Обе записи верны — пишите ту, которую
-        держите в голове. Важно другое: в <code>min</code> и <code>max</code>
-        кладётся <b><code>r</code> или <code>n</code></b> в зависимости от
-        того, что спросили.</p></div>
+        держите в голове. Важно другое: сравнивается и сохраняется
+        <b><code>r</code> или <code>n</code></b> — смотря что спросили.</p></div>
     </div>
   </div>
 </section>
@@ -412,15 +413,15 @@ print(m)</code></pre>
   <table class="mini">
     <tr><th>Вопрос</th><th>Раз</th><th>Строка отбора</th></tr>
     <tr><td>наименьшее <i>R</i> больше <i>T</i></td><td>3</td>
-      <td><code>if r &gt; T and (best == 0 or r &lt; best): best = r</code></td></tr>
+      <td><code>if r &gt; T and r &lt; best: best = r</code></td></tr>
     <tr><td>то же, но <b>нечётное</b> <i>R</i></td><td>2</td>
       <td>добавляется <code>and r % 2 == 1</code></td></tr>
     <tr><td>наибольшее <i>R</i> не больше <i>T</i></td><td>1</td>
       <td><code>if r &lt;= T and r &gt; best: best = r</code></td></tr>
     <tr><td>наименьшее <i>N</i> с <i>R</i> ≥ <i>T</i></td><td>4</td>
-      <td><code>if r &gt;= T and best == 0: best = n</code></td></tr>
+      <td><code>if r &gt;= T and n &lt; best: best = n</code></td></tr>
     <tr><td>наибольшее <i>N</i> с <i>R</i> ≤ <i>T</i></td><td>2</td>
-      <td><code>if r &lt;= T: best = n</code></td></tr>
+      <td><code>if r &lt;= T and n &gt; best: best = n</code></td></tr>
     <tr><td>наибольшее <i>N</i>, <i>R</i> ближе всего к <i>T</i></td><td>1</td>
       <td><code>d = abs(r - T)</code>, затем <code>if d &lt;= dist:</code></td></tr>
   </table>
@@ -436,8 +437,8 @@ print(m)</code></pre>
          одна для сравнения, другая для ответа.</p>
       <div class="two">
         <div>
-<pre><code><span class="hl">dist = 10 ** 9</span>   <span class="c"># расстояние: пока
-              # ничего не нашли</span>
+<pre><code><span class="hl">dist = 10 ** 9</span>   <span class="c"># расстояние: больше
+              # любого возможного</span>
 best = 0      <span class="c"># сам ответ</span>
 for n in range(1, 1001):
     ...
@@ -547,7 +548,7 @@ def ds(s):
     return v</code></pre>
     </div>
     <div>
-<pre><code>best = 0
+<pre><code>best = 10 ** 9
 for n in range(1, 1001):
     s = to3(n)
     if n % 3 == 0:
@@ -556,8 +557,7 @@ for n in range(1, 1001):
         t = s + to3(ds(s) * 2)
     r = int(t, 3)
     <span class="c">#print(n, s, t, r)</span>
-    if r &gt; 520 and r % 2 == 1 \
-       and (best == 0 or r &lt; best):
+    if r &gt; 520 and r % 2 == 1 and r &lt; best:
         best = r
 print(best)</code></pre>
       <div class="steps">
