@@ -4,6 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Двоичная система — тренажёр</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E10%3C/text%3E%3C/svg%3E">
+<!--
+  СОБРАНО ИЗ ШАБЛОНА — руками не править.
+  Тренажёр и домашнее задание тем 3–5 восьмого класса — одна страница в
+  двух режимах: lessons/8a-1/template.html. Что у темы своё — в её
+  topic.json (название, метка кода, задач на тип) и hint.html (подсказка).
+  Пересобрать: uv run gen.py --sync в папке темы.
+-->
 <style>
 :root{
   --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
@@ -17,6 +25,7 @@ html,body{background:var(--bg);color:var(--ink)}
 body{margin:0;padding:20px 16px 60px;
      font:17px/1.5 "Segoe UI",system-ui,sans-serif}
 .wrap{max-width:900px;margin:0 auto}
+.mono{font-family:Consolas,"Courier New",monospace}
 
 h1{font-size:22px;margin:0 0 4px}
 .sub{color:var(--muted);font-size:15px;margin:0 0 18px}
@@ -35,13 +44,36 @@ h1{font-size:22px;margin:0 0 4px}
 .m3{color:#8a5a00;border-color:#e6c98a!important}
 .m2{color:var(--err);border-color:var(--err-line)!important}
 .stats{color:var(--muted);font-size:14px;line-height:1.35}
+.stats b{color:var(--ink)}
 .spacer{flex:1 1 auto}
 button{font:600 15px/1 inherit;padding:11px 16px;border-radius:9px;
        border:1px solid var(--accent);background:#fff;color:var(--accent);
        cursor:pointer}
 button:hover:not(:disabled){background:#eaf1fa}
+button:disabled{opacity:.5;cursor:default}
 button.primary{background:var(--accent);color:#fff}
 button.primary:hover:not(:disabled){background:#194f8c}
+button:focus-visible{outline:3px solid #a9c6e8;outline-offset:2px}
+
+/* ---- как устроено и как сдать (только ДЗ) ---- */
+.howto{border:1px solid var(--line);border-left:5px solid var(--accent);
+       border-radius:10px;padding:14px 18px;margin-bottom:18px;
+       background:var(--card);font-size:16px;line-height:1.5}
+.howto dl{margin:0;display:grid;grid-template-columns:auto 1fr;
+          gap:8px 14px;align-items:baseline}
+.howto dt{font-weight:700;white-space:nowrap;color:var(--accent)}
+.howto dd{margin:0}
+.howto a{color:var(--accent);font-weight:600;word-break:break-all}
+table.steps{border-collapse:collapse;margin:8px 0;font:15px/1.4 inherit}
+table.steps th,table.steps td{border:1px solid var(--line);padding:4px 12px;
+     text-align:center;background:#fff}
+table.steps th{background:var(--card);color:var(--muted);font-size:13px;
+     font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+table.steps td.m{font-weight:700;color:var(--accent);font-size:17px}
+@media (max-width:560px){ .howto dl{grid-template-columns:1fr;gap:2px 0}
+                          .howto dd{margin-bottom:8px} }
+.need{margin:0;flex-basis:100%;font-size:15px;color:var(--muted)}
+.need b{color:var(--ink)}
 
 /* ---- список освоенных типов ---- */
 .types{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 18px}
@@ -89,6 +121,31 @@ table.div td{padding:2px 10px;border:0}
 table.div td.rem{color:var(--accent);font-weight:700}
 .retry{margin-top:10px}
 
+/* ---- код работы и сдача (только ДЗ) ---- */
+.finish{border:3px solid var(--ok-line);background:var(--ok-bg);
+        border-radius:14px;padding:22px 24px;margin:18px 0 16px}
+.finish h2{margin:0 0 6px;font-size:22px;color:var(--ok)}
+.finish .row{margin:16px 0 0}
+.code.wait{font-size:18px;letter-spacing:0;color:#888}
+.code{font:700 34px/1.1 Consolas,monospace;letter-spacing:3px;
+      color:var(--ink);background:#fff;border:2px solid var(--ok-line);
+      border-radius:10px;padding:14px 18px;margin:14px 0;
+      display:inline-block;user-select:all}
+ol.todo{margin:14px 0 0;padding-left:22px}
+ol.todo li{margin:6px 0}
+.send{margin:14px 0 0;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.send label{display:flex;flex-direction:column;gap:4px;
+            font:600 13px/1 inherit;color:var(--muted)}
+.send input{font:600 17px/1 inherit;padding:10px 12px;border-radius:9px;
+            border:2px solid var(--line);background:#fff;width:200px}
+.send input:focus{outline:none;border-color:var(--accent)}
+.send .note{flex-basis:100%;margin:2px 0 0}
+.mailbox{margin:16px 0 0;border:2px dashed var(--accent);border-radius:12px;
+         padding:14px 18px;background:#fff}
+.mailbox h3{margin:0 0 6px;font-size:17px;color:var(--accent)}
+.mailbox p{margin:6px 0}
+.mailbox a{color:var(--accent);font-weight:600;word-break:break-all}
+
 details{margin-top:26px;border:1px solid var(--line);border-radius:12px;
         padding:12px 18px;background:var(--card)}
 summary{cursor:pointer;font-weight:600;font-size:17px}
@@ -110,9 +167,7 @@ th{background:#fff;font-family:inherit;color:var(--muted)}
 <div class="wrap">
 
 <h1>Двоичная система счисления — тренажёр</h1>
-<p class="sub">Двенадцать заданий: по два на каждое умение. Умение
-   засчитывается, когда решены <b>обе</b> его задачи. Ошибся — увидишь
-   разбор и получишь новую попытку.</p>
+<p class="sub">Двенадцать заданий: по два на каждое умение. Умение засчитывается, когда решены <b>обе</b> его задачи. Ошибся — увидишь разбор и кнопку «Новые числа».</p>
 
 <div class="panel">
   <div class="mark">
@@ -128,6 +183,7 @@ th{background:#fff;font-family:inherit;color:var(--muted)}
 <div id="tasks"></div>
 <div id="done"></div>
 <div class="more" id="more"></div>
+<div id="final"></div>
 
 <details>
   <summary>Подсказка: двоичная система и действия в ней</summary>
@@ -223,6 +279,7 @@ th{background:#fff;font-family:inherit;color:var(--muted)}
 
 <script>
 "use strict";
+
 /* ==== ГЕНЕРАТОР: вставлено gen.py, руками не править ==== */
 /* ==================================================================
    nslib.js — общая библиотека раздела «Системы счисления», 8 класс.
@@ -988,21 +1045,33 @@ return {TYPES, SCALE, TOPIC: "binary-system"};
 /* ==== /ГЕНЕРАТОР ==== */
 
 /* ------------------------------------------------------------------
-   Тренажёр: два круга по всем типам. В каждом круге типы перемешаны,
-   чтобы одинаковые задачи не шли подряд и работа читалась как два
-   прохода, а не как шесть пар.
+   Одна страница в двух режимах (Света, 01.10.2026: тренажёр и ДЗ
+   свести в одно). Режим вписывает сборка: "tr" — тренажёр на уроке,
+   отметку учитель снимает с экрана; "dz" — домашнее задание, в конце
+   код работы по фамилии и сдача формой.
+
+   Задачи лежат на странице все сразу, типы перемешаны (правило
+   17.09.2026). В ДЗ — по одной на тип; в тренажёре столько, сколько
+   задано в topic.json.
 
    Оценка считается по ОСВОЕННЫМ ТИПАМ, а не по числу верных ответов:
-   иначе добор ломает счёт. Тип освоен, когда решены обе его задачи.
+   иначе «Новые числа» ломают счёт. Тип освоен, когда решены все его
+   задачи.
 ------------------------------------------------------------------ */
 
+const MODE = "tr";
 const TYPES = TASKS.TYPES;
 const SCALE = TASKS.SCALE;
 const PER_TYPE = 2;
 const rnd = Math.random;
+const markFor = m => SCALE[m] || 2;
 
-let tasks = [];        // {type, task, status, given, bad}
+/* --------------------------------------------------------- состояние */
+
+let tasks = [];        // {type, task, status, given, bad, draft}
 let firstTry = [];     // по типам: ни одной ошибки
+let solved = 0, wrong = 0;
+let locked = false;    // ДЗ: код выдан — карточки заперты
 
 const shuffled = arr => {
   const a = arr.slice();
@@ -1015,7 +1084,7 @@ const shuffled = arr => {
 
 function makeTask(ti){
   return {type: ti, task: TYPES[ti].gen(rnd), status: "open",
-          given: "", bad: null};
+          given: "", bad: null, draft: ""};
 }
 
 function newRun(){
@@ -1024,6 +1093,7 @@ function newRun(){
     for (const ti of shuffled(TYPES.map((_, i) => i)))
       tasks.push(makeTask(ti));
   firstTry = TYPES.map(() => true);
+  solved = 0; wrong = 0; locked = false;
   render();
   const first = document.querySelector("input[type=text]:not(:disabled)");
   if (first) first.focus();
@@ -1032,46 +1102,65 @@ function newRun(){
 const okCount = ti => tasks.filter(t => t.type === ti && t.status === "ok").length;
 const isMastered = ti => okCount(ti) >= PER_TYPE;
 const mastered = () => TYPES.filter((_, i) => isMastered(i)).length;
-const markFor = m => SCALE[m] || 2;
+const cleanCount = () => TYPES.filter((_, i) => isMastered(i) && firstTry[i]).length;
 const openLeft = () => tasks.some(t => t.status === "open");
+const stats = () => ({typesDone: mastered(), cleanTypes: cleanCount(),
+                      solved, wrong});
+
+// Перерисовка пересобирает карточки целиком — недописанное в открытых
+// полях сохраняем, чтобы ответ на одной карточке не стирал соседние.
+function captureDrafts(){
+  tasks.forEach((t, i) => {
+    const el = document.getElementById("in" + i);
+    if (el && t.status === "open") t.draft = el.value;
+  });
+}
 
 /* ------------------------------------------------------------ проверка */
 
 function check(i){
   const t = tasks[i];
-  if (t.status !== "open") return;
+  if (t.status !== "open" || locked) return;
   const input = document.getElementById("in" + i);
   const given = NS.normalize(input.value);
   if (!given) return;                    // пустое ответом не считаем
+  captureDrafts();
   t.given = input.value.trim();
   if (given === t.task.answer){
     t.status = "ok";
+    solved++;
     render();
     focusNextOpen(i + 1);
   } else {
     t.status = "err";
     t.bad = NS.badDigit(given, t.task.answerBase);
     firstTry[t.type] = false;
+    wrong++;
     render();
   }
 }
 
-// Новая задача того же типа вместо неверной: тип закрывается только
-// двумя верными, поэтому ошибку надо отработать, а не отложить.
+// «Новые числа»: такая же задача вместо неверной, на той же карточке.
+// Тип закрывается только верным ответом, поэтому ошибку надо отработать,
+// а не отложить.
 function retry(i){
-  const ti = tasks[i].type;
-  tasks[i] = makeTask(ti);
+  if (locked) return;
+  captureDrafts();
+  tasks[i] = makeTask(tasks[i].type);
   render();
   const el = document.getElementById("in" + i);
   if (el){ el.focus(); el.scrollIntoView({block:"center", behavior:"smooth"}); }
 }
 
-// Добор: доносим ровно столько задач, сколько не хватает до двух
+// Добор (тренажёр): доносим ровно столько задач, сколько не хватает до
 // верных по каждому незакрытому типу.
 function addMore(){
+  captureDrafts();
   for (let ti = 0; ti < TYPES.length; ti++){
     const need = PER_TYPE - okCount(ti);
-    const have = tasks.filter(t => t.type === ti && t.status !== "ok").length;
+    // неверная карточка уже не открыта: считать её «имеющейся» значило
+    // бы не добавить ничего, и кнопка молча не работала бы
+    const have = tasks.filter(t => t.type === ti && t.status === "open").length;
     for (let k = have; k < need; k++) tasks.push(makeTask(ti));
   }
   render();
@@ -1094,6 +1183,7 @@ const esc = v => String(v == null ? "" : v).replace(/"/g, "&quot;");
 function render(){
   const box = document.getElementById("tasks");
   box.innerHTML = "";
+  const off = locked ? "disabled" : "";
 
   tasks.forEach((t, i) => {
     const card = document.createElement("div");
@@ -1108,10 +1198,11 @@ function render(){
       tail = `<div class="tail">
         <div class="verdict err">Ошибка. ${why}Правильный ответ: <b>${t.task.answer}</b></div>
         <div class="solution"><span class="cap">разбор</span>${t.task.solution}</div>
-        <button class="retry" data-retry="${i}">Ещё задача этого типа</button>
+        <button class="retry" data-retry="${i}" ${off}>Новые числа</button>
       </div>`;
     }
 
+    const open = t.status === "open";
     card.innerHTML = `
       <div class="q">
         <div class="num">${i + 1}</div>
@@ -1120,9 +1211,9 @@ function render(){
       <div class="row">
         <input type="text" id="in${i}" autocomplete="off"
                spellcheck="false" placeholder="ответ"
-               value="${t.status === "open" ? "" : esc(t.given)}"
-               ${t.status === "open" ? "" : "disabled"}>
-        ${t.status === "open" ? `<button data-check="${i}">Проверить</button>` : ""}
+               value="${esc(open ? t.draft : t.given)}"
+               ${open && !locked ? "" : "disabled"}>
+        ${open ? `<button data-check="${i}" ${off}>Проверить</button>` : ""}
       </div>
       ${tail}`;
     box.appendChild(card);
@@ -1140,7 +1231,18 @@ function render(){
   updatePanel();
 }
 
+function renderTypes(){
+  document.getElementById("types").innerHTML = TYPES.map((t, i) =>
+    `<span class="chip${isMastered(i) ? " done" : ""}">${t.title}` +
+    (PER_TYPE > 1 ? ` <i>${okCount(i)}/${PER_TYPE}</i>` : "") +
+    `</span>`).join("");
+  document.getElementById("stats").innerHTML =
+    `освоено умений: <b>${mastered()}</b> из ${TYPES.length}<br>` +
+    `без единой ошибки: <b>${cleanCount()}</b> из ${TYPES.length}`;
+}
+
 function updatePanel(){
+  renderTypes();
   const m = mastered();
   const mark = markFor(m);
   const started = tasks.some(t => t.status !== "open");
@@ -1150,15 +1252,6 @@ function updatePanel(){
   // характеризует, а урок только начался
   el.textContent = started ? mark : "—";
   el.className = started ? "m" + mark : "";
-
-  const clean = TYPES.filter((_, i) => isMastered(i) && firstTry[i]).length;
-  document.getElementById("stats").innerHTML =
-    `освоено умений: <b>${m}</b> из ${TYPES.length}<br>` +
-    `без единой ошибки: <b>${clean}</b> из ${TYPES.length}`;
-
-  document.getElementById("types").innerHTML = TYPES.map((t, i) =>
-    `<span class="chip${isMastered(i) ? " done" : ""}">${t.title}` +
-    ` <i>${okCount(i)}/${PER_TYPE}</i></span>`).join("");
 
   const allDone = m === TYPES.length;
   document.getElementById("done").innerHTML = allDone
@@ -1174,6 +1267,7 @@ function updatePanel(){
 }
 
 document.getElementById("again").addEventListener("click", newRun);
+
 newRun();
 </script>
 <p class="ai-mark" style="margin:34px auto 0;max-width:860px;padding-top:12px;border-top:1px solid #d9dce6;color:#5c6070;font:13px/1.5 'Segoe UI',system-ui,sans-serif">Материалы подготовлены с использованием технологий искусственного интеллекта.</p>
