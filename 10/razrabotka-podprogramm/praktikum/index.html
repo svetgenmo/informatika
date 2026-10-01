@@ -412,10 +412,19 @@ const T_HINTS = [
 
 function tRng(seed) {
   let s = seed >>> 0;
-  return function () {
+  const rng = function () {
     s = (s * 1664525 + 1013904223) >>> 0;
     return s / 4294967296;
   };
+  rng.seed = seed;
+  return rng;
+}
+/* Циклы подбора не бесконечные: если для зерна задачи нет, лучше громкая
+   ошибка с номером зерна, чем node, крутящийся всю ночь (письмо health 01.10). */
+const T_TRIES = 10000;
+function tGiveUp(k, rng, where) {
+  if (k >= T_TRIES)
+    throw new Error(where + ': за ' + T_TRIES + ' попыток задача не подобралась, зерно ' + rng.seed);
 }
 function tRand(rng, a, b) { return a + Math.floor(rng() * (b - a + 1)); }
 function tPick(rng, arr) { return arr[tRand(rng, 0, arr.length - 1)]; }
@@ -590,7 +599,8 @@ const GOODS = [
 ];
 
 function m2(rng) {
-  for (;;) {
+  for (let k = 0; ; k++) {
+    tGiveUp(k, rng, 'признак в цикле');
     const g = tPick(rng, GOODS);
     const v = g.mk(rng);
     const [a, b] = g.range(rng);
@@ -755,7 +765,8 @@ function m5(rng) {
   const v = g.mk(rng);
   /* первый вызов: находка не дальше шестого числа */
   let p, h;
-  for (;;) {
+  for (let k = 0; ; k++) {
+    tGiveUp(k, rng, 'поиск с ранним return, первый вызов');
     p = tRand(rng, 10, 150);
     h = -1;
     for (let i = p; i <= p + 5; i++) if (g.f(i, v)) { h = i; break; }
@@ -765,14 +776,16 @@ function m5(rng) {
   /* второй: через раз отрезок без находок — ответ из-за цикла */
   let r, s;
   if (tRand(rng, 0, 1)) {
-    for (;;) {
+    for (let k = 0; ; k++) {
+      tGiveUp(k, rng, 'поиск с ранним return, отрезок без находок');
       r = tRand(rng, 10, 150);
       s = r;
       while (s + 1 <= r + 4 && !g.f(s + 1, v)) s++;
       if (!g.f(r, v) && s > r) break;
     }
   } else {
-    for (;;) {
+    for (let k = 0; ; k++) {
+      tGiveUp(k, rng, 'поиск с ранним return, второй вызов');
       r = tRand(rng, 10, 150);
       let hit = false;
       for (let i = r; i <= r + 5; i++) if (g.f(i, v)) { hit = true; break; }
