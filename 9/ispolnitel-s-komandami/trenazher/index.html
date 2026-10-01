@@ -7,12 +7,21 @@
 <meta name="description" content="Тренажёр к заданию 5 ОГЭ по информатике, 9 класс: восемь типов задач про исполнителя с двумя командами.">
 <meta name="robots" content="noindex">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E5%3C/text%3E%3C/svg%3E">
+<!--
+  СОБРАНО ИЗ ШАБЛОНА — руками не править.
+  Тренажёр и домашнее задание тем ОГЭ 9 класса — одна страница в двух
+  режимах: lessons/9/template.html. Что у темы своё — в её topic.json
+  (тексты, шкала, метка кода), hooks.js (подпись под условием, вид
+  разбора, письмо) и hint.html (подсказка). Пересобрать: uv run gen.py
+  --sync в папке темы.
+-->
 <style>
 :root{
   --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
   --bg:#fff; --card:#f6f7fb;
   --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
   --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
 }
 *{box-sizing:border-box}
 html,body{background:var(--bg);color:var(--ink)}
@@ -22,6 +31,55 @@ body{margin:0;padding:20px 16px 60px;
 
 h1{font-size:22px;margin:0 0 4px}
 .sub{color:var(--muted);font-size:15px;margin:0 0 18px}
+
+.m5{color:var(--ok);border-color:var(--ok-line)!important}
+.m4{color:var(--accent);border-color:#a9c6e8!important}
+.m3{color:#8a5a00;border-color:#e6c98a!important}
+.m2{color:var(--err);border-color:var(--err-line)!important}
+.spacer,.sp{flex:1 1 auto}
+button{font:600 15px/1 inherit;padding:11px 16px;border-radius:9px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);
+       cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);
+                color:var(--muted);background:#fff}
+button:focus-visible{outline:3px solid #a9c6e8;outline-offset:2px}
+
+input[type=text]{font:700 19px/1 Consolas,"Courier New",monospace;
+     padding:11px 14px;width:220px;letter-spacing:1px;
+     border:2px solid var(--line);border-radius:9px;background:#fff;
+     color:var(--ink)}
+input[type=text]:focus{outline:none;border-color:var(--accent)}
+input[type=text]:disabled{background:#f1f2f6;color:var(--muted)}
+
+.ask{font-weight:600}
+.ask small{display:block;font-weight:400;color:var(--muted);margin-top:3px}
+
+/* Условие задачи — картинкой: не выделяется и не копируется в поисковик
+   или в нейросеть, прочитать и разобрать приходится самому. В тренажёре
+   и в ДЗ одинаково: текстом условие вставляется в любой чат одним
+   движением. */
+.frozen{user-select:none;overflow-x:auto}
+.frozen canvas{display:block;max-width:100%;height:auto}
+
+.done{margin:18px 0 0;padding:12px 16px;border-radius:10px;
+      background:var(--ok-bg);border:1px solid var(--ok-line);
+      color:var(--ok);font-weight:600}
+
+details.help{margin-top:26px;border:1px solid var(--line);border-radius:12px;
+        padding:12px 18px;background:var(--card)}
+details.help summary{cursor:pointer;font-weight:600;font-size:17px}
+details.help h3{font-size:16px;margin:18px 0 6px}
+details.help p{margin:6px 0}
+details.help table{border-collapse:collapse;margin:6px 0;font-size:15px}
+details.help td,details.help th{border:1px solid var(--line);padding:5px 10px;
+                                text-align:left}
+details.help th{background:#fff;color:var(--muted);font-size:14px}
+code{font:600 15px/1.4 Consolas,"Courier New",monospace;
+     background:#fff;border:1px solid var(--line);border-radius:4px;
+     padding:1px 5px}
 
 /* ---- панель оценки ---- */
 .panel{display:flex;align-items:center;gap:18px;flex-wrap:wrap;
@@ -33,21 +91,7 @@ h1{font-size:22px;margin:0 0 4px}
 .mark b{font:700 40px/1 "Segoe UI",system-ui,sans-serif;min-width:44px;
         text-align:center;border-radius:8px;padding:2px 10px;
         background:#fff;border:2px solid var(--line)}
-.m5{color:var(--ok);border-color:var(--ok-line)!important}
-.m4{color:var(--accent);border-color:#a9c6e8!important}
-.m3{color:#8a5a00;border-color:#e6c98a!important}
-.m2{color:var(--err);border-color:var(--err-line)!important}
 .stats{color:var(--muted);font-size:14px;line-height:1.35}
-.spacer{flex:1 1 auto}
-button{font:600 15px/1 inherit;padding:11px 16px;border-radius:9px;
-       border:1px solid var(--accent);background:#fff;color:var(--accent);
-       cursor:pointer}
-button:hover:not(:disabled){background:#eaf1fa}
-button.primary{background:var(--accent);color:#fff}
-button.primary:hover:not(:disabled){background:#194f8c}
-button:disabled{opacity:.4;cursor:default;border-color:var(--line);
-                color:var(--muted);background:#fff}
-button:focus-visible{outline:3px solid #a9c6e8;outline-offset:2px}
 
 /* ---- задачи ---- */
 .task{border:1px solid var(--line);border-radius:12px;padding:14px 18px;
@@ -66,18 +110,10 @@ button:focus-visible{outline:3px solid #a9c6e8;outline-offset:2px}
        color:var(--accent);border:1px solid #a9c6e8;border-radius:20px;
        padding:1px 8px;vertical-align:2px;text-transform:none;
        letter-spacing:0}
-
-.ask{margin:12px 0 0 40px;font-weight:600}
-.ask small{display:block;font-weight:400;color:var(--muted);margin-top:3px}
-
-.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;
+.task .frozen{margin:10px 0 0 40px}
+.task .ask{margin:12px 0 0 40px}
+.task .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;
      margin:14px 0 0 40px}
-input[type=text]{font:700 19px/1 Consolas,"Courier New",monospace;
-     padding:11px 14px;width:200px;letter-spacing:1px;
-     border:2px solid var(--line);border-radius:9px;background:#fff;
-     color:var(--ink)}
-input[type=text]:focus{outline:none;border-color:var(--accent)}
-input[type=text]:disabled{background:#f1f2f6;color:var(--muted)}
 .verdict{font-weight:700}
 .verdict.ok{color:var(--ok)}
 .verdict.err{color:var(--err)}
@@ -93,31 +129,12 @@ input[type=text]:disabled{background:#f1f2f6;color:var(--muted)}
 details.steps{margin:10px 0 0 40px;border:none;background:none;padding:0}
 details.steps summary{font-size:14px;color:var(--accent);font-weight:600}
 
-/* Условие задачи — картинкой: не выделяется и не копируется в поисковик
-   или в нейросеть, прочитать и разобрать приходится самому. Условие
-   задания 5 — три строки, они вставляются в любой чат одним движением. */
-.frozen{margin:10px 0 0 40px;user-select:none;overflow-x:auto}
-.frozen canvas{display:block;max-width:100%;height:auto}
-
-.done{margin:18px 0 0;padding:12px 16px;border-radius:10px;
-      background:var(--ok-bg);border:1px solid var(--ok-line);
-      color:var(--ok);font-weight:600}
-
-details.help{margin-top:26px;border:1px solid var(--line);border-radius:12px;
-        padding:12px 18px;background:var(--card)}
-details.help summary{cursor:pointer;font-weight:600;font-size:17px}
-details.help h3{font-size:16px;margin:18px 0 6px}
-details.help p{margin:6px 0}
-table{border-collapse:collapse;margin:6px 0;font-size:15px}
-td,th{border:1px solid var(--line);padding:5px 10px;text-align:left}
-th{background:#fff;color:var(--muted);font-size:14px}
-code{font:600 15px/1.4 Consolas,"Courier New",monospace;
-     background:#fff;border:1px solid var(--line);border-radius:4px;
-     padding:1px 5px}
-
 @media (max-width:700px){
-  .ask,.row,.why,details.steps,.frozen{margin-left:0}
+  .task .ask,.task .row,.why,details.steps,.task .frozen{margin-left:0}
 }
+
+/* ---- своё у темы (topic.css) ---- */
+
 </style>
 </head>
 <body>
@@ -842,20 +859,49 @@ function conditionText(t){
 
 /* ==== /БАЗА ==== */
 
-/* ------------------------------------------------------------- оценка
-   Восемь типов — по замеру тренировочных вариантов, по ОДНОЙ задаче на
-   каждый. Норма с 19.09.2026: где задача решается руками на бумаге, а
-   не в голове за минуту, тренажёр — один круг. Вернуть второй круг —
-   PER_TYPE = 2, остальное подстроится.
+/* ------------------------------------------------------------------
+   Одна страница в двух режимах (Света, 01.10.2026: тренажёр и ДЗ
+   свести в одно). Режим вписывает сборка: "tr" — тренажёр на уроке,
+   отметку учитель снимает с экрана; "dz" — домашнее задание, в конце
+   код работы по фамилии и сдача формой.
 
-   Считаем ОСВОЕННЫЕ типы, а не верные ответы — иначе добор ломает счёт.
+   Тренажёр — все задачи сразу, PER_TYPE на тип, ошибки добираются
+   кнопкой «Добавить задачи». ДЗ — по одной задаче на тип (норма
+   07.09.2026: длинное домашнее не сделают), ошибка лечится «Новыми
+   числами» на той же карточке.
+
+   Оценка считается по ОСВОЕННЫМ ТИПАМ, а не по числу верных ответов:
+   иначе добор ломает счёт.
 ------------------------------------------------------------------ */
+
+const MODE = "tr";
 const SCALE = [[8, 5], [7, 4], [6, 3]];
-const PER_TYPE = 1;                       // задач на каждый тип
-function markFor(mastered){
-  for (const s of SCALE) if (mastered >= s[0]) return s[1];
+function markFor(done){
+  for (const s of SCALE) if (done >= s[0]) return s[1];
   return 2;
 }
+
+const esc = s => String(s == null ? "" : s).replace(/&/g, "&amp;")
+                 .replace(/</g, "&lt;").replace(/>/g, "&gt;")
+                 .replace(/"/g, "&quot;");
+
+/* ---- своё у темы (hooks.js): подпись под условием, вид разбора ---- */
+/* Своё у темы «исполнитель с командами» для общего шаблона ../template.html.
+   askHtml(t) — что стоит под картинкой условия: вопрос и как записать
+   ответ. solutionHtml(t, given, hl, wrong) — разбор: given — что ввёл
+   ученик, hl — подсветка от verdict(), wrong — ответ неверный. */
+
+function askHtml(t){
+  return `<div class="ask">${esc(t.tail)}<small>${esc(t.howto)}</small></div>`;
+}
+
+// Разбор — ход решения, а не объявление ответа.
+function solutionHtml(t, given, hl, wrong){
+  return `<ol>${t.steps.map(s => `<li>${esc(s)}</li>`).join("")}</ol>` +
+         `<div class="rule">${esc(t.rule)}</div>`;
+}
+
+const PER_TYPE = 1;            // задач на каждый тип
 
 /* ---------------------------------------------------------- состояние */
 
@@ -897,6 +943,7 @@ function failedTypes(){
                          set.add(t.type); });
   return set;
 }
+// сколько задач надо добрать, чтобы закрыть незакрытые типы
 function lackCount(){
   const cnt = rightByType();
   let n = 0;
@@ -917,6 +964,7 @@ function check(i){
   const v = verdict(t, given);
   t.given = given;
   t.hint = v.hint;
+  t.hl = v.hl || null;
   t.status = v.ok ? "ok" : "err";
   if (t.status === "ok" && !t.extra) firstRoundRight++;
 
@@ -924,6 +972,8 @@ function check(i){
   focusNextOpen(i + 1);
 }
 
+// Следующее открытое поле после только что закрытого; если сзади всё
+// решено — первое открытое сверху.
 function focusNextOpen(from){
   let idx = tasks.findIndex((t, k) => k >= from && t.status === "open");
   if (idx < 0) idx = tasks.findIndex(t => t.status === "open");
@@ -938,6 +988,7 @@ function addTasks(){
   const need = [...failedTypes()];
   if (!need.length) return;
   const cnt = rightByType();
+  // доносим ровно столько, сколько не хватает до PER_TYPE верных по типу
   need.forEach(id => {
     for (let i = PER_TYPE - (cnt[id] || 0); i > 0; i--)
       tasks.push(Object.assign(makeTask(id),
@@ -950,6 +1001,9 @@ function addTasks(){
 
 /* -------------------------------------------------------------- вывод */
 
+// Перерисовка собирает карточки заново, поэтому набранное в ещё не
+// проверенных полях надо сначала забрать в состояние — иначе ученик
+// теряет ответы, которые уже вписал, но пока не проверил.
 function captureDrafts(){
   tasks.forEach((t, i) => {
     if (t.status !== "open") return;
@@ -958,18 +1012,14 @@ function captureDrafts(){
   });
 }
 
-const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
-                          .replace(/>/g, "&gt;");
-
-// Разбор — это ход решения, а не объявление ответа.
+// Разбор — ход решения, а не объявление ответа. При ошибке раскрыт,
+// при верном ответе свёрнут под «как это решается».
 function steps(t, open){
-  const list = t.steps.map(s => `<li>${esc(s)}</li>`).join("");
-  const body = `<ol>${list}</ol><div class="rule">${esc(t.rule)}</div>`;
+  const body = solutionHtml(t, t.given, t.hl, t.status === "err");
   if (open) return `<div class="why">${body}</div>`;
   return `<details class="steps"><summary>как это решается</summary>
           <div class="why">${body}</div></details>`;
 }
-
 
 function render(){
   const box = document.getElementById("tasks");
@@ -983,8 +1033,8 @@ function render(){
     if (t.status === "open"){
       tail = `<div class="row">
                 <input type="text" id="in${i}" autocomplete="off"
-                       spellcheck="false" placeholder="ответ" maxlength="12"
-                       inputmode="numeric" value="${esc(t.draft || "")}">
+                       spellcheck="false" placeholder="ответ" maxlength="12" inputmode="numeric"
+                       value="${esc(t.draft || "")}">
                 <button data-check="${i}">Проверить</button>
               </div>`;
     } else {
@@ -1006,7 +1056,7 @@ function render(){
           t.extra ? '<span class="extra">добор</span>' : ""}</span></div>
       </div>
       <div class="frozen" id="frozen${i}"></div>
-      <div class="ask">${esc(t.tail)}<small>${esc(t.howto)}</small></div>
+      ${askHtml(t)}
       ${tail}`;
     box.appendChild(card);
     document.getElementById("frozen" + i).appendChild(renderCondition(t));
@@ -1036,10 +1086,12 @@ function updatePanel(){
 
   const extras = tasks.filter(t => t.extra).length;
   const nextUp = SCALE.filter(s => s[0] > mastered).pop();
+  const rule = PER_TYPE === 1
+    ? "тип закрывает верная задача; ошибся — «Добавить задачи» даст такую же"
+    : `тип закрывают ${PER_TYPE === 2 ? "две" : PER_TYPE} верные задачи`;
   document.getElementById("stats").innerHTML =
     `освоено типов: <b>${mastered}</b> из ${TYPES_TOTAL} ` +
-    `<span style="opacity:.7">(тип закрывает верная задача; ошибся — ` +
-    `«Добавить задачи» даст такую же)</span><br>` +
+    `<span style="opacity:.7">(${rule})</span><br>` +
     `верно с первой попытки: <b>${firstRoundRight}</b> из ` +
     `${TYPES_TOTAL * PER_TYPE}` +
     (extras ? ` &middot; добрано задач: <b>${extras}</b>` : "") +
@@ -1061,7 +1113,8 @@ function updatePanel(){
 document.getElementById("again").addEventListener("click", newRun);
 document.getElementById("add").addEventListener("click", addTasks);
 newRun();
+
 </script>
-<p class="ai-mark" style='margin:34px auto 0;max-width:860px;padding-top:12px;border-top:1px solid #d9dce6;color:#5c6070;font:13px/1.5 "Segoe UI",system-ui,sans-serif'>Материалы подготовлены с использованием технологий искусственного интеллекта.</p>
+<p class="ai-mark" style="margin:34px auto 0;max-width:860px;padding-top:12px;border-top:1px solid #d9dce6;color:#5c6070;font:13px/1.5 'Segoe UI',system-ui,sans-serif">Материалы подготовлены с использованием технологий искусственного интеллекта.</p>
 </body>
 </html>

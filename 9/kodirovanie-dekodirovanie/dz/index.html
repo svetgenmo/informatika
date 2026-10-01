@@ -7,21 +7,36 @@
 <meta name="description" content="Домашнее задание к заданию 2 ОГЭ по информатике, 9 класс: шесть типов задач на кодовую таблицу, код работы и сдача формой.">
 <meta name="robots" content="noindex">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E10%3C/text%3E%3C/svg%3E">
+<!--
+  СОБРАНО ИЗ ШАБЛОНА — руками не править.
+  Тренажёр и домашнее задание тем ОГЭ 9 класса — одна страница в двух
+  режимах: lessons/9/template.html. Что у темы своё — в её topic.json
+  (тексты, шкала, метка кода), hooks.js (подпись под условием, вид
+  разбора, письмо) и hint.html (подсказка). Пересобрать: uv run gen.py
+  --sync в папке темы.
+-->
 <style>
 :root{
   --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
   --bg:#fff; --card:#f6f7fb;
   --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
   --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
 }
 *{box-sizing:border-box}
 html,body{background:var(--bg);color:var(--ink)}
 body{margin:0;padding:20px 16px 60px;
      font:17px/1.5 "Segoe UI",system-ui,sans-serif}
 .wrap{max-width:820px;margin:0 auto}
+
 h1{font-size:22px;margin:0 0 4px}
 .sub{color:var(--muted);font-size:15px;margin:0 0 18px}
 
+.m5{color:var(--ok);border-color:var(--ok-line)!important}
+.m4{color:var(--accent);border-color:#a9c6e8!important}
+.m3{color:#8a5a00;border-color:#e6c98a!important}
+.m2{color:var(--err);border-color:var(--err-line)!important}
+.spacer,.sp{flex:1 1 auto}
 button{font:600 15px/1 inherit;padding:11px 16px;border-radius:9px;
        border:1px solid var(--accent);background:#fff;color:var(--accent);
        cursor:pointer}
@@ -32,38 +47,63 @@ button:disabled{opacity:.4;cursor:default;border-color:var(--line);
                 color:var(--muted);background:#fff}
 button:focus-visible{outline:3px solid #a9c6e8;outline-offset:2px}
 
+input[type=text]{font:700 19px/1 Consolas,"Courier New",monospace;
+     padding:11px 14px;width:220px;letter-spacing:1px;
+     border:2px solid var(--line);border-radius:9px;background:#fff;
+     color:var(--ink)}
+input[type=text]:focus{outline:none;border-color:var(--accent)}
+input[type=text]:disabled{background:#f1f2f6;color:var(--muted)}
+
+.ask{font-weight:600}
+.ask small{display:block;font-weight:400;color:var(--muted);margin-top:3px}
+
+/* Условие задачи — картинкой: не выделяется и не копируется в поисковик
+   или в нейросеть, прочитать и разобрать приходится самому. В тренажёре
+   и в ДЗ одинаково: текстом условие вставляется в любой чат одним
+   движением. */
+.frozen{user-select:none;overflow-x:auto}
+.frozen canvas{display:block;max-width:100%;height:auto}
+
+.done{margin:18px 0 0;padding:12px 16px;border-radius:10px;
+      background:var(--ok-bg);border:1px solid var(--ok-line);
+      color:var(--ok);font-weight:600}
+
+details.help{margin-top:26px;border:1px solid var(--line);border-radius:12px;
+        padding:12px 18px;background:var(--card)}
+details.help summary{cursor:pointer;font-weight:600;font-size:17px}
+details.help h3{font-size:16px;margin:18px 0 6px}
+details.help p{margin:6px 0}
+details.help table{border-collapse:collapse;margin:6px 0;font-size:15px}
+details.help td,details.help th{border:1px solid var(--line);padding:5px 10px;
+                                text-align:left}
+details.help th{background:#fff;color:var(--muted);font-size:14px}
+code{font:600 15px/1.4 Consolas,"Courier New",monospace;
+     background:#fff;border:1px solid var(--line);border-radius:4px;
+     padding:1px 5px}
+
 /* ---- как устроено ---- */
 .howto{border:1px solid var(--line);border-radius:12px;padding:4px 18px 12px;
        background:var(--card);margin-bottom:20px}
 .howto dt{font-weight:700;margin-top:12px}
 .howto dd{margin:4px 0 0;color:var(--muted)}
 .howto dd b{color:var(--ink)}
+.howto a{color:var(--accent);font-weight:600;word-break:break-all}
 table.steps{border-collapse:collapse;margin:8px 0 6px;font-size:15px}
 table.steps td,table.steps th{border:1px solid var(--line);padding:4px 10px}
 table.steps th{background:#fff;color:var(--muted);font-size:14px;
                font-weight:600}
 table.steps td.m{font-weight:700;text-align:center;color:var(--accent)}
-/* Образец черновика — того самого, что уходит скриншотом. Показать его
-   дешевле, чем объяснять словами: ученик списывает форму записи. */
-pre.draft{margin:8px 0;padding:10px 14px;overflow-x:auto;
-     background:#fff;border:1px solid var(--line);border-radius:9px;
-     font:600 14px/1.5 Consolas,"Courier New",monospace;color:var(--ink)}
 
 /* ---- прогресс по типам ---- */
 .progress{border:2px solid var(--accent);border-radius:12px;
           padding:12px 18px;background:var(--card);margin-bottom:20px}
 .ptop{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
 .ptop h2{font-size:16px;margin:0;color:var(--muted);font-weight:600}
-.sp{flex:1 1 auto}
 .score{display:flex;align-items:baseline;gap:8px}
 .score span{color:var(--muted);font-size:14px}
 .score b{font:700 30px/1 "Segoe UI",system-ui,sans-serif;min-width:38px;
          text-align:center;border-radius:8px;padding:2px 8px;background:#fff;
          border:2px solid var(--line)}
-.m5{color:var(--ok);border-color:var(--ok-line)!important}
-.m4{color:var(--accent);border-color:#a9c6e8!important}
-.m3{color:#8a5a00;border-color:#e6c98a!important}
-.m2{color:var(--err);border-color:var(--err-line)!important}
 .types{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
 .type{display:flex;align-items:center;gap:8px;border:1px solid var(--line);
       border-radius:20px;padding:4px 12px;background:#fff;font-size:14px}
@@ -74,34 +114,19 @@ pre.draft{margin:8px 0;padding:10px 14px;overflow-x:auto;
 .dot.full{background:var(--accent)}
 .type.done .dot.full{background:var(--ok)}
 .need{margin:12px 0 0;font-size:15px;color:var(--muted)}
+.need b{color:var(--ink)}
 
 /* ---- карточка задачи ---- */
 .card{border:1px solid var(--line);border-radius:12px;padding:16px 20px;
       background:#fff;margin-bottom:14px}
 .card.ok{border-color:var(--ok-line);background:var(--ok-bg)}
 .card.locked{opacity:.75}
+.card .frozen{margin:6px 0 0}
 .kicker{font-size:12px;font-weight:600;color:var(--muted);
         text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px}
 .card p{margin:8px 0}
-.chain{font:700 21px/1.4 Consolas,"Courier New",monospace;
-       text-align:center;margin:14px 0;letter-spacing:1px}
-.chains{margin:14px 0;text-align:center}
-.chains div{font:700 19px/1.6 Consolas,"Courier New",monospace;
-            letter-spacing:1px}
-table.codetable{border-collapse:collapse;margin:14px auto;font-size:15px}
-table.codetable td{border:1px solid #8f97a8;padding:3px 12px;text-align:center;
-              min-width:34px}
-table.codetable td.c{font:600 15px/1.4 Consolas,"Courier New",monospace}
-table.codetable.pairs td{padding:2px 9px;min-width:26px}
-.ask{margin-top:14px;font-weight:600}
-.ask small{display:block;font-weight:400;color:var(--muted);margin-top:3px}
+.card .ask{margin-top:14px}
 .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:14px}
-input[type=text]{font:700 19px/1 Consolas,"Courier New",monospace;
-     padding:11px 14px;width:220px;letter-spacing:1px;
-     border:2px solid var(--line);border-radius:9px;background:#fff;
-     color:var(--ink)}
-input[type=text]:focus{outline:none;border-color:var(--accent)}
-input[type=text]:disabled{background:#f1f2f6;color:var(--muted)}
 .verdict{margin-top:14px;padding:10px 14px;border-radius:9px;font-weight:600}
 .verdict.ok{background:var(--ok-bg);border:1px solid var(--ok-line);
             color:var(--ok)}
@@ -131,29 +156,14 @@ input[type=text]:disabled{background:#f1f2f6;color:var(--muted)}
 .send input{font:600 16px/1 inherit;padding:10px 12px;width:200px;
             border:2px solid var(--line);border-radius:9px;background:#fff}
 .send .note{flex:1 1 100%;margin:2px 0 0}
-.todo{color:var(--muted);font-size:15px}
-
-/* --------------------------------------------------- письмо со снимками
-   Второй канал сдачи. Код уезжает формой, а файлы — обычным письмом:
-   Google Форма берёт вложения только у того, кто вошёл в аккаунт, а
-   письму аккаунт не нужен. */
 .mailbox{margin:16px 0 0;border:2px dashed var(--accent);border-radius:12px;
          padding:14px 18px;background:#fff}
 .mailbox h3{margin:0 0 6px;font-size:17px;color:var(--accent)}
 .mailbox p{margin:6px 0}
 .mailbox a{color:var(--accent);font-weight:600;word-break:break-all}
 
-details{margin-top:26px;border:1px solid var(--line);border-radius:12px;
-        padding:12px 18px;background:var(--card)}
-details summary{cursor:pointer;font-weight:600;font-size:17px}
-details h3{font-size:16px;margin:18px 0 6px}
-details p{margin:6px 0}
-details table.hex{border-collapse:collapse;margin:6px 0;font-size:15px}
-details table.hex td,details table.hex th{border:1px solid var(--line);
-     padding:5px 10px;text-align:left}
-details table.hex th{background:#fff;color:var(--muted);font-size:14px}
-code{font:600 15px/1.4 Consolas,"Courier New",monospace;background:#fff;
-     border:1px solid var(--line);border-radius:4px;padding:1px 5px}
+/* ---- своё у темы (topic.css) ---- */
+
 </style>
 </head>
 <body>
@@ -176,13 +186,7 @@ code{font:600 15px/1.4 Consolas,"Courier New",monospace;background:#fff;
     <dt>Сколько решать</dt>
     <dd><b>Сколько хочешь — на какую оценку наработаешь, такую и
         получишь.</b>
-        <table class="steps">
-          <tr><th>закрыто типов</th><th>оценка</th>
-              <th>задач минимум</th></tr>
-          <tr><td>4 из 6</td><td class="m">3</td><td>4</td></tr>
-          <tr><td>5 из 6</td><td class="m">4</td><td>5</td></tr>
-          <tr><td>6 из 6</td><td class="m">5</td><td>6</td></tr>
-        </table>
+        <table class="steps" id="steps"></table>
         Задач будет больше, если ошибаться. Остановиться можно в любой
         момент — кнопка «Закончить и получить код» внизу страницы.</dd>
 
@@ -214,6 +218,7 @@ code{font:600 15px/1.4 Consolas,"Courier New",monospace;background:#fff;
         разным типам хватит.
         <b>Код без них не засчитывается:</b> оценка ставится за способ,
         а способ виден только в черновике.</dd>
+
   </dl>
 </div>
 
@@ -239,7 +244,7 @@ code{font:600 15px/1.4 Consolas,"Courier New",monospace;background:#fff;
 </div>
 <div id="final"></div>
 
-<details>
+<details class="help">
   <summary>Подсказка: как решается задание 2</summary>
 
   <h3>Что вообще происходит</h3>
@@ -250,8 +255,8 @@ code{font:600 15px/1.4 Consolas,"Courier New",monospace;background:#fff;
 
   <h3>Почему это не всегда однозначно</h3>
   <p>Если бы ни один код не был началом другого, разрез был бы только
-     один. Но в экзаменационных задачах коды <b>специально</b> устроены
-     иначе: скажем, <code>Н&nbsp;=&nbsp;10</code>, а
+     один. Но в экзаменационных задачах коды <b>специально</b>
+     устроены иначе: скажем, <code>Н&nbsp;=&nbsp;10</code>, а
      <code>К&nbsp;=&nbsp;101</code>. Дойдя до <code>101…</code>, вы не
      знаете сразу, что взять — и это не подвох, а суть задания.</p>
 
@@ -263,12 +268,12 @@ code{font:600 15px/1.4 Consolas,"Courier New",monospace;background:#fff;
         один код, — значит ветка была неверной: возвращаемся к последней
         развилке и берём другой вариант.</li>
   </ol>
-  <p>Ошибка почти всегда одна и та же: взяли короткий код, дошли до конца
-     «почти», а последние символы не сложились — и решили, что ошиблись в
-     таблице. Нет: надо вернуться к развилке.</p>
+  <p>Ошибка почти всегда одна и та же: взяли короткий код, дошли до
+     конца «почти», а последние символы не сложились — и решили, что
+     ошиблись в таблице. Нет: надо вернуться к развилке.</p>
 
   <h3>Три подсказки, которые дают в условии</h3>
-  <table class="hex">
+  <table>
     <tr><th>что написано</th><th>что это значит</th></tr>
     <tr><td>ничего дополнительно</td>
         <td>разрез и так единственный — тупики отсекут лишнее</td></tr>
@@ -289,8 +294,9 @@ code{font:600 15px/1.4 Consolas,"Courier New",monospace;background:#fff;
   <p>Буквы — подряд, без пробелов и знаков: <code>КАРЕТА</code>. Число —
      только цифры, без слова «букв». Если спрашивают, какие буквы
      повторяются, — выписывают сами буквы: <code>АБ</code>.</p>
-  <p>Информатику сдают за компьютером: ответ набирают с клавиатуры в
-     экзаменационной программе, и сверяет его машина — знак в знак.</p>
+  <p>Это не придирка. Информатику сдают за компьютером: ответ вы
+     набираете с клавиатуры в экзаменационной программе, и сверяет его
+     машина — знак в знак.</p>
 
   <h3>Откуда эти задачи</h3>
   <p><b>Задачи авторские, составлены в форме задания 2 ОГЭ по
@@ -1306,20 +1312,115 @@ function conditionText(t){
 
 /* ==== /БАЗА ==== */
 
-// Ступени. Домашнее задание добровольное — ученик набирает столько,
-// сколько ему нужно, и останавливается. Шкала та же, что в тренажёре.
+/* ------------------------------------------------------------------
+   Одна страница в двух режимах (Света, 01.10.2026: тренажёр и ДЗ
+   свести в одно). Режим вписывает сборка: "tr" — тренажёр на уроке,
+   отметку учитель снимает с экрана; "dz" — домашнее задание, в конце
+   код работы по фамилии и сдача формой.
+
+   Тренажёр — все задачи сразу, PER_TYPE на тип, ошибки добираются
+   кнопкой «Добавить задачи». ДЗ — по одной задаче на тип (норма
+   07.09.2026: длинное домашнее не сделают), ошибка лечится «Новыми
+   числами» на той же карточке.
+
+   Оценка считается по ОСВОЕННЫМ ТИПАМ, а не по числу верных ответов:
+   иначе добор ломает счёт.
+------------------------------------------------------------------ */
+
+const MODE = "dz";
 const SCALE = [[6, 5], [5, 4], [4, 3]];
-const MIN_TO_FINISH = 4;                 // ниже сдавать нечего
 function markFor(done){
   for (const s of SCALE) if (done >= s[0]) return s[1];
   return 2;
 }
 
+const esc = s => String(s == null ? "" : s).replace(/&/g, "&amp;")
+                 .replace(/</g, "&lt;").replace(/>/g, "&gt;")
+                 .replace(/"/g, "&quot;");
+
+/* ---- своё у темы (hooks.js): подпись под условием, вид разбора ---- */
+/* Своё у темы «кодирование и декодирование» для общего шаблона ../template.html.
+   askHtml(t) — что стоит под картинкой условия: вопрос и как записать
+   ответ. solutionHtml(t, given, hl, wrong) — разбор: given — что ввёл
+   ученик, hl — подсветка от verdict(), wrong — ответ неверный. */
+
+const HOWTO = {
+  word: "Буквы подряд, без пробелов и знаков препинания.",
+  num: "Только число, без слова «букв».",
+  letters: "Сами буквы, подряд. Порядок любой."
+};
+function askHtml(t){
+  return `<div class="ask">${esc(t.tail)}<small>${HOWTO[t.ask]}</small></div>`;
+}
+
+// Разбор — ход решения, а не объявление ответа.
+function solutionHtml(t, given, hl, wrong){
+  return `<ol>${t.steps.map(s => `<li>${esc(s)}</li>`).join("")}</ol>` +
+         `<div class="rule">${esc(t.rule)}</div>`;
+}
+
+/* Письмо со снимками — только в ДЗ: в тренажёре MAILBOX не вызывается.
+   Шаблон сам проверяет typeof MAILBOX. */
+/* ----------------------------------------------------- письмо со снимками
+   Код говорит, сколько задач решено, но не показывает, чем они решались.
+   А в задании 2 оценивается именно способ: разрезал цепочку с откатом на
+   развилке — решил; подобрал наугад или спросил нейросеть — нет. Поэтому
+   рядом с формой второй канал — обычное письмо с вложением. Почта, а не
+   форма: Google Форма берёт файлы только у того, кто вошёл в аккаунт, а
+   письму аккаунт не нужен. До агента-учителя такое письмо доходит само.
+
+   Отметку по снимку не ставят: рукописный разбор двоичной цепочки читается
+   ненадёжно, одна перепутанная цифра переворачивает всё. Снимок отвечает
+   на другой вопрос — делалось ли руками; отметку считает код.
+------------------------------------------------------------------ */
+const MAIL = "krevskayas+hw@gmail.com";
+
+const MAILBOX = `<div class="mailbox">
+  <h3>Осталось прислать скриншоты</h3>
+  <p>Черновик, а не ответы: цепочка, разрезанная на коды, с буквами под
+     ними, и где была развилка — какую ветку отбросил и почему.
+     Двух-трёх снимков по разным типам хватит; фотография листа тоже
+     годится.</p>
+  <div class="row"><button id="mailbtn">Отправить скриншоты</button></div>
+  <p class="stats" id="mailnote">Кнопка откроет письмо на <b>${MAIL}</b>
+     с уже вписанной темой — останется приложить снимки и нажать
+     «Отправить». Входить никуда не нужно, письмо годится и с телефона.</p>
+</div>`;
+
+// Тема письма — это то, по чему работу опознают: фамилия, класс и код.
+// Её собирает кнопка, чтобы никто не набирал код руками.
+function wireMail(){
+  const btn = document.getElementById("mailbtn");
+  if (!btn) return;
+  const note = document.getElementById("mailnote");
+  btn.addEventListener("click", () => {
+    const val = id => (document.getElementById(id) || {value: ""}).value.trim();
+    const f = val("fam"), k = val("kls") || "9";
+    const code = CURRENT_CODE;
+    if (!f){
+      note.textContent = "Сначала впиши фамилию — она уйдёт в тему письма, "
+                       + "иначе непонятно, чья это работа.";
+      return;
+    }
+    const subject = "ДЗ " + f + " " + k + " " + code;
+    const body = ["Прикрепи скриншоты черновика — писать здесь ничего не нужно.",
+                  "", "Фамилия: " + f, "Класс: " + k, "Код работы: " + code];
+    window.location.href = "mailto:" + MAIL
+      + "?subject=" + encodeURIComponent(subject)
+      + "&body=" + encodeURIComponent(body.join("\r\n"));
+    note.textContent = "Письмо открылось в почтовой программе: приложи "
+      + "снимки и нажми «Отправить». Ничего не открылось — напиши сам(а) "
+      + "на " + MAIL + ", тема письма: " + subject;
+  });
+}
+
+const MIN_TO_FINISH = 4;  // ниже сдавать нечего
+
 /* ------------------------------------------------------------ квитанция
    Код несёт цифры работы и контрольную сумму. Ключа нигде нет — иначе
    страницу нельзя было бы просто положить на школьную платформу. Смысл
    кода не в том, чтобы его нельзя было подделать, а в том, что подделать
-   его дольше, чем решить.
+   его дольше, чем решить. Раскодирует его homework.py в корне кабинета.
 ------------------------------------------------------------------ */
 /* Ссылку на форму ставит скрипт set_form_link.py из корня кабинета:
    в ней зашиты номера полей формы, на глаз их не подобрать. Пусто —
@@ -1382,72 +1483,15 @@ function makeCode(st, fam){
   return "KD-" + out.slice(0, 4) + "-" + out.slice(4);
 }
 
-/* ----------------------------------------------------- письмо со снимками
-   Код говорит, сколько задач решено, но не показывает, чем они решались.
-   А в задании 2 оценивается именно способ: разрезал цепочку с откатом на
-   развилке — решил; подобрал наугад или спросил нейросеть — нет. Поэтому
-   рядом с формой второй канал — обычное письмо с вложением. Почта, а не
-   форма: Google Форма берёт файлы только у того, кто вошёл в аккаунт, а
-   письму аккаунт не нужен. До агента-учителя такое письмо доходит само.
-
-   Отметку по снимку не ставят: рукописный разбор двоичной цепочки читается
-   ненадёжно, одна перепутанная цифра переворачивает всё. Снимок отвечает
-   на другой вопрос — делалось ли руками; отметку считает код.
------------------------------------------------------------------- */
-const MAIL = "krevskayas+hw@gmail.com";
-
-const MAILBOX = `<div class="mailbox">
-  <h3>Осталось прислать скриншоты</h3>
-  <p>Черновик, а не ответы: цепочка, разрезанная на коды, с буквами под
-     ними, и где была развилка — какую ветку отбросил и почему.
-     Двух-трёх снимков по разным типам хватит; фотография листа тоже
-     годится.</p>
-  <div class="row"><button id="mailbtn">Отправить скриншоты</button></div>
-  <p class="stats" id="mailnote">Кнопка откроет письмо на <b>${MAIL}</b>
-     с уже вписанной темой — останется приложить снимки и нажать
-     «Отправить». Входить никуда не нужно, письмо годится и с телефона.</p>
-</div>`;
-
-// Тема письма — это то, по чему работу опознают: фамилия, класс и код.
-// Её собирает кнопка, чтобы никто не набирал код руками.
-function wireMail(){
-  const btn = document.getElementById("mailbtn");
-  if (!btn) return;
-  const note = document.getElementById("mailnote");
-  btn.addEventListener("click", () => {
-    const val = id => (document.getElementById(id) || {value: ""}).value.trim();
-    const f = val("fam"), k = val("kls") || "9";
-    const code = CURRENT_CODE;
-    if (!f){
-      note.textContent = "Сначала впиши фамилию — она уйдёт в тему письма, "
-                       + "иначе непонятно, чья это работа.";
-      return;
-    }
-    const subject = "ДЗ " + f + " " + k + " " + code;
-    const body = ["Прикрепи скриншоты черновика — писать здесь ничего не нужно.",
-                  "", "Фамилия: " + f, "Класс: " + k, "Код работы: " + code];
-    window.location.href = "mailto:" + MAIL
-      + "?subject=" + encodeURIComponent(subject)
-      + "&body=" + encodeURIComponent(body.join("\r\n"));
-    note.textContent = "Письмо открылось в почтовой программе: приложи "
-      + "снимки и нажми «Отправить». Ничего не открылось — напиши сам(а) "
-      + "на " + MAIL + ", тема письма: " + subject;
-  });
-}
-
 /* --------------------------------------------------------- состояние
    Все задания лежат на странице сразу (правило Светы от 17.09.2026):
    виден объём, порядок ученик выбирает сам. Карточка на тип; верный
    ответ её закрывает, ошибка показывает разбор и кнопку «Новые числа» —
-   такая же задача с другими данными на той же карточке.
-
-   Один верный ответ закрывает тип — не два, как в тренажёре: норма
-   домашней работы от 07.09.2026 (по одной задаче на тип, длинное
-   домашнее просто не сделают).                                        */
+   такая же задача на той же карточке.                               */
 
 const st = {
   cards: TYPES.map(t => ({task: makeTask(t.id), state: "open",
-                          given: "", hint: null, draft: ""})),
+                          given: "", hint: null, hl: null, draft: ""})),
   clean: TYPES.map(() => true),    // закрыт без единой ошибки
   solved: 0, wrong: 0,
   locked: false                    // код выдан — карточки заперты
@@ -1474,6 +1518,7 @@ function answer(i){
   const v = verdict(c.task, given);
   c.given = given;
   c.hint = v.hint;
+  c.hl = v.hl || null;
   if (v.ok){
     st.solved++;
     c.state = "ok";
@@ -1489,7 +1534,7 @@ function newNumbers(i){
   if (st.locked) return;
   captureDrafts();
   st.cards[i] = {task: makeTask(TYPES[i].id), state: "open",
-                 given: "", hint: null, draft: ""};
+                 given: "", hint: null, hl: null, draft: ""};
   render();
   const el = document.getElementById("ans" + i);
   if (el) el.focus();
@@ -1497,59 +1542,21 @@ function newNumbers(i){
 
 /* ------------------------------------------------------------- вывод */
 
-const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
-                          .replace(/>/g, "&gt;");
-
-/* Кодовая таблица. На 5-6 букв — в строку, буквы сверху, коды снизу,
-   как во всех вариантах. На все 33 буквы алфавита строка не влезает, и
-   в вариантах её тоже верстают колонками пар «буква — номер». */
-function codeTable(tbl){
-  if (tbl.length <= 8){
-    const top = tbl.map(e => `<td>${esc(e.L)}</td>`).join("");
-    const bot = tbl.map(e => `<td class="c">${esc(e.c)}</td>`).join("");
-    return `<table class="codetable"><tr>${top}</tr><tr>${bot}</tr></table>`;
-  }
-  const groups = 4;
-  const rows = Math.ceil(tbl.length / groups);
-  let html = "";
-  for (let r = 0; r < rows; r++){
-    let tr = "";
-    for (let g = 0; g < groups; g++){
-      const e = tbl[g * rows + r];
-      tr += e ? `<td>${esc(e.L)}</td><td class="c">${esc(e.c)}</td>`
-            : "<td></td><td></td>";
-    }
-    html += `<tr>${tr}</tr>`;
-  }
-  return `<table class="codetable pairs">${html}</table>`;
-}
-
-/* Условие собирается по раскладке `blocks` от генератора: у разных
-   сюжетов порядок частей разный (у разведчика цепочка идёт до таблицы,
-   у шпионов — после), и повторять этот порядок здесь руками значило бы
-   разводить страницу с генератором. */
-function condition(t){
-  return t.blocks.map(b =>
-      b.k === "p" ? `<p>${esc(b.t)}</p>`
-  : b.k === "chain" ? `<div class="chain">${esc(b.t)}</div>`
-  : b.k === "chains"
-        ? `<div class="chains">${t.chains.map(c => `<div>${esc(c)}</div>`)
-                                         .join("")}</div>`
-  : codeTable(t.table)).join("");
-}
-
-const HOWTO = {
-  word: "Буквы подряд, без пробелов и знаков препинания.",
-  num: "Только число, без слова «букв».",
-  letters: "Сами буквы, подряд. Порядок любой."
+const kinds = n => {
+  const a = n % 100, b = a % 10;
+  if (a > 4 && a < 21) return "типов";
+  if (b === 1) return "тип";
+  if (b > 1 && b < 5) return "типа";
+  return "типов";
 };
 
-// Разбор показывает ход решения целиком. «Верный ответ КАРЕТА» не учит
-// ничему: важно, на каком шаге ты свернул не туда.
-function explain(t){
-  return `<div class="solution"><span class="cap">как это решается</span>
-          <ol>${t.steps.map(s => `<li>${esc(s)}</li>`).join("")}</ol>
-          <div class="rule">${esc(t.rule)}</div></div>`;
+function renderSteps(){
+  const rows = SCALE.slice().reverse().map(([k, m]) =>
+    `<tr><td>${k} из ${TYPES_TOTAL}</td><td class="m">${m}</td>` +
+    `<td>${k}</td></tr>`).join("");
+  document.getElementById("steps").innerHTML =
+    `<tr><th>закрыто типов</th><th>оценка</th><th>задач минимум</th></tr>` +
+    rows;
 }
 
 function renderTypes(){
@@ -1575,13 +1582,6 @@ function renderTypes(){
     : "Закончить и получить код";
 
   const up = SCALE.filter(s => s[0] > done).pop();
-  const kinds = n => {
-    const a = n % 100, b = a % 10;
-    if (a > 4 && a < 21) return "типов";
-    if (b === 1) return "тип";
-    if (b > 1 && b < 5) return "типа";
-    return "типов";
-  };
   let text;
   if (!up){
     text = "Закрыто всё, что нужно на пятёрку. Забирай код и сдавай.";
@@ -1592,7 +1592,7 @@ function renderTypes(){
   } else {
     const left = MIN_TO_FINISH - done;
     text = `Закрой ещё <b>${left}</b> ${kinds(left)}, ` +
-        `чтобы получить код на <b>3</b>.`;
+        `чтобы получить код на <b>${markFor(MIN_TO_FINISH)}</b>.`;
   }
   document.getElementById("need").innerHTML = text;
   document.getElementById("finishnote").innerHTML = st.locked ? "" : text;
@@ -1630,16 +1630,19 @@ function render(){
                 ${st.locked ? "disabled" : ""}>Новые числа</button></div>
         <div class="verdict err">Ошибка. ${c.hint
            ? c.hint + " " : `Верный ответ: ${esc(t.answer)}. `}
-           Тип остаётся незакрытым — нажми «Новые числа»: будет
-           такая же задача с другой цепочкой.</div>` + explain(t);
+           Тип остаётся незакрытым — нажми «Новые числа»: будет такая же
+           задача с другой цепочкой.</div>
+        <div class="solution"><span class="cap">как это решается</span>${
+           solutionHtml(t, c.given, c.hl, true)}</div>`;
     }
 
     card.innerHTML = `
       <div class="kicker">${i + 1} &middot; ${esc(t.name)}</div>
-      ${condition(t)}
-      <div class="ask">${esc(t.tail)}<small>${HOWTO[t.ask]}</small></div>
+      <div class="frozen" id="frozen${i}"></div>
+      ${askHtml(t)}
       ${tail}`;
     main.appendChild(card);
+    document.getElementById("frozen" + i).appendChild(renderCondition(t));
   });
 
   main.querySelectorAll("button[data-go]").forEach(b =>
@@ -1718,8 +1721,8 @@ function renderFinish(){
   const done = st.typesDone, mark = markFor(done);
   const all = done >= TYPES_TOTAL;
   const up = SCALE.filter(s => s[0] > done).pop();
-  // у темы с письмом (снимки черновика) поля фамилии и класса нужны и
-  // без подключённой формы: из них собирается тема письма
+  // у темы с письмом (снимки черновика, hooks.js) поля фамилии и класса
+  // нужны и без подключённой формы: из них собирается тема письма
   const mail = typeof MAILBOX !== "undefined";
   const who = `<label>Фамилия
           <input id="fam" autocomplete="off" placeholder="как в журнале"></label>
@@ -1732,13 +1735,13 @@ function renderFinish(){
   // а обычный ход: закрыл ещё один тип, забрал код получше.
   const more = !up ? ""
   : `<div class="row"><button id="back">Вернуться к задачам — до ${up[1]}</button>
-       <span class="stats">закроешь ещё ${up[0] - done} — получишь новый
-             код, получше; сдавать надо будет его</span></div>`;
+       <span class="stats">этот код останется действительным; закроешь ещё
+             ${up[0] - done} — получишь новый, получше</span></div>`;
 
   const box = document.getElementById("final");
   box.innerHTML = `
     <div class="finish">
-      <h2>${all ? "Готово — закрыты все шесть типов"
+      <h2>${all ? `Готово — закрыты все ${TYPES_TOTAL} ${kinds(TYPES_TOTAL)}`
               : `Готово — наработано на ${mark}`}</h2>
       <p class="stats">Закрыто типов: <b>${done}</b> из
          ${TYPES_TOTAL} &middot; решено задач: <b>${st.solved}</b> &middot;
@@ -1776,8 +1779,10 @@ document.getElementById("finish").addEventListener("click", () => {
   if (st.typesDone >= MIN_TO_FINISH && !st.locked) renderFinish();
 });
 
+renderSteps();
 render();
+
 </script>
-<p class="ai-mark" style='margin:34px auto 0;max-width:860px;padding-top:12px;border-top:1px solid #d9dce6;color:#5c6070;font:13px/1.5 "Segoe UI",system-ui,sans-serif'>Материалы подготовлены с использованием технологий искусственного интеллекта.</p>
+<p class="ai-mark" style="margin:34px auto 0;max-width:860px;padding-top:12px;border-top:1px solid #d9dce6;color:#5c6070;font:13px/1.5 'Segoe UI',system-ui,sans-serif">Материалы подготовлены с использованием технологий искусственного интеллекта.</p>
 </body>
 </html>
