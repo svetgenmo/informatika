@@ -169,6 +169,54 @@ ul.plain li{margin:8px 0}
 @media (max-width:1000px){ .exwrap{grid-template-columns:1fr}
                            .exwrap .task{position:static} }
 .task p.ex{font-style:italic;color:var(--muted)}
+/* разбор картинками (xSolution / xCompare в gen.py) */
+.step.xs{padding:8px 14px}
+/* без капители: в подписях есть буква b, заглавной B её не узнать */
+.step.xs .cap{margin-bottom:4px;text-transform:none;letter-spacing:.02em;
+              font-size:17px;font-weight:700}
+.step.xs svg.xchain{display:block;width:100%;height:auto;max-height:24vh}
+.xtiles{display:inline-flex;gap:6px;vertical-align:middle}
+.xt{display:inline-block;min-width:40px;padding:4px 0;text-align:center;
+    font:700 28px/1.1 Consolas,monospace;border:2px solid var(--muted);
+    border-radius:8px;background:#fff;color:var(--ink)}
+.xt.ok{border-color:var(--ok);background:var(--ok-bg);color:var(--ok)}
+.xans{margin:6px 0 2px;display:flex;align-items:center;gap:12px}
+.xans .xt{min-width:48px;font-size:34px}
+.xflip{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:8px 14px}
+.xlbl{font-size:17px;color:var(--muted)}
+.xarr{font-size:30px;color:var(--accent);line-height:1}
+.xledger{display:grid;gap:5px}
+.xrow{display:grid;grid-template-columns:96px 46px auto;align-items:center;
+      justify-items:start}
+.xrow .xop{font:700 21px/1 "Segoe UI",system-ui,sans-serif;color:var(--accent)}
+.xrow .xop .xn{display:inline-block;width:24px;height:24px;line-height:22px;
+      border:1.5px solid var(--muted);border-radius:50%;text-align:center;
+      font:700 15px/22px "Segoe UI",sans-serif;font-style:normal;color:var(--ink);
+      margin-right:8px;vertical-align:2px}
+.xrow .xbox{font:700 23px/1.2 Consolas,monospace;border:2.5px solid var(--muted);
+      border-radius:9px;padding:3px 12px;background:#fff}
+.xrow .xbox.first{border-color:var(--accent);background:#eaf1fa}
+.xrow:last-child .xbox{border-color:var(--ok);background:var(--ok-bg)}
+.xeq{font:700 25px/1.5 Consolas,monospace}
+.xeq.ok{color:var(--ok);font-size:30px}
+table.xtry{border-collapse:collapse;font:600 21px/1.3 Consolas,monospace;margin-top:6px}
+table.xtry th{font:600 15px "Segoe UI",sans-serif;color:var(--muted);text-align:left;padding:2px 14px 2px 0}
+table.xtry td{padding:3px 14px 3px 0;border-top:1px solid var(--line)}
+table.xtry tr.ok td{color:var(--ok);font-weight:800}
+table.xtry tr.over td{color:var(--err)}
+/* сверка ответа класса */
+.xcheck{display:flex;gap:10px;margin-top:12px}
+.xcheck .xin{font:700 26px/1 Consolas,monospace;width:250px;padding:8px 12px;
+     border:2px solid var(--line);border-radius:10px}
+.xcheck .xin::placeholder{font:400 16px "Segoe UI",sans-serif}
+.xcheck .xin:focus{outline:none;border-color:var(--accent)}
+.steps .xres:empty{display:none}
+.steps .xres{border:3px dashed var(--accent);border-radius:12px;padding:6px 16px 10px;background:#fff}
+.xres .xverd{font:800 26px/1.2 "Segoe UI",system-ui,sans-serif;margin:4px 0 4px}
+.xres .xverd.ok{color:var(--ok)}
+.xres .xverd.bad{color:var(--err)}
+.xres svg.xchain{display:block;width:100%;height:auto;max-height:18vh}
+.xres .xwhy{font-size:19px;color:var(--muted);margin-top:2px}
 
 /* ---- размер шрифта на проекторе: A− / A+ ---- */
 .zoom{display:inline-flex;align-items:center;gap:3px;margin-left:8px}
@@ -998,6 +1046,223 @@ function verdict(t, raw){
 }
 
 
+/* ============================================== разбор рисунком
+   Цепочки — те же, что на слайдах 2–9 презентации (там их рисует
+   deck_slides.py): над стрелкой действие, в кружке номер команды, под
+   числом — почему взята эта команда; обратный ход — красными стрелками.
+   Рисует их генератор из той же задачи, что и условие, — разбор на
+   слайде-примере и сверка ответа класса не могут разойтись с ключом.
+   Правка Светы 03.10.2026: «вчитываться нудно, а так всё наглядно».
+============================================================ */
+const X_SIGN = {mul: "×", add: "+", sub: "−", div: ":"};
+const X_UNDO = {mul: ":", add: "−", sub: "+", div: "×"};
+
+// Подпись над стрелкой: «×3», «+2», «x²»; undo — отмена команды.
+function xLab(op, b, undo){
+  if (op[0] === "sq") return undo ? "√" : "x²";
+  return (undo ? X_UNDO : X_SIGN)[op[0]] + (op[1] === "b" && b !== undefined ? b : op[1]);
+}
+
+/* Цепочка чисел. labels[i] и nums[i] — подпись и номер команды на
+   стрелке i; o.back — стрелки справа налево (идём от цели); o.notes —
+   подписи под числами ("\n" — перенос); o.end — "ok" (последнее число
+   зелёное) или "bad" (красное); o.fail — исполнитель споткнулся:
+   последняя стрелка пунктиром в красный ✗, o.fail.why — подпись под ним. */
+function xChain(values, labels, nums, o){
+  o = o || {};
+  const bw = o.bw || 66, gap = o.gap || 54, font = o.font || 26;
+  const fail = o.fail || null;
+  const n = values.length, cells = n + (fail ? 1 : 0);
+  const top = 34;
+  const notes = (o.notes || []).slice();
+  if (fail) notes[n] = fail.why || "";
+  const deep = notes.some(s => s && s.indexOf("\n") >= 0) ? 46 : notes.some(Boolean) ? 26 : 0;
+  const h = top + 56 + deep + 8;
+  // подпись под крайним числом шире клетки — поле по краям, чтобы не резалась
+  const pad = deep ? 22 : 0;
+  const w = 12 + 2 * pad + cells * bw + (cells - 1) * gap;
+  const out = ['<svg class="xchain" viewBox="0 0 ' + w + " " + h + '" role="img" aria-label="'
+               + values.join(o.back ? " ← " : " → ") + '">',
+               '<g font-family="Segoe UI, system-ui, sans-serif">'];
+  for (let i = 0; i < cells; i++){
+    const x = 6 + pad + i * (bw + gap);
+    const isFail = fail && i === n, last = !fail && i === n - 1;
+    const [fill, line] = isFail ? ["#fdecea", "#b3261e"]
+        : last ? (o.end === "bad" ? ["#fdecea", "#b3261e"] : ["#e6f5ec", "#137a41"])
+        : i === 0 ? ["#eaf1fa", "#1f5fa8"] : ["#fff", "#5c6070"];
+    out.push('<rect x="' + x + '" y="' + top + '" width="' + bw + '" height="56" rx="10" fill="'
+             + fill + '" stroke="' + line + '" stroke-width="3"' + (isFail ? ' stroke-dasharray="7 5"' : "") + "/>");
+    const v = isFail ? "✗" : String(values[i]);
+    const fs = v.length > 3 ? Math.round(font * 3 / v.length) : font;
+    out.push('<text x="' + (x + bw / 2) + '" y="' + (top + 28 + fs * 0.36) + '" text-anchor="middle" font-size="'
+             + fs + '" font-weight="700" fill="' + (isFail ? "#b3261e" : "#1b1b1f") + '">' + v + "</text>");
+    if (notes[i])
+      notes[i].split("\n").forEach((part, k) =>
+        out.push('<text x="' + (x + bw / 2) + '" y="' + (top + 76 + k * 20) + '" text-anchor="middle" '
+                 + 'font-size="17" fill="' + (isFail ? "#b3261e" : "#5c6070") + '">' + part + "</text>"));
+    if (i === cells - 1) continue;
+    const x1 = x + bw + 6, x2 = x + bw + gap - 6, y = top + 28;
+    const toFail = fail && i === n - 1;
+    const col = o.back || toFail ? "#b3261e" : "#1f5fa8";
+    out.push('<line x1="' + x1 + '" y1="' + y + '" x2="' + x2 + '" y2="' + y + '" stroke="' + col
+             + '" stroke-width="3"' + (toFail ? ' stroke-dasharray="6 4"' : "") + "/>");
+    const tip = o.back ? x1 : x2, d = o.back ? 10 : -10;
+    out.push('<path d="M' + tip + "," + y + " l" + d + ",-6 v12 z\" fill=\"" + col + '"/>');
+    const mid = (x1 + x2) / 2;
+    out.push('<text x="' + mid + '" y="' + (y - 11) + '" text-anchor="middle" font-size="20" '
+             + 'font-weight="700" fill="' + col + '">' + labels[i] + "</text>");
+    if (nums && nums[i])
+      out.push('<circle cx="' + mid + '" cy="' + (y + 19) + '" r="11" fill="#fff" stroke="#5c6070" '
+               + 'stroke-width="1.5"/><text x="' + mid + '" y="' + (y + 25) + '" text-anchor="middle" '
+               + 'font-size="15" font-weight="700" fill="#1b1b1f">' + nums[i] + "</text>");
+  }
+  out.push("</g></svg>");
+  return out.join("");
+}
+
+// Номера команд плитками: «12122» → пять клеток; cls — ok / bad / пусто.
+const xTiles = (s, cls) => '<span class="xtiles">' + s.split("").map(d =>
+    '<span class="xt' + (cls ? " " + cls : "") + '">' + d + "</span>").join("") + "</span>";
+
+const isSquare = x => { const s = Math.round(Math.sqrt(x)); return s * s === x; };
+
+/* Почему взята именно эта команда — подпись под числом. Обратный ход:
+   cur — число, которое отменяем; прямой: cur — число, к которому
+   применяем. «Тупик» — другая команда выполнима, но к цели за
+   оставшиеся команды не приводит (это гарантирует единственность). */
+function xWhy(op, alt, cur, prev, back){
+  const tail = "делится, но\nветка — тупик";
+  if (back){
+    if (op[0] === "mul") return "делится\nна " + op[1];
+    if (op[0] === "sq") return "это " + prev + "²";
+    if (alt[0] === "sq") return isSquare(cur) ? "квадрат, но\nветка — тупик" : "не\nквадрат";
+    return cur % alt[1] ? "на " + alt[1] + "\nне делится" : tail;
+  }
+  if (op[0] === "div") return "делится\nна " + op[1];
+  return cur % alt[1] ? "на " + alt[1] + "\nне делится" : tail;
+}
+
+/* Разбор рисунком: список шагов {cap, html, answer}. Каждый шаг —
+   картинка, текста — только подпись. */
+function xSolution(t){
+  const m = t.meta, steps = [];
+  if (m.kind === "compose"){
+    const tr = runProg(m.ops, m.prog, m.a).trace;
+    const p = m.prog, ops = m.ops;
+    const op = i => ops[+p[i] - 1], alt = i => ops[p[i] === "1" ? 1 : 0];
+    const fwdLabels = p.split("").map((d, i) => xLab(op(i)));
+    if (ops.some(o => o[0] === "div")){
+      const notes = tr.map((v, i) => i < p.length ? xWhy(op(i), alt(i), v, null, false) : "цель");
+      steps.push({cap: "1 · от начала: делить можно только нацело",
+                  html: xChain(tr, fwdLabels, p, {notes: notes})});
+      steps.push({cap: "2 · ответ — номера команд по порядку", answer: true,
+                  html: '<div class="xans">' + xTiles(p, "ok") + "</div>"});
+    } else {
+      const notes = tr.map((v, i) => i ? xWhy(op(i - 1), alt(i - 1), v, tr[i - 1], true) : "начало");
+      steps.push({cap: "1 · от цели к началу: отменяем команды",
+                  html: xChain(tr, p.split("").map((d, i) => xLab(op(i), undefined, true)), p,
+                               {back: true, notes: notes})});
+      steps.push({cap: "2 · записывали с конца — переворачиваем",
+                  html: '<div class="xflip"><span class="xlbl">записали от цели</span>'
+                      + xTiles(p.split("").reverse().join(""), "")
+                      + '<span class="xlbl">в ответ — наоборот</span>' + xTiles(p, "ok") + "</div>"});
+      steps.push({cap: "3 · проверка от начала — ответ", answer: true,
+                  html: xChain(tr, fwdLabels, p) + '<div class="xans"><span class="xlbl">ответ</span>'
+                      + xTiles(p, "ok") + "</div>"});
+    }
+    return steps;
+  }
+
+  // «найди b»: выполняем с буквой, потом уравнение или подбор
+  let poly = [m.a];
+  const rows = ['<div class="xrow"><span class="xop">начало</span><span class="xbox first">'
+                + polyText(poly) + "</span></div>"];
+  for (const d of m.prog){
+    const o = m.ops[+d - 1];
+    poly = polyStep(o, poly);
+    rows.push('<div class="xrow"><span class="xop"><i class="xn">' + d + "</i>" + xLab(o)
+              + '</span><span class="xarr">⟶</span><span class="xbox">' + polyText(poly) + "</span></div>");
+  }
+  steps.push({cap: "1 · выполняем программу, b — буквой",
+              html: '<div class="xledger">' + rows.join("") + "</div>"});
+
+  let eq;
+  if (poly.length === 2){
+    const c0 = poly[0], c1 = poly[1], k = Math.abs(c1) === 1 ? "" : Math.abs(c1);
+    const lines = [polyText(poly) + " = " + m.res];
+    if (c0 === 0) lines.push("b = " + m.res + " : " + c1);
+    else if (c1 > 0) lines.push(k + "b = " + m.res + " − " + c0 + " = " + (m.res - c0));
+    else lines.push(k + "b = " + c0 + " − " + m.res + " = " + (c0 - m.res));
+    eq = lines.map(s => '<div class="xeq">' + s + "</div>").join("")
+       + '<div class="xeq ok">b = ' + m.b + "</div>";
+  } else {
+    const trs = [];
+    for (let v = Math.max(2, m.b - 2); v <= m.b + 1; v++){
+      const got = polyVal(poly, v);
+      trs.push('<tr class="' + (got === m.res ? "ok" : got > m.res ? "over" : "") + '"><td>b = ' + v
+               + "</td><td>" + got + "</td><td>" + (got === m.res ? "✓" : got > m.res ? "много" : "мало")
+               + "</td></tr>");
+    }
+    eq = '<div class="xeq">' + polyText(poly) + " = " + m.res + "</div>"
+       + '<table class="xtry"><tr><th>пробуем</th><th>' + polyText(poly) + "</th><th></th></tr>"
+       + trs.join("") + "</table>";
+  }
+  steps.push({cap: poly.length === 2 ? "2 · уравнение" : "2 · b в квадрате — подбираем", html: eq});
+
+  const tr = runProg(m.ops, m.prog, m.a, m.b).trace;
+  steps.push({cap: "3 · проверка: подставили b = " + m.b, answer: true,
+              html: xChain(tr, m.prog.split("").map(d => xLab(m.ops[+d - 1], m.b)), m.prog)
+                  + '<div class="xans"><span class="xlbl">ответ: b =</span><span class="xtiles">'
+                  + '<span class="xt ok">' + m.b + "</span></span></div>"});
+  return steps;
+}
+
+/* Сверка ответа с эталоном рисунком: ответ исполняется, и цепочка
+   показывает, что из него вышло. Вердикт — общий verdict(): запись знак
+   в знак, как на экзамене. Возвращает {ok, head, pic, why}. */
+function xCompare(t, raw){
+  const v = verdict(t, raw);
+  if (!v) return null;
+  const m = t.meta, given = String(raw).trim();
+  const res = {ok: v.ok, pic: "", why: ""};
+  const failWhy = (op, x) => op[0] === "div" ? x + " на " + op[1] + "\nне делится" : "меньше\nединицы";
+
+  if (m.kind === "compose" && /^[12]+$/.test(given)){
+    const r = runProg(m.ops, given, m.a);
+    const got = r.trace[r.trace.length - 1];
+    const n = r.failAt || given.length;
+    const labels = given.slice(0, n).split("").map(d => xLab(m.ops[+d - 1]));
+    res.pic = xChain(r.trace, labels, given.slice(0, n), {
+      end: v.ok ? "ok" : "bad",
+      fail: r.failAt ? {why: failWhy(m.ops[+given[n - 1] - 1], got)} : null});
+    const run = s => { const q = runProg(m.ops, s, m.a);
+                       return !q.failAt && q.trace[q.trace.length - 1] === m.target; };
+    res.why = v.ok ? "дошли до " + m.target
+        : given.length > m.lim ? "команд " + given.length + ", а можно не более " + m.lim
+        : run(given.split("").reverse().join("")) ? "команды верные, но записаны с конца — перевернуть"
+        : run(given.replace(/[12]/g, d => d === "1" ? "2" : "1")) ? "ход верный, но перепутаны номера команд"
+        : r.failAt ? "на шаге " + r.failAt + " команда невыполнима"
+        : "вышло " + got + ", а нужно " + m.target;
+  } else if (m.kind === "find" && /^[1-9]\d*$/.test(given)){
+    const b = +given, r = runProg(m.ops, m.prog, m.a, b);
+    const got = r.trace[r.trace.length - 1];
+    const n = r.failAt || m.prog.length;
+    const subB = m.ops.some(o => o[0] === "sub" && o[1] === "b");
+    res.pic = xChain(r.trace, m.prog.slice(0, n).split("").map(d => xLab(m.ops[+d - 1], b)),
+                     m.prog.slice(0, n), {
+      end: v.ok ? "ok" : "bad",
+      fail: r.failAt ? {why: failWhy(m.ops[+m.prog[n - 1] - 1], got)} : null});
+    res.why = v.ok ? "при b = " + b + " выходит " + m.res
+        : r.failAt ? "при b = " + b + " число перестаёт быть натуральным — b меньше"
+        : "вышло " + got + ", а нужно " + m.res + " — b " + ((got < m.res) === subB ? "меньше" : "больше");
+  } else {
+    res.why = v.hint;          // запись не та: пробелы, «b =», лишний ноль
+  }
+  res.head = v.ok ? "✓ совпало с эталоном" : "✗ не совпало";
+  return res;
+}
+
+
 /* ============================================ условие картинкой
    Условие рисуется на canvas, а не выводится тегами: с картинки нельзя
    выделить текст и отправить его в нейросеть — только прочитать и решить
@@ -1122,27 +1387,52 @@ function condition(t){
       : `<p${b.i ? ' class="ex"' : ""}>${segsHtml(b.segs)}</p>`).join("");
 }
 
+// Сверка ответа класса с эталоном: большой знак и цепочка — что вышло из
+// ответа класса (xCompare в gen.py, тот же исполнитель, что у тренажёра).
+function xCheck(el, t){
+  const box = el.querySelector(".xres");
+  const r = xCompare(t, el.querySelector(".xin").value);
+  if (!r){ box.innerHTML = ""; return; }
+  box.innerHTML = `<div class="xverd ${r.ok ? "ok" : "bad"}">${r.head}</div>`
+      + r.pic + `<div class="xwhy">${r.why}</div>`;
+}
+
+// Разбор — картинками (xSolution в gen.py), текст только в подписях:
+// правка Светы 03.10.2026 «вчитываться нудно, а так всё наглядно».
 function buildExample(el){
   const id = +el.dataset.type;
   const t = makeTask(id);
-  const steps = t.steps.map((s, i) =>
-      `<div class="step" hidden><span class="cap">шаг ${i + 1}</span>
-         ${esc(s)}</div>`).join("");
+  const steps = xSolution(t).map(s =>
+      '<div class="step xs' + (s.answer ? " answer" : "") + '" hidden><span class="cap">'
+      + esc(s.cap) + "</span>" + s.html + "</div>").join("");
+  const num = t.kind === "find" ? "b" : "номера команд";
 
   el.innerHTML =
     `<p class="eyebrow">разбираем вместе</p>
      <h2>Пример: ${esc(t.name)}</h2>
      <div class="exwrap">
        <div class="task">${condition(t)}
-         <div class="ask">${esc(t.tail)}</div></div>
+         <div class="ask">${esc(t.tail)}</div>
+         <div class="xcheck">
+           <input class="xin" type="text" inputmode="numeric" autocomplete="off"
+                  spellcheck="false" placeholder="ответ класса: ${num}">
+           <button class="xgo">Сверить</button>
+         </div></div>
        <div class="steps">
-         <div class="step hint" hidden><span class="cap">о чём задача</span>
-           ${esc(t.rule)}</div>
+         <div class="xres"></div>
          ${steps}
-         <div class="step answer" hidden><span class="cap">ответ</span>
-           ${esc(t.answer)}</div>
        </div>
      </div>`;
+  const inp = el.querySelector(".xin");
+  // набор ответа не должен листать слайды и менять шрифт
+  inp.addEventListener("keydown", e => {
+    e.stopPropagation();
+    if (e.key === "Enter") xCheck(el, t);
+  });
+  el.querySelector(".xgo").addEventListener("click", e => {
+    xCheck(el, t);
+    e.currentTarget.blur();       // иначе пробел «нажмёт» кнопку ещё раз
+  });
   // условие выше экрана закреплять нельзя — см. fitExamples() в конце файла;
   // через таймер: к этому моменту слайд показан и масштаб применён
   setTimeout(() => { if (typeof fitExamples === "function") fitExamples(); }, 0);
