@@ -993,8 +993,8 @@ function verdict(t, raw){
       return {ok: false, hint: "При b = " + v + " программа не выполняется: "
               + "на шаге " + r.failAt + " число перестаёт быть натуральным."};
     const got = r.trace[r.trace.length - 1];
-    return {ok: false, hint: "Подставим b = " + v + ": " + r.trace.join(" \u2192 ")
-            + ". Вышло <b>" + got + "</b>, а нужно " + m.res + " — b должно "
+    // сам след рисует xCompare под этой строкой — здесь только вывод
+    return {ok: false, hint: "При b = " + v + " вышло <b>" + got + "</b>, а нужно " + m.res + " — b должно "
             + "быть <b>" + ((got < m.res) === (m.ops.some(o => o[0] === "sub"
               && o[1] === "b")) ? "меньше" : "больше") + "</b>."};
   }
@@ -1035,14 +1035,12 @@ function verdict(t, raw){
   if (r.failAt){
     const op = m.ops[+given[r.failAt - 1] - 1];
     const x = r.trace[r.trace.length - 1];
-    return {ok: false, hint: "Выполняем: " + r.trace.join(" \u2192 ") + " — и "
-            + "на шаге " + r.failAt + " команда «" + cmdText(op) + "» "
+    return {ok: false, hint: "На шаге " + r.failAt + " команда «" + cmdText(op) + "» "
             + "<b>невыполнима</b>: " + (op[0] === "div"
                ? x + " не делится на " + op[1] + " нацело"
                : "получилось бы не натуральное число") + "."};
   }
-  return {ok: false, hint: "Выполняем: " + r.trace.join(" \u2192 ")
-          + ". Вышло <b>" + got + "</b>, а нужно " + m.target + "."};
+  return {ok: false, hint: "Вышло <b>" + got + "</b>, а нужно " + m.target + "."};
 }
 
 
