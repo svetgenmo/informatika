@@ -408,13 +408,36 @@ function fSameAct(a, b) {
   return JSON.stringify(a) === JSON.stringify(b);
 }
 
-function fRule(rng) {
-  const base = rng() < 0.6 ? 2 : 3;
-  const cond = tPick(rng, ['parity', 'parity', 'digitsum', 'div3', 'div3']);
+/* force — семейство, которое правило обязано содержать (Света, 03.10:
+   «при генерации добавь эти варианты»):
+     'last'  одна из веток дописывает три последние двоичные цифры,
+             t = s + s[-3:] (апробация 04.03.26);
+     'repl'  пара веток с заменой двух левых разрядов на 10 / 11
+             (апробация 05.03.25, пересдача 08.07.26, открытый вариант).
+   Сами по себе они выпадают неровно: 'repl' живёт только при признаке
+   «сумма цифр» в двоичной системе и попадался в 1,4 % задач, то есть
+   практически никогда. fWork ставит их в каждую работу явно. */
+function fRule(rng, force) {
+  const base = force ? 2 : (rng() < 0.6 ? 2 : 3);
+  const cond = force === 'repl' ? 'digitsum'
+             : tPick(rng, ['parity', 'parity', 'digitsum', 'div3', 'div3']);
   for (let tries = 0; tries < 60; tries++) {
     const acts = fActs(rng, base, cond);
-    const a = tPick(rng, acts);
-    const b = tPick(rng, acts);
+    let a = tPick(rng, acts);
+    let b = tPick(rng, acts);
+    if (force === 'repl') {
+      a = {kind: 'repl', tail: '0', head: '10'};
+      b = {kind: 'repl', tail: '1', head: '11'};
+    } else if (force === 'last') {
+      const other = acts.filter(x => x.kind !== 'last' && x.kind !== 'repl' &&
+                                     !(x.kind === 'calc' && x.src === 'rem'));
+      const last = {kind: 'last', k: 3};
+      /* остаток от деления — только на ветке «не делится», то есть b */
+      const rem = acts.filter(x => x.kind === 'calc' && x.src === 'rem');
+      if (rem.length && rng() < 0.5) { a = last; b = rem[0]; }
+      else if (rng() < 0.5) { a = last; b = tPick(rng, other); }
+      else { a = tPick(rng, other); b = last; }
+    }
     if (fSameAct(a, b)) continue;
     /* «Остаток от деления N на 3» имеет смысл только на ветке, где N на 3
        НЕ делится: на другой он всегда ноль, и ветка вырождается в приписку
@@ -643,15 +666,20 @@ function fRows(rule, centre) {
   return out;
 }
 
-function fMake(type, rng) {
+function fHas(rule, force) {
+  return !force || rule.a.kind === force || rule.b.kind === force;
+}
+
+function fMake(type, rng, force) {
   for (let tries = 0; tries < 400; tries++) {
-    const rule = fRule(rng);
+    const rule = fRule(rng, force);
+    if (!fHas(rule, force)) continue;
     const pairs = fScan(rule, F_LIM);
     const t = fCompose(type, rule, pairs, rng);
     /* part — что именно спрашивают. Все шесть типов здесь в форме ЕГЭ, так
        что «теория / экзамен» делить нечего; полезнее напоминать, какое из
        двух чисел идёт в ответ: на этом номере чаще всего и теряют балл. */
-    if (t) { t.type = type; t.part = (t.meta.kind === 'minR' || t.meta.kind === 'maxR') ? 'R' : 'N'; return t; }
+    if (t) { t.type = type; t.force = force || null; t.part = (t.meta.kind === 'minR' || t.meta.kind === 'maxR') ? 'R' : 'N'; return t; }
   }
   /* до сюда не доходит: fRule всегда возвращает рабочее правило, а пороги
      подбираются из самих посчитанных R */
@@ -805,7 +833,23 @@ function fWork(rng, w) {
     plan = [];
     for (let r = 0; r < w.rounds; r++) plan = plan.concat(tShuffle(rng, w.types.slice()));
   }
-  return plan.map(type => fMake(type, rng));
+  const force = fForces(rng, plan.length);
+  return plan.map((type, i) => fMake(type, rng, force[i]));
+}
+
+/* В каждой работе — хотя бы по задаче на «три последние двоичные цифры»
+   и на «замену двух левых разрядов», на случайных местах (см. fRule).
+   Задача помнит своё семейство (t.force): «Новые числа» дают ту же
+   ситуацию с другими числами. */
+function fForces(rng, n) {
+  const force = [];
+  for (let i = 0; i < n; i++) force.push(null);
+  if (n >= 2) {
+    const at = tShuffle(rng, force.map((_, i) => i));
+    force[at[0]] = 'last';
+    force[at[1]] = 'repl';
+  }
+  return force;
 }
 
 /* Практикум: балл за тип, у которого закрыты ВСЕ его задачи. В домашней и
@@ -830,7 +874,8 @@ function fMark(points, w) {
 /* Набор по одной задаче каждого типа — для самопроверки и образцов. */
 function fSet(seed) {
   const rng = tRng(seed || 1);
-  return [0, 1, 2, 3, 4, 5].map(type => fMake(type, rng));
+  const force = fForces(rng, 6);
+  return [0, 1, 2, 3, 4, 5].map(type => fMake(type, rng, force[type]));
 }
 
 /* Ответ сверяется знак в знак (answer-format-strict), но ошибка всегда
@@ -1084,7 +1129,7 @@ function judge(i){
       '<div class="why">' + why(t) + '</div>';
     go.textContent = "Новые числа";
     go.onclick = function(){
-      st.tasks[i] = fMake(t.type, rng);
+      st.tasks[i] = fMake(t.type, rng, t.force);
       st.tries[i]++;
       st.answered[i] = false;
       renderTask(i);
@@ -1258,8 +1303,9 @@ function finish(){
 /* Старт: по задаче каждого типа, все сразу. */
 (function start(){
   const area = document.getElementById("area");
+  const force = fForces(rng, N);
   for (let i = 0; i < N; i++){
-    st.tasks.push(fMake(i, rng));
+    st.tasks.push(fMake(i, rng, force[i]));
     const d = document.createElement("div");
     d.className = "card";
     d.id = "t" + i;
