@@ -114,6 +114,15 @@ button:focus-visible{outline:3px solid #a9c6e8;outline-offset:2px}
             border:1px solid var(--hi-line);border-radius:5px;padding:1px 6px}
 .solution div{margin:6px 0}
 
+.verdict.hi{background:var(--hi-bg);border:1px solid var(--hi-line);
+            color:var(--hi)}
+.card.hinted{border-color:var(--hi-line)}
+.card .extra{color:var(--hi);font-weight:700}
+.over{border:3px solid var(--err-line);background:var(--err-bg);
+      border-radius:14px;padding:18px 22px;margin:0 0 16px;color:var(--err);
+      font-weight:600}
+.over button{margin-top:12px}
+
 /* ----------------------------------------------------------- финал */
 .finish{border:3px solid var(--ok-line);background:var(--ok-bg);
         border-radius:14px;padding:22px 24px;margin-bottom:16px}
@@ -174,11 +183,16 @@ table.hex th{background:#fff;color:var(--muted);font-size:14px}
     <dt>Сколько решать</dt>
     <dd>Столько, на сколько хочешь наработать:
       <table class="steps">
-        <tr><th>найдено ответов</th><th>7</th><th>9</th><th>11</th></tr>
+        <tr><th>найдено с первой попытки</th><th>7</th><th>9</th><th>11</th></tr>
         <tr><th>оценка</th><td class="m">3</td><td class="m">4</td>
             <td class="m">5</td></tr>
       </table>
       Меньше семи — код не выдаётся, сдавать нечего.</dd>
+    <dt>Если ошибся</dt>
+    <dd>Страница подскажет, что искать в файле. Ответ после подсказки
+        вопрос закрывает, но <b>в зачёт не идёт</b> — зато к той же книге
+        добавится новый вопрос: ответишь на него сразу — потеря возмещена.
+        Ошибок больше четырёх — работу придётся начать заново.</dd>
     <dt>Как сдать</dt>
     <dd>В конце страница выдаст <b>код работы</b>. Нажми «Сдать работу»,
         впиши фамилию и класс — форма откроется с уже вписанным кодом.</dd>
@@ -351,8 +365,19 @@ function fingerprint(s, salt){
    (До 17.09.2026 вопросы шли по одному с кнопкой «Отложить»; Света
    попросила показывать все сразу — виден объём и можно выбрать порядок.) */
 
+// Ответ после подсказки вопрос закрывает, но в зачёт не идёт: вместо
+// него к той же книге добавляется новый вопрос. Добавочных не больше
+// EXTRA_MAX — на следующей ошибке работа закрывается, и её начинают
+// заново (Света, 05.10.2026). Формат кода прежний: в поле «найдено»
+// теперь уходят только ответы с первой попытки, поэтому разборщик
+// (check_homework.py) ставит отметку по ним, ничего не меняя у себя.
+const EXTRA_MAX = 4;
+
 const st = {
   queue: [],            // вопросы этого захода, по книгам
+  extra: {},            // id → добавлен вместо ошибки
+  given: {},            // id → что вписано в поле (переживает перерисовку)
+  over: false,          // ошибок больше EXTRA_MAX — работа закрыта
   done: {},             // id → закрыт
   clean: {},            // id → закрыт с первой попытки
   attempts: {},         // id → сколько раз по нему уже ошиблись
@@ -361,7 +386,13 @@ const st = {
 };
 
 const triesOf = q => st.attempts[q.id] || 0;
+const mistakes = () => Object.keys(st.attempts).length;
+const seen = new Set();   // что уже выпадало: новый заход берёт сперва невиданное
+// «Сделано» для отметки и кода — найдено с первой попытки
 Object.defineProperty(st, "typesDone",
+  {get(){ return Math.min(TOTAL,
+      Object.values(st.clean).filter(Boolean).length); }});
+Object.defineProperty(st, "foundAll",
   {get(){ return Object.keys(st.done).length; }});
 Object.defineProperty(st, "cleanTypes",
   {get(){ return Object.values(st.clean).filter(Boolean).length; }});
@@ -369,25 +400,60 @@ Object.defineProperty(st, "cleanTypes",
 // По три вопроса из каждой книги: в наборе всегда есть и файл россыпью,
 // и файл из архива, а наборы у соседей не совпадают. На странице вопросы
 // стоят по книгам — чтобы файл открывать один раз.
+const freshFirst = pool => shuffle(pool)
+    .sort((x, y) => seen.has(x.id) - seen.has(y.id));
+
 function buildQueue(){
   const picked = [];
   TEXTS.forEach(t => {
     const pool = BANK.questions.filter(q => q.text === t.id);
-    picked.push(...shuffle(pool).slice(0, BANK.perText));
+    picked.push(...freshFirst(pool).slice(0, BANK.perText));
   });
+  picked.forEach(q => seen.add(q.id));
   return picked;
 }
 
 function start(){
   st.queue = buildQueue();
   st.done = {}; st.clean = {}; st.attempts = {}; st.note = {};
+  st.extra = {}; st.given = {}; st.over = false;
   st.solved = 0; st.wrong = 0;
   document.getElementById("bottom").innerHTML = "";
   renderAll();
+  window.scrollTo(0, 0);
+}
+
+// Добавочный вопрос — к той же книге и встаёт к её вопросам, чтобы файл
+// не открывать снова; если вопросы книги кончились — к книге, где их
+// осталось больше всего.
+function addExtra(q){
+  const inRun = new Set(st.queue.map(x => x.id));
+  const left = BANK.questions.filter(x => !inRun.has(x.id));
+  let pool = left.filter(x => x.text === q.text);
+  if (!pool.length){
+    const count = {};
+    left.forEach(x => { count[x.text] = (count[x.text] || 0) + 1; });
+    const best = Object.keys(count).sort((a, b) => count[b] - count[a])[0];
+    pool = left.filter(x => x.text === best);
+  }
+  if (!pool.length) return;
+  const nq = freshFirst(pool)[0];
+  seen.add(nq.id);
+  st.extra[nq.id] = true;
+  let at = -1;
+  st.queue.forEach((x, k) => { if (x.text === nq.text) at = k; });
+  st.queue.splice(at + 1, 0, nq);
+}
+
+function captureGiven(){
+  st.queue.forEach(q => {
+    const el = document.getElementById("ans-" + q.id);
+    if (el) st.given[q.id] = el.value;
+  });
 }
 
 function answer(q){
-  if (st.done[q.id]) return;
+  if (st.over || st.done[q.id]) return;
   const given = document.getElementById("ans-" + q.id).value.trim();
   if (!given) return;
   if (!norm(given)){
@@ -402,7 +468,19 @@ function answer(q){
     if (triesOf(q) === 0) st.clean[q.id] = true;
   } else {
     st.wrong++;
+    const first = triesOf(q) === 0;
     st.attempts[q.id] = triesOf(q) + 1;
+    // добавочный — только за первую ошибку в вопросе: повторные попытки
+    // на той же карточке ничего не стоят, подсказка уже дана
+    if (first){
+      if (mistakes() > EXTRA_MAX) st.over = true;
+      else addExtra(q);
+      captureGiven();
+      renderAll();
+      const el = document.getElementById("ans-" + q.id);
+      if (el && !st.over) el.focus();
+      return;
+    }
   }
   renderCard(q, given);
   renderProgress();
@@ -432,15 +510,18 @@ function renderFiles(){
 function renderProgress(){
   const done = st.typesDone;
   document.getElementById("dots").innerHTML = st.queue.map(q =>
-    `<span class="dot${st.done[q.id] ? " full" : ""}"></span>`).join("");
+    `<span class="dot${st.clean[q.id] ? " full" : ""}"></span>`).join("");
 
   const mark = markFor(done);
   const el = document.getElementById("mark");
   el.textContent = done >= MIN_TO_FINISH ? mark : "—";
   el.className = done >= MIN_TO_FINISH ? "m" + mark : "";
 
+  if (st.over){
+    el.textContent = "—"; el.className = "";
+  }
   const btn = document.getElementById("finish");
-  btn.disabled = done < MIN_TO_FINISH;
+  btn.disabled = st.over || done < MIN_TO_FINISH;
   btn.textContent = done >= MIN_TO_FINISH
       ? `Закончить и получить код (на ${mark})`
       : "Закончить и получить код";
@@ -455,6 +536,12 @@ function renderProgress(){
   };
   const up = SCALE.filter(s => s[0] > done).pop();
   const need = document.getElementById("need");
+  const errs = `<br>Ошибок: <b>${mistakes()}</b>, можно не больше ${EXTRA_MAX}.`;
+  if (st.over){
+    need.innerHTML = `Ошибок больше ${EXTRA_MAX} — работа закрыта. `
+        + `Начни заново: будут новые вопросы.`;
+    return;
+  }
   if (!up){
     need.innerHTML = "Найдено всё, что нужно на пятёрку. " +
                      "Забирай код и сдавай.";
@@ -467,14 +554,21 @@ function renderProgress(){
     need.innerHTML = `Найди ещё <b>${left}</b> ${forms(left)}, `
         + `чтобы получить код на <b>3</b>.`;
   }
+  need.innerHTML += errs;
 }
 
 function cardHtml(q, n, given){
   const src = byId[q.text];
   const done = !!st.done[q.id];
+  const hinted = done && triesOf(q) > 0;
   let tail = "";
-  if (done){
+  if (hinted){
+    tail = `<div class="verdict hi">Найдено с подсказкой — в зачёт не идёт.
+              ${st.extra[q.id] ? "" : "Вместо него к этой книге добавлен новый вопрос."}</div>`;
+  } else if (done){
     tail = `<div class="verdict ok">Правильно — ответ найден.</div>`;
+  } else if (st.over){
+    tail = "";
   } else if (st.note[q.id]){
     tail = `<div class="verdict err">${esc(st.note[q.id])}</div>`;
   } else if (triesOf(q) > 0){
@@ -491,22 +585,23 @@ function cardHtml(q, n, given){
            `</div>`;
   }
   return `
-    <div class="card${done ? " ok" : triesOf(q) > 0 ? " err" : ""}" id="card-${q.id}">
-      <div class="kicker">${n} &middot; ${esc(q.kind)}</div>
+    <div class="card${hinted ? " hinted" : done ? " ok" : triesOf(q) > 0 ? " err" : ""}" id="card-${q.id}">
+      <div class="kicker">${n} &middot; ${esc(q.kind)}${st.extra[q.id]
+        ? ` &middot; <span class="extra">вместо ошибки</span>` : ""}</div>
       <div class="q">${esc(q.q)}<small>Ответа на этой странице нет —
         он только в файле.</small></div>
       <div class="row">
         <input type="text" id="ans-${q.id}" autocomplete="off" spellcheck="false"
                placeholder="ответ" value="${esc(given || "")}"
-               ${done ? "disabled" : ""}>
-        <button class="primary" id="go-${q.id}" ${done ? "disabled" : ""}>Проверить</button>
+               ${done || st.over ? "disabled" : ""}>
+        <button class="primary" id="go-${q.id}" ${done || st.over ? "disabled" : ""}>Проверить</button>
       </div>
       ${tail}
     </div>`;
 }
 
 function bindCard(q){
-  if (st.done[q.id]) return;
+  if (st.over || st.done[q.id]) return;
   document.getElementById("go-" + q.id).addEventListener("click", () => answer(q));
   document.getElementById("ans-" + q.id).addEventListener("keydown", e => {
     if (e.key === "Enter"){ e.preventDefault(); answer(q); }
@@ -517,7 +612,7 @@ function renderCard(q, given){
   const n = st.queue.indexOf(q) + 1;
   document.getElementById("card-" + q.id).outerHTML = cardHtml(q, n, given);
   bindCard(q);
-  if (!st.done[q.id]) document.getElementById("ans-" + q.id).focus();
+  if (!st.done[q.id] && !st.over) document.getElementById("ans-" + q.id).focus();
 }
 
 function renderAll(){
@@ -534,10 +629,19 @@ function renderAll(){
         ${src.zip ? `<span class="zip">${esc(src.where)}</span>`
                   : esc(src.where)}</div>`;
     }
-    html += cardHtml(q, n, "");
+    html += cardHtml(q, n, st.given[q.id] || "");
   });
   document.getElementById("main").innerHTML = html;
   st.queue.forEach(bindCard);
+  if (st.over){
+    document.getElementById("bottom").innerHTML = `<div class="over">
+      Ошибок больше ${EXTRA_MAX} — работа закрыта, код не выдаётся.
+      Начни заново: будут новые вопросы. Не торопись с ответом — сначала
+      найди слово в файле.<br>
+      <button id="restart" class="primary">Начать заново</button></div>`;
+    document.getElementById("restart").addEventListener("click", start);
+    document.getElementById("bottom").scrollIntoView({behavior: "smooth", block: "start"});
+  }
 }
 
 /* Кнопка «Сдать». Код привязан к фамилии (Света, 26.09.2026): пока
@@ -615,10 +719,10 @@ function renderFinish(){
 
   document.getElementById("bottom").innerHTML = `
     <div class="finish">
-      <h2>${all ? "Готово — найдены все двенадцать ответов"
+      <h2>${all ? "Готово — все двенадцать с первой попытки"
                 : `Готово — наработано на ${mark}`}</h2>
-      <p class="stats">Найдено ответов: <b>${done}</b> из ${TOTAL}
-         &middot; с первой попытки: <b>${st.cleanTypes}</b>
+      <p class="stats">В зачёт (с первой попытки): <b>${done}</b> из ${TOTAL}
+         &middot; найдено с подсказкой: <b>${st.foundAll - done}</b>
          &middot; неверных попыток: <b>${st.wrong}</b></p>
       <div class="code" id="code"></div>
       <p class="stats">Это код твоей работы. Он собран из твоей фамилии и
