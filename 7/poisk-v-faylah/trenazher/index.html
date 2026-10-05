@@ -98,6 +98,15 @@ input[type=text]:disabled{background:#f1f2f6;color:var(--muted)}
        background:#fff;border:1px solid var(--hi-line);border-radius:5px;
        padding:1px 6px}
 
+.task.hinted{border-color:var(--hi-line);background:var(--hi-bg)}
+.task.hinted .num{background:var(--hi)}
+.verdict.hi{color:var(--hi)}
+.extra{display:inline-block;margin-left:8px;font-size:12px;font-weight:600;
+       color:var(--hi);border:1px solid var(--hi-line);border-radius:10px;
+       padding:0 8px;background:#fff}
+.over{margin:18px 0 0;padding:12px 16px;border-radius:10px;
+      background:var(--err-bg);border:1px solid var(--err-line);
+      color:var(--err);font-weight:600}
 .done{margin:18px 0 0;padding:12px 16px;border-radius:10px;
       background:var(--ok-bg);border:1px solid var(--ok-line);
       color:var(--ok);font-weight:600}
@@ -127,6 +136,10 @@ th{background:#fff;color:var(--muted);font-size:14px}
 <p class="sub">Двенадцать вопросов к четырём книгам: по три к каждой.
    Ответ <b>не написан нигде на этой странице</b> — его надо найти в
    файле. Набор вопросов при каждом запуске новый.</p>
+<p class="sub">В оценку идут ответы <b>с первой попытки</b>. Ошибся —
+   страница подскажет, что искать, а внизу появится новый вопрос к той
+   же книге: ответишь на него верно сразу — потеря возмещена. Ошибок
+   больше четырёх — тест придётся начать заново.</p>
 
 <div class="files">
   <h2>Где взять файлы</h2>
@@ -162,16 +175,15 @@ th{background:#fff;color:var(--muted);font-size:14px}
     <tr><th>вопрос</th><th>что искать</th></tr>
     <tr><td>Сколько раз Остап закапывал букварь?</td>
         <td><code>закапывал</code></td></tr>
-    <tr><td>Как звали коня Казбича?</td><td><code>скакун</code></td></tr>
+    <tr><td>Как звали коня Казбича?</td><td><code>Казбич</code></td></tr>
     <tr><td>Кем служит Лизанька?</td><td><code>Лизанька</code></td></tr>
   </table>
   <p>Слово вроде «который» или «сказал» не годится: совпадений будут
      сотни.</p>
 
   <h3>Ищи основу слова, а не всё целиком</h3>
-  <p>В книге слово стоит в своём падеже: не «ясень», а «ясенем», не
-     «конь», а «коня». Поэтому ищи <b>корень</b>: <code>ясен</code>,
-     <code>кон</code>, <code>закапыв</code>.</p>
+  <p>В книге слово стоит в своём падеже: не «ясень», а «ясенем».
+     Поэтому ищи <b>корень</b>: <code>ясен</code>, <code>закапыв</code>.</p>
 
   <h3>Архив сначала распакуй</h3>
   <p>Если файл лежит в архиве, работать с ним прямо оттуда нельзя.
@@ -194,7 +206,7 @@ th{background:#fff;color:var(--muted);font-size:14px}
 "use strict";
 
 /* ==== БАНК: вставлено gen.py, руками не править ==== */
-const BANK = {"perText":3,"total":12,"texts":[{"id":"asya","file":"Тургенев. Ася.txt","author":"И. С. Тургенев","title":"Ася","where":"лежит прямо в папке «Тексты»","zip":""},{"id":"bulba","file":"Гоголь. Тарас Бульба.txt","author":"Н. В. Гоголь","title":"Тарас Бульба","where":"внутри архива «Проза.zip» — сначала распакуй","zip":"Проза.zip"},{"id":"geroy","file":"Лермонтов. Герой нашего времени.txt","author":"М. Ю. Лермонтов","title":"Герой нашего времени","where":"внутри архива «Проза.zip» — сначала распакуй","zip":"Проза.zip"},{"id":"gore","file":"Грибоедов. Горе от ума.txt","author":"А. С. Грибоедов","title":"Горе от ума","where":"внутри архива «Драматургия.zip» — сначала распакуй","zip":"Драматургия.zip"}],"questions":[{"id":1,"text":"asya","kind":"название","q":"Студенты приехали в городок Л. на особый торжественный пир. Как называется такой пир?","hint":"торжественный пир","fp":["56ee6594"]},{"id":2,"text":"asya","kind":"имя","q":"Под старым ясенем стояла каменная скамья, а из ветвей ясеня печально выглядывала маленькая статуя. Чья это была статуя? Ответ дайте в именительном падеже.","hint":"ясенем","fp":["4c778cf9"]},{"id":3,"text":"asya","kind":"название","q":"Ася бросила из окна ветку цветка, и герой хранил этот высохший цветок всю жизнь. Что это за цветок?","hint":"высохший цветок","fp":["4e34a2ef"]},{"id":4,"text":"asya","kind":"число","q":"Сколько лет было рассказчику Н. Н., когда произошла эта история? Ответ запишите цифрами.","hint":"Мне было тогда лет","fp":["8c4b4676"]},{"id":5,"text":"asya","kind":"число","q":"В скольких верстах от Рейна лежит городок З.? Ответ запишите цифрами.","hint":"Городок З.","fp":["9ebdd4b7"]},{"id":6,"text":"asya","kind":"имя","q":"Мать Аси была бывшей горничной. Как её звали? Ответ дайте в именительном падеже.","hint":"горничной","fp":["69dd8e5d"]},{"id":7,"text":"bulba","kind":"место","q":"В какой бурсе учились сыновья Тараса Бульбы? Ответ дайте одним словом — прилагательным, как в тексте.","hint":"бурсе","fp":["f22e7095","87947d84"]},{"id":8,"text":"bulba","kind":"число","q":"Сколько раз Остап закапывал в землю свой букварь? Ответ запишите цифрами.","hint":"закапывал","fp":["ed2437e1"]},{"id":9,"text":"bulba","kind":"имя","q":"Как звали младшего сына Тараса Бульбы?","hint":"Будьте здоровы, сынки","fp":["af59a91a"]},{"id":10,"text":"bulba","kind":"имя","q":"Как звали старшего сына Тараса Бульбы?","hint":"старший сын","fp":["b435bda6"]},{"id":11,"text":"bulba","kind":"место","q":"В какой город Тарас велел везти себя, чтобы ещё раз увидеть сына? Ответ дайте в именительном падеже.","hint":"Вези меня в","fp":["d3b98a7a"]},{"id":12,"text":"bulba","kind":"место","q":"На какой город решило идти войско, узнав, что там много казны и богатых обывателей? Ответ дайте в именительном падеже.","hint":"было много казны","fp":["612b520e"]},{"id":13,"text":"geroy","kind":"место","q":"Максим Максимыч десять лет стоял с ротой в крепости у Каменного Брода. В какой местности была эта крепость? Ответ дайте в именительном падеже.","hint":"Каменного Брода","fp":["bb6cad8a","540b8b13","756a00c1"]},{"id":14,"text":"geroy","kind":"имя","q":"Как звали коня Казбича? Ответ дайте в именительном падеже.","hint":"голос моего","fp":["b8918668"]},{"id":15,"text":"geroy","kind":"число","q":"Азамат хвалит лошадь Казбича и говорит, что отдал бы за неё половину своего табуна, будь он хозяином в доме. Сколько кобыл в табуне, о котором он говорит? Ответ запишите цифрами.","hint":"табун в","fp":["491165db"]},{"id":16,"text":"geroy","kind":"число","q":"Сколько лет Максим Максимыч простоял с ротою в крепости? Ответ запишите цифрами.","hint":"стоял там в крепости","fp":["4c2c1205"]},{"id":17,"text":"geroy","kind":"занятие","q":"Какой национальности был поручик Вулич? Ответ дайте в именительном падеже единственного числа.","hint":"Он был родом","fp":["e613b375"]},{"id":18,"text":"geroy","kind":"место","q":"Какой городок назван самым скверным из всех приморских городов России? Ответ дайте в именительном падеже.","hint":"приморских городов","fp":["32e069d1"]},{"id":19,"text":"gore","kind":"занятие","q":"Кем служит Лизанька в доме Фамусова?","hint":"Лизанька","fp":["dd10f83e"]},{"id":20,"text":"gore","kind":"занятие","q":"Кем служит у Фамусова Алексей Степанович Молчалин?","hint":"Молчалин","fp":["61f3196d"]},{"id":21,"text":"gore","kind":"число","q":"Сколько дочерей у князя и княгини Тугоуховских? Ответ запишите цифрами.","hint":"Тугоуховский","fp":["f7999041"]},{"id":22,"text":"gore","kind":"занятие","q":"Какое воинское звание у Сергея Сергеевича Скалозуба?","hint":"Скалозуб, Сергей","fp":["8c960196"]},{"id":23,"text":"gore","kind":"место","q":"В каком городе происходит действие комедии? Ответ дайте в именительном падеже.","hint":"Действие в","fp":["23da32b5","017432dc","1eda2ad6"]},{"id":24,"text":"gore","kind":"занятие","q":"Кем служит Павел Афанасьевич Фамусов? Ответ дайте одним словом — так, как названа его должность в списке действующих лиц.","hint":"Павел Афанасьевич","fp":["305299c6"]}]};
+const BANK = {"perText":3,"total":12,"texts":[{"id":"asya","file":"Тургенев. Ася.txt","author":"И. С. Тургенев","title":"Ася","where":"лежит прямо в папке «Тексты»","zip":"","dl":"Тургенев. Ася.zip"},{"id":"bulba","file":"Гоголь. Тарас Бульба.txt","author":"Н. В. Гоголь","title":"Тарас Бульба","where":"внутри архива «Проза.zip» — сначала распакуй","zip":"Проза.zip","dl":""},{"id":"geroy","file":"Лермонтов. Герой нашего времени.txt","author":"М. Ю. Лермонтов","title":"Герой нашего времени","where":"внутри архива «Проза.zip» — сначала распакуй","zip":"Проза.zip","dl":""},{"id":"gore","file":"Грибоедов. Горе от ума.txt","author":"А. С. Грибоедов","title":"Горе от ума","where":"внутри архива «Драматургия.zip» — сначала распакуй","zip":"Драматургия.zip","dl":""}],"questions":[{"id":1,"text":"asya","kind":"название","q":"Студенты приехали в городок Л. на особый торжественный пир. Как называется такой пир?","hint":"торжественный пир","fp":["56ee6594"]},{"id":2,"text":"asya","kind":"имя","q":"Под старым ясенем стояла каменная скамья, а из ветвей ясеня печально выглядывала маленькая статуя. Чья это была статуя? Ответ дайте в именительном падеже.","hint":"ясенем","fp":["4c778cf9"]},{"id":3,"text":"asya","kind":"название","q":"Ася бросила из окна ветку цветка, и герой хранил этот высохший цветок всю жизнь. Что это за цветок?","hint":"высохший цветок","fp":["4e34a2ef"]},{"id":4,"text":"asya","kind":"число","q":"Сколько лет было рассказчику Н. Н., когда произошла эта история? Ответ запишите цифрами.","hint":"Мне было тогда лет","fp":["8c4b4676"]},{"id":5,"text":"asya","kind":"число","q":"В скольких верстах от Рейна лежит городок З.? Ответ запишите цифрами.","hint":"Городок З.","fp":["9ebdd4b7"]},{"id":6,"text":"asya","kind":"имя","q":"Мать Аси была бывшей горничной. Как её звали? Ответ дайте в именительном падеже.","hint":"горничной","fp":["69dd8e5d"]},{"id":7,"text":"bulba","kind":"место","q":"В какой бурсе учились сыновья Тараса Бульбы? Ответ дайте одним словом — прилагательным, как в тексте.","hint":"бурсе","fp":["f22e7095","87947d84"]},{"id":8,"text":"bulba","kind":"число","q":"Сколько раз Остап закапывал в землю свой букварь? Ответ запишите цифрами.","hint":"закапывал","fp":["ed2437e1"]},{"id":9,"text":"bulba","kind":"имя","q":"Как звали младшего сына Тараса Бульбы?","hint":"Будьте здоровы, сынки","fp":["af59a91a"]},{"id":10,"text":"bulba","kind":"имя","q":"Как звали старшего сына Тараса Бульбы?","hint":"старший сын","fp":["b435bda6"]},{"id":11,"text":"bulba","kind":"место","q":"В какой город Тарас велел везти себя, чтобы ещё раз увидеть сына? Ответ дайте в именительном падеже.","hint":"Вези меня в","fp":["d3b98a7a"]},{"id":12,"text":"bulba","kind":"место","q":"На какой город решило идти войско, узнав, что там много казны и богатых обывателей? Ответ дайте в именительном падеже.","hint":"было много казны","fp":["612b520e"]},{"id":13,"text":"geroy","kind":"место","q":"Максим Максимыч десять лет стоял с ротой в крепости у Каменного Брода. В какой местности была эта крепость? Ответ дайте в именительном падеже.","hint":"Каменного Брода","fp":["bb6cad8a","540b8b13","756a00c1"]},{"id":14,"text":"geroy","kind":"имя","q":"Как звали коня Казбича? Ответ дайте в именительном падеже.","hint":"голос моего","fp":["b8918668"]},{"id":15,"text":"geroy","kind":"число","q":"Азамат хвалит лошадь Казбича и говорит, что отдал бы за неё половину своего табуна, будь он хозяином в доме. Сколько кобыл в табуне, о котором он говорит? Ответ запишите цифрами.","hint":"табун в","fp":["491165db"]},{"id":16,"text":"geroy","kind":"число","q":"Сколько лет Максим Максимыч простоял с ротою в крепости? Ответ запишите цифрами.","hint":"стоял там в крепости","fp":["4c2c1205"]},{"id":17,"text":"geroy","kind":"занятие","q":"Печорин пишет, что Грушницкий только год в службе и носит толстую солдатскую шинель. В каком звании Грушницкий? Ответ дайте в именительном падеже.","hint":"год в службе","fp":["5b338382"]},{"id":18,"text":"geroy","kind":"место","q":"Какой городок назван самым скверным из всех приморских городов России? Ответ дайте в именительном падеже.","hint":"приморских городов","fp":["32e069d1"]},{"id":19,"text":"gore","kind":"занятие","q":"Кем служит Лизанька в доме Фамусова?","hint":"Лизанька","fp":["dd10f83e"]},{"id":20,"text":"gore","kind":"занятие","q":"Кем служит у Фамусова Алексей Степанович Молчалин?","hint":"Молчалин","fp":["61f3196d"]},{"id":21,"text":"gore","kind":"число","q":"Сколько дочерей у князя и княгини Тугоуховских? Ответ запишите цифрами.","hint":"Тугоуховский","fp":["f7999041"]},{"id":22,"text":"gore","kind":"занятие","q":"Какое воинское звание у Сергея Сергеевича Скалозуба?","hint":"Скалозуб, Сергей","fp":["8c960196"]},{"id":23,"text":"gore","kind":"место","q":"В каком городе происходит действие комедии? Ответ дайте в именительном падеже.","hint":"Действие в","fp":["23da32b5","017432dc","1eda2ad6"]},{"id":24,"text":"gore","kind":"занятие","q":"Кем служит Павел Афанасьевич Фамусов? Ответ дайте одним словом — так, как названа его должность в списке действующих лиц.","hint":"Павел Афанасьевич","fp":["305299c6"]}]};
 /* ==== /БАНК ==== */
 
 const TEXTS = BANK.texts;
@@ -206,8 +218,15 @@ TEXTS.forEach(t => { byId[t.id] = t; });
 const SCALE = [[11, 5], [9, 4], [7, 3]];
 const markFor = n => (SCALE.find(s => n >= s[0]) || [0, 2])[1];
 
+// Ответ после подсказки найден, но в оценку не идёт: вместо него в
+// конец списка добавляется новый вопрос к той же книге. Добавочных не
+// больше EXTRA_MAX — на следующей ошибке круг закрывается, и тест
+// начинают заново (правило Светы 05.10.2026).
+const EXTRA_MAX = 4;
+
 let tasks = [];
-let firstTry = 0;
+let over = false;
+const seen = new Set();   // что уже выпадало: новый круг берёт сперва невиданное
 
 const shuffle = a => {
   const x = a.slice();
@@ -239,31 +258,61 @@ function fingerprint(s, salt){
 
 /* ------------------------------------------------------------- набор */
 
+// Сперва то, что ещё не выпадало: перезапуск даёт новые вопросы, пока
+// банк не исчерпан.
+const freshFirst = pool => shuffle(pool)
+    .sort((x, y) => seen.has(x.id) - seen.has(y.id));
+
+const asTask = (q, extra) =>
+    Object.assign({}, q, {status: "open", tries: 0, given: "", draft: "",
+                          extra: extra});
+
 // По три вопроса из каждой книги: так в наборе всегда есть и файл
 // россыпью, и файл из архива, а наборы у соседей не совпадают.
 function newRun(){
-  firstTry = 0;
+  over = false;
   const picked = [];
   TEXTS.forEach(t => {
     const pool = BANK.questions.filter(q => q.text === t.id);
-    picked.push(...shuffle(pool).slice(0, BANK.perText));
+    picked.push(...freshFirst(pool).slice(0, BANK.perText));
   });
-  tasks = shuffle(picked).map(q =>
-      Object.assign({}, q, {status: "open", tries: 0, given: "", draft: ""}));
+  picked.forEach(q => seen.add(q.id));
+  tasks = shuffle(picked).map(q => asTask(q, false));
   renderFiles();
   render();
+  window.scrollTo(0, 0);
   const el = document.getElementById("in0");
   if (el) el.focus();
 }
 
-const solved = () => tasks.filter(t => t.status === "ok").length;
+// Добавочный вопрос — к той же книге; если её вопросы кончились, к той,
+// где их осталось больше всего.
+function addExtra(textId){
+  const inRun = new Set(tasks.map(t => t.id));
+  const left = BANK.questions.filter(q => !inRun.has(q.id));
+  let pool = left.filter(q => q.text === textId);
+  if (!pool.length){
+    const count = {};
+    left.forEach(q => { count[q.text] = (count[q.text] || 0) + 1; });
+    const best = Object.keys(count).sort((x, y) => count[y] - count[x])[0];
+    pool = left.filter(q => q.text === best);
+  }
+  if (!pool.length) return;
+  const q = freshFirst(pool)[0];
+  seen.add(q.id);
+  tasks.push(asTask(q, true));
+}
+
+const clean = () =>
+    tasks.filter(t => t.status === "ok" && t.tries === 0).length;
+const mistakes = () => tasks.filter(t => t.tries > 0).length;
 const allAnswered = () => tasks.every(t => t.status === "ok");
 
 /* ----------------------------------------------------------- проверка */
 
 function check(i){
   const t = tasks[i];
-  if (!t || t.status === "ok") return;
+  if (over || !t || t.status === "ok") return;
   const el = document.getElementById("in" + i);
   const given = (el ? el.value : "").trim();
   if (!given) return;
@@ -279,11 +328,15 @@ function check(i){
   t.note = "";
   if (t.fp.indexOf(fingerprint(given, t.id)) >= 0){
     t.status = "ok";
-    if (t.tries === 0) firstTry++;
   } else {
     t.status = "err";
-    t.tries++;
     t.draft = given;
+    // добавочный — только за первую ошибку в вопросе: повторные
+    // попытки на той же карточке ничего не стоят, подсказка уже дана
+    if (t.tries++ === 0){
+      if (mistakes() > EXTRA_MAX) over = true;
+      else addExtra(t.text);
+    }
   }
   render();
   if (t.status === "ok") focusNextOpen(i + 1);
@@ -310,8 +363,11 @@ function captureDrafts(){
 // Дорога до папки «Тексты» зависит от того, откуда открыта страница:
 // с сайта она лежит в подпапке (/dz/), из общей папки — рядом с ними.
 const FILES_BASE = /\/$/.test(location.pathname) ? "../Тексты/" : "Тексты/";
+// Голый .txt браузер открывает прямо в этой вкладке — и набранные
+// ответы пропадают. Поэтому даже файл россыпью скачивается архивом (dl).
 const fileLink = t => `<a href="${FILES_BASE}${encodeURIComponent(
-    t.zip || t.file)}" download>${esc(t.zip || t.file)}</a>`;
+    t.dl || t.zip || t.file)}" download target="_blank">${esc(
+    t.dl || t.zip || t.file)}</a>`;
 
 const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
                           .replace(/>/g, "&gt;");
@@ -331,14 +387,23 @@ function render(){
   tasks.forEach((t, i) => {
     const src = byId[t.text];
     const card = document.createElement("div");
-    card.className = "task" + (t.status === "open" ? "" : " " + t.status);
+    const hinted = t.status === "ok" && t.tries > 0;
+    card.className = "task" + (hinted ? " hinted"
+        : t.status === "open" ? "" : " " + t.status);
     card.id = "card" + i;
 
     let tail;
     if (t.status === "ok"){
       tail = `<div class="row">
                 <input type="text" value="${esc(t.given)}" disabled>
-                <span class="verdict ok">Правильно</span>
+                ${hinted
+                  ? `<span class="verdict hi">Найдено с подсказкой —
+                       в оценку не идёт</span>`
+                  : `<span class="verdict ok">Правильно</span>`}
+              </div>`;
+    } else if (over){
+      tail = `<div class="row">
+                <input type="text" value="${esc(t.draft || "")}" disabled>
               </div>`;
     } else {
       // Правильного ответа страница не знает — только отпечаток. Поэтому
@@ -371,7 +436,8 @@ function render(){
             файл <b>${esc(src.file)}</b>,
             ${src.zip ? `<span class="zip">${esc(src.where)}</span>`
                       : esc(src.where)}</span>
-          ${esc(t.q)}<span class="kind">${esc(t.kind)}</span>
+          ${esc(t.q)}<span class="kind">${esc(t.kind)}</span>${t.extra
+            ? `<span class="extra">вместо ошибки</span>` : ""}
         </div>
       </div>
       ${tail}`;
@@ -391,23 +457,32 @@ function render(){
 }
 
 function updatePanel(){
-  const n = solved();
+  const n = clean();
   const mark = markFor(n);
   const started = tasks.some(t => t.status !== "open");
   const el = document.getElementById("mark");
-  el.textContent = started ? mark : "—";
-  el.className = started ? "m" + mark : "";
+  el.textContent = over || !started ? "—" : mark;
+  el.className = over || !started ? "" : "m" + mark;
 
   const nextUp = SCALE.filter(s => s[0] > n).pop();
-  document.getElementById("stats").innerHTML =
-    `найдено ответов: <b>${n}</b> из ${TOTAL}<br>` +
-    `с первой попытки: <b>${firstTry}</b> из ${TOTAL}` +
-    (nextUp ? `<br>до оценки ${nextUp[1]} осталось найти: ` +
-              `<b>${nextUp[0] - n}</b>` : "");
+  document.getElementById("stats").innerHTML = over
+    ? `ошибок больше ${EXTRA_MAX} — круг закрыт`
+    : `в оценку (с первой попытки): <b>${n}</b> из ${TOTAL}<br>` +
+      `ошибок: <b>${mistakes()}</b>, можно не больше ${EXTRA_MAX}` +
+      (nextUp ? `<br>до оценки ${nextUp[1]} осталось найти: ` +
+                `<b>${nextUp[0] - n}</b>` : "");
 
-  document.getElementById("done").innerHTML = allAnswered()
-    ? `<div class="done">Все ${TOTAL} ответов найдены. Оценка ${mark}.</div>`
-    : "";
+  const done = document.getElementById("done");
+  if (over){
+    done.innerHTML = `<div class="over">Ошибок больше ${EXTRA_MAX} — оценка
+      не выставляется. Нажми «Начать заново»: будет новый набор вопросов.
+      Не торопись с ответом — сначала найди слово в файле.</div>`;
+  } else if (allAnswered()){
+    done.innerHTML = `<div class="done">Все вопросы закрыты: с первой
+      попытки ${n} из ${TOTAL}. Оценка ${mark}.</div>`;
+  } else {
+    done.innerHTML = "";
+  }
 }
 
 document.getElementById("again").addEventListener("click", newRun);
