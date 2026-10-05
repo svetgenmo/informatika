@@ -104,9 +104,6 @@ input[type=text]:disabled{background:#f1f2f6;color:var(--muted)}
 .extra{display:inline-block;margin-left:8px;font-size:12px;font-weight:600;
        color:var(--hi);border:1px solid var(--hi-line);border-radius:10px;
        padding:0 8px;background:#fff}
-.over{margin:18px 0 0;padding:12px 16px;border-radius:10px;
-      background:var(--err-bg);border:1px solid var(--err-line);
-      color:var(--err);font-weight:600}
 .done{margin:18px 0 0;padding:12px 16px;border-radius:10px;
       background:var(--ok-bg);border:1px solid var(--ok-line);
       color:var(--ok);font-weight:600}
@@ -136,10 +133,12 @@ th{background:#fff;color:var(--muted);font-size:14px}
 <p class="sub">Двенадцать вопросов к четырём книгам: по три к каждой.
    Ответ <b>не написан нигде на этой странице</b> — его надо найти в
    файле. Набор вопросов при каждом запуске новый.</p>
-<p class="sub">В оценку идут ответы <b>с первой попытки</b>. Ошибся —
+<p class="sub"><b>Тройку можно добрать, четвёрку и пятёрку — только
+   заработать.</b> В оценку идут ответы с первой попытки. Ошибся —
    страница подскажет, что искать, а внизу появится новый вопрос к той
-   же книге: ответишь на него верно сразу — потеря возмещена. Ошибок
-   больше пяти — тест придётся начать заново.</p>
+   же книге. Но ошибки ставят потолок: одна — ещё можно на 5, до трёх —
+   не выше 4, больше — не выше 3. Хочешь выше потолка — «Начать
+   заново».</p>
 
 <div class="files">
   <h2>Где взять файлы</h2>
@@ -218,16 +217,19 @@ TEXTS.forEach(t => { byId[t.id] = t; });
 const SCALE = [[11, 5], [9, 4], [7, 3]];
 const markFor = n => (SCALE.find(s => n >= s[0]) || [0, 2])[1];
 
-// Ответ после подсказки найден, но в оценку не идёт: вместо него в
-// конец списка добавляется новый вопрос к той же книге. Добавочных не
-// больше EXTRA_MAX — на следующей ошибке круг закрывается, и тест
-// начинают заново (правило Светы 05.10.2026).
-// Порог — на уровне тройки (Света, 06.10.2026): ошибок можно столько,
-// сколько их допускает «3» — 12 вопросов минус 7 нужных на неё.
-const EXTRA_MAX = TOTAL - SCALE[SCALE.length - 1][0];
+// Тройку можно добрать, четвёрку и пятёрку — только заработать (Света,
+// 06.10.2026). Ответ после подсказки вопрос закрывает, но в оценку не
+// идёт: вместо него к той же книге добавляется новый вопрос, и так без
+// ограничений — до тройки дойдёт любой, кто не бросит. Но ошибки ставят
+// потолок: их можно столько, сколько допускает та же отметка на обычной
+// проверочной (на «5» — 12 − 11 = 1, на «4» — 12 − 9 = 3). Больше —
+// потолок тройка; хочешь выше — «Начать заново».
+const LOWEST = SCALE[SCALE.length - 1];
+const ceilingFor = errs =>
+    (SCALE.find(s => errs <= TOTAL - s[0]) || LOWEST)[1];
+const finalMark = (n, errs) => Math.min(markFor(n), ceilingFor(errs));
 
 let tasks = [];
-let over = false;
 const seen = new Set();   // что уже выпадало: новый круг берёт сперва невиданное
 
 const shuffle = a => {
@@ -272,7 +274,6 @@ const asTask = (q, extra) =>
 // По три вопроса из каждой книги: так в наборе всегда есть и файл
 // россыпью, и файл из архива, а наборы у соседей не совпадают.
 function newRun(){
-  over = false;
   const picked = [];
   TEXTS.forEach(t => {
     const pool = BANK.questions.filter(q => q.text === t.id);
@@ -314,7 +315,7 @@ const allAnswered = () => tasks.every(t => t.status === "ok");
 
 function check(i){
   const t = tasks[i];
-  if (over || !t || t.status === "ok") return;
+  if (!t || t.status === "ok") return;
   const el = document.getElementById("in" + i);
   const given = (el ? el.value : "").trim();
   if (!given) return;
@@ -335,10 +336,7 @@ function check(i){
     t.draft = given;
     // добавочный — только за первую ошибку в вопросе: повторные
     // попытки на той же карточке ничего не стоят, подсказка уже дана
-    if (t.tries++ === 0){
-      if (mistakes() > EXTRA_MAX) over = true;
-      else addExtra(t.text);
-    }
+    if (t.tries++ === 0) addExtra(t.text);
   }
   render();
   if (t.status === "ok") focusNextOpen(i + 1);
@@ -403,10 +401,6 @@ function render(){
                        в оценку не идёт</span>`
                   : `<span class="verdict ok">Правильно</span>`}
               </div>`;
-    } else if (over){
-      tail = `<div class="row">
-                <input type="text" value="${esc(t.draft || "")}" disabled>
-              </div>`;
     } else {
       // Правильного ответа страница не знает — только отпечаток. Поэтому
       // при ошибке она подсказывает, ЧТО искать, а не что написать.
@@ -459,32 +453,29 @@ function render(){
 }
 
 function updatePanel(){
-  const n = clean();
-  const mark = markFor(n);
+  const n = clean(), errs = mistakes();
+  const cap = ceilingFor(errs);
+  const mark = finalMark(n, errs);
   const started = tasks.some(t => t.status !== "open");
   const el = document.getElementById("mark");
-  el.textContent = over || !started ? "—" : mark;
-  el.className = over || !started ? "" : "m" + mark;
+  el.textContent = started ? mark : "—";
+  el.className = started ? "m" + mark : "";
 
-  const nextUp = SCALE.filter(s => s[0] > n).pop();
-  document.getElementById("stats").innerHTML = over
-    ? `ошибок больше ${EXTRA_MAX} — круг закрыт`
-    : `в оценку (с первой попытки): <b>${n}</b> из ${TOTAL}<br>` +
-      `ошибок: <b>${mistakes()}</b>, можно не больше ${EXTRA_MAX}` +
+  // следующая ступень — только та, что ещё под потолком
+  const nextUp = SCALE.filter(s => s[0] > n && s[1] <= cap).pop();
+  document.getElementById("stats").innerHTML =
+      `в оценку (с первой попытки): <b>${n}</b> из ${TOTAL}<br>` +
+      `ошибок: <b>${errs}</b>` +
+      (cap < SCALE[0][1] ? ` — выше ${cap} в этом круге не получить` : "") +
       (nextUp ? `<br>до оценки ${nextUp[1]} осталось найти: ` +
                 `<b>${nextUp[0] - n}</b>` : "");
 
   const done = document.getElementById("done");
-  if (over){
-    done.innerHTML = `<div class="over">Ошибок больше ${EXTRA_MAX} — оценка
-      не выставляется. Нажми «Начать заново»: будет новый набор вопросов.
-      Не торопись с ответом — сначала найди слово в файле.</div>`;
-  } else if (allAnswered()){
-    done.innerHTML = `<div class="done">Все вопросы закрыты: с первой
-      попытки ${n} из ${TOTAL}. Оценка ${mark}.</div>`;
-  } else {
-    done.innerHTML = "";
-  }
+  done.innerHTML = allAnswered()
+    ? `<div class="done">Все вопросы закрыты: с первой попытки ${n}
+       из ${TOTAL}, ошибок ${errs}. Оценка ${mark}.${cap < SCALE[0][1]
+         ? " Хочешь выше — «Начать заново»." : ""}</div>`
+    : "";
 }
 
 document.getElementById("again").addEventListener("click", newRun);

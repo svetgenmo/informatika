@@ -118,10 +118,6 @@ button:focus-visible{outline:3px solid #a9c6e8;outline-offset:2px}
             color:var(--hi)}
 .card.hinted{border-color:var(--hi-line)}
 .card .extra{color:var(--hi);font-weight:700}
-.over{border:3px solid var(--err-line);background:var(--err-bg);
-      border-radius:14px;padding:18px 22px;margin:0 0 16px;color:var(--err);
-      font-weight:600}
-.over button{margin-top:12px}
 
 /* ----------------------------------------------------------- финал */
 .finish{border:3px solid var(--ok-line);background:var(--ok-bg);
@@ -184,6 +180,7 @@ table.hex th{background:#fff;color:var(--muted);font-size:14px}
     <dd>Столько, на сколько хочешь наработать:
       <table class="steps">
         <tr><th>найдено с первой попытки</th><th>7</th><th>9</th><th>11</th></tr>
+        <tr><th>ошибок можно</th><td>сколько угодно</td><td>до 3</td><td>1</td></tr>
         <tr><th>оценка</th><td class="m">3</td><td class="m">4</td>
             <td class="m">5</td></tr>
       </table>
@@ -191,8 +188,9 @@ table.hex th{background:#fff;color:var(--muted);font-size:14px}
     <dt>Если ошибся</dt>
     <dd>Страница подскажет, что искать в файле. Ответ после подсказки
         вопрос закрывает, но <b>в зачёт не идёт</b> — зато к той же книге
-        добавится новый вопрос: ответишь на него сразу — потеря возмещена.
-        Ошибок больше пяти — работу придётся начать заново.</dd>
+        добавится новый вопрос. <b>Тройку можно добрать, четвёрку и
+        пятёрку — только заработать:</b> ошибки ставят потолок (строка
+        «ошибок можно» в таблице). Хочешь выше потолка — начни заново.</dd>
     <dt>Как сдать</dt>
     <dd>В конце страница выдаст <b>код работы</b>. Нажми «Сдать работу»,
         впиши фамилию и класс — форма откроется с уже вписанным кодом.</dd>
@@ -365,21 +363,31 @@ function fingerprint(s, salt){
    (До 17.09.2026 вопросы шли по одному с кнопкой «Отложить»; Света
    попросила показывать все сразу — виден объём и можно выбрать порядок.) */
 
-// Ответ после подсказки вопрос закрывает, но в зачёт не идёт: вместо
-// него к той же книге добавляется новый вопрос. Добавочных не больше
-// EXTRA_MAX — на следующей ошибке работа закрывается, и её начинают
-// заново (Света, 05.10.2026). Формат кода прежний: в поле «найдено»
-// теперь уходят только ответы с первой попытки, поэтому разборщик
-// (check_homework.py) ставит отметку по ним, ничего не меняя у себя.
-// Порог — на уровне тройки (Света, 06.10.2026): ошибок можно столько,
-// сколько их допускает «3» — 12 вопросов минус 7 нужных на неё.
-const EXTRA_MAX = TOTAL - SCALE[SCALE.length - 1][0];
+// Тройку можно добрать, четвёрку и пятёрку — только заработать (Света,
+// 06.10.2026). Ответ после подсказки вопрос закрывает, но в оценку не
+// идёт: вместо него к той же книге добавляется новый вопрос, и так без
+// ограничений — до тройки дойдёт любой, кто не бросит. Но ошибки ставят
+// потолок: их можно столько, сколько допускает та же отметка на обычной
+// проверочной (на «5» — 12 − 11 = 1, на «4» — 12 − 9 = 3). Больше —
+// потолок тройка; хочешь выше — «Начать заново».
+const LOWEST = SCALE[SCALE.length - 1];
+const ceilingFor = errs =>
+    (SCALE.find(s => errs <= TOTAL - s[0]) || LOWEST)[1];
+const finalMark = (n, errs) => Math.min(markFor(n), ceilingFor(errs));
+
+// Формат кода прежний. В поле «найдено» уходит число, которое уже
+// упирается в потолок: разборщик (check_homework.py) ставит отметку по
+// нему и ничего не знает о потолке, а отметка выходит та же, что на
+// странице.
+function countedFor(n, errs){
+  const higher = SCALE.find(s => s[1] === ceilingFor(errs) + 1);
+  return higher ? Math.min(n, higher[0] - 1) : n;
+}
 
 const st = {
   queue: [],            // вопросы этого захода, по книгам
   extra: {},            // id → добавлен вместо ошибки
   given: {},            // id → что вписано в поле (переживает перерисовку)
-  over: false,          // ошибок больше EXTRA_MAX — работа закрыта
   done: {},             // id → закрыт
   clean: {},            // id → закрыт с первой попытки
   attempts: {},         // id → сколько раз по нему уже ошиблись
@@ -390,10 +398,10 @@ const st = {
 const triesOf = q => st.attempts[q.id] || 0;
 const mistakes = () => Object.keys(st.attempts).length;
 const seen = new Set();   // что уже выпадало: новый заход берёт сперва невиданное
-// «Сделано» для отметки и кода — найдено с первой попытки
+// «Сделано» для отметки и кода — найдено с первой попытки и упёрто в
+// потолок по ошибкам
 Object.defineProperty(st, "typesDone",
-  {get(){ return Math.min(TOTAL,
-      Object.values(st.clean).filter(Boolean).length); }});
+  {get(){ return countedFor(Math.min(TOTAL, st.cleanTypes), mistakes()); }});
 Object.defineProperty(st, "foundAll",
   {get(){ return Object.keys(st.done).length; }});
 Object.defineProperty(st, "cleanTypes",
@@ -418,7 +426,7 @@ function buildQueue(){
 function start(){
   st.queue = buildQueue();
   st.done = {}; st.clean = {}; st.attempts = {}; st.note = {};
-  st.extra = {}; st.given = {}; st.over = false;
+  st.extra = {}; st.given = {};
   st.solved = 0; st.wrong = 0;
   document.getElementById("bottom").innerHTML = "";
   renderAll();
@@ -455,7 +463,7 @@ function captureGiven(){
 }
 
 function answer(q){
-  if (st.over || st.done[q.id]) return;
+  if (st.done[q.id]) return;
   const given = document.getElementById("ans-" + q.id).value.trim();
   if (!given) return;
   if (!norm(given)){
@@ -475,12 +483,11 @@ function answer(q){
     // добавочный — только за первую ошибку в вопросе: повторные попытки
     // на той же карточке ничего не стоят, подсказка уже дана
     if (first){
-      if (mistakes() > EXTRA_MAX) st.over = true;
-      else addExtra(q);
+      addExtra(q);
       captureGiven();
       renderAll();
       const el = document.getElementById("ans-" + q.id);
-      if (el && !st.over) el.focus();
+      if (el) el.focus();
       return;
     }
   }
@@ -519,11 +526,8 @@ function renderProgress(){
   el.textContent = done >= MIN_TO_FINISH ? mark : "—";
   el.className = done >= MIN_TO_FINISH ? "m" + mark : "";
 
-  if (st.over){
-    el.textContent = "—"; el.className = "";
-  }
   const btn = document.getElementById("finish");
-  btn.disabled = st.over || done < MIN_TO_FINISH;
+  btn.disabled = done < MIN_TO_FINISH;
   btn.textContent = done >= MIN_TO_FINISH
       ? `Закончить и получить код (на ${mark})`
       : "Закончить и получить код";
@@ -536,17 +540,16 @@ function renderProgress(){
     if (b > 1 && b < 5) return "ответа";
     return "ответов";
   };
-  const up = SCALE.filter(s => s[0] > done).pop();
+  const cap = ceilingFor(mistakes());
+  // следующая ступень — только та, что ещё под потолком
+  const up = SCALE.filter(s => s[0] > done && s[1] <= cap).pop();
   const need = document.getElementById("need");
-  const errs = `<br>Ошибок: <b>${mistakes()}</b>, можно не больше ${EXTRA_MAX}.`;
-  if (st.over){
-    need.innerHTML = `Ошибок больше ${EXTRA_MAX} — работа закрыта. `
-        + `Начни заново: будут новые вопросы.`;
-    return;
-  }
-  if (!up){
-    need.innerHTML = "Найдено всё, что нужно на пятёрку. " +
-                     "Забирай код и сдавай.";
+  const errs = `<br>Ошибок: <b>${mistakes()}</b>` + (cap < SCALE[0][1]
+      ? ` — выше <b>${cap}</b> в этом заходе не получить. Хочешь выше —
+         <a href="#" id="restart">начни заново</a>.`
+      : (mistakes() ? ". Ещё одна — и пятёрка уйдёт." : "."));
+  if (!up && done >= MIN_TO_FINISH){
+    need.innerHTML = `Можно забирать код — это <b>${mark}</b>.`;
   } else if (done >= MIN_TO_FINISH){
     need.innerHTML = `Можно остановиться прямо сейчас — это <b>${mark}</b>. `
         + `Найди ещё <b>${up[0] - done}</b> ${forms(up[0] - done)} — `
@@ -557,6 +560,12 @@ function renderProgress(){
         + `чтобы получить код на <b>3</b>.`;
   }
   need.innerHTML += errs;
+  const rs = document.getElementById("restart");
+  if (rs) rs.addEventListener("click", e => {
+    e.preventDefault();
+    if (confirm("Начать заново? Найденное в этом заходе пропадёт, "
+              + "вопросы будут новые.")) start();
+  });
 }
 
 function cardHtml(q, n, given){
@@ -569,8 +578,6 @@ function cardHtml(q, n, given){
               ${st.extra[q.id] ? "" : "Вместо него к этой книге добавлен новый вопрос."}</div>`;
   } else if (done){
     tail = `<div class="verdict ok">Правильно — ответ найден.</div>`;
-  } else if (st.over){
-    tail = "";
   } else if (st.note[q.id]){
     tail = `<div class="verdict err">${esc(st.note[q.id])}</div>`;
   } else if (triesOf(q) > 0){
@@ -595,15 +602,15 @@ function cardHtml(q, n, given){
       <div class="row">
         <input type="text" id="ans-${q.id}" autocomplete="off" spellcheck="false"
                placeholder="ответ" value="${esc(given || "")}"
-               ${done || st.over ? "disabled" : ""}>
-        <button class="primary" id="go-${q.id}" ${done || st.over ? "disabled" : ""}>Проверить</button>
+               ${done ? "disabled" : ""}>
+        <button class="primary" id="go-${q.id}" ${done ? "disabled" : ""}>Проверить</button>
       </div>
       ${tail}
     </div>`;
 }
 
 function bindCard(q){
-  if (st.over || st.done[q.id]) return;
+  if (st.done[q.id]) return;
   document.getElementById("go-" + q.id).addEventListener("click", () => answer(q));
   document.getElementById("ans-" + q.id).addEventListener("keydown", e => {
     if (e.key === "Enter"){ e.preventDefault(); answer(q); }
@@ -614,7 +621,7 @@ function renderCard(q, given){
   const n = st.queue.indexOf(q) + 1;
   document.getElementById("card-" + q.id).outerHTML = cardHtml(q, n, given);
   bindCard(q);
-  if (!st.done[q.id] && !st.over) document.getElementById("ans-" + q.id).focus();
+  if (!st.done[q.id]) document.getElementById("ans-" + q.id).focus();
 }
 
 function renderAll(){
@@ -635,15 +642,6 @@ function renderAll(){
   });
   document.getElementById("main").innerHTML = html;
   st.queue.forEach(bindCard);
-  if (st.over){
-    document.getElementById("bottom").innerHTML = `<div class="over">
-      Ошибок больше ${EXTRA_MAX} — работа закрыта, код не выдаётся.
-      Начни заново: будут новые вопросы. Не торопись с ответом — сначала
-      найди слово в файле.<br>
-      <button id="restart" class="primary">Начать заново</button></div>`;
-    document.getElementById("restart").addEventListener("click", start);
-    document.getElementById("bottom").scrollIntoView({behavior: "smooth", block: "start"});
-  }
 }
 
 /* Кнопка «Сдать». Код привязан к фамилии (Света, 26.09.2026): пока
@@ -709,9 +707,14 @@ function renderFinish(){
   renderProgress();
   const done = st.typesDone, mark = markFor(done);
   const all = done >= TOTAL;
-  const up = SCALE.filter(s => s[0] > done).pop();
+  const cap = ceilingFor(mistakes());
+  const up = SCALE.filter(s => s[0] > done && s[1] <= cap).pop();
 
-  const more = !up
+  const more = !up && cap < SCALE[0][1]
+    ? `<button id="more">Начать заново — за оценкой выше</button>
+       <span class="stats">код этой работы останется — сдать его можно
+             и сейчас</span>`
+    : !up
     ? `<button id="more">Взять другие вопросы</button>
        <span class="stats">оценку это уже не изменит,
              но перед ВПР полезно</span>`
@@ -723,8 +726,9 @@ function renderFinish(){
     <div class="finish">
       <h2>${all ? "Готово — все двенадцать с первой попытки"
                 : `Готово — наработано на ${mark}`}</h2>
-      <p class="stats">В зачёт (с первой попытки): <b>${done}</b> из ${TOTAL}
-         &middot; найдено с подсказкой: <b>${st.foundAll - done}</b>
+      <p class="stats">С первой попытки: <b>${st.cleanTypes}</b> из ${TOTAL}
+         &middot; найдено с подсказкой: <b>${st.foundAll - st.cleanTypes}</b>
+         &middot; ошибок: <b>${mistakes()}</b>
          &middot; неверных попыток: <b>${st.wrong}</b></p>
       <div class="code" id="code"></div>
       <p class="stats">Это код твоей работы. Он собран из твоей фамилии и
@@ -763,7 +767,7 @@ function renderFinish(){
   if (back) back.addEventListener("click", () => {
     // всё найдено — берём другой набор вопросов из банка; иначе просто
     // убираем итог, вопросы никуда не делись
-    if (all) start();
+    if (all || !up) start();
     else {
       document.getElementById("bottom").innerHTML = "";
       window.scrollTo({top: 0, behavior: "smooth"});
