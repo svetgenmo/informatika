@@ -48,8 +48,6 @@ table.steps td.m{font-weight:700;color:var(--accent);font-size:17px}
 /* ------------------------------------------------------- прогресс */
 .progress{border:2px solid var(--accent);border-radius:12px;
           background:var(--card);padding:14px 18px;margin-bottom:20px}
-.progress h2{font-size:15px;margin:0;color:var(--muted);
-             font-weight:600;letter-spacing:.04em;text-transform:uppercase}
 .ptop{display:flex;align-items:center;gap:16px;flex-wrap:wrap;
       margin-bottom:14px}
 .ptop .sp{flex:1 1 auto}
@@ -63,11 +61,19 @@ table.steps td.m{font-weight:700;color:var(--accent);font-size:17px}
 .score b.m3{color:#8a5a00;border-color:var(--hi-line)}
 .need{margin:12px 0 0;font-size:15px;color:var(--muted)}
 .need b{color:var(--ink)}
-.dots{display:flex;gap:6px;flex-wrap:wrap}
-.dot{width:16px;height:16px;border-radius:50%;border:2px solid var(--line);
-     background:#fff}
-.dot.full{background:var(--ok);border-color:var(--ok)}
-.dot.now{border-color:var(--accent);box-shadow:0 0 0 3px #dbe7f6}
+/* ---- лесенка: отрезок на каждую отметку (Света, 06.10.2026) ---- */
+.ladder{display:flex;gap:10px;flex:1 1 100%;margin-top:4px}
+.seg{min-width:0}
+.cells{display:flex;gap:3px}
+.cells i{flex:1 1 0;height:14px;border-radius:4px;background:#e4e7ef}
+.cells i.f{background:var(--accent)}
+.seg.got .cells i{background:var(--ok)}
+.seg .lab{font-size:13px;color:var(--muted);text-align:center;
+          margin-top:4px;font-weight:600;white-space:nowrap}
+.seg.got .lab{color:var(--ok)}
+.seg.capped .cells i{background:repeating-linear-gradient(45deg,
+     #e4e7ef 0 4px,#fff 4px 8px)}
+.seg.capped .lab{color:var(--err)}
 
 /* --------------------------------------------------------- вопрос */
 .card{border:1px solid var(--line);border-radius:12px;padding:18px 20px;
@@ -203,8 +209,7 @@ table.hex th{background:#fff;color:var(--muted);font-size:14px}
     <div class="sp"></div>
     <button id="finish" disabled>Закончить и получить код</button>
   </div>
-  <h2>Вопросы</h2>
-  <div class="dots" id="dots"></div>
+  <div class="ladder" id="ladder"></div>
   <p class="need" id="need"></p>
 </div>
 
@@ -384,6 +389,28 @@ function countedFor(n, errs){
   return higher ? Math.min(n, higher[0] - 1) : n;
 }
 
+// Лесенка вместо одной цифры (Света, 06.10.2026): первая половина
+// работы — не «двойка, двойка», а заполняющийся отрезок «на 3». Отрезки
+// берутся из SCALE: 7 клеток на тройку, ещё 2 на четвёрку, ещё 2 на
+// пятёрку. Отрезок выше потолка по ошибкам заштрихован.
+function ladderHtml(n, cap){
+  let from = 0;
+  return SCALE.slice().reverse().map(([need, m]) => {
+    const size = need - from;
+    const got = Math.max(0, Math.min(size, n - from));
+    const capped = m > cap, reached = n >= need && !capped;
+    from = need;
+    const cells = Array.from({length: size},
+        (_, k) => `<i class="${k < got ? "f" : ""}"></i>`).join("");
+    return `<div class="seg${reached ? " got" : ""}${capped ? " capped" : ""}"
+                 style="flex:${size} 1 0">
+      <div class="cells">${cells}</div>
+      <div class="lab">${capped ? `на ${m} — потолок`
+                                : (reached ? "✓ " : "") + "на " + m}</div>
+    </div>`;
+  }).join("");
+}
+
 const st = {
   queue: [],            // вопросы этого захода, по книгам
   extra: {},            // id → добавлен вместо ошибки
@@ -518,8 +545,8 @@ function renderFiles(){
 
 function renderProgress(){
   const done = st.typesDone;
-  document.getElementById("dots").innerHTML = st.queue.map(q =>
-    `<span class="dot${st.clean[q.id] ? " full" : ""}"></span>`).join("");
+  document.getElementById("ladder").innerHTML =
+      ladderHtml(st.cleanTypes, ceilingFor(mistakes()));
 
   const mark = markFor(done);
   const el = document.getElementById("mark");
@@ -556,8 +583,8 @@ function renderProgress(){
         + `и будет <b>${up[1]}</b>.`;
   } else {
     const left = MIN_TO_FINISH - done;
-    need.innerHTML = `Найди ещё <b>${left}</b> ${forms(left)}, `
-        + `чтобы получить код на <b>3</b>.`;
+    need.innerHTML = `До тройки: <b>${done}</b> из ${MIN_TO_FINISH}. `
+        + `Найди ещё <b>${left}</b> ${forms(left)} — и будет код на <b>3</b>.`;
   }
   need.innerHTML += errs;
   const rs = document.getElementById("restart");

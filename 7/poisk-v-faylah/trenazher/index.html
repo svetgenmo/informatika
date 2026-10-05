@@ -35,6 +35,20 @@ h1{font-size:22px;margin:0 0 4px}
 .files b{font-family:Consolas,"Courier New",monospace}
 .files .zip{color:var(--hi);font-weight:600}
 
+/* ---- лесенка: отрезок на каждую отметку (Света, 06.10.2026) ---- */
+.ladder{display:flex;gap:10px;flex:1 1 100%;margin-top:4px}
+.seg{min-width:0}
+.cells{display:flex;gap:3px}
+.cells i{flex:1 1 0;height:14px;border-radius:4px;background:#e4e7ef}
+.cells i.f{background:var(--accent)}
+.seg.got .cells i{background:var(--ok)}
+.seg .lab{font-size:13px;color:var(--muted);text-align:center;
+          margin-top:4px;font-weight:600;white-space:nowrap}
+.seg.got .lab{color:var(--ok)}
+.seg.capped .cells i{background:repeating-linear-gradient(45deg,
+     #e4e7ef 0 4px,#fff 4px 8px)}
+.seg.capped .lab{color:var(--err)}
+
 /* ---- панель оценки ---- */
 .panel{display:flex;align-items:center;gap:18px;flex-wrap:wrap;
        border:2px solid var(--accent);border-radius:12px;
@@ -152,6 +166,7 @@ th{background:#fff;color:var(--muted);font-size:14px}
   <div class="stats" id="stats"></div>
   <div class="spacer"></div>
   <button id="again">Начать заново</button>
+  <div class="ladder" id="ladder"></div>
 </div>
 
 <div id="tasks"></div>
@@ -228,6 +243,28 @@ const LOWEST = SCALE[SCALE.length - 1];
 const ceilingFor = errs =>
     (SCALE.find(s => errs <= TOTAL - s[0]) || LOWEST)[1];
 const finalMark = (n, errs) => Math.min(markFor(n), ceilingFor(errs));
+
+// Лесенка вместо одной цифры (Света, 06.10.2026): первая половина
+// работы — не «двойка, двойка», а заполняющийся отрезок «на 3». Отрезки
+// берутся из SCALE: 7 клеток на тройку, ещё 2 на четвёрку, ещё 2 на
+// пятёрку. Отрезок выше потолка по ошибкам заштрихован.
+function ladderHtml(n, cap){
+  let from = 0;
+  return SCALE.slice().reverse().map(([need, m]) => {
+    const size = need - from;
+    const got = Math.max(0, Math.min(size, n - from));
+    const capped = m > cap, reached = n >= need && !capped;
+    from = need;
+    const cells = Array.from({length: size},
+        (_, k) => `<i class="${k < got ? "f" : ""}"></i>`).join("");
+    return `<div class="seg${reached ? " got" : ""}${capped ? " capped" : ""}"
+                 style="flex:${size} 1 0">
+      <div class="cells">${cells}</div>
+      <div class="lab">${capped ? `на ${m} — потолок`
+                                : (reached ? "✓ " : "") + "на " + m}</div>
+    </div>`;
+  }).join("");
+}
 
 let tasks = [];
 const seen = new Set();   // что уже выпадало: новый круг берёт сперва невиданное
@@ -456,10 +493,12 @@ function updatePanel(){
   const n = clean(), errs = mistakes();
   const cap = ceilingFor(errs);
   const mark = finalMark(n, errs);
-  const started = tasks.some(t => t.status !== "open");
+  // «2» не горит по ходу работы — только если всё закрыто, а тройки нет
+  const shown = n >= LOWEST[0] || allAnswered();
   const el = document.getElementById("mark");
-  el.textContent = started ? mark : "—";
-  el.className = started ? "m" + mark : "";
+  el.textContent = shown ? mark : "—";
+  el.className = shown ? "m" + mark : "";
+  document.getElementById("ladder").innerHTML = ladderHtml(n, cap);
 
   // следующая ступень — только та, что ещё под потолком
   const nextUp = SCALE.filter(s => s[0] > n && s[1] <= cap).pop();
@@ -467,8 +506,9 @@ function updatePanel(){
       `в оценку (с первой попытки): <b>${n}</b> из ${TOTAL}<br>` +
       `ошибок: <b>${errs}</b>` +
       (cap < SCALE[0][1] ? ` — выше ${cap} в этом круге не получить` : "") +
-      (nextUp ? `<br>до оценки ${nextUp[1]} осталось найти: ` +
-                `<b>${nextUp[0] - n}</b>` : "");
+      (n < LOWEST[0] ? `<br>до тройки: <b>${n}</b> из ${LOWEST[0]}`
+        : nextUp ? `<br>до оценки ${nextUp[1]} осталось найти: ` +
+                   `<b>${nextUp[0] - n}</b>` : "");
 
   const done = document.getElementById("done");
   done.innerHTML = allAnswered()
