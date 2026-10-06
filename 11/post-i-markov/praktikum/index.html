@@ -1,0 +1,1559 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Машина Поста и алгорифмы Маркова — обзорный практикум</title>
+<meta name="description" content="Обзорный практикум 11 класса (углублённый) к тринадцатой паре: машина Поста и нормальные алгорифмы Маркова — выполнить программу Поста, стёртая команда, выполнить алгорифм Маркова, что делает алгорифм, составить свой алгорифм.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E11%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{margin:0;padding:20px 16px 60px;font:17px/1.55 "Segoe UI",system-ui,sans-serif}
+.wrap{max-width:820px;margin:0 auto}
+h1{font-size:23px;margin:0 0 4px}
+h2{font-size:18px;margin:0 0 10px}
+.sub{color:var(--muted);font-size:15px;margin:0 0 18px}
+code{font-family:Consolas,"Cascadia Mono",monospace;background:var(--card);
+     border:1px solid var(--line);border-radius:5px;padding:1px 6px;
+     font-size:15px;letter-spacing:.04em}
+.intro{border:1px solid var(--line);border-radius:12px;background:var(--card);
+       padding:14px 18px;margin-bottom:18px}
+.intro dl{margin:0}
+.intro dt{font-weight:700;margin-top:10px}
+.intro dt:first-child{margin-top:0}
+.intro dd{margin:2px 0 0}
+.progress{border:2px solid var(--accent);border-radius:12px;padding:12px 16px;
+          background:#fff;margin-bottom:18px}
+.ptop{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.ptop h2{margin:0}
+.sp{flex:1 1 auto}
+.score{display:flex;align-items:baseline;gap:10px;color:var(--muted);font-size:15px}
+.score b{font:700 34px/1 "Segoe UI",system-ui,sans-serif;color:var(--ink);
+         min-width:40px;text-align:center;border:2px solid var(--line);
+         border-radius:8px;padding:2px 8px}
+.m5 b{color:var(--ok);border-color:var(--ok-line)}
+.m4 b{color:var(--accent);border-color:#a9c6e8}
+.m3 b{color:#8a5a00;border-color:var(--hi-line)}
+/* Лесенка отметки (правило «тройку добрать, 4 и 5 заработать», 06.10.2026). */
+.ladder{display:flex;gap:10px;flex:1 1 100%;margin-top:4px}
+.seg{min-width:0}
+.cells{display:flex;gap:3px}
+.cells i{flex:1 1 0;height:14px;border-radius:4px;background:#e4e7ef}
+.cells i.f{background:var(--accent)}
+.seg.got .cells i{background:var(--ok)}
+.seg .lab{font-size:13px;color:var(--muted);text-align:center;margin-top:2px}
+.seg.got .lab{color:var(--ok)}
+.seg.capped .cells i{background:repeating-linear-gradient(45deg,
+  #f3d3d0 0 4px,#fdecea 4px 8px)}
+.seg.capped .lab{color:var(--err)}
+.types{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);border-radius:20px;padding:4px 12px;
+      font-size:14px;color:var(--muted);background:var(--card)}
+.chip.done{border-color:var(--ok-line);background:var(--ok-bg);color:var(--ok);
+           font-weight:600}
+.chip.miss{border-color:var(--err-line);background:var(--err-bg);color:var(--err)}
+.chip.cur{border-color:var(--accent);color:var(--accent);font-weight:600}
+.card{border:1px solid var(--line);border-radius:12px;padding:16px 18px;
+      background:#fff;margin-bottom:14px}
+.card.ok{border-color:var(--ok-line);background:var(--ok-bg)}
+.card.err{border-color:var(--err-line);background:var(--err-bg)}
+.tag{font-size:13px;color:var(--muted);margin:0 0 6px}
+.q{font-size:17px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+input[type=text]{font:16px/1 Consolas,monospace;padding:10px 12px;border-radius:8px;
+                 border:1px solid var(--line);width:100%;max-width:340px}
+button{font:600 15px/1 inherit;padding:11px 16px;border-radius:9px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);color:var(--muted)}
+.verdict{margin-top:10px;font-size:15.5px;font-weight:600}
+.verdict.ok{color:var(--ok)}
+.verdict.err{color:var(--err)}
+.why{margin-top:8px;font-size:15.5px;color:var(--ink)}
+.note{border:1px solid var(--hi-line);background:var(--hi-bg);border-radius:10px;
+      padding:11px 15px;margin:12px 0;font-size:15.5px}
+.code{font:700 26px/1.2 Consolas,monospace;letter-spacing:.06em;
+      background:var(--card);border:2px dashed var(--accent);border-radius:12px;
+      padding:16px;text-align:center;margin:12px 0;user-select:all}
+.code.wait{font-size:18px;letter-spacing:0;color:#888}
+.stats{color:var(--muted);font-size:14px}
+label{display:block;font-size:14px;color:var(--muted);margin-bottom:3px}
+.fields{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0}
+.fields div{flex:1 1 180px}
+.fields input{max-width:none}
+sup,sub{font-size:12px}
+h3{font-size:16.5px;margin:16px 0 6px;color:var(--accent)}
+details.help{margin-top:26px;border:1px solid var(--line);border-radius:12px;
+        padding:12px 18px;background:var(--card)}
+details.help summary{cursor:pointer;font-weight:600;font-size:17px;
+        color:var(--accent)}
+details.help p{margin:6px 0}
+details.help ol,details.help ul{margin:6px 0;padding-left:22px}
+details.help li{margin:4px 0}
+details.help table{border-collapse:collapse;margin:8px 0;font-size:15px}
+details.help th,details.help td{border:1px solid var(--line);
+        padding:4px 10px;text-align:center;background:#fff}
+details.help th{background:#fff;color:var(--muted);font-weight:600}
+table.gm{border-collapse:collapse;margin:10px 0;font:15px/1.2 Consolas,"Cascadia Mono",monospace}
+table.gm th,table.gm td{border:1px solid var(--line);min-width:34px;height:30px;
+        text-align:center;padding:0 4px;background:#fff}
+table.gm th{background:var(--card);color:var(--muted);font-weight:600}
+/* Список утверждений в понятийной задаче: строки длинные, их надо разделить. */
+.q ol.st{margin:10px 0;padding-left:26px}
+.q ol.st li{margin:6px 0}
+/* Пост и Марков: клетка под кареткой, стёртая команда, программы, варианты. */
+table.gm td.h{background:var(--hi-bg);border:2px solid var(--hi);font-weight:700}
+table.gm td.miss{background:var(--hi-bg);color:var(--hi);font-weight:700}
+table.post td,table.mk td{min-width:110px;text-align:left;padding:0 12px;white-space:nowrap}
+table.tape td{min-width:30px}
+table.tape tr:first-child td{color:var(--muted);font-size:13px;height:22px}
+.q p.rules{font-size:14.5px;color:var(--muted);margin:6px 0 10px}
+.q p.rules code{font-size:13.5px}
+.q ol.op{margin:10px 0;padding-left:26px}
+.q ol.op li{margin:4px 0}
+.q i{font-style:normal;font-weight:600}
+textarea.prog{font:16px/1.45 Consolas,"Cascadia Mono",monospace;padding:10px 12px;
+              border-radius:8px;border:1px solid var(--line);width:100%;max-width:520px;
+              resize:vertical}
+details.help pre{font-family:Consolas,"Cascadia Mono",monospace;
+        background:#1e2430;color:#e7ecf5;padding:10px 12px;border-radius:9px;
+        font-size:14.5px;overflow-x:auto}
+</style>
+
+<style>img.frz-b{display:block;max-width:100%;height:auto;border-radius:10px;margin:8px 0}img.frz-i{display:inline-block;vertical-align:-0.32em;max-width:100%;height:auto;border-radius:5px}</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Машина Поста и алгорифмы Маркова</h1>
+<p class="sub">11 класс, углублённый уровень. Обзорный практикум к тринадцатой паре:
+шесть задач — от выполнения чужой программы до своего алгорифма.</p>
+
+<div class="intro">
+  <dl>
+    <dt>Что нужно сделать</dt>
+    <dd>Шесть задач — по одной на каждый вопрос темы, и все сразу на
+        странице: решай в любом порядке. Ответил верно — вопрос закрыт.
+        Ошибся — сразу видно, как это решается, а вопрос остаётся
+        открытым: кнопка «Новые числа» даёт ту же задачу с другими данными.
+        Времени нужно минут двадцать пять: шаги машины и подстановки удобно
+        выписывать на черновике столбиком.</dd>
+    <dt>Свой алгорифм</dt>
+    <dd>Последний вопрос — алгорифм Маркова пишешь сам. Его не сверяют с
+        ответом, а <b>выполняют</b> на всех коротких словах. Не прошёл —
+        страница покажет слово, на котором он ошибся, и что у него вышло;
+        исправляй и проверяй ещё раз, сколько нужно.</dd>
+    <dt>Отметка: тройку можно добрать, четвёрку и пятёрку — заработать</dt>
+    <dd>Закрыто 6 из 6 — «5», 5 — «4», 3 или 4 — «3». До тройки дойдёт любой,
+        кто не бросит: за ошибку — новая задача, без ограничений. Но ошибки
+        ставят <b>потолок</b>: «5» — только без ошибок, «4» — с одной, дальше —
+        «3». В своём алгорифме ошибкой считается только первая неудачная
+        проверка: дальше это отладка, а не ошибка. Описка в записи формулы
+        (нет стрелки, русская буква) ошибкой не считается вовсе. Кнопка
+        <b>«Получить код»</b> появляется, как только закрыто три вопроса.</dd>
+    <dt>Короткий ответ — знак в знак</dt>
+    <dd>В первых пяти вопросах — число (<code>13</code>, а не <code>13 шагов</code>)
+        или слово латинскими буквами подряд (<code>abca</code>, без кавычек и
+        пробелов). На КЕГЭ ответ читает машина, и здесь так же.</dd>
+    <dt>Как сдать</dt>
+    <dd>В конце появится код работы и кнопка <b>«Сдать работу»</b>: впишешь
+        фамилию и класс, кнопка сама откроет форму с уже вписанным кодом.
+        Переписывать код руками не надо — на этом чаще всего и ошибаются.</dd>
+    <dt>Не успел на уроке</dt>
+    <dd>Открой эту же страницу дома и пройди целиком: вариант будет другой,
+        а сдаётся всё так же — одним кодом.</dd>
+  </dl>
+</div>
+
+<div class="progress">
+  <div class="ptop">
+    <h2>Вопросы темы</h2>
+    <span class="sp"></span>
+    <div class="score" id="scorebox">
+      <span>наработано на</span><b id="mark">—</b>
+    </div>
+    <div class="ladder" id="ladder"></div>
+  </div>
+  <div class="types" id="types"></div>
+  <p class="stats" id="stats"></p>
+</div>
+
+<div id="area"></div>
+<div id="bottom"></div>
+
+<details class="help">
+  <summary>Подсказка: машина Поста и алгорифмы Маркова</summary>
+  <h3>Ещё два уточнения понятия алгоритма</h3>
+  <p>Машина Тьюринга — не единственная попытка строго сказать, что такое
+     алгоритм. В том же 1936 году <b>Эмиль Пост</b> описал машину ещё
+     проще, а в конце 1940-х — начале 1950-х <b>А. А. Марков</b> предложил
+     <b>нормальные алгорифмы</b> — преобразования слов по формулам. Все эти
+     модели <b>равносильны</b>: что вычисляет одна, вычисляют и другие.</p>
+
+  <h3>Машина Поста</h3>
+  <ul>
+    <li><b>Лента</b> из клеток; клетка либо <b>пуста</b>, либо <b>отмечена</b>
+        меткой V. Над одной клеткой стоит <b>каретка</b>.</li>
+    <li><b>Программа</b> — пронумерованный список команд; в каждой, кроме
+        «стоп», сказано, к какой команде перейти дальше.</li>
+  </ul>
+  <table>
+    <tr><th>команда</th><th>что делает</th></tr>
+    <tr><td>V j</td><td>поставить метку, перейти к j</td></tr>
+    <tr><td>X j</td><td>стереть метку, перейти к j</td></tr>
+    <tr><td>→ j / ← j</td><td>каретку на клетку вправо / влево, перейти к j</td></tr>
+    <tr><td>? i; j</td><td>клетка пуста — к i, отмечена — к j</td></tr>
+    <tr><td>!</td><td>стоп</td></tr>
+  </table>
+  <p>Метка в уже отмеченную клетку и стирание пустой — <b>аварийная
+     остановка</b>, результата нет. Пример: <img class="frz-i" width="63" height="19" alt="код" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAH4AAAAnCAIAAABGwGvgAAAD90lEQVR42u2aX0hbdxTHj4kkEgwEQx50xr8PooIIYvam1bgiZgpaA7rmavbg1NXWCipdUklTZK6SGBKjJiYZpE4hY65NmYsPmrZKpTPGqk9qBBFpaZuAMQpK5CZ7uKxsXTZmmxt1+X1fci6Ec+Dz+95zf78fJ2Zj6xUgnYUoCMFZKZb44X7CQSwipt2XbuR61HAQeiSEHqFHisAO51QKBoNzc3Pfm0wLCwsAMKjVlpeXRwkvl8tlsVjm5+ffvH6N4ziXyy0pLRWLxRwOh1z0fr//kdVqMpm2traizaSBQECpVJqMRhzH/7wSLpfrR4vFYDTm5+eThV6v05nNZrfbDQAMBiMlJWV9fT160KvV6lG9HgCys7NrhcK0tDTf/v7ExITD4fB6va0tLbN2O4PBIKXXLzmdbrebSqXW1dfP2u2fXb4cVa4XiURJSUkdHR0PrdaGhoaioqLPKyt/GB8vKysDAI/H8/DBA7JcLxKJYqnU7u7u9IyMKPwqcjicX6ammEzmX5xLoXx97drMzAxhzS+uXiXF9cXFxSM63YXgfnh42NjYuLGxEd6073EnlPEHEN/+PtpcgkwmW3j2rL6ubnFxkexaPp+PCBISEhB6aGtrS01NPTg4+FIsnp6eJrWW0+kkAh6Ph9BDenr6T5OThYWFfr+//caNsbExkgqdnJyMDA8DAJvNrhAIEHoAABaLZb5/v7q6OhAI3JXLFQoFGVV6e3s3NzcBQCqVnmpn+YGn2fOjpqamJ48fh/YUhUKn0+l0+rtDifvt22/7+qhUariq63S6ifFxAMAwrLKqCt3hvL8AJGU2GgxKhQIABALB7Z6eCN3hnB8ZDIZ/b8Tf3LpltVoB4Kvm5q6urnDV1Q4OqtVqAKioqFAODHzYAsf+X/3u9XpbW1uXHA4KhXK7pwfDsHBl7u/vN4yOAkBNTc3HdLDINRy73V7G53/K4w0PDZFda3t7u/bKlSWHg0ajqTWacHEPBoN3ZDKCO4Zh39279zFfjgi5fm9v72Z7+9HREQCoVKqcnJxLJSXkldNqtTs7O0wmU6fXn3a7/U/CcVwikfw8OQkAzS0tnZ2dELH7+rXV1SdPn757/O35cyL4dWqK2GABQG5uLp/Ph1DX3AR3Qi9WVkhFL5fLPR6PRCLJysoKV06pVEpw53K5NBpNo9H8/T9JiYm1QmH40a+urQ2Gqmez2cBmI2KhUBgSfWZmZlxc3PHxMfGYl5dH6ksWHx9vNpvDm3N5eZkIdnd3Q3IAgIKCgv+OPkK9ns1mD6hUycnJLBar7fr1kMsTbYohBv/QCBSgEShAEwlICD1Cj4TQI/RICD1Cj4TQwwUbdyXOV0jI9VGh3wFNEmug4RdiHAAAAABJRU5ErkJggg==">,
+     <img class="frz-i" width="88" height="19" alt="код" src="data:image/png;base64,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">, <img class="frz-i" width="63" height="19" alt="код" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAH4AAAAnCAIAAABGwGvgAAAFTUlEQVR42u2bX0xTVxzHf6UNUUNBYmkTWx6kLVRMSkoLfWLM4KItoCJBYc4XAsa5jD8PQwTcAxWmkQGruhcJxTn+PPFinRZEmWNAWyol/FFGGYl0EECwpLUlaS53D0ecU2Buve1l2/m+9Lb3d+/p/fR3v+d3zrlljNtmAIsOBWEEdImFXiL5EZhFwDT92wLOemw4GD0WRo/RY20d9BaLRaPRZBw9Gi+TSWJiFArF8aysq1rt8+fPafn2x7OyxCKRWCSanJzcJKy+vh6F9fb2Uth6TU0NOq1YJGpoaPAj+hcvXmSfOPHdzZsjIyNOp5MgiGWHY3BwUKvVfnTgALVX9Z5Sq9Vow2AwbBJmuHcPAHbt2qVUKqlq+umTJw03bgQu61ksVnJy8rnS0qvXrt1oaNBoNOhiXC5XYUGB0+kMMHqVWs1gMF7DXVe/Tk7abDYAUKlUTCaTknYJgigrKyMIgsPh+Dqkeh+Fhob29/eH7dz55ofZOTnFxcX627cdDkf3w4fphw8HEj2Px4uPj7dYLGNjY3a7XSAQvBtzb+2GSE1Npardpqam4eFhJpNZXlFRXFTk96xnMplvcUc6cuQI2phfWAi856hUqs09B90QPB5PrlBQ0qLdbv+mvh4A8vPzY/fupbPCYbFe3ToCPp8G9Jt6jt1uHxsbQ70CCvNdFRUVHo9nT1TU5wUFdBaXJEl+f+sWAERwuR8kJwcePZfLlcvlAGC1Wufm5t52m7XfIy0tjZLm2tvbf+7pYTAY1dXVwcHB9KBfXl4eGBj49MyZrq4uNput1Wq3b99OS4mJPIckyY6OjnXdRiAQSOPifG9oaWnpq+pqADh58qTCZ/v62+iNRiOqZBVyeU52dldX1759+27r9QqKnPQf6JBKFRQUBAAdf7b7ubm5oaEhAEilKOU1lZUOh2P37t1flJRsidHs6Ojoxzk572ZcID0nXi4HALPZvLS09EfKGwwkSQJAGhW1TXd3t16vB4CLVVU7duygAb1SqZyw2SZsNsvjxz/cvVtSUsLn82dmZj47e7atrY0u+shzCIK4f//+W26zJypK4kMdguR2u7+8cAEAMjIykpKSaJ7DCQ0NFYvF+adP6+/cEYvFAFB18eLC/Dw96A8dQp7zus5ZXFy0WCxUdbA1V67Mzs5yOJzy8nKgdpXKF4WEhOTm5p4/f35lZcVoNKalpwcefQSXK5fLzWZzX1+f0+lks9mdnZ0EQVAykhoZGWlubgaAtPT0p+Pjb+6amXm1sv3s2TOj0QgAYWFhEokkQOjR9AjtE4EqtdpsNnu9XjSoRl2uRCIRCoU+nvmX8fHV1VUAaNLpmnS6dWNaW1paW1oAICkpqXGDGL9MGlutVrQRHROzUcyDBw8OpKQoExO/vX7dL3XOmud0dnY6nc7+/n4Kaxvw37K4Lxowm3U6HQDIZLLo6GjYYNazqLDQ4/EAQF1dXWxs7If791PsORERCoXCZDI9evSow2Dwer1Uzdscy8w8lpm50dzcwYMHAeBcaWleXp6/0E9NTc2v9aIkSbrdbvv09E89PT92d5MkGR4efunSpY2OnZiYQNyRBq1WytEjzzGZTC9fvvy6thYApFJpZGTkfyHrGxsb21pb190lk8kuX768Jypqo2OFQuG2bdtWVlbQW6lU6ifP0VRWrq6uokJLTd1U5RYyHBaLxWaz+Xx+XFycOjU1MTHxL/vh2rq66qoql8v1yalTKSkp/rgYDoeTkJCAKg0Gg/F6IWVrioEe/MOPQAF+BArwsjgWRo/RY2H0GD0WRo/RY2H08C/7Qw8aX2HhrP9f6HdI7AWBtV9jpgAAAABJRU5ErkJggg==">, <img class="frz-i" width="46" height="19" alt="код" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFwAAAAnCAIAAAANaLgNAAACYUlEQVR42u2aMWgaURjHv6s5FR1O0C7WDo0nmApOkk6XNlhwaQYnByFddNNsxqCmlrSxQ6RJadJFaVwc4+TkIA7p4NSAB4nYdDAXHQpqF2867XDWppQEIXi+lO+/3Hvc4z7ud//37rvvHVX/1gLU37qHCP7VnHx4+OA+sgCAi8sf6BScPggFofxRqVSysayNZV+uriKUkTQajdxQq9WzgZJOp+XHYmPZbDZLApQxi9lAOTs9zWYyxDqFpmmloUiSFIvFJEkymUxEQZmlU3K5XK1WU6lU8UQC1xQAAEEQPuztAUAwGHy8sECmU5SePolEQhTFR/Pz4bU1fPsAABQKhS/HxxRFpVKp2wT+f9aUTqfzLpUCAL/f73K5SM5TaMWgvNna6vV6ZrM5sr5OZvKmtFMqlUqxWASAt9vbOp2OTCg0TVMUpRCUfr//anMTALxeL8dxJGf6Mg4l3j7pnZ12u20ymeLx+J34/LmNU+YmGcTzfD6fB4AXKytn9frVU63WqMTbbDar1SoAMAxjt9vvtFMouXB9czmycHQUjUYnvCLHcZ8PDwHLkZOoXC4/d7ufLC5+OjggHM1ETrlB38/PPR4PAEQ3NgKBwHXDut3u06UlURTlbiaTeba8PI37uRSEUCh0IQiRSMTn8xHtlEajMSYCAF9PTqYU6OP+Ps/zP3u918nk1YgkVt6sVqtWqx13nU7nlAINB4NRYzgc/G4TCsVoNL7f3bVYLAaDIRQOu93uKQUKhcMOh4NhmGQyqdfrZ7OmAG6GAW5xIBQUQkEoCAWhIBSEArP/vUvO5FDolGv1CymxvzJvrJ33AAAAAElFTkSuQmCC"> — каретка
+     идёт вправо по ряду меток до первой пустой клетки и ставит в неё метку:
+     ряд стал на одну метку длиннее.</p>
+
+  <h3>Как выполнять вручную</h3>
+  <p>Пиши столбиком: номер команды, номер клетки, пуста она или отмечена.
+     Шаг — одна выполненная команда, <b>«!» тоже считается</b>. Лента
+     перерисовывается после каждого V и X.</p>
+
+  <h3>Нормальный алгорифм Маркова</h3>
+  <p>Работает со <b>словом</b> — строкой символов. Схема — упорядоченный
+     список формул <b>P → Q</b> («заменить P на Q») и заключительных
+     <b>P →· Q</b>. λ — пустое слово. Один шаг:</p>
+  <ol>
+    <li>просмотреть формулы <b>сверху вниз</b> и взять первую, левая часть
+        которой входит в слово;</li>
+    <li>заменить её <b>самое левое</b> вхождение на правую часть;</li>
+    <li>если формула заключительная — стоп, иначе снова к пункту 1.</li>
+  </ol>
+  <p>Ни одна формула не подходит — тоже стоп. Пример: схема <img class="frz-i" width="71" height="19" alt="код" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAI8AAAAnCAIAAAC5ToxHAAAEwUlEQVR42u1bbUhbVxg+JtUkfkZJFBwLOB06grAGTH9o9ZcgTgsW27p2pnQ1BhE063B2qdY5SPzjqqAVRWqikg6xgoJCp2hdR0xdlFgUQTNNwjI/YhITyUwwH+7HBQkmirk58WOc50+S9957bp7nuefc931vErLy1wZAuCIgIAmuEK5hL59+QkdaXGb8/c8OmltoJURAbiH45xa/uvrzlJSszEyk2kUphuYWWgkRkFsIyK3/tVshISFItYtS7Jq/B4SGhgIALBZLz6tX4+PjOp2OQqGwb9zg8/kpKSne+29tbU1MTMzOzq6uru7o9TabLTo6Oi0tLT8//87du0Qi8Qrpjo+Lv4rBdItCoSwuLvJ4vB29HovY7fbf3r79fXq6t6+PxWId2//bR49UKpVnZHd3Vy6Xy+Xy4eHhHrE4PDwcuqxWq7WyslIgEKSmpkIcFh8XfxWD6dbe3l7Z48cmk4nJZN5/8CA+Pn5qaurX16/tdvv3T56MT0xgl5InGAxGTk4Ok8mk0emHbrdGo5FKpRqNZn5+vq2trba2FrpbDQ0NMzLZ1yUlnV1dbDYb4sg4uOBQ7MRFFXticpauLr+6emxsDHvP4XAEz54dzX2RUCgWiwEAbe3teXl5nkdtb28nJCR4X/uFBQU6nY5Go8k/fIDullqt5paVabXasLCwX168OPaVcMNfLvgUA3C7upyHD+ufP/dcprnl5di99I/374/t7E0PABAZGZmbmwsAMBgMNpsNultJSUlvhoYyMjIODg6qq6r6+/uhDIubi1+KwcwJ4+LiBALBsSCdTmcwGACAlZWVM45DpVKPFvFgZARUKrW3r6+oqMjtdv/c2Njc3By87ON0LrAUw5kT+kx+aDSaVqs1mUzemxQKxdDQ0MeFhc3Nzf39/cPDQ1gycbnc6XfvfF+GBAKJRCKRSNjHrs7OHb1e1NQUYBaKgwsOxaC5dRKioqMBAE6n0zPocrnq6+oGBwcvrJwkQCv/oXPxqdg5ufWv1QoAiImJ8QyKe3oweiwWq6qq6svr1yMiIrBNHS9ftrS0BHjS7u7uU7Y6HI4fnz4dGRkBAJTzeDU1NYGcCzoXn4qdk1vr6+sAgOTkZM+gVCrFbs5iiSQYddUpMJvNFRUVcwoFgUCoq68vLS0NcEDoXHwqdh5uKZVKo9EIAMjMyjoKOp1OnU4HAEhPT/emt7ERxN9aQc/goXPxqdh5dHUdDkeTSIQlP4WFhUdxIpGI1X1qtdrlch3FLRbLDzU1AwMDwXOrvb1dq9VGRUWJJRIoxRZcLicpFpReRq9EknXzZmJiotvt/riw0NraqlQqAQBCkYhMJnt2MzPY7BmZbG1tjVdeXnT7NplMnpubezM4aDabg7oMNjY2GgwGiJ2nQLicXTGYvYzv+PzR0dGTmodCobDw1q1j8eXl5ZJ797xrxs+Skzkczk8NDQCAPxWK2NjYy9/SxcEFh2Kn9zL8cMtqtU5OTs7IZCqVSq/Xm0wmCoXCYDCys7O/KS2l032PoF5f7+jokMvlRqMxIjLyi7S0rwoKiouLl5aW7hQXXyG3cHDBpxgctxAA+vUnAnrSj9xCQG4hILeQWwjILQTkFnILAVyOf7JipTICmlsI0PAfTN7xYCaLRHEAAAAASUVORK5CYII=">
+     на слове <img class="frz-i" width="37" height="19" alt="код" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEsAAAAnCAIAAADIGiKcAAADfUlEQVR42u2ZXUhaYRjHn+Zinubsgyxo7FxMBw7pRlhd9HlREK0uFlZjH0Zrq8s+RhP63EW12yDorjwFNsJFXbbEyEY7NAuVuinLjJ2VWJ4yXEdIbRcHxGlja73KVudBEP6+vv/3d55znvflOXFrGztwqeMaXPa4zn7duS26fGxfv+1diRxyhFeKsKmx8Z5EkpuTE9UFIXfhcsgRcoT/IWFcXFwMloXQ5fp5/xAfHw8Abrd7eGhoZmaGoigMw7Kys5uamiQSSeR4h8Oh0+kWFxfX19f3nE6GYYRCoVQqLS0trayq4vF4SFxQEmIYtrKy0tDQsOd0sorX6/04PW2YmxsZHZXL5WHjX9TWWq3WUOXg4IAkSZIkp6amhtXqhISEi7ugJDw6OnpZV0fTtEwme/L0aVpa2uzs7PuxMa/X+7qlZUanYy9/aOA4XlBQIJPJUkWi00DAbrdrNBq73b68vDwwMKBSqZC4ICN0OBwAoFQq29rb2XussLCQf+OGWq2mKEqv15eUlISOVxNEenp62CSKysrysjKKoqYmJ88kPK8L4lqqrKnp7OoKfYRe1dezteHT/HzY4Eg8ABAIBMXFxQCwv7/PMMzFXVASpqSktLW1hYkikQjHcQBYW1v7w3mSkpKCD1j0XP6ylp5ZAFNTU7e3t2majvzJaDROTExYzObd3d3j4+PT09NouCAj/FXcEgoBwOfzhYp+v7+zo0Or1UbVJUZnmu8eDwAkJib+VGaGh1k8uVxOEITZYrFubLCf5uZmVC4xyqHNZgMAsVgcKmo0GrbYqAnizH0PiUsscmgymVwuFwDk5OYGRZ/PR1EUAGRmZkbi7ezsIHGJBeHJycm7vj62AJaXlwd1Ho/H7stbW1t+vz+ou93uN62t4+PjSFyicqYZIYjcvLyMjIxAIGAxm/v7+00mEwD09vXx+fzQ0/ODrKzPCwubm5sN9fWPKir4fP7S0tIHrfbw8BCVC0pCdrdlGKanpyfyGNnb21tUVBSmq1Sqx9XVDMMYDAaDwRDU74rFSqXybXc3EpffLJvtef9Jv9Tj8ej1+s8LC1ar1el00jSNYRiO4/n5+c+ePxeJzp5hy2YbHBwkSdLlct0UCO5LpQ/LyhQKxerqaqVCAQBfjMbk5OQLusCv+6XnIASuI8x1MThCjpAj5Ag5Qo4Q/u233Oz2z+Xwv4wfJljnUCWxUuwAAAAASUVORK5CYII=">: bab ⇒ abb, больше <img class="frz-i" width="29" height="19" alt="код" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADoAAAAnCAIAAADRkcw6AAADQUlEQVR42u2YS0gbYRDHJ02lWZtGEaNg6R6aFFKDl0D1YHyBgtjkUPFRao1YW3P0UWzAZ6HRXgXBm2YVYpFU1JtNUIxFF1FJRC8aH5FuNUSzmmDdgHn0sBDSxIJK10fZYWHhv8PHj9lvZr5vOGsbu3B77A7cKrtLvx49FN5w0B8/929fdFncG4JbX1f3RCyWZ2ay0WVxWVzmcTkczvV3tfNbTEwMALjd7v6+PqPRSBAEgiDpGRn19fVisTja3+FwmEym+fn59fX1faeToiiBQCCRSIqKikrLyrhcLrO4CIKsrKyo1ep9p5NWvF7vt4kJ8/T0wOCgTCaL8H9TXW2z2cKVw8NDHMdxHB8bG+vX6WJjYxnE9Xg8b2tqSJKUSqWvKiqSkpKmpqa+DA15vd73jY1Gk4kOf7ihKJqTkyOVShOFwmAgYLfb9Xq93W5fWlrq6enRaDQM4jocDgBQqVTNLS30r8zNzeXdu6fT6QiCmJycLCwsDPfXYVhycnLEIiWlpUqFgiCIsdHRC+FepjKoqqra2tvDt9272lo6Bb/PzEQ4R7MCAJ/PLygoAICDgwOKohjETUhIaG5ujhCFQiGKogCwtrZ2znXi4+NDW5/ZynBmOicmJu7s7JAkGf1pYWFhZGRk2Wrd29s7OTkJBoNXV8j+Zg8EAgDw+Xzhot/vb2ttNRgMN66r/To+BoC4uLg/8qy/n2aVyWQYhlmXl20bG/TT0NBwndHd2toCAJFIFC7q9Xo623QYdqH6ymx0LRaLy+UCgEy5PCT6fD6CIAAgLS0tmnV3d/d6cE9PTz93ddFFQ6lUhnQul0u3jO3tbb/fH9LdbveHpqbh4eGr2Awej2cAw+RZWSkpKYFAYNlq7e7utlgsANDZ1cXj8cIPQ8/S0+dmZzc3N9W1tS+Ki3k83uLi4leD4ejoiPHKQDcCiqK0Wm30QaKzszM/Pz9C12g0L8vLKYoym81mszmkPxaJVCrVx44OBnE/abW5eXlzs7M2m83pdJIkiSAIiqLZ2dmvKyuFwjMmFampqePj4729vTiOu1yu+3z+U4nkuUJRUlKyurp6iehy6KETOxZhLz8sLovL4rK48N8M++mewUb3H9tviNNMWeOaLhsAAAAASUVORK5CYII="> нет — стоп.
+     Алгорифм сортирует буквы.</p>
+
+  <h3>Свой алгорифм на странице</h3>
+  <p>По одной формуле в строке, по порядку; заключительная — с точкой после
+     стрелки, пустое слово — λ или ничего:</p>
+  <img class="frz-b" width="96" height="112" alt="фрагмент программы — набери его сам" src="data:image/png;base64,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">
+  <p>Эта схема меняет a на b и b на a. Приём <b>бегунка</b>: формула с пустой
+     левой частью ставит служебную метку * в начало слова, формулы вида
+     <img class="frz-i" width="71" height="19" alt="код" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAI8AAAAnCAIAAAC5ToxHAAAFKElEQVR42u2afyyjdxzHP239CNoqiciNCc6iiGR+VLiLv24SV8fhuKtRcXIlwmqyGPPjzHaUxNSubm5xp5y5nfi1krKbiSNuoc/5cX8JJtLM/Dj+aJVW/Gj3x7PJxs1O9dH18n3/0z5Pvz+evl/P93k+n8/zkGZ+XQIkExEZWWBCMsM/3nVyQF78n/Xb72tobaErIRKihXQqWgkcznseHqOjo8jEM3NMf1p2dnYAwGAwEIYzc+wEtPb29ng83gsMwzfxWfEjUKvVRYWF3RIJQkKoYyeg1dPT82xwMDExsaysbHt7m/HXmSKTySLY7NbW1mqhcH9/H0EizjHKR/xPAMCWbvOfTZlMJtPLa35+/uf+/h/7+iwsLORyuXprq+T27c3Nzdhr1wQCAbowEuTYhkoNACS88vTm2bFOp/vp6VORSDQzMwMAFAolJjY2MzPT2dkZ4SHOMTw7Njvp3CQSiUajUalUfNPa2vqdc+doNNq/tV9ZWenv7x8bG5udnV179Uqj0dDpdCaTyWaz469fp1Aobz2tkzp23FAnWlsjIyOiu3cnJiacnJw8PDyGh4fj4uLa2tpsbGySuNzU1FR7e/tDXdiXL8/Nzb12tICAgAax2Nra2uAGbW5uZmZmFhQUeHp6GheVHo4ZpvLU0d5+MyVlcnIyKSmpt6/P3d1dp9MVFhU1iMV0Ov3b+/c5HI5Opzva0cXFhcvlVlRUPHj4sL6+vrCw0NXVFQDGx8dFIhERHpWUlPzy/HkChyOTyYyISm/H4Piq7puIHRHR2dmZk5MTyGIBgFKpBACFQhEaGirt7S0vLw8JDiaRSId6iRsbHR0dD+2Mi4+PvHJlcXHxh66uvLw8g9uUlZX1cmpKLpffTEn5qro6PDzcKLT0c8wwEbyVlVXL48f4xPisB0dAo9EEAkHU1atHex1FBQBUKjUsLAwA1tfXNRqNwW1yc3Nr7+hgsVg7OzvZfH5zc7NRaOnnGCG1jI2NjYMj0EMHkev29jYRTjEYjKZHj2JiYrRa7RelpVVVVUYPN07pmD4RvB7CMKyjo+Pl1NTy8rJarT50pZZhGJ7e6yEej/dscPD1pyGZbGlpaWlpeeBObGxsuUBgolGonhH8ibS/v19cVNTW1masP0kmk9/CZ8cESdzQgKPy9/fn8/nv+/nZ2PxZNPnm3j2hUHjK8evr64/5dXd397P8fIlEAgBp6em5ubmI1nFqaWnBAw1xYyMRedUxUigUGRkZLzCMTCYXFRdzuVy0tuD4CvTi4iIA+Pr6HkW1tETgu1YLCwu8W7fkcrmFhYURI3hTenZMoVDMzc1x7/5eaVYqlZ/m5ra2thI3dW1trVwup9Fo4sZGg6Cqq6vz9/PL5vO1Wi0AbG1tfZiQEBgY2NPdjTcYHR29EBISFRm5urpqkrRIJBIrKAgA5ufn09PSpFLpwMBAZWXlB5cudXV1EXoOlpaWXrh48fsnT4KCgk4/mkql+rqmRqVS9fb2YhgGAN0SCYZhSoWisrISb1MjFK6trU1PT39HZG5H7H0rLy+Pc+OGRqMZGhoaGho62O9+/nxycvLnJSUEzUulUpuamsBwRfSDrAP/ov3nJgDga86036Lx9vaWSCTR0dGOjo5mZma2DEZwcPCXd+5IpVIfHx9TuVvQ6fTs7Gwqlcpms/HFGhUVFchi2TIY+fn5eJuPc3IcHByYXl5JRIYzZ5EdI6G3PwG9oYaEaCEhWogWEqKFhGghWkiIFhIYtE6Ip8pIaG0hGUx/ACSne/scBrZcAAAAAElFTkSuQmCC"> проводят её по слову, а заключительная стирает в
+     конце. Формула <img class="frz-i" width="54" height="19" alt="код" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAG0AAAAnCAIAAACKWVELAAAEuUlEQVR42u2aXUibVxjHnySSkMzXRaJCnRKMHX7cCGsTa1ObWZiNStMl9iMSTexF1gudQ4bQ+ZU6cGElrExd0QZirYlGUGeaLdo41KFV0ULuBGmjhDlRIxLNh8Zosot3lbKy4UdeZ+z7vwnnHDic8+N5cp7zPy9h9vUi4DqyiDiCoCgM/Yn/KBpncTj98acdj0c8r3GO7ztHjUZzictNTUm5mJFRXl5uX1k5NRQKxOKPz56dnJw8Do6vX71aXl72+Xx2u/0Xo7GwqGhzc/N0cIyMjAQAOp1+HBzlcrlWp1Or1TweDwDmrNZWjSZEwe3s7Mjl8pfT02gTJYjS9Hg81VVVzwwGrDgmsFjp6emfZmX99OhRfHw8AGh1ut3d3VDkaDQaR4aHJRJJfX391tYW/U08Tk1N5eXmdnV1/fDw4YG2Rvqy7GsA+DDigwPUnGFh/kBgdHTU43Z/cu4ck8kMOY7JycnJKSlWq/W3wcGB/n4ymWyz2Txut6K21uVyifLzlUrlPtN8w+kBAAJ6LzxoHW632y9xuX6/XyQSff/gQYhmdyAQMD9/3tjYODs7CwAkEkkoEpWUlMTFxR1THY4gCJVKBQCz2ez1ekOUI4FAQBAkPDwcbdJotNgzZxAEOb760Wg0ut1uAHC5XMPDw5ju1uVyyWQyNGSCqLGxsdu3bslksqWlJR6PRyAQ+Hx+Q0MD7/JllUq1trZ2HBy17e1vM8WUo0KhGH/xokAsnpqaCtacPd3dd4qLLRZLYWGhqb+fxWIFAoGq6mpNa2tERERLc7NYLA4EAthytFgsMzMzABAbGwsAv4+MOJ1O7DiWlpYymUyn03mnuHhgYCAoc+bm5XE4nI6ODsX9+zQabX19HQAcDkdmZuavJtONmzdLS0oIBAK2HLVaLQAwGIzKykoA8Hq9g2YzdhwTEhK6e3rYbPb29vZXZWXtb6XCoUWlUnUdHefZbLTpcDgAAKWJIIhSqRRcv45tXq+trfWbTAAgEAiyrlxB/5WfYZzadDq97elToVDo9/u/ratTqVTBnX9jY2OPJhzFf9y/urq6fD4fANwWi8lk8mfZ2b09PZMTE6urq1FRUUfZjFwuH/mXI4tIJFIoFAqFgjZbmpvtKyvfKZUkEikoHDv1+mP1e3Z3d/WdnQBwns1OTEwEAMG1a2i/yWTC3FMhEk+6H75PDQ0NLS4uogYJ2nMhIyM6Ohp1LqRS6VGWolar/2PU5/N9c++ewWAAgC/u3q2oqAhh/xE9Yeh0Oj8n5+97JYmUk5uLHuILCwsYrdLhcEilUoPBQCQSaxWKkwbxYBzn5+YmxscBQCQSkcnkvX6BQIBpITk/P38jP//l9DSZTP6xoaGoqAhC2sfV6nRoaSp+k9So0tLSUPunr68PiyU2NTXZbDYEQVqfPOHz+RDSfvjm5ubPvb0AwOFwElisf4x+LhQCwJzVqu/sDLqTVldXd5HL7dTrORwOhPq7gqGvD720FBQUvDsqkUhQl6mmpuZCenpwlxgeHt7W1paUlASn4H1m74TJvnr13VEGg9Hy+HFqaiqFQomJiYH3T4f0H3EB/h0A/n6Nc8Q54sI54hxxjjhHXDhHOBk+LlqU48Lj8X/WX0Whz+RDLJWpAAAAAElFTkSuQmCC"> подходит к любому слову — поэтому её
+     пишут <b>последней</b>. Порядок формул — часть алгорифма.</p>
+</details>
+
+</div>
+
+<script>
+/* ==== ЗАДАЧИ: вставлено gen.py, руками не править ==== */
+/* Обзорный практикум к тринадцатой паре 11 класса (углублённый уровень).
+   Содержание ФГОС, уроки 25–26 официального плана: «Машина Поста» и
+   «Нормальные алгорифмы Маркова». В столбце «Задание ЕГЭ» у этих уроков
+   пусто — экзаменационной линии у темы нет, вопросы сняты с содержания плана.
+
+   Единственный источник задач. В practice.html вписывается скриптом
+   gen.py между маркерами — руками страницу не править.
+
+   Пять вопросов из шести — короткий ответ (число или слово), сверка знак в
+   знак, как на КЕГЭ. Шестой — свой алгорифм Маркова: его не сверяют с
+   ключом, а ВЫПОЛНЯЮТ на всех коротких словах и сравнивают результат
+   (правильных схем много, ключа быть не может). */
+
+const T_TYPES = [
+  "понятия: Пост и Марков",
+  "выполнить программу Поста",
+  "выполнить алгорифм Маркова",
+  "стёртая команда Поста",
+  "что делает алгорифм",
+  "составить алгорифм"
+];
+
+function tRng(seed) {
+  let s = seed >>> 0;
+  return function () {
+    s ^= s << 13; s >>>= 0;
+    s ^= s >> 17;
+    s ^= s << 5;  s >>>= 0;
+    return s / 4294967296;
+  };
+}
+
+function tRand(rng, a, b) { return a + Math.floor(rng() * (b - a + 1)); }
+function tPick(rng, arr) { return arr[tRand(rng, 0, arr.length - 1)]; }
+
+function tShuffle(rng, arr) {
+  const a = arr.slice();
+  for (let j = a.length - 1; j > 0; j--) {
+    const k = tRand(rng, 0, j);
+    const t = a[j]; a[j] = a[k]; a[k] = t;
+  }
+  return a;
+}
+
+function tPl(n, one, few, many) {
+  const h = n % 100, t = n % 10;
+  if (h >= 11 && h <= 14) return many;
+  if (t === 1) return one;
+  if (t >= 2 && t <= 4) return few;
+  return many;
+}
+
+function tEsc(s) {
+  return String(s).replace(/[&<>]/g, function (c) {
+    return {"&": "&amp;", "<": "&lt;", ">": "&gt;"}[c];
+  });
+}
+
+/* ========================================================== машина Поста
+   Лента — клетки, пустые или с меткой. Программа — массив команд, команда
+   номер i лежит в prog[i - 1]:
+     {op: "V", to}  поставить метку,   {op: "X", to}  стереть метку,
+     {op: "R", to}  каретку вправо,    {op: "L", to}  каретку влево,
+     {op: "?", to, to2}  клетка пуста — к команде to, отмечена — к to2,
+     {op: "!"}  стоп.
+   Метка в отмеченную клетку и стирание пустой — аварийная остановка
+   (так у самого Поста: результата нет). Лента — объект {позиция: true}. */
+
+const P_LIMIT = 2000;
+
+function pCmd(c) {
+  if (c.op === "!") return "!";
+  if (c.op === "?") return "? " + c.to + "; " + c.to2;
+  const sign = {V: "V", X: "X", R: "→", L: "←"}[c.op];
+  return sign + " " + c.to;
+}
+
+function pP(rows) {
+  /* компактная запись: ["R", 2], ["?", 3, 1], ["!"] */
+  return rows.map(function (r) {
+    return r[0] === "?" ? {op: "?", to: r[1], to2: r[2]}
+         : r[0] === "!" ? {op: "!"} : {op: r[0], to: r[1]};
+  });
+}
+
+/* word — строка из "1" (метка) и "0" (пусто), лежит с позиции 0;
+   start — позиция каретки. */
+function pRun(prog, word, start, limit) {
+  const tape = {};
+  for (let i = 0; i < word.length; i++) if (word[i] === "1") tape[i] = true;
+  let pos = start, k = 1, steps = 0, lo = pos, hi = pos;
+  const trace = [], seen = {};
+  while (true) {
+    if (k < 1 || k > prog.length)
+      return {halted: false, why: "jump", k: k, steps: steps, trace: trace, seen: seen};
+    if (steps >= limit)
+      return {halted: false, why: "limit", steps: steps, trace: trace, seen: seen};
+    const c = prog[k - 1];
+    seen[k] = true;
+    const m = !!tape[pos];
+    trace.push({k: k, pos: pos, m: m, c: c});
+    steps++;
+    if (c.op === "!") break;
+    if (c.op === "V") {
+      if (m) return {halted: false, why: "crashV", k: k, pos: pos, steps: steps, trace: trace, seen: seen};
+      tape[pos] = true; k = c.to;
+    } else if (c.op === "X") {
+      if (!m) return {halted: false, why: "crashX", k: k, pos: pos, steps: steps, trace: trace, seen: seen};
+      delete tape[pos]; k = c.to;
+    } else if (c.op === "R") { pos++; k = c.to; }
+    else if (c.op === "L") { pos--; k = c.to; }
+    else k = m ? c.to2 : c.to;
+    if (pos < lo) lo = pos;
+    if (pos > hi) hi = pos;
+  }
+  const marks = Object.keys(tape).map(Number).sort(function (a, b) { return a - b; });
+  return {halted: true, steps: steps, pos: pos, lo: lo, hi: hi, tape: tape,
+          marks: marks, trace: trace, seen: seen};
+}
+
+/* Таблица программы. hole — номер команды, показанной звёздочкой. */
+function gPost(prog, hole) {
+  let h = '<table class="gm post"><tr><th>№</th><th>команда</th></tr>';
+  for (let i = 1; i <= prog.length; i++)
+    h += "<tr><th>" + i + "</th>" + (i === hole ? '<td class="miss">★</td>'
+                                                : "<td>" + pCmd(prog[i - 1]) + "</td>") + "</tr>";
+  return h + "</table>";
+}
+
+const P_RULES = "Команды: <code>V j</code> — поставить метку, <code>X j</code> — стереть " +
+  "метку, <code>→ j</code> и <code>← j</code> — сдвинуть каретку на клетку вправо или " +
+  "влево, и перейти к команде j; <code>? i; j</code> — если клетка под кареткой пуста, " +
+  "перейти к команде i, если отмечена — к j; <code>!</code> — стоп. Метка в отмеченную " +
+  "клетку или стирание пустой — аварийная остановка.";
+
+/* Библиотека машин Поста над рядами меток. Каретка в начале — над самой
+   левой меткой (первого) ряда. f(слово) — позиции меток после остановки.
+   Описание набрано ещё раз в gen.py со своей реализацией. */
+function fRange(a, b) { const o = []; for (let i = a; i <= b; i++) o.push(i); return o; }
+function fBlocks(w) {   /* "11011" -> [2, 2] */
+  return w.split("0").filter(Boolean).map(function (s) { return s.length; });
+}
+
+const P_FN = {
+  inc_r: {desc: "дописывает одну метку справа к ряду меток",
+          f: function (w) { return fRange(0, w.length); },
+          rows: [["R", 2], ["?", 3, 1], ["V", 4], ["!"]]},
+  inc_l: {desc: "дописывает одну метку слева к ряду меток",
+          f: function (w) { return fRange(-1, w.length - 1); },
+          rows: [["L", 2], ["V", 3], ["!"]]},
+  dec_r: {desc: "стирает самую правую метку ряда",
+          f: function (w) { return fRange(0, w.length - 2); },
+          rows: [["R", 2], ["?", 3, 1], ["L", 4], ["X", 5], ["!"]]},
+  clear: {desc: "стирает весь ряд меток",
+          f: function () { return []; },
+          rows: [["X", 2], ["R", 3], ["?", 4, 1], ["!"]]},
+  shr:   {desc: "сдвигает ряд меток на одну клетку вправо",
+          f: function (w) { return fRange(1, w.length); },
+          rows: [["X", 2], ["R", 3], ["?", 4, 2], ["V", 5], ["!"]]},
+  shl:   {desc: "сдвигает ряд меток на одну клетку влево",
+          f: function (w) { return fRange(-1, w.length - 2); },
+          rows: [["L", 2], ["V", 3], ["R", 4], ["?", 5, 3], ["L", 6], ["X", 7], ["!"]]},
+  add2:  {desc: "дописывает две метки справа к ряду меток",
+          f: function (w) { return fRange(0, w.length + 1); },
+          rows: [["R", 2], ["?", 3, 1], ["V", 4], ["R", 5], ["V", 6], ["!"]]},
+  gap:   {desc: "ставит метку справа от ряда через одну пустую клетку",
+          f: function (w) { return fRange(0, w.length - 1).concat([w.length + 1]); },
+          rows: [["R", 2], ["?", 3, 1], ["R", 4], ["V", 5], ["!"]]},
+  add:   {pair: true,
+          desc: "складывает два числа: два ряда меток, разделённые одной пустой клеткой, сливает в один сплошной ряд",
+          f: function (w) { const b = fBlocks(w); return fRange(1, b[0] + b[1]); },
+          rows: [["X", 2], ["R", 3], ["?", 4, 2], ["V", 5], ["!"]]}
+};
+
+function pTests(fn) {
+  const out = [];
+  if (fn.pair) {
+    for (let a = 1; a <= 4; a++)
+      for (let b = 1; b <= 4; b++) out.push("1".repeat(a) + "0" + "1".repeat(b));
+    return out;
+  }
+  for (let n = 1; n <= 6; n++) out.push("1".repeat(n));
+  return out;
+}
+
+function pFail(fn, prog) {
+  for (const w of pTests(fn)) {
+    const r = pRun(prog, w, 0, P_LIMIT);
+    const want = fn.f(w).join(",");
+    if (!r.halted || r.marks.join(",") !== want) return {w: w, r: r, want: fn.f(w)};
+  }
+  return null;
+}
+
+/* Ленты в одном окне клеток, чтобы сдвиг был виден: ▮ — метка, ▯ — пусто.
+   Входной ряд лежит с клетки 0, окно захватывает все метки всех лент. */
+function gWin(w, lists) {
+  let lo = 0, hi = w.length - 1;
+  for (const l of lists) for (const p of l) { if (p < lo) lo = p; if (p > hi) hi = p; }
+  const show = function (has) {
+    let s = "";
+    for (let i = lo; i <= hi; i++) s += has(i) ? "▮" : "▯";
+    return "<code>" + s + "</code>";
+  };
+  const out = [show(function (i) { return i >= 0 && i < w.length && w[i] === "1"; })];
+  for (const l of lists) out.push(show(function (i) { return l.indexOf(i) >= 0; }));
+  return out;
+}
+
+function pFailText(f) {
+  const r = f.r;
+  const t = gWin(f.w, r.marks ? [r.marks, f.want] : []);
+  const on = "на ряду " + t[0];
+  if (r.why === "crashV") return on + " авария: команда " + r.k + " ставит метку в отмеченную клетку";
+  if (r.why === "crashX") return on + " авария: команда " + r.k + " стирает метку в пустой клетке";
+  if (r.why === "limit") return on + " машина не остановилась за " + P_LIMIT + " шагов — зациклилась";
+  if (r.why === "jump") return on + " переход к несуществующей команде " + r.k;
+  return on + " после остановки на ленте " + t[1] + ", а нужно " + t[2];
+}
+
+/* =================================================== алгорифмы Маркова
+   Схема — массив формул [левая, правая, заключительная]. Пустое слово — "",
+   на странице — λ. Шаг: берётся ПЕРВАЯ по порядку формула, левая часть
+   которой входит в слово, и заменяется САМОЕ ЛЕВОЕ вхождение. Остановка —
+   после заключительной формулы или когда ни одна не подходит. */
+
+const M_LIMIT = 2000;
+const M_LONG = 300;
+
+function mkSide(s) { return s === "" ? "λ" : s; }
+function mkRule(r) { return mkSide(r[0]) + (r[2] ? " →· " : " → ") + mkSide(r[1]); }
+function gWord(w) { return "<code>" + (w === "" ? "λ" : tEsc(w)) + "</code>"; }
+
+function mkRun(scheme, word, limit) {
+  let w = word, steps = 0;
+  const trace = [];
+  while (true) {
+    let i = -1, at = -1;
+    for (let k = 0; k < scheme.length; k++) {
+      at = w.indexOf(scheme[k][0]);
+      if (at >= 0) { i = k; break; }
+    }
+    if (i < 0) return {halted: true, why: "none", word: w, steps: steps, trace: trace};
+    if (steps >= limit) return {halted: false, why: "limit", word: w, steps: steps, trace: trace};
+    const r = scheme[i];
+    const nw = w.slice(0, at) + r[1] + w.slice(at + r[0].length);
+    trace.push({i: i + 1, from: w, to: nw, fin: r[2]});
+    steps++;
+    w = nw;
+    if (r[2]) return {halted: true, why: "final", word: w, steps: steps, trace: trace};
+    if (w.length > M_LONG) return {halted: false, why: "long", word: w, steps: steps, trace: trace};
+  }
+}
+
+function gScheme(scheme) {
+  let h = '<table class="gm mk"><tr><th>№</th><th>формула</th></tr>';
+  for (let i = 0; i < scheme.length; i++)
+    h += "<tr><th>" + (i + 1) + "</th><td>" + tEsc(mkRule(scheme[i])) + "</td></tr>";
+  return h + "</table>";
+}
+
+const M_RULES = "Формула <code>P → Q</code> заменяет P на Q, <code>P →· Q</code> — " +
+  "заключительная: после неё алгорифм останавливается; λ — пустое слово. На каждом шаге " +
+  "берётся <b>первая по порядку</b> формула, левая часть которой входит в слово, и " +
+  "заменяется <b>самое левое</b> вхождение. Ни одна формула не подходит — остановка.";
+
+/* Библиотека алгорифмов. alpha — буквы входного слова; маркеры * и # в
+   алфавит слова не входят. Описание набрано ещё раз в gen.py. */
+function fFlip(c) { return {a: "b", b: "a", "0": "1", "1": "0"}[c]; }
+function fBinc(w) {
+  const d = w.split("");
+  let i = d.length - 1;
+  while (i >= 0 && d[i] === "1") { d[i] = "0"; i--; }
+  if (i >= 0) d[i] = "1"; else d.unshift("1");
+  return d.join("");
+}
+
+const M_FN = {
+  /* слова из a и b */
+  sort:  {alpha: "ab", desc: "переставляет буквы так, что все a стоят перед всеми b",
+          f: function (w) { return w.split("").sort().join(""); },
+          rules: [["ba", "ab", false]]},
+  sortb: {alpha: "ab", desc: "переставляет буквы так, что все b стоят перед всеми a",
+          f: function (w) { return w.split("").sort().reverse().join(""); },
+          rules: [["ab", "ba", false]]},
+  dela:  {alpha: "ab", desc: "удаляет из слова все буквы a",
+          f: function (w) { return w.replace(/a/g, ""); },
+          rules: [["a", "", false]]},
+  delb:  {alpha: "ab", desc: "удаляет из слова все буквы b",
+          f: function (w) { return w.replace(/b/g, ""); },
+          rules: [["b", "", false]]},
+  a2b:   {alpha: "ab", desc: "заменяет каждую a на b",
+          f: function (w) { return w.replace(/a/g, "b"); },
+          rules: [["a", "b", false]]},
+  dfa:   {alpha: "ab", desc: "удаляет самую левую букву a (если a нет — слово не меняется)",
+          f: function (w) { return w.replace("a", ""); },
+          rules: [["a", "", true]]},
+  preb:  {alpha: "ab", desc: "приписывает b в начало слова",
+          f: function (w) { return "b" + w; },
+          rules: [["", "b", true]]},
+  swap:  {alpha: "ab", desc: "заменяет каждую a на b, а каждую b на a",
+          f: function (w) { return w.split("").map(fFlip).join(""); },
+          rules: [["*a", "b*", false], ["*b", "a*", false], ["*", "", true], ["", "*", false]]},
+  appa:  {alpha: "ab", desc: "приписывает a в конец слова",
+          f: function (w) { return w + "a"; },
+          rules: [["*a", "a*", false], ["*b", "b*", false], ["*", "a", true], ["", "*", false]]},
+  delf:  {alpha: "ab", desc: "удаляет первую букву слова",
+          f: function (w) { return w.slice(1); },
+          rules: [["*a", "", true], ["*b", "", true], ["", "*", false]]},
+  dell:  {alpha: "ab", desc: "удаляет последнюю букву слова",
+          f: function (w) { return w.slice(0, -1); },
+          rules: [["*a", "a*", false], ["*b", "b*", false], ["a*", "", true], ["b*", "", true],
+                  ["", "*", false]]},
+  dbl:   {alpha: "ab", desc: "удваивает каждую букву слова",
+          f: function (w) { return w.replace(/(.)/g, "$1$1"); },
+          rules: [["*a", "aa*", false], ["*b", "bb*", false], ["*", "", true], ["", "*", false]]},
+  /* число n — ряд из n единиц */
+  u_inc: {alpha: "1", desc: "прибавляет к числу 1",
+          f: function (w) { return w + "1"; },
+          rules: [["", "1", true]]},
+  u_dec: {alpha: "1", desc: "вычитает из числа 1",
+          f: function (w) { return w.slice(1); },
+          rules: [["1", "", true]]},
+  u_dbl: {alpha: "1", desc: "умножает число на 2",
+          f: function (w) { return w + w; },
+          rules: [["*1", "11*", false], ["*", "", true], ["", "*", false]]},
+  u_tri: {alpha: "1", desc: "умножает число на 3",
+          f: function (w) { return w + w + w; },
+          rules: [["*1", "111*", false], ["*", "", true], ["", "*", false]]},
+  u_half:{alpha: "1", desc: "делит число на 2 нацело (остаток отбрасывается)",
+          f: function (w) { return "1".repeat(Math.floor(w.length / 2)); },
+          rules: [["*11", "1*", false], ["*1", "", true], ["*", "", true], ["", "*", false]]},
+  u_par: {alpha: "1", desc: "заменяет число остатком от его деления на 2",
+          f: function (w) { return w.length % 2 ? "1" : ""; },
+          rules: [["11", "", false]]},
+  u_add: {alpha: "1", pair: true,
+          desc: "складывает два числа: из записи вида 11+111 получает 11111",
+          f: function (w) { return w.replace("+", ""); },
+          rules: [["+", "", false]]},
+  /* двоичные слова */
+  b_inc: {alpha: "01", desc: "прибавляет 1 к двоичному числу",
+          f: fBinc,
+          rules: [["1#", "#0", false], ["0#", "1", true], ["#", "1", true],
+                  ["*0", "0*", false], ["*1", "1*", false], ["*", "#", false], ["", "*", false]]},
+  b_app0:{alpha: "01", desc: "приписывает 0 в конец слова",
+          f: function (w) { return w + "0"; },
+          rules: [["*0", "0*", false], ["*1", "1*", false], ["*", "0", true], ["", "*", false]]},
+  b_inv: {alpha: "01", desc: "заменяет каждый 0 на 1, а каждую 1 на 0",
+          f: function (w) { return w.split("").map(fFlip).join(""); },
+          rules: [["*0", "1*", false], ["*1", "0*", false], ["*", "", true], ["", "*", false]]},
+  b_sort:{alpha: "01", desc: "переставляет цифры так, что все 0 стоят перед всеми 1",
+          f: function (w) { return w.split("").sort().join(""); },
+          rules: [["10", "01", false]]},
+  b_del0:{alpha: "01", desc: "удаляет из слова все нули",
+          f: function (w) { return w.replace(/0/g, ""); },
+          rules: [["0", "", false]]},
+  b_pre1:{alpha: "01", desc: "приписывает 1 в начало слова",
+          f: function (w) { return "1" + w; },
+          rules: [["", "1", true]]},
+  b_dell:{alpha: "01", desc: "удаляет последнюю цифру слова",
+          f: function (w) { return w.slice(0, -1); },
+          rules: [["*0", "0*", false], ["*1", "1*", false], ["0*", "", true], ["1*", "", true],
+                  ["", "*", false]]}
+};
+
+/* Для «что делает алгорифм» — группы с одинаковыми входными словами. */
+const M_GROUPS = {
+  letters: ["sort", "sortb", "dela", "delb", "a2b", "dfa", "preb", "swap", "appa", "delf", "dell", "dbl"],
+  unary:   ["u_inc", "u_dec", "u_dbl", "u_tri", "u_half", "u_par"],
+  binary:  ["b_inc", "b_app0", "b_inv", "b_sort", "b_del0", "b_pre1", "b_dell"]
+};
+
+/* Для «составь алгорифм» — то, что стоит написать руками. */
+const M_WRITE = {
+  letters: ["sort", "dela", "dfa", "swap", "appa", "delf", "dell", "dbl"],
+  unary:   ["u_add", "u_dbl", "u_tri", "u_half", "u_par"],
+  binary:  ["b_inv", "b_app0", "b_sort", "b_dell"]
+};
+
+function mTests(fn) {
+  const out = [];
+  if (fn.pair) {
+    for (let a = 1; a <= 4; a++)
+      for (let b = 1; b <= 4; b++) out.push("1".repeat(a) + "+" + "1".repeat(b));
+    return out;
+  }
+  if (fn.alpha === "1") { for (let n = 1; n <= 7; n++) out.push("1".repeat(n)); return out; }
+  let cur = [""];
+  for (let n = 1; n <= 4; n++) {
+    const next = [];
+    for (const w of cur) for (const c of fn.alpha) next.push(w + c);
+    cur = next;
+    for (const w of cur) out.push(w);
+  }
+  return out;
+}
+
+function mFail(fn, scheme) {
+  for (const w of mTests(fn)) {
+    const r = mkRun(scheme, w, M_LIMIT);
+    const want = fn.f(w);
+    if (!r.halted || r.word !== want) return {w: w, r: r, want: want};
+  }
+  return null;
+}
+
+function mFailText(f) {
+  const on = "на слове " + gWord(f.w);
+  if (f.r.why === "limit")
+    return on + " алгорифм не остановился за " + M_LIMIT + " шагов — зациклился";
+  if (f.r.why === "long")
+    return on + " слово разрослось длиннее " + M_LONG + " знаков — алгорифм не останавливается";
+  return on + " получилось " + gWord(f.r.word) + ", а нужно " + gWord(f.want);
+}
+
+function gTrace(tr, max) {
+  const show = tr.slice(0, max).map(function (s) {
+    return "(" + s.i + ") " + (s.from === "" ? "λ" : tEsc(s.from)) + " ⇒ " +
+      (s.to === "" ? "λ" : tEsc(s.to));
+  });
+  return show.join("; ") + (tr.length > max ? "; …" : "");
+}
+
+/* ---------------------------------------------------------- понятия */
+
+/* ==== БАНК УТВЕРЖДЕНИЙ (JSON; читает и gen.py) ==== */
+const T_BANK = [
+{"t": "Каждая клетка ленты машины Поста либо пуста, либо отмечена меткой — третьего не бывает.", "v": true, "w": "верно: алфавит машины Поста — «пусто» и «метка»"},
+{"t": "Программа машины Поста — пронумерованный список команд, и в каждой команде, кроме «стоп», указан номер следующей.", "v": true, "w": "верно: порядок выполнения задают номера, а не таблица состояний"},
+{"t": "Команда «? i; j» машины Поста выбирает продолжение в зависимости от того, пуста клетка под кареткой или отмечена.", "v": true, "w": "верно, это единственная команда ветвления"},
+{"t": "Если машина Поста получает команду поставить метку в уже отмеченную клетку, происходит аварийная остановка.", "v": true, "w": "верно: такая команда невыполнима, результата нет"},
+{"t": "Машина Поста за один шаг сдвигает каретку не больше чем на одну клетку.", "v": true, "w": "верно: команды → и ← сдвигают ровно на одну клетку"},
+{"t": "Машину Поста описал Эмиль Пост в 1936 году — в том же году, что и Тьюринг свою машину, и независимо от него.", "v": true, "w": "верно: обе работы вышли в 1936 году"},
+{"t": "Нормальный алгорифм Маркова задаётся упорядоченным списком формул подстановки вида «P → Q» и «P →· Q».", "v": true, "w": "верно, это и есть схема алгорифма"},
+{"t": "На каждом шаге алгорифм Маркова применяет первую по порядку подходящую формулу и заменяет самое левое вхождение её левой части.", "v": true, "w": "верно: так шаг определён однозначно"},
+{"t": "После применения заключительной формулы (со знаком «·») алгорифм Маркова останавливается.", "v": true, "w": "верно, для этого заключительные формулы и нужны"},
+{"t": "Алгорифм Маркова останавливается и тогда, когда ни одна формула схемы к слову не применима.", "v": true, "w": "верно: это второй способ остановки"},
+{"t": "Формула с пустой левой частью применима к любому слову и приписывает свою правую часть в начало слова.", "v": true, "w": "верно: пустое слово «входит» в любое слово, и самое левое его вхождение — в начале"},
+{"t": "Если переставить формулы алгорифма Маркова местами, может получиться алгорифм, который делает совсем другое.", "v": true, "w": "верно: порядок формул — часть алгорифма"},
+{"t": "Алгорифм Маркова может работать бесконечно: например, схема из одной формулы «a → a» на слове a никогда не остановится.", "v": true, "w": "верно: формула применяется снова и снова, слово не меняется"},
+{"t": "Машина Поста, машина Тьюринга и нормальные алгорифмы Маркова вычисляют одно и то же: задачу, решаемую одной моделью, решают и другие.", "v": true, "w": "верно: все эти уточнения понятия алгоритма равносильны"},
+{"t": "Лента машины Поста состоит из клеток, в каждую из которых можно записать любую букву алфавита.", "v": false, "w": "неверно: в клетке либо метка, либо пусто"},
+{"t": "У машины Поста, как и у машины Тьюринга, программа — таблица: строки — состояния, столбцы — символы.", "v": false, "w": "неверно: у машины Поста программа — нумерованный список команд"},
+{"t": "Машина Поста решает меньше задач, чем машина Тьюринга, потому что в её клетках всего два вида содержимого.", "v": false, "w": "неверно: модели равносильны, любой символ можно закодировать группой меток"},
+{"t": "Команда «стоп» машины Поста стирает все метки на ленте.", "v": false, "w": "неверно: «стоп» только останавливает машину, лента остаётся как есть"},
+{"t": "Каретка машины Поста за один шаг может перескочить на любую клетку ленты.", "v": false, "w": "неверно: не больше чем на одну клетку"},
+{"t": "Алгорифм Маркова применяет все формулы схемы к слову одновременно.", "v": false, "w": "неверно: на шаге применяется ровно одна формула"},
+{"t": "Если левая часть формулы входит в слово несколько раз, алгорифм Маркова за один шаг заменяет все вхождения сразу.", "v": false, "w": "неверно: за шаг заменяется только самое левое вхождение"},
+{"t": "Порядок формул в схеме алгорифма Маркова не важен: результат от него не зависит.", "v": false, "w": "неверно: применяется первая подходящая, от порядка зависит, какая"},
+{"t": "Алгорифм Маркова всегда останавливается, потому что каждая подстановка укорачивает слово.", "v": false, "w": "неверно: подстановка может и удлинять слово, и не менять его, алгорифм может зациклиться"},
+{"t": "Заключительной называется формула, которая стоит последней в списке.", "v": false, "w": "неверно: заключительную отмечает знак «·», а не место в списке"},
+{"t": "Нормальные алгорифмы Маркова работают только со словами из букв русского алфавита.", "v": false, "w": "неверно: алфавит любой конечный — буквы, цифры, знаки"},
+{"t": "Машину Поста построили в металле, и она долго служила для научных расчётов.", "v": false, "w": "неверно: это математическая модель, а не устройство"}
+];
+/* ==== /БАНК ==== */
+
+/* ---------------------------------------------------------------- задачи */
+
+function tTask(type, rng) {
+  if (type === 0) return tConcepts(rng);
+  if (type === 1) return tPostTrace(rng);
+  if (type === 2) return tMkTrace(rng);
+  if (type === 3) return tPostHole(rng);
+  if (type === 4) return tMkWhat(rng);
+  return tMkWrite(rng);
+}
+
+/* 0. Понятия: сколько из пяти утверждений верны. Верных не 0 и не 5. */
+function tConcepts(rng) {
+  const SHOW = 5;
+  let pick = [];
+  for (let t = 0; t < 400; t++) {
+    pick = tShuffle(rng, T_BANK.map(function (_, i) { return i; })).slice(0, SHOW);
+    const k = pick.filter(function (i) { return T_BANK[i].v; }).length;
+    if (k >= 1 && k <= SHOW - 1) break;
+  }
+  const items = pick.map(function (i) { return "<li>" + T_BANK[i].t + "</li>"; });
+  const right = pick.filter(function (i) { return T_BANK[i].v; }).length;
+  const why = pick.map(function (i, n) { return (n + 1) + ") " + T_BANK[i].w; });
+  return {
+    type: 0, kind: "concepts", answer: String(right),
+    question: "Ниже пять утверждений о машине Поста и нормальных алгорифмах Маркова. " +
+      "Сколько из них верны?<ol class=\"st\">" + items.join("") +
+      "</ol><p>В ответе укажите число.</p>",
+    explain: why.join("; ") + ". Верных — " + right + "."
+  };
+}
+
+/* 1. Выполнить программу машины Поста: случайная программа из 4–6 команд,
+   лента из 4–6 клеток. Отбор: доходит до «!» за 6–16 шагов без аварии,
+   выполняет каждую команду, меняет ленту, каретка и метки не выходят за
+   нарисованные клетки. Повороты: меток после остановки, шагов, клетка под
+   кареткой. */
+function tPostTrace(rng) {
+  const kind = tPick(rng, ["marks", "steps", "cell"]);
+  let best = null;
+  for (let t = 0; t < 30000 && !best; t++) {
+    const k = tRand(rng, 4, 6);
+    const len = tRand(rng, 4, 6);
+    let word = "";
+    for (let i = 0; i < len; i++) word += tPick(rng, ["0", "1"]);
+    const stop = tRand(rng, 2, k);
+    const prog = [];
+    for (let i = 1; i <= k; i++) {
+      if (i === stop) { prog.push({op: "!"}); continue; }
+      const op = tPick(rng, ["V", "X", "R", "L", "R", "L", "?", "?"]);
+      if (op === "?") {
+        const a = tRand(rng, 1, k);
+        let b = tRand(rng, 1, k - 1);
+        if (b >= a) b++;
+        prog.push({op: "?", to: a, to2: b});
+      } else prog.push({op: op, to: tRand(rng, 1, k)});
+    }
+    const start = tRand(rng, 0, len - 1);
+    const r = pRun(prog, word, start, 40);
+    if (!r.halted) continue;
+    if (r.steps < 6 || r.steps > 16) continue;
+    if (Object.keys(r.seen).length !== k) continue;
+    if (r.lo < -2 || r.hi > len + 1) continue;
+    let fin = "";
+    for (let i = -2; i < len + 2; i++) fin += r.tape[i] ? "1" : "0";
+    if (fin === "00" + word + "00") continue;
+    if (kind === "marks" && r.marks.length < 1) continue;
+    best = {prog: prog, word: word, start: start, r: r};
+  }
+  if (!best) {
+    /* не случается: отбор проходит примерно каждая сотая программа */
+    const p = pP(P_FN.dec_r.rows);
+    best = {prog: p, word: "0111", start: 1, r: pRun(p, "0111", 1, 40)};
+  }
+  const len = best.word.length, W = len + 4;
+  /* клетки ленты нумеруем с 1; слово лежит с клетки 3 */
+  let tape = '<table class="gm tape"><tr><th>клетка</th>';
+  for (let i = 1; i <= W; i++) tape += "<td>" + i + "</td>";
+  tape += "</tr><tr><th>лента</th>";
+  for (let i = 1; i <= W; i++) {
+    const idx = i - 3;
+    const c = idx >= 0 && idx < len && best.word[idx] === "1" ? "V" : "";
+    tape += "<td" + (idx === best.start ? ' class="h"' : "") + ">" + c + "</td>";
+  }
+  tape += "</tr></table>";
+  const r = best.r;
+  const ask = kind === "marks"
+    ? "Сколько меток будет на ленте после остановки машины?"
+    : kind === "steps"
+      ? "Сколько команд выполнит машина до остановки, считая и команду «!»?"
+      : "Над клеткой с каким номером окажется каретка после остановки?";
+  const answer = kind === "marks" ? r.marks.length : kind === "steps" ? r.steps : r.pos + 3;
+  const steps = r.trace.map(function (s, n) {
+    return (n + 1) + ") команда " + s.k + " «" + pCmd(s.c) + "», клетка " + (s.pos + 3) +
+      (s.m ? " отмечена" : " пуста");
+  });
+  let fin = "";
+  for (let i = 1; i <= W; i++) fin += r.tape[i - 3] ? "V" : "·";
+  return {
+    type: 1, kind: kind, answer: String(answer),
+    question: "Машина Поста выполняет программу:" + gPost(best.prog) +
+      "<p class=\"rules\">" + P_RULES + "</p>" +
+      "<p>Лента перед запуском (V — метка); каретка над выделенной клеткой, " +
+      "начинаем с команды 1:</p>" + tape + "<p>" + ask + "</p>",
+    explain: "Шаги: " + steps.join("; ") + ". Машина остановилась после " + r.steps +
+      " " + tPl(r.steps, "команды", "команд", "команд") + ", каретка над клеткой " +
+      (r.pos + 3) + ". Лента в клетках 1–" + W + ": " + fin + " — меток " +
+      r.marks.length + ". Ответ: " + answer + "."
+  };
+}
+
+/* 2. Выполнить алгорифм Маркова: случайная схема из 2–4 формул над {a, b, c},
+   слово из 4–7 букв. Отбор: останавливается за 4–12 шагов, в ходе работы
+   применяются хотя бы две разные формулы, результат непустой и короче 11
+   букв. Повороты: какое слово получится; сколько шагов; номер формулы,
+   применённой последней. */
+function tMkTrace(rng) {
+  const kind = tPick(rng, ["word", "count", "last"]);
+  const AL = ["a", "b", "c"];
+  const side = function (lo, hi) {
+    let s = "";
+    const n = tRand(rng, lo, hi);
+    for (let i = 0; i < n; i++) s += tPick(rng, AL);
+    return s;
+  };
+  let best = null;
+  for (let t = 0; t < 30000 && !best; t++) {
+    const k = tRand(rng, 2, 4);
+    const scheme = [], lefts = {};
+    for (let i = 0; i < k; i++) {
+      const L = side(1, 2);
+      if (lefts[L]) break;
+      lefts[L] = true;
+      let R = side(0, 2);
+      if (R === L) R = "";
+      scheme.push([L, R, rng() < 0.18]);
+    }
+    if (scheme.length !== k) continue;
+    const len = tRand(rng, 4, 7);
+    let word = "";
+    for (let i = 0; i < len; i++) word += tPick(rng, AL);
+    const r = mkRun(scheme, word, 30);
+    if (!r.halted) continue;
+    if (r.steps < 4 || r.steps > 12) continue;
+    const used = {};
+    r.trace.forEach(function (s) { used[s.i] = true; });
+    if (Object.keys(used).length < 2) continue;
+    if (r.word === "" || r.word.length > 10 || r.word === word) continue;
+    best = {scheme: scheme, word: word, r: r};
+  }
+  if (!best) {
+    /* не случается: отбор проходит примерно каждая двадцатая схема */
+    const s = [["ab", "b", false], ["c", "a", false]];
+    best = {scheme: s, word: "cabca", r: mkRun(s, "cabca", 30)};
+  }
+  const r = best.r;
+  const ask = kind === "word"
+    ? "Какое слово получится после остановки алгорифма?"
+    : kind === "count"
+      ? "Сколько шагов (подстановок) сделает алгорифм до остановки?"
+      : "Какая по номеру формула будет применена последней?";
+  const answer = kind === "word" ? r.word : kind === "count" ? String(r.steps)
+    : String(r.trace[r.trace.length - 1].i);
+  const stopWhy = r.why === "final"
+    ? "сработала заключительная формула " + r.trace[r.trace.length - 1].i
+    : "ни одна формула больше не подходит";
+  return {
+    type: 2, kind: kind, word: kind === "word", answer: answer,
+    question: "Нормальный алгорифм Маркова задан схемой:" + gScheme(best.scheme) +
+      "<p class=\"rules\">" + M_RULES + "</p>" +
+      "<p>Алгорифм применяют к слову " + gWord(best.word) + ". " + ask + "</p>" +
+      (kind === "word" ? "<p>В ответе запишите слово — латинские буквы подряд.</p>"
+                       : "<p>В ответе укажите число.</p>"),
+    explain: "Шаги (номер формулы и слово): " + gTrace(r.trace, 20) + ". Остановка: " +
+      stopWhy + ". Получилось " + gWord(r.word) + " за " + r.steps + " " +
+      tPl(r.steps, "шаг", "шага", "шагов") + ". Ответ: " + answer + "."
+  };
+}
+
+/* 3. Стёртая команда Поста: машина из библиотеки, одна команда, которая
+   выполняется на проверочных рядах, стёрта; четыре варианта, верен ровно
+   один — остальные портят ленту хотя бы на одном ряду, вызывают аварию или
+   вешают машину. Похожесть вариантов: та же команда с другим переходом,
+   другая команда с тем же переходом, «?» с переставленными переходами. */
+function tPostHole(rng) {
+  const id = tPick(rng, Object.keys(P_FN));
+  const fn = P_FN[id];
+  const prog = pP(fn.rows);
+  const k = prog.length;
+  const used = {};
+  for (const w of pTests(fn))
+    for (const s of pRun(prog, w, 0, P_LIMIT).trace) if (s.c.op !== "!") used[s.k] = true;
+  const holes = Object.keys(used).map(Number);
+  let hole = null, wrong = [];
+  for (let t = 0; t < 50 && !hole; t++) {
+    const h = tPick(rng, holes);
+    const right = prog[h - 1];
+    const cands = [];
+    const add = function (c) {
+      if (pCmd(c) === pCmd(right)) return;
+      if (cands.some(function (x) { return pCmd(x.cmd) === pCmd(c); })) return;
+      const p2 = prog.slice();
+      p2[h - 1] = c;
+      const f = pFail(fn, p2);
+      if (f) cands.push({cmd: c, fail: f});
+    };
+    if (right.op === "?") {
+      add({op: "?", to: right.to2, to2: right.to});
+      for (let j = 1; j <= k; j++) {
+        add({op: "?", to: j, to2: right.to2});
+        add({op: "?", to: right.to, to2: j});
+      }
+      for (const op of ["R", "L"]) { add({op: op, to: right.to}); add({op: op, to: right.to2}); }
+    } else {
+      for (let j = 1; j <= k; j++) add({op: right.op, to: j});
+      for (const op of ["V", "X", "R", "L"]) if (op !== right.op) add({op: op, to: right.to});
+    }
+    if (cands.length >= 3) { hole = h; wrong = tShuffle(rng, cands).slice(0, 3); }
+  }
+  const right = prog[hole - 1];
+  const opts = tShuffle(rng, [{cmd: right, fail: null}].concat(wrong));
+  const ans = opts.findIndex(function (o) { return !o.fail; }) + 1;
+  const ex = tPick(rng, pTests(fn).filter(function (w) { return w.length >= 3; }));
+  const exw = gWin(ex, [fn.f(ex)]);
+  const why = opts.map(function (o, i) {
+    return (i + 1) + ") «" + pCmd(o.cmd) + "» — " + (o.fail ? pFailText(o.fail) : "подходит");
+  });
+  return {
+    type: 3, kind: id, answer: String(ans),
+    question: "Машина Поста задумана так, что она <i>" + fn.desc + "</i>. Например: " +
+      exw[0] + " → " + exw[1] + " (▮ — метка, ▯ — пустая клетка; клетки те же). " +
+      "В начале каретка стоит над самой левой меткой" + (fn.pair ? " первого ряда" : " ряда") +
+      ", вокруг пусто; начинаем с команды 1. В программе одна команда стёрта (знак ★):" +
+      gPost(prog, hole) + "<p class=\"rules\">" + P_RULES + "</p>" +
+      "<p>Какая команда должна стоять на месте звёздочки?</p>" +
+      "<ol class=\"op\">" + opts.map(function (o) { return "<li>" + pCmd(o.cmd) + "</li>"; }).join("") +
+      "</ol><p>В ответе укажите номер варианта.</p>",
+    explain: "Подставляем каждый вариант и прогоняем машину: " + why.join("; ") +
+      ". Ответ: " + ans + "."
+  };
+}
+
+/* 4. Что делает алгорифм: схема из библиотеки и четыре описания из той же
+   группы. Слово для разбора — такое, на котором все четыре описания дают
+   разный результат. */
+function tMkWhat(rng) {
+  const kind = tPick(rng, ["letters", "unary", "binary"]);
+  const group = M_GROUPS[kind];
+  let pick = null, word = null;
+  for (let t = 0; t < 300 && !word; t++) {
+    pick = tShuffle(rng, group).slice(0, 4);
+    const fns = pick.map(function (id) { return M_FN[id]; });
+    const cands = tShuffle(rng, mTests(fns[0]).filter(function (w) { return w.length >= 3; }));
+    for (const w of cands) {
+      const res = fns.map(function (f) { return f.f(w); });
+      if (new Set(res).size === 4) { word = w; break; }
+    }
+  }
+  const id = pick[0];
+  const fn = M_FN[id];
+  const opts = tShuffle(rng, pick);
+  const ans = opts.indexOf(id) + 1;
+  const r = mkRun(fn.rules, word, M_LIMIT);
+  const what = kind === "unary"
+    ? "число n записано рядом из n единиц"
+    : "на входе непустое слово из " + (kind === "letters" ? "букв a и b" : "цифр 0 и 1");
+  const why = opts.map(function (o, i) {
+    return (i + 1) + ") " + (o === id ? "даёт " + gWord(M_FN[o].f(word)) + " — совпало"
+                                      : "дало бы " + gWord(M_FN[o].f(word)));
+  });
+  return {
+    type: 4, kind: kind, answer: String(ans),
+    question: "Нормальный алгорифм Маркова задан схемой:" + gScheme(fn.rules) +
+      "<p class=\"rules\">" + M_RULES + (/[*#]/.test(fn.rules.map(mkRule).join("")) ?
+        " Знаки * и # — служебные метки, во входном слове их нет." : "") + "</p>" +
+      "<p>Во входном слове " + what.replace(/^на входе /, "") + ". Что делает этот алгорифм?</p>" +
+      "<ol class=\"op\">" + opts.map(function (o) { return "<li>" + M_FN[o].desc + "</li>"; }).join("") +
+      "</ol><p>В ответе укажите номер варианта.</p>",
+    explain: "Прогоним алгорифм на слове " + gWord(word) + ": " + gTrace(r.trace, 12) +
+      " — получилось " + gWord(r.word) + ". Варианты: " + why.join("; ") +
+      ". Ответ: " + ans + "."
+  };
+}
+
+/* 5. Составить алгорифм Маркова. Ключа нет: схема выполняется на всех
+   проверочных словах. */
+function tMkWrite(rng) {
+  const kind = tPick(rng, ["letters", "unary", "binary"]);
+  const id = tPick(rng, M_WRITE[kind]);
+  const fn = M_FN[id];
+  const pool = mTests(fn).filter(function (w) { return w.length >= 3 && w.length <= 5; });
+  const ex = tPick(rng, pool);
+  const n = mTests(fn).length;
+  const what = fn.pair
+    ? "два числа записаны рядами единиц через знак +"
+    : fn.alpha === "1"
+      ? "число n записано рядом из n единиц"
+      : "на входе непустое слово из " + (fn.alpha === "ab" ? "букв a и b" : "цифр 0 и 1");
+  const range = fn.pair ? "на всех суммах вида 1+1 … 1111+1111"
+    : fn.alpha === "1" ? "на рядах из 1–7 единиц" : "на всех словах длиной от 1 до 4";
+  const sample = fn.rules.map(function (r) {
+    return mkSide(r[0]) + (r[2] ? " ->. " : " -> ") + mkSide(r[1]);
+  }).join("\n");
+  return {
+    type: 5, kind: kind, prog: true, fn: id, answer: sample,
+    question: "Составьте нормальный алгорифм Маркова, который <i>" + fn.desc + "</i>. " +
+      "Например: " + gWord(ex) + " → " + gWord(fn.f(ex)) + ". Во входном слове " +
+      what.replace(/^на входе /, "") + ". Можно вводить служебные знаки (например * или #) — " +
+      "в результате их остаться не должно." +
+      "<p>Пишите по одной формуле в строке, по порядку: <code>ba -&gt; ab</code> — обычная, " +
+      "<code>a -&gt;. b</code> — заключительная (точка после стрелки). Пустое слово — λ " +
+      "или ничего: <code>λ -&gt; *</code>, <code>* -&gt;. λ</code>. Комментарий — после //.</p>" +
+      "<p>Страница выполнит алгорифм " + range + " (" + n + " " +
+      tPl(n, "проверка", "проверки", "проверок") + ") и сравнит результат с тем, что " +
+      "должно получиться.</p>",
+    explain: "Алгорифм верен на всех проверочных словах. Одна из возможных схем " +
+      "(у вашей может быть другая):" + gScheme(fn.rules)
+  };
+}
+
+/* Разбор схемы ученика. Стрелка «->» или «→», заключительная — с точкой
+   после стрелки («->.», «→.», «→·»). Пустая сторона — λ, Λ или ничего.
+   Ошибки называются словами и с номером строки. */
+function mParse(raw) {
+  const lines = String(raw === undefined || raw === null ? "" : raw).split(/\r?\n/);
+  const scheme = [];
+  let finals = 0;
+  for (let k = 0; k < lines.length; k++) {
+    const s = lines[k].replace(/\/\/.*$/, "").trim();
+    if (!s) continue;
+    const at = "Строка " + (k + 1);
+    const m = s.match(/^(.*?)\s*(->|→|=>)\s*([.·])?\s*(.*)$/);
+    if (!m)
+      return {err: at + ": нет стрелки. Формула пишется так: ba -> ab (или a ->. b для заключительной)."};
+    const side = function (x, role) {
+      x = x.trim();
+      if (x === "λ" || x === "Λ") return {v: ""};
+      if (/\s/.test(x))
+        return {err: at + ": в " + role + " части пробел — слово пишется слитно."};
+      if (/λ|Λ/.test(x))
+        return {err: at + ": λ — это целое пустое слово, внутри другого слова его не пишут."};
+      if (/[а-яё]/i.test(x))
+        return {err: at + ": в " + role + " части русская буква — нужны латинские."};
+      if (/->|→/.test(x))
+        return {err: at + ": две стрелки в одной формуле."};
+      return {v: x};
+    };
+    const L = side(m[1], "левой");
+    if (L.err) return {err: L.err};
+    const R = side(m[4], "правой");
+    if (R.err) return {err: R.err};
+    const fin = !!m[3];
+    if (fin) finals++;
+    scheme.push([L.v, R.v, fin]);
+  }
+  if (!scheme.length) return {err: "Схема пустая."};
+  return {scheme: scheme};
+}
+
+function tVerdict(task, raw) {
+  const fn = M_FN[task.fn];
+  const p = mParse(raw);
+  if (p.err) return {ok: false, form: true, msg: p.err};
+  const f = mFail(fn, p.scheme);
+  if (f) {
+    const t = mFailText(f);
+    return {ok: false, msg: t.charAt(0).toUpperCase() + t.slice(1) + ".",
+            trace: gTrace(f.r.trace, 10)};
+  }
+  return {ok: true, n: mTests(fn).length};
+}
+
+/* ------------------------------------------------------------- сборка */
+
+function tMake(seed) {
+  const rng = tRng(seed || 1);
+  const order = tShuffle(rng, [0, 1, 2, 3, 4, 5]);
+  return order.map(function (type) { return tTask(type, rng); });
+}
+
+/* Сверка знак в знак. Прощаются только пробелы по краям — их не видно.
+   Схему не сверяют, а выполняют. */
+function tCheck(task, raw) {
+  if (task.prog) return tVerdict(task, raw).ok;
+  const s = String(raw === undefined || raw === null ? "" : raw).trim();
+  return s === task.answer;
+}
+
+/* Что не так с ФОРМОЙ ответа. null — форма в порядке, ошибка в сути. */
+function tHint(task, raw) {
+  if (task.prog) {
+    const v = tVerdict(task, raw);
+    return v.form ? v.msg : null;
+  }
+  const s = String(raw === undefined || raw === null ? "" : raw).trim();
+  if (!s) return "Ответ пустой.";
+  if (task.word) {
+    if (/^[abc]+$/.test(s)) return null;
+    if (/[а-яё]/i.test(s)) return "Слово — латинскими буквами a, b, c, без кириллицы.";
+    if (/^[abcABC]+$/.test(s)) return "Только строчные буквы — заглавная это другой символ.";
+    if (/[abc]/.test(s)) return "Только само слово: буквы подряд, без пробелов, кавычек и знаков.";
+    return "Ответ — слово из букв a, b, c.";
+  }
+  if (/^\d+$/.test(s)) return null;
+  if (/[А-Яа-яA-Za-z]/.test(s)) return "Ответ — целое число, без слов и единиц.";
+  if (/\d/.test(s)) return "Только число — без пробелов, запятых и знаков.";
+  return "Ответ — целое число.";
+}
+/* ==== /ЗАДАЧИ ==== */
+
+/* Форма сдачи ДЗ — одна на все темы. Ссылку разносит set_form_link.py. */
+const FORM = "https://docs.google.com/forms/d/e/1FAIpQLSfQyhaxcnzn4ZaKSe_ZMsluw7qRQnrw_80H6SfrnYB5EThUIA/viewform?usp=pp_url&entry.853601231=ФАМИЛИЯ&entry.1091635917=КЛАСС&entry.487188307=КОД";
+
+const ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+const EPOCH = Date.UTC(2026, 0, 1);
+const PREFIX = "PM";
+const SCALE = [[6, 5], [5, 4], [3, 3]];
+const TOTAL = SCALE[0][0];
+
+/* Тройку можно добрать, четвёрку и пятёрку — только заработать (Света,
+   06.10.2026, общее правило тренажёра и ДЗ). Ошибочная задача вопрос не
+   закрывает, «Новые числа» дают новую — без ограничений, до тройки дойдёт
+   любой, кто не бросит. Но ошибки ставят потолок: их можно столько, сколько
+   допускает та же отметка (на «5» — 6 − 6 = 0, на «4» — 6 − 5 = 1). Больше —
+   потолок тройка; хочешь выше — «Начать заново».
+   В своём алгорифме ошибкой считается только ПЕРВАЯ неудачная проверка
+   задачи: дальше идёт отладка той же схемы, а не новая попытка. Ошибка
+   формы (нет стрелки, русская буква) ошибкой не считается — это опечатка. */
+const LOWEST = SCALE[SCALE.length - 1];
+const ceilingFor = errs =>
+    (SCALE.find(s => errs <= TOTAL - s[0]) || LOWEST)[1];
+
+/* Формат кода прежний. В поле «закрыто» уходит число, уже упёртое в потолок:
+   разборщик (check_homework.py) ставит отметку по нему и ничего не знает о
+   потолке, а отметка выходит та же, что на странице. */
+function countedFor(n, errs){
+  const higher = SCALE.find(s => s[1] === ceilingFor(errs) + 1);
+  return higher ? Math.min(n, higher[0] - 1) : n;
+}
+
+/* Лесенка вместо одной цифры (Света, 06.10.2026): до тройки — не «двойка»,
+   а заполняющийся отрезок «на 3». Отрезки из SCALE: 3 клетки на тройку,
+   ещё 2 на четвёрку, ещё 1 на пятёрку. Отрезок выше потолка заштрихован. */
+function ladderHtml(n, cap){
+  let from = 0;
+  return SCALE.slice().reverse().map(([need, m]) => {
+    const size = need - from;
+    const got = Math.max(0, Math.min(size, n - from));
+    const capped = m > cap, reached = n >= need && !capped;
+    from = need;
+    const cells = Array.from({length: size},
+        (_, k) => '<i class="' + (k < got ? "f" : "") + '"></i>').join("");
+    return '<div class="seg' + (reached ? " got" : "") + (capped ? " capped" : "")
+         + '" style="flex:' + size + ' 1 0"><div class="cells">' + cells + '</div>'
+         + '<div class="lab">' + (capped ? "на " + m + " — потолок"
+                                         : (reached ? "✓ " : "") + "на " + m) + '</div></div>';
+  }).join("");
+}
+
+const bin = (v, w) => v.toString(2).padStart(w, "0");
+
+/* Семибитными частями строки: в нагрузке 33 бита, а побитовые операции в JS
+   32-битные — старший бит молча потерялся бы. */
+function checksum(bitstr){
+  let cs = 0x5B;
+  for (let i = 0; i < bitstr.length; i += 7)
+    cs ^= parseInt(bitstr.substr(i, 7).padEnd(7, "0"), 2);
+  return cs & 0x7F;
+}
+
+/* Фамилия в коде (Света, 26.09.2026). Фамилию понимаем как первое
+   слово строчными, ё -> е: «Синицына Мария» и «синицына» дают один
+   код. Из неё получаются 40 бит (FNV-1a и xorshift32), которыми код
+   перемешивается. Та же арифметика живёт в homework.py — surname_stream. */
+function surnameKey(s){
+  return String(s || "").toLowerCase().replace(/ё/g, "е")
+    .split(/[^а-яa-z-]+/).find(w => w.replace(/-/g, "")) || "";
+}
+
+function surnameStream(fam){
+  const s = surnameKey(fam);
+  if (!s) return "0".repeat(40);
+  let h = 0x811C9DC5;
+  for (const ch of s){
+    h ^= ch.charCodeAt(0);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  const step = x => { x ^= x << 13; x ^= x >>> 17; x ^= x << 5; return x >>> 0; };
+  let x = h || 0x9E3779B9;
+  for (let i = 0; i < 4; i++) x = step(x);
+  const w1 = x = step(x), w2 = step(x);
+  return (bin(w1, 32) + bin(w2, 32)).slice(0, 40);
+}
+
+function makeCode(st, fam){
+  const day = Math.max(0, Math.min(2047, Math.floor(
+      (Date.now() - EPOCH) / 86400000)));
+  const payload = bin(day, 11) + bin(Math.min(15, st.typesDone), 4) +
+                  bin(Math.min(15, st.cleanTypes), 4) +
+                  bin(Math.min(127, st.solved), 7) +
+                  bin(Math.min(127, st.wrong), 7);
+  const plain = payload + bin(checksum(payload), 7);
+  const key = surnameStream(fam);
+  let bitstr = "";
+  for (let i = 0; i < 40; i++) bitstr += plain[i] === key[i] ? "0" : "1";
+  let out = "";
+  for (let i = 0; i < 40; i += 5)
+    out += ALPHABET[parseInt(bitstr.substr(i, 5), 2)];
+  return PREFIX + "-" + out.slice(0, 4) + "-" + out.slice(4);
+}
+
+/* ---------------------------------------------------------- состояние
+   Все вопросы темы лежат на странице сразу — решать можно в любом
+   порядке, объём виден с первого взгляда. Вопрос закрывается одним верным
+   ответом и больше не спрашивается. Ошибся — разбор сразу, а вопрос
+   остаётся открытым: кнопка «Новые числа» на той же карточке даёт задачу с
+   другими данными. Код выдаётся, когда закрыто хотя бы MIN_TO_FINISH;
+   после кода карточки запираются. */
+const T_COUNT = T_TYPES.length;
+const MIN_TO_FINISH = 3;
+
+let st;
+
+function esc(s){ return String(s).replace(/[&<>]/g, c =>
+  ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+
+function markFor(n){
+  for (const [need, m] of SCALE) if (n >= need) return m;
+  return null;
+}
+
+function wordQ(n){
+  const a = n % 100, b = a % 10;
+  if (a > 4 && a < 21) return "вопросов";
+  if (b === 1) return "вопрос";
+  if (b > 1 && b < 5) return "вопроса";
+  return "вопросов";
+}
+
+function newRng(){ return tRng((Date.now() ^ (Math.random() * 1e9)) >>> 0); }
+
+function freshState(){
+  const s = {
+    done:   Array(T_COUNT).fill(false),
+    clean:  Array(T_COUNT).fill(true),
+    tried:  Array(T_COUNT).fill(false),
+    failed: Array(T_COUNT).fill(false),   /* схема этой задачи уже не прошла */
+    tasks:  Array(T_COUNT).fill(null),
+    solved: 0, wrong: 0, code: null
+  };
+  for (let i = 0; i < T_COUNT; i++) s.tasks[i] = tTask(i, newRng());
+  /* закрыто на самом деле */
+  Object.defineProperty(s, "closed",
+    {get(){ return s.done.filter(Boolean).length; }});
+  /* закрыто «для отметки и кода» — упёрто в потолок по ошибкам */
+  Object.defineProperty(s, "typesDone",
+    {get(){ return countedFor(s.closed, s.wrong); }});
+  Object.defineProperty(s, "cleanTypes",
+    {get(){ return s.done.filter((d, i) => d && s.clean[i]).length; }});
+  return s;
+}
+
+function paint(){
+  const box = document.getElementById("types");
+  box.innerHTML = "";
+  for (let i = 0; i < T_COUNT; i++) {
+    const el = document.createElement("span");
+    el.className = "chip" + (st.done[i] ? " done" : st.tried[i] ? " miss" : "");
+    el.textContent = (i + 1) + ". " + T_TYPES[i];
+    box.appendChild(el);
+  }
+  const cap = ceilingFor(st.wrong);
+  document.getElementById("ladder").innerHTML = ladderHtml(st.closed, cap);
+  /* «2» по ходу не показываем: до тройки — прочерк и лесенка */
+  const m = st.closed >= MIN_TO_FINISH ? markFor(st.typesDone) : null;
+  const sb = document.getElementById("scorebox");
+  sb.className = "score" + (m ? " m" + m : "");
+  document.getElementById("mark").textContent = m || "—";
+  document.getElementById("stats").textContent =
+    "Закрыто: " + st.closed + " из " + T_COUNT + " · ошибок: " + st.wrong +
+    (st.closed < MIN_TO_FINISH
+      ? " · до тройки осталось закрыть " + (MIN_TO_FINISH - st.closed) : "") +
+    (cap < SCALE[0][1]
+      ? " · выше «" + cap + "» в этом заходе не получить"
+      : (st.wrong ? "" : " · без ошибок пока — пятёрка открыта"));
+  renderBottom();
+}
+
+function cardHtml(i){
+  const t = st.tasks[i];
+  return '<div class="card" id="task-' + i + '">' +
+      '<p class="tag">' + (i + 1) + ' &middot; ' + T_TYPES[i] + '</p>' +
+      '<div class="q">' + t.question + '</div>' +
+      '<div class="row">' +
+        (t.prog
+          ? '<textarea class="prog" id="ans-' + i + '" rows="7" autocomplete="off" ' +
+              'spellcheck="false" placeholder="ba -> ab"></textarea>'
+          : '<input type="text" id="ans-' + i + '" autocomplete="off" spellcheck="false" ' +
+              'placeholder="ответ"' + '>') +
+        '<button class="primary" id="go-' + i + '">' +
+          (t.prog ? 'Проверить алгорифм' : 'Ответить') + '</button>' +
+      '</div>' +
+      '<div class="verdict" id="v-' + i + '"></div>' +
+    '</div>';
+}
+
+function bindCard(i){
+  /* В поле схемы Enter — новая строка, а не «Ответить». */
+  if (!st.tasks[i].prog)
+    document.getElementById("ans-" + i).addEventListener("keydown", function(e){
+      if (e.key === "Enter") judge(i);
+    });
+  document.getElementById("go-" + i).addEventListener("click", function(){ judge(i); });
+}
+
+function renderAll(){
+  let html = "";
+  for (let i = 0; i < T_COUNT; i++) html += cardHtml(i);
+  document.getElementById("area").innerHTML = html;
+  for (let i = 0; i < T_COUNT; i++) bindCard(i);
+}
+
+function renderCard(i){
+  document.getElementById("task-" + i).outerHTML = cardHtml(i);
+  bindCard(i);
+}
+
+function capNote(){
+  const cap = ceilingFor(st.wrong);
+  return cap < SCALE[0][1] ? " Ошибок: " + st.wrong + " — выше «" + cap +
+    "» в этом заходе не получить." : "";
+}
+
+/* Схему не сверяют с ключом, а выполняют на проверочных словах. Не прошла —
+   поле остаётся открытым: страница называет слово, на котором алгорифм
+   ошибся, и схему правят тут же, без новой задачи. Ошибкой считается
+   только первая неудача; ошибка формы — не ошибка. */
+function judgeProg(i){
+  const t = st.tasks[i];
+  const raw = document.getElementById("ans-" + i).value;
+  const r = tVerdict(t, raw);
+  const card = document.getElementById("task-" + i);
+  const v = document.getElementById("v-" + i);
+  if (r.ok) {
+    st.tried[i] = true;
+    st.done[i] = true; st.solved++;
+    card.className = "card ok";
+    document.getElementById("ans-" + i).disabled = true;
+    document.getElementById("go-" + i).disabled = true;
+    v.className = "verdict ok";
+    v.innerHTML = "Алгорифм работает на всех " + r.n + " проверочных словах — вопрос закрыт.";
+    card.insertAdjacentHTML("beforeend", '<div class="why">' + t.explain + '</div>');
+  } else if (r.form) {
+    card.className = "card err";
+    v.className = "verdict err";
+    v.innerHTML = "Схема не прочитана. " + esc(r.msg) + " Это опечатка, а не ошибка — исправь и проверь.";
+  } else {
+    st.tried[i] = true;
+    if (!st.failed[i]) { st.failed[i] = true; st.wrong++; st.clean[i] = false; }
+    card.className = "card err";
+    v.className = "verdict err";
+    v.innerHTML = "Не работает. " + r.msg +
+      (r.trace ? " Шаги: " + r.trace + "." : "") +
+      " Исправь схему и проверь ещё раз — повторные проверки ошибкой не считаются." +
+      capNote();
+  }
+  paint();
+}
+
+function judge(i){
+  if (st.code) return;
+  const t = st.tasks[i];
+  if (t.prog) return judgeProg(i);
+  const raw = document.getElementById("ans-" + i).value;
+  if (!raw.trim()) return;
+  const ok = tCheck(t, raw);
+  st.tried[i] = true;
+  if (ok) { st.done[i] = true; st.solved++; }
+  else { st.wrong++; st.clean[i] = false; }
+
+  const card = document.getElementById("task-" + i);
+  card.className = "card " + (ok ? "ok" : "err");
+  document.getElementById("ans-" + i).disabled = true;
+  document.getElementById("go-" + i).disabled = true;
+  const v = document.getElementById("v-" + i);
+  v.className = "verdict " + (ok ? "ok" : "err");
+  v.innerHTML = ok
+    ? "Правильно — вопрос закрыт."
+    : "Ошибка. Твой ответ: <code>" + esc(raw) + "</code>, верный: <code>" +
+      esc(t.answer) + "</code>." +  (tHint(t, raw) ? " " + tHint(t, raw) : "") +
+      " Вопрос остался открытым: возьми ту же задачу с другими данными." + capNote();
+  card.insertAdjacentHTML("beforeend",
+    '<div class="why">' + t.explain + '</div>' +
+    (ok ? '' : '<div class="row"><button class="primary" id="re-' + i +
+               '">Новые числа</button></div>'));
+  if (!ok) document.getElementById("re-" + i).addEventListener("click", function(){
+    st.tasks[i] = tTask(i, newRng());
+    st.tried[i] = false;
+    renderCard(i);
+    document.getElementById("ans-" + i).focus();
+    paint();
+  });
+  paint();
+}
+
+function renderBottom(){
+  const box = document.getElementById("bottom");
+  if (st.code) return;
+  const done = st.closed, open = T_COUNT - done;
+  if (done < MIN_TO_FINISH) {
+    box.innerHTML = '<p class="stats">Код работы появится, когда будет закрыто ' +
+      'хотя бы ' + MIN_TO_FINISH + ' ' + wordQ(MIN_TO_FINISH) + ' (сейчас ' +
+      done + ').</p>';
+    return;
+  }
+  const m = markFor(st.typesDone);
+  const cap = ceilingFor(st.wrong);
+  const up = SCALE.filter(s => s[0] > done && s[1] <= cap).pop();
+  let msg;
+  if (up) {
+    msg = "Наработано на <b>" + m + "</b> (закрыто " + done + " из " + T_COUNT +
+      "). Можно забрать код сейчас, а можно дорешать ещё " + open + " " +
+      wordQ(open) + " и дойти до <b>" + up[1] + "</b>.";
+  } else if (open > 0) {
+    msg = "Наработано на <b>" + m + "</b> (закрыто " + done + " из " + T_COUNT +
+      "). С ошибками этого захода выше «" + cap + "» не подняться — забирай код " +
+      "или после него начни заново.";
+  } else {
+    msg = "Все " + T_COUNT + " " + wordQ(T_COUNT) + " закрыты — наработано на <b>" +
+      m + "</b>.";
+  }
+  box.innerHTML =
+    '<div class="card">' +
+      '<p>' + msg + '</p>' +
+      '<div class="row"><button class="primary" id="stop">Получить код' +
+        (open > 0 ? ' сейчас' : '') + '</button></div>' +
+    '</div>';
+  document.getElementById("stop").addEventListener("click", finish);
+}
+
+/* Код привязан к фамилии (Света, 26.09.2026): пока фамилия не вписана,
+   кода нет, а вписанная подмешивается в код. Фамилию и класс страница
+   помнит между заходами, но компьютер в классе общий — подставленную
+   фамилию просим проверить. Код считается по завершённой работе (fin):
+   «Начать заново» заменяет st. */
+let CURRENT_CODE = "";
+function finish(){
+  const fin = st;
+  st.code = "done";
+  document.querySelectorAll("#area input, #area textarea, #area button").forEach(function(el){
+    el.disabled = true;
+  });
+  const m = markFor(st.typesDone);
+  const cap = ceilingFor(st.wrong);
+  const open = [];
+  for (let i = 0; i < T_COUNT; i++) if (!st.done[i]) open.push(T_TYPES[i]);
+  document.getElementById("bottom").innerHTML =
+    '<div class="card">' +
+      '<h2>Работа завершена</h2>' +
+      '<p>Закрыто <b>' + st.closed + '</b> из ' + T_COUNT + ', ошибок ' + st.wrong +
+        (m ? ', это отметка <b>' + m + '</b>' : '') + '.' +
+        (cap < SCALE[0][1] ? ' Выше «' + cap + '» с таким числом ошибок не выйдет.' : '') +
+        (open.length ? ' Не закрыто: ' + open.join(", ") + '.' : '') +
+      '</p>' +
+      '<p>Код работы — его и надо сдать:</p>' +
+      '<div class="code" id="code"></div>' +
+      '<div class="note">Это код твоей работы. Он собран из твоей фамилии и ' +
+        'того, сколько и как ты решал: у соседа с тем же результатом код ' +
+        'другой. Поменяешь фамилию — поменяется и код. Переписывать его ' +
+        'руками не нужно: впиши фамилию и класс, и кнопка откроет форму с уже ' +
+        'подставленным кодом.</div>' +
+      '<div class="fields">' +
+        '<div><label for="fam">Фамилия и имя</label>' +
+          '<input type="text" id="fam" autocomplete="off"></div>' +
+        '<div><label for="kls">Класс</label>' +
+          '<input type="text" id="kls" autocomplete="off" value="11"></div>' +
+      '</div>' +
+      '<p class="stats" id="famhint"></p>' +
+      '<div class="row">' +
+        '<button id="send" class="primary">Сдать работу</button>' +
+        '<button id="again">Начать заново' +
+          (cap < SCALE[0][1] ? ' — ради «' + (cap + 1) + '» и выше' : '') + '</button>' +
+      '</div>' +
+      '<p class="stats" id="sendnote"></p>' +
+      '<p class="stats">«Начать заново» откроет все ' + T_COUNT + ' вопросов с ' +
+        'нуля и обнулит ошибки. Сдавать нужно тот код, который получен сейчас, ' +
+        'или код нового захода, если он лучше.</p>' +
+    '</div>';
+  document.getElementById("bottom").scrollIntoView({behavior: "smooth", block: "start"});
+  const fam = document.getElementById("fam");
+  const kls = document.getElementById("kls");
+  const box = document.getElementById("code");
+  const note = document.getElementById("sendnote");
+  const hint = document.getElementById("famhint");
+  let remembered = "";
+  try {
+    remembered = localStorage.getItem("hw-fam") || "";
+    fam.value = remembered;
+    kls.value = localStorage.getItem("hw-kls") || kls.value;
+  } catch (e) {}
+  const update = function(){
+    const f = fam.value.trim();
+    CURRENT_CODE = surnameKey(f) ? makeCode(fin, f) : "";
+    box.textContent = CURRENT_CODE || "впиши фамилию — появится код";
+    box.classList.toggle("wait", !CURRENT_CODE);
+    hint.textContent = remembered && f === remembered
+      ? "Фамилию подставил этот компьютер с прошлого раза — проверь, что она твоя."
+      : "";
+  };
+  fam.addEventListener("input", update);
+  update();
+  document.getElementById("send").addEventListener("click", function(){
+    if (!CURRENT_CODE) {
+      note.textContent = "Впиши фамилию — иначе непонятно, чья это работа.";
+      fam.focus();
+      return;
+    }
+    const k = kls.value.trim() || "11";
+    try {
+      localStorage.setItem("hw-fam", fam.value.trim());
+      localStorage.setItem("hw-kls", k);
+    } catch (e) {}
+    const url = FORM.replace("ФАМИЛИЯ", encodeURIComponent(fam.value.trim()))
+                    .replace("КЛАСС", encodeURIComponent(k))
+                    .replace("КОД", encodeURIComponent(CURRENT_CODE));
+    window.open(url, "_blank", "noopener");
+    note.innerHTML = "Форма открылась в новой вкладке. Работа сдана, только " +
+      "когда в форме нажата «Отправить». Вкладка не открылась — " +
+      '<a href="' + url + '" target="_blank" rel="noopener">открой форму ' +
+      "по этой ссылке</a>.";
+  });
+  document.getElementById("again").addEventListener("click", resetAll);
+  paint();
+}
+
+function resetAll(){
+  st = freshState();
+  renderAll();
+  paint();
+}
+
+resetAll();
+</script>
+<p class="ai-mark" style="margin:34px auto 0;max-width:860px;padding-top:12px;border-top:1px solid #d9dce6;color:#5c6070;font:13px/1.5 "Segoe UI",system-ui,sans-serif">Материалы подготовлены с использованием технологий искусственного интеллекта.</p>
+</body>
+</html>
