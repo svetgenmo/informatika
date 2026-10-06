@@ -45,9 +45,6 @@ h1{font-size:22px;margin:0 0 4px}
 .seg .lab{font-size:13px;color:var(--muted);text-align:center;
           margin-top:4px;font-weight:600;white-space:nowrap}
 .seg.got .lab{color:var(--ok)}
-.seg.capped .cells i{background:repeating-linear-gradient(45deg,
-     #e4e7ef 0 4px,#fff 4px 8px)}
-.seg.capped .lab{color:var(--err)}
 
 /* ---- панель оценки ---- */
 .panel{display:flex;align-items:center;gap:18px;flex-wrap:wrap;
@@ -147,12 +144,10 @@ th{background:#fff;color:var(--muted);font-size:14px}
 <p class="sub">Двенадцать вопросов к четырём книгам: по три к каждой.
    Ответ <b>не написан нигде на этой странице</b> — его надо найти в
    файле. Набор вопросов при каждом запуске новый.</p>
-<p class="sub"><b>Тройку можно добрать, четвёрку и пятёрку — только
-   заработать.</b> В оценку идут ответы с первой попытки. Ошибся —
-   страница подскажет, что искать, а внизу появится новый вопрос к той
-   же книге. Но ошибки ставят потолок: одна — ещё можно на 5, до трёх —
-   не выше 4, больше — не выше 3. Хочешь выше потолка — «Начать
-   заново».</p>
+<p class="sub">В оценку идут ответы <b>с первой попытки</b>. Ошибся —
+   страница подскажет, что искать, вопрос можно закрыть, но в оценку он
+   не пойдёт — зато внизу появится новый вопрос к той же книге. Так
+   можно добрать хоть до пятёрки.</p>
 
 <div class="files">
   <h2>Где взять файлы</h2>
@@ -232,36 +227,30 @@ TEXTS.forEach(t => { byId[t.id] = t; });
 const SCALE = [[11, 5], [9, 4], [7, 3]];
 const markFor = n => (SCALE.find(s => n >= s[0]) || [0, 2])[1];
 
-// Тройку можно добрать, четвёрку и пятёрку — только заработать (Света,
-// 06.10.2026). Ответ после подсказки вопрос закрывает, но в оценку не
-// идёт: вместо него к той же книге добавляется новый вопрос, и так без
-// ограничений — до тройки дойдёт любой, кто не бросит. Но ошибки ставят
-// потолок: их можно столько, сколько допускает та же отметка на обычной
-// проверочной (на «5» — 12 − 11 = 1, на «4» — 12 − 9 = 3). Больше —
-// потолок тройка; хочешь выше — «Начать заново».
+// Исправленный ответ не засчитывается — даётся новый (Света, 06.10.2026).
+// Ответ после подсказки вопрос закрывает, но в оценку не идёт: вместо
+// него к той же книге добавляется новый вопрос, без ограничений. Отметка
+// — по числу ответов с первой попытки, добирать можно до пятёрки:
+// потолок по ошибкам в тот же день снят — на новом материале чисто сразу не
+// выходит, и он отнимал «4» и «5» у тех, кто честно добирал.
 const LOWEST = SCALE[SCALE.length - 1];
-const ceilingFor = errs =>
-    (SCALE.find(s => errs <= TOTAL - s[0]) || LOWEST)[1];
-const finalMark = (n, errs) => Math.min(markFor(n), ceilingFor(errs));
 
 // Лесенка вместо одной цифры (Света, 06.10.2026): первая половина
 // работы — не «двойка, двойка», а заполняющийся отрезок «на 3». Отрезки
 // берутся из SCALE: 7 клеток на тройку, ещё 2 на четвёрку, ещё 2 на
-// пятёрку. Отрезок выше потолка по ошибкам заштрихован.
-function ladderHtml(n, cap){
+// пятёрку.
+function ladderHtml(n){
   let from = 0;
   return SCALE.slice().reverse().map(([need, m]) => {
     const size = need - from;
     const got = Math.max(0, Math.min(size, n - from));
-    const capped = m > cap, reached = n >= need && !capped;
+    const reached = n >= need;
     from = need;
     const cells = Array.from({length: size},
         (_, k) => `<i class="${k < got ? "f" : ""}"></i>`).join("");
-    return `<div class="seg${reached ? " got" : ""}${capped ? " capped" : ""}"
-                 style="flex:${size} 1 0">
+    return `<div class="seg${reached ? " got" : ""}" style="flex:${size} 1 0">
       <div class="cells">${cells}</div>
-      <div class="lab">${capped ? `на ${m} — потолок`
-                                : (reached ? "✓ " : "") + "на " + m}</div>
+      <div class="lab">${(reached ? "✓ " : "") + "на " + m}</div>
     </div>`;
   }).join("");
 }
@@ -491,21 +480,18 @@ function render(){
 
 function updatePanel(){
   const n = clean(), errs = mistakes();
-  const cap = ceilingFor(errs);
-  const mark = finalMark(n, errs);
+  const mark = markFor(n);
   // «2» не горит по ходу работы — только если всё закрыто, а тройки нет
   const shown = n >= LOWEST[0] || allAnswered();
   const el = document.getElementById("mark");
   el.textContent = shown ? mark : "—";
   el.className = shown ? "m" + mark : "";
-  document.getElementById("ladder").innerHTML = ladderHtml(n, cap);
+  document.getElementById("ladder").innerHTML = ladderHtml(n);
 
-  // следующая ступень — только та, что ещё под потолком
-  const nextUp = SCALE.filter(s => s[0] > n && s[1] <= cap).pop();
+  const nextUp = SCALE.filter(s => s[0] > n).pop();
   document.getElementById("stats").innerHTML =
       `в оценку (с первой попытки): <b>${n}</b> из ${TOTAL}<br>` +
       `ошибок: <b>${errs}</b>` +
-      (cap < SCALE[0][1] ? ` — выше ${cap} в этом круге не получить` : "") +
       (n < LOWEST[0] ? `<br>до тройки: <b>${n}</b> из ${LOWEST[0]}`
         : nextUp ? `<br>до оценки ${nextUp[1]} осталось найти: ` +
                    `<b>${nextUp[0] - n}</b>` : "");
@@ -513,8 +499,7 @@ function updatePanel(){
   const done = document.getElementById("done");
   done.innerHTML = allAnswered()
     ? `<div class="done">Все вопросы закрыты: с первой попытки ${n}
-       из ${TOTAL}, ошибок ${errs}. Оценка ${mark}.${cap < SCALE[0][1]
-         ? " Хочешь выше — «Начать заново»." : ""}</div>`
+       из ${TOTAL}, ошибок ${errs}. Оценка ${mark}.</div>`
     : "";
 }
 

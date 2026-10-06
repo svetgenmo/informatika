@@ -71,9 +71,6 @@ table.steps td.m{font-weight:700;color:var(--accent);font-size:17px}
 .seg .lab{font-size:13px;color:var(--muted);text-align:center;
           margin-top:4px;font-weight:600;white-space:nowrap}
 .seg.got .lab{color:var(--ok)}
-.seg.capped .cells i{background:repeating-linear-gradient(45deg,
-     #e4e7ef 0 4px,#fff 4px 8px)}
-.seg.capped .lab{color:var(--err)}
 
 /* --------------------------------------------------------- вопрос */
 .card{border:1px solid var(--line);border-radius:12px;padding:18px 20px;
@@ -186,7 +183,6 @@ table.hex th{background:#fff;color:var(--muted);font-size:14px}
     <dd>Столько, на сколько хочешь наработать:
       <table class="steps">
         <tr><th>найдено с первой попытки</th><th>7</th><th>9</th><th>11</th></tr>
-        <tr><th>ошибок можно</th><td>сколько угодно</td><td>до 3</td><td>1</td></tr>
         <tr><th>оценка</th><td class="m">3</td><td class="m">4</td>
             <td class="m">5</td></tr>
       </table>
@@ -194,9 +190,7 @@ table.hex th{background:#fff;color:var(--muted);font-size:14px}
     <dt>Если ошибся</dt>
     <dd>Страница подскажет, что искать в файле. Ответ после подсказки
         вопрос закрывает, но <b>в зачёт не идёт</b> — зато к той же книге
-        добавится новый вопрос. <b>Тройку можно добрать, четвёрку и
-        пятёрку — только заработать:</b> ошибки ставят потолок (строка
-        «ошибок можно» в таблице). Хочешь выше потолка — начни заново.</dd>
+        добавится новый вопрос. Так можно добрать хоть до пятёрки.</dd>
     <dt>Как сдать</dt>
     <dd>В конце страница выдаст <b>код работы</b>. Нажми «Сдать работу»,
         впиши фамилию и класс — форма откроется с уже вписанным кодом.</dd>
@@ -368,45 +362,30 @@ function fingerprint(s, salt){
    (До 17.09.2026 вопросы шли по одному с кнопкой «Отложить»; Света
    попросила показывать все сразу — виден объём и можно выбрать порядок.) */
 
-// Тройку можно добрать, четвёрку и пятёрку — только заработать (Света,
-// 06.10.2026). Ответ после подсказки вопрос закрывает, но в оценку не
-// идёт: вместо него к той же книге добавляется новый вопрос, и так без
-// ограничений — до тройки дойдёт любой, кто не бросит. Но ошибки ставят
-// потолок: их можно столько, сколько допускает та же отметка на обычной
-// проверочной (на «5» — 12 − 11 = 1, на «4» — 12 − 9 = 3). Больше —
-// потолок тройка; хочешь выше — «Начать заново».
+// Исправленный ответ не засчитывается — даётся новый (Света, 06.10.2026).
+// Ответ после подсказки вопрос закрывает, но в оценку не идёт: вместо
+// него к той же книге добавляется новый вопрос, без ограничений. Отметка
+// — по числу ответов с первой попытки, добирать можно до пятёрки:
+// потолок по ошибкам в тот же день снят — на новом материале чисто сразу не
+// выходит, и он отнимал «4» и «5» у тех, кто честно добирал.
 const LOWEST = SCALE[SCALE.length - 1];
-const ceilingFor = errs =>
-    (SCALE.find(s => errs <= TOTAL - s[0]) || LOWEST)[1];
-const finalMark = (n, errs) => Math.min(markFor(n), ceilingFor(errs));
-
-// Формат кода прежний. В поле «найдено» уходит число, которое уже
-// упирается в потолок: разборщик (check_homework.py) ставит отметку по
-// нему и ничего не знает о потолке, а отметка выходит та же, что на
-// странице.
-function countedFor(n, errs){
-  const higher = SCALE.find(s => s[1] === ceilingFor(errs) + 1);
-  return higher ? Math.min(n, higher[0] - 1) : n;
-}
 
 // Лесенка вместо одной цифры (Света, 06.10.2026): первая половина
 // работы — не «двойка, двойка», а заполняющийся отрезок «на 3». Отрезки
 // берутся из SCALE: 7 клеток на тройку, ещё 2 на четвёрку, ещё 2 на
-// пятёрку. Отрезок выше потолка по ошибкам заштрихован.
-function ladderHtml(n, cap){
+// пятёрку.
+function ladderHtml(n){
   let from = 0;
   return SCALE.slice().reverse().map(([need, m]) => {
     const size = need - from;
     const got = Math.max(0, Math.min(size, n - from));
-    const capped = m > cap, reached = n >= need && !capped;
+    const reached = n >= need;
     from = need;
     const cells = Array.from({length: size},
         (_, k) => `<i class="${k < got ? "f" : ""}"></i>`).join("");
-    return `<div class="seg${reached ? " got" : ""}${capped ? " capped" : ""}"
-                 style="flex:${size} 1 0">
+    return `<div class="seg${reached ? " got" : ""}" style="flex:${size} 1 0">
       <div class="cells">${cells}</div>
-      <div class="lab">${capped ? `на ${m} — потолок`
-                                : (reached ? "✓ " : "") + "на " + m}</div>
+      <div class="lab">${(reached ? "✓ " : "") + "на " + m}</div>
     </div>`;
   }).join("");
 }
@@ -425,10 +404,10 @@ const st = {
 const triesOf = q => st.attempts[q.id] || 0;
 const mistakes = () => Object.keys(st.attempts).length;
 const seen = new Set();   // что уже выпадало: новый заход берёт сперва невиданное
-// «Сделано» для отметки и кода — найдено с первой попытки и упёрто в
-// потолок по ошибкам
+// «Сделано» для отметки и кода — найдено с первой попытки. Формат кода
+// прежний: разборщик (check_homework.py) ставит отметку по этому числу.
 Object.defineProperty(st, "typesDone",
-  {get(){ return countedFor(Math.min(TOTAL, st.cleanTypes), mistakes()); }});
+  {get(){ return Math.min(TOTAL, st.cleanTypes); }});
 Object.defineProperty(st, "foundAll",
   {get(){ return Object.keys(st.done).length; }});
 Object.defineProperty(st, "cleanTypes",
@@ -546,7 +525,7 @@ function renderFiles(){
 function renderProgress(){
   const done = st.typesDone;
   document.getElementById("ladder").innerHTML =
-      ladderHtml(st.cleanTypes, ceilingFor(mistakes()));
+      ladderHtml(st.cleanTypes);
 
   const mark = markFor(done);
   const el = document.getElementById("mark");
@@ -567,16 +546,11 @@ function renderProgress(){
     if (b > 1 && b < 5) return "ответа";
     return "ответов";
   };
-  const cap = ceilingFor(mistakes());
-  // следующая ступень — только та, что ещё под потолком
-  const up = SCALE.filter(s => s[0] > done && s[1] <= cap).pop();
+  const up = SCALE.filter(s => s[0] > done).pop();
   const need = document.getElementById("need");
-  const errs = `<br>Ошибок: <b>${mistakes()}</b>` + (cap < SCALE[0][1]
-      ? ` — выше <b>${cap}</b> в этом заходе не получить. Хочешь выше —
-         <a href="#" id="restart">начни заново</a>.`
-      : (mistakes() ? ". Ещё одна — и пятёрка уйдёт." : "."));
-  if (!up && done >= MIN_TO_FINISH){
-    need.innerHTML = `Можно забирать код — это <b>${mark}</b>.`;
+  if (!up){
+    need.innerHTML = "Найдено всё, что нужно на пятёрку. " +
+                     "Забирай код и сдавай.";
   } else if (done >= MIN_TO_FINISH){
     need.innerHTML = `Можно остановиться прямо сейчас — это <b>${mark}</b>. `
         + `Найди ещё <b>${up[0] - done}</b> ${forms(up[0] - done)} — `
@@ -586,13 +560,6 @@ function renderProgress(){
     need.innerHTML = `До тройки: <b>${done}</b> из ${MIN_TO_FINISH}. `
         + `Найди ещё <b>${left}</b> ${forms(left)} — и будет код на <b>3</b>.`;
   }
-  need.innerHTML += errs;
-  const rs = document.getElementById("restart");
-  if (rs) rs.addEventListener("click", e => {
-    e.preventDefault();
-    if (confirm("Начать заново? Найденное в этом заходе пропадёт, "
-              + "вопросы будут новые.")) start();
-  });
 }
 
 function cardHtml(q, n, given){
@@ -734,14 +701,9 @@ function renderFinish(){
   renderProgress();
   const done = st.typesDone, mark = markFor(done);
   const all = done >= TOTAL;
-  const cap = ceilingFor(mistakes());
-  const up = SCALE.filter(s => s[0] > done && s[1] <= cap).pop();
+  const up = SCALE.filter(s => s[0] > done).pop();
 
-  const more = !up && cap < SCALE[0][1]
-    ? `<button id="more">Начать заново — за оценкой выше</button>
-       <span class="stats">код этой работы останется — сдать его можно
-             и сейчас</span>`
-    : !up
+  const more = !up
     ? `<button id="more">Взять другие вопросы</button>
        <span class="stats">оценку это уже не изменит,
              но перед ВПР полезно</span>`
@@ -751,7 +713,7 @@ function renderFinish(){
 
   document.getElementById("bottom").innerHTML = `
     <div class="finish">
-      <h2>${all ? "Готово — все двенадцать с первой попытки"
+      <h2>${all ? "Готово — двенадцать ответов в зачёт"
                 : `Готово — наработано на ${mark}`}</h2>
       <p class="stats">С первой попытки: <b>${st.cleanTypes}</b> из ${TOTAL}
          &middot; найдено с подсказкой: <b>${st.foundAll - st.cleanTypes}</b>
@@ -794,7 +756,7 @@ function renderFinish(){
   if (back) back.addEventListener("click", () => {
     // всё найдено — берём другой набор вопросов из банка; иначе просто
     // убираем итог, вопросы никуда не делись
-    if (all || !up) start();
+    if (all) start();
     else {
       document.getElementById("bottom").innerHTML = "";
       window.scrollTo({top: 0, behavior: "smooth"});
