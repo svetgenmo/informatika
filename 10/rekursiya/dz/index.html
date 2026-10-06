@@ -1,0 +1,1456 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Рекурсия — домашнее задание</title>
+<meta name="description" content="Домашнее задание 10 класса (углублённый) по рекурсии: значение рекурсивной функции, печать до и после вызова, сколько вызовов, функция по формуле (задание 16 ЕГЭ), контрпример к рекурсивной программе, вопросы про базу, шаг и стек. Тройку можно добрать, четвёрку и пятёрку — только заработать. Код работы для сдачи формой.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E10%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{margin:0;padding:20px 16px 60px;font:17px/1.55 "Segoe UI",system-ui,sans-serif}
+.wrap{max-width:820px;margin:0 auto}
+h1{font-size:23px;margin:0 0 4px}
+h2{font-size:18px;margin:0 0 10px}
+.sub{color:var(--muted);font-size:15px;margin:0 0 18px}
+code,pre{font-family:Consolas,"Cascadia Mono",monospace}
+pre{background:#1e2430;color:#e7ecf5;padding:13px 16px;border-radius:10px;
+    overflow-x:auto;font-size:15px;line-height:1.5;margin:10px 0}
+code{background:var(--card);border:1px solid var(--line);border-radius:5px;
+     padding:1px 5px;font-size:15px}
+pre code{background:none;border:0;padding:0;color:inherit;font-size:inherit}
+.intro{border:1px solid var(--line);border-radius:12px;background:var(--card);
+       padding:14px 18px;margin-bottom:18px}
+.intro dl{margin:0}
+.intro dt{font-weight:700;margin-top:10px}
+.intro dt:first-child{margin-top:0}
+.intro dd{margin:2px 0 0}
+.progress{border:2px solid var(--accent);border-radius:12px;padding:12px 16px;
+          background:#fff;margin-bottom:18px}
+.ptop{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.ptop h2{margin:0}
+.sp{flex:1 1 auto}
+.score{display:flex;align-items:baseline;gap:10px;color:var(--muted);font-size:15px}
+.score b{font:700 34px/1 "Segoe UI",system-ui,sans-serif;color:var(--ink);
+         min-width:40px;text-align:center;border:2px solid var(--line);
+         border-radius:8px;padding:2px 8px}
+.m5 b{color:var(--ok);border-color:var(--ok-line)}
+.m4 b{color:var(--accent);border-color:#a9c6e8}
+.m3 b{color:#8a5a00;border-color:var(--hi-line)}
+.ladder{display:flex;gap:10px;flex:1 1 100%;margin-top:4px}
+.seg{min-width:0}
+.cells{display:flex;gap:3px}
+.cells i{flex:1 1 0;height:14px;border-radius:4px;background:#e4e7ef}
+.cells i.f{background:var(--accent)}
+.seg.got .cells i{background:var(--ok)}
+.seg .lab{font-size:13px;color:var(--muted);text-align:center;margin-top:2px}
+.seg.got .lab{color:var(--ok)}
+.seg.capped .cells i{background:repeating-linear-gradient(45deg,
+  #f3d3d0 0 4px,#fdecea 4px 8px)}
+.seg.capped .lab{color:var(--err)}
+.types{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);border-radius:20px;padding:4px 12px;
+      font-size:14px;color:var(--muted);background:var(--card)}
+.chip.done{border-color:var(--ok-line);background:var(--ok-bg);color:var(--ok);
+           font-weight:600}
+.chip.cur{border-color:var(--accent);color:var(--accent);font-weight:600}
+.card{border:1px solid var(--line);border-radius:12px;padding:16px 18px;
+      background:#fff;margin-bottom:14px}
+.card.ok{border-color:var(--ok-line);background:var(--ok-bg)}
+.card.err{border-color:var(--err-line);background:var(--err-bg)}
+.tag{font-size:13px;color:var(--muted);margin:0 0 6px}
+.inp{font-size:15px;color:var(--muted);margin:4px 0}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px}
+input[type=text]{font:16px/1 Consolas,monospace;padding:10px 12px;border-radius:8px;
+                 border:1px solid var(--line);width:100%;max-width:340px}
+button{font:600 15px/1 inherit;padding:11px 16px;border-radius:9px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);color:var(--muted)}
+.verdict{margin-top:10px;font-size:15.5px}
+.verdict.ok{color:var(--ok)}
+.verdict.err{color:var(--err)}
+.note{border:1px solid var(--hi-line);background:var(--hi-bg);border-radius:10px;
+      padding:11px 15px;margin:12px 0;font-size:15.5px}
+.code.wait{font-size:18px;letter-spacing:0;color:#888}
+.code{font:700 26px/1.2 Consolas,monospace;letter-spacing:.06em;
+      background:var(--card);border:2px dashed var(--accent);border-radius:12px;
+      padding:16px;text-align:center;margin:12px 0;user-select:all}
+.stats{color:var(--muted);font-size:14px}
+label{display:block;font-size:14px;color:var(--muted);margin-bottom:3px}
+.fields{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0}
+.fields div{flex:1 1 180px}
+.fields input{max-width:none}
+details{margin-top:10px;border:1px dashed var(--line);border-radius:9px;padding:8px 12px}
+summary{cursor:pointer;color:var(--accent);font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Домашнее задание — рекурсия</h1>
+<p class="sub">10 класс, углублённый уровень. Читаем рекурсивные программы: что
+вернёт функция, в каком порядке напечатаются числа, сколько будет вызовов, чему
+равна функция, заданная формулой (задание 16 ЕГЭ); ищем данные, на которых
+рекурсивная программа врёт; отвечаем на вопросы про базу, шаг и стек. Python не
+нужен.</p>
+
+<div class="intro">
+  <dl>
+    <dt>Что нужно сделать</dt>
+    <dd>Закрыть шесть типов задач — по одной верно решённой на каждый. Ошибся —
+        тип не закрыт, и следующей придёт новая задача того же типа: разбор только
+        что показан, примени его. Новых задач сколько угодно.</dd>
+    <dt>Тройку можно добрать, четвёрку и пятёрку — только заработать</dt>
+    <dd>Четыре закрытых типа — «3», сколько бы ошибок ни было по дороге. Пять
+        типов — «4», шесть — «5», но <b>ошибки ставят потолок</b>: без ошибок
+        можно дойти до «5», с одной — не выше «4», с двумя и больше — «3». Хочешь
+        выше потолка — кнопка «Начать заново», задачи будут новые. Меньше четырёх
+        типов — кода не будет: сдавать нечего.</dd>
+    <dt>Главный приём — выписать вызовы столбиком</dt>
+    <dd>Каждый следующий вызов — ступенькой правее: так видно, кто кого ждёт в
+        стеке. Дойди до базы, потом поднимайся и подставляй ответы снизу вверх.
+        Функцию, заданную формулой, считай таблицей от базы: F(1), F(2), F(3)…
+        Ответ — всё напечатанное через пробел или число, о котором спрашивают.
+        Считать в уме и на бумаге: на проверочной Python тоже не будет, а запустив
+        программу, ответ узнаешь, но не научишься.</dd>
+    <dt>Как сдать</dt>
+    <dd>В конце появится кнопка <b>«Сдать работу»</b>: впишешь фамилию и
+        класс, кнопка сама откроет форму с уже вписанным кодом. Переписывать
+        код руками не надо — именно на этом чаще всего и ошибаются.</dd>
+  </dl>
+</div>
+
+<div class="progress">
+  <div class="ptop">
+    <h2>Что осталось закрыть</h2>
+    <span class="sp"></span>
+    <div class="score" id="scorebox">
+      <span>наработано на</span><b id="mark">—</b>
+    </div>
+    <div class="ladder" id="ladder"></div>
+  </div>
+  <div class="types" id="types"></div>
+  <p class="stats" id="stats"></p>
+</div>
+
+<div id="area"></div>
+
+</div>
+
+<script>
+/* ==== ТИПЫ: вставлено gen.py, руками не править ==== */
+/* Рекурсия — источник правды для тренажёра практикума, ДЗ, проверочной и
+   слайдов-примеров. Вставляется скриптом gen.py --sync между маркерами.
+   Руками в html не править.
+
+   Шесть типов задач — уроки 23–24 плана («Рекурсия. Рекурсивные объекты
+   (фракталы). Рекурсивные процедуры и функции. Использование стека для
+   организации рекурсивных вызовов» и практическая работа):
+     0 «значение рекурсивной функции» — спуск до базы и подъём с ответом
+     1 «печать до и после вызова»     — print на спуске и на подъёме
+     2 «сколько вызовов»              — два-три вызова в теле: дерево
+                                        вызовов, как у фрактала
+     3 «функция по формуле»           — задание 16 ЕГЭ: функция задана
+                                        формулой, считаем снизу вверх
+     4 «где упадёт»                   — нет базы, шаг мимо базы, база
+                                        без return: RecursionError, TypeError
+     5 «глубина стека»                — сколько вызовов одновременно ждут
+                                        в стеке в самый глубокий момент
+
+   Ответ каждой задачи страница считает сама, а gen.py --selftest берёт
+   исполняемый текст задачи (src) КАК ЕСТЬ и исполняет настоящим Python под
+   sys.setprofile: вызовы (имя, аргументы, что вернула, глубина) обязаны
+   совпасть с meta.calls по порядку, печать — с meta.events (что и на какой
+   глубине), а ответ — с напечатанным, с числом вызовов (тип 2), с
+   наибольшей глубиной (тип 5) или с номером упавшей строки (тип 4).
+
+   Разбор — рисунком (правило Светы 26.09.2026): вызовы лесенкой, у каждого
+   ступенька — его глубина в стеке; печать — на той ступеньке, где она
+   случилась; у формулы — таблица значений снизу вверх.
+
+   Списков в коде задач нет: класс их не проходил. */
+
+const T_TYPES = [
+  'значение рекурсивной функции',
+  'печать до и после вызова',
+  'сколько вызовов',
+  'функция по формуле (ЕГЭ 16)',
+  'где упадёт',
+  'глубина стека'
+];
+const T_PER_TYPE = 1;      /* задач каждого типа в наборе: один проход, правило Светы 21.09.2026 */
+
+/* Одна строка-подпись к разбору: приём, а не пересказ решения. */
+const T_HINTS = [
+  'Спускайся до базы, выписывая вызовы столбиком; потом поднимайся и подставляй ответы снизу вверх.',
+  'print до вызова срабатывает на спуске, print после вызова — на подъёме, в обратном порядке.',
+  'Нарисуй дерево вызовов: у каждого вызова столько детей, сколько вызовов в теле. Считай все узлы, и листья тоже.',
+  'Считай снизу вверх: F(1), F(2), F(3)… — каждое следующее из уже посчитанных. Таблица короче дерева.',
+  'Ищи базу: есть ли она, доходит ли до неё шаг и что она возвращает.',
+  'Стек растёт на спуске: глубина — длина самой длинной цепочки «вызов внутри вызова», считая первый.'
+];
+
+function tRng(seed) {
+  let s = seed >>> 0;
+  const rng = function () {
+    s = (s * 1664525 + 1013904223) >>> 0;
+    return s / 4294967296;
+  };
+  rng.seed = seed;
+  return rng;
+}
+/* Циклы подбора не бесконечные: если для зерна задачи нет, лучше громкая
+   ошибка с номером зерна, чем node, крутящийся всю ночь (письмо health 01.10). */
+const T_TRIES = 10000;
+function tGiveUp(k, rng, where) {
+  if (k >= T_TRIES)
+    throw new Error(where + ': за ' + T_TRIES + ' попыток задача не подобралась, зерно ' + rng.seed);
+}
+function tRand(rng, a, b) { return a + Math.floor(rng() * (b - a + 1)); }
+function tPick(rng, arr) { return arr[tRand(rng, 0, arr.length - 1)]; }
+function tShuffle(rng, arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = tRand(rng, 0, i);
+    const tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+  }
+  return a;
+}
+
+/* --------------------------------------------- арифметика по правилам Python */
+function pyDiv(a, b) { return Math.floor(a / b); }                 /* a // b */
+function pyMod(a, b) { return a - b * Math.floor(a / b); }         /* a % b  */
+/* как Python печатает значение: True, False, None, число */
+function pyShow(v) {
+  if (v === null || v === undefined) return 'None';
+  if (v === true) return 'True';
+  if (v === false) return 'False';
+  return String(v);
+}
+function numbered(lines) {
+  return lines.map((l, i) => String(i + 1).padStart(2, ' ') + '  ' + l).join('\n');
+}
+/* запись вызова: имя, аргументы, что вернула (null — None), глубина в
+   стеке: 0 — позвали из основной программы, 1 — из первого вызова и т. д. */
+const call = (fn, args, ret, depth) => ({ fn, args, ret, depth: depth || 0 });
+
+/* Трассировщик: оборачивает функцию задачи так, что каждый вызов и каждая
+   печать пишутся по порядку, с глубиной. Это и есть стек: depth растёт на
+   спуске и убывает на подъёме. */
+function tTrace() {
+  const tr = { calls: [], events: [], out: [], depth: 0 };
+  tr.fn = (name, body) => function (...args) {
+    const rec = call(name, args.slice(), null, tr.depth);
+    tr.calls.push(rec);
+    tr.events.push({ k: 'call', c: rec });
+    tr.depth++;
+    const r = body(...args);
+    tr.depth--;
+    rec.ret = (r === undefined ? null : r);
+    return r;
+  };
+  tr.print = (v) => {
+    tr.out.push(pyShow(v));
+    tr.events.push({ k: 'print', v: pyShow(v), depth: tr.depth });
+  };
+  return tr;
+}
+const maxDepth = calls => calls.reduce((m, c) => Math.max(m, c.depth), 0) + 1;
+
+/* ------------------------------------- тип 0: значение рекурсивной функции */
+const VALS = [
+  { mk: rng => { const B = tRand(rng, 0, 1); return { B, A: tRand(rng, 1, 5), K: tRand(rng, 2, 9), m: B + tRand(rng, 3, 5) }; },
+    src: v => 'def f(n):\n    if n <= ' + v.B + ':\n        return ' + v.A + '\n    return f(n - 1) + ' + v.K,
+    run: (v, f) => n => (n <= v.B ? v.A : f(n - 1) + v.K),
+    cap: v => 'Спуск до f(' + v.B + ') = ' + v.A + ', на подъёме каждый вызов прибавляет ' + v.K + '.' },
+  { mk: rng => { const B = tRand(rng, 0, 1); return { B, A: tRand(rng, 1, 4), K: tRand(rng, 2, 3), m: B + tRand(rng, 3, 4) }; },
+    src: v => 'def f(n):\n    if n <= ' + v.B + ':\n        return ' + v.A + '\n    return f(n - 1) * ' + v.K,
+    run: (v, f) => n => (n <= v.B ? v.A : f(n - 1) * v.K),
+    cap: v => 'База f(' + v.B + ') = ' + v.A + '; на подъёме каждый вызов умножает ответ нижнего на ' + v.K + '.' },
+  { mk: rng => ({ A: tRand(rng, 1, 9), m: tRand(rng, 4, 7) }),
+    src: v => 'def f(n):\n    if n == 1:\n        return ' + v.A + '\n    return f(n - 1) + n',
+    run: (v, f) => n => (n === 1 ? v.A : f(n - 1) + n),
+    cap: v => 'На подъёме прибавляется своё n: ' + v.A + ' + 2 + 3 + … + ' + v.m + '.' },
+  { mk: rng => ({ m: tRand(rng, 3, 6) }),
+    src: v => 'def f(n):\n    if n <= 1:\n        return 1\n    return n * f(n - 1)',
+    run: (v, f) => n => (n <= 1 ? 1 : n * f(n - 1)),
+    cap: v => 'Это факториал: ' + v.m + ' · ' + (v.m - 1) + ' · … · 1. Умножения случаются на подъёме.' },
+  { mk: rng => ({ m: tRand(rng, 100, 99999) }),
+    src: v => 'def f(n):\n    if n < 10:\n        return n\n    return f(n // 10) + n % 10',
+    run: (v, f) => n => (n < 10 ? n : f(pyDiv(n, 10)) + n % 10),
+    cap: v => 'n // 10 отрезает последнюю цифру, n % 10 — сама эта цифра: функция складывает цифры числа.' },
+  { mk: rng => ({ m: tRand(rng, 9, 120) }),
+    src: v => 'def f(n):\n    if n == 0:\n        return 0\n    return f(n // 2) + n % 2',
+    run: (v, f) => n => (n === 0 ? 0 : f(pyDiv(n, 2)) + n % 2),
+    cap: v => 'n % 2 — последняя двоичная цифра, n // 2 — остальные: функция считает единицы в двоичной записи '
+            + v.m + ' = ' + v.m.toString(2) + '.' }
+];
+
+function m0(rng) {
+  const g = tPick(rng, VALS), v = g.mk(rng);
+  const tr = tTrace();
+  let f; f = tr.fn('f', g.run(v, (...a) => f(...a)));
+  tr.print(f(v.m));
+  const src = g.src(v) + '\nprint(f(' + v.m + '))';
+  return {
+    code: src, src,
+    meta: { calls: tr.calls, events: tr.events, kind: 'calls', check: 'print' },
+    question: 'Что напечатает программа?',
+    answer: tr.out.join(' '),
+    explain: g.cap(v)
+  };
+}
+
+/* ------------------------------------------ тип 1: печать до и после вызова */
+const PROCS = [
+  { mk: rng => { const K = tRand(rng, 1, 3); return { K, m: K * tRand(rng, 3, 5) - tRand(rng, 0, K - 1) }; },
+    src: v => 'def p(n):\n    if n > 0:\n        print(n)\n        p(n - ' + v.K + ')',
+    run: (v, p, pr) => n => { if (n > 0) { pr(n); p(n - v.K); } },
+    cap: () => 'print стоит ДО вызова: числа печатаются на спуске, сверху вниз.' },
+  { mk: rng => { const K = tRand(rng, 1, 3); return { K, m: K * tRand(rng, 3, 5) - tRand(rng, 0, K - 1) }; },
+    src: v => 'def p(n):\n    if n > 0:\n        p(n - ' + v.K + ')\n        print(n)',
+    run: (v, p, pr) => n => { if (n > 0) { p(n - v.K); pr(n); } },
+    cap: () => 'print стоит ПОСЛЕ вызова: первым печатает самый глубокий вызов — числа идут на подъёме, снизу вверх.' },
+  { mk: rng => ({ m: tRand(rng, 2, 4) }),
+    src: () => 'def p(n):\n    if n > 0:\n        print(n)\n        p(n - 1)\n        print(n)',
+    run: (v, p, pr) => n => { if (n > 0) { pr(n); p(n - 1); pr(n); } },
+    cap: () => 'Каждый вызов печатает дважды: на спуске и на подъёме. Получается зеркало.' },
+  { mk: rng => ({ m: tRand(rng, 5, 60) }),
+    src: () => 'def p(n):\n    if n > 0:\n        p(n // 2)\n        print(n % 2)',
+    run: (v, p, pr) => n => { if (n > 0) { p(pyDiv(n, 2)); pr(n % 2); } },
+    cap: v => 'Остатки от деления на 2 печатаются на подъёме — от первой цифры к последней: это двоичная запись '
+            + v.m + ' = ' + v.m.toString(2) + '. Стек сам развернул порядок.' },
+  { mk: rng => ({ m: tRand(rng, 2, 3) }),
+    src: () => 'def p(n):\n    if n > 0:\n        p(n - 1)\n        print(n)\n        p(n - 1)',
+    run: (v, p, pr) => n => { if (n > 0) { p(n - 1); pr(n); p(n - 1); } },
+    cap: () => 'Два вызова в теле: левая половина, своё число, правая половина. Узор как у линейки — '
+             + 'и как у фрактала: часть повторяет целое.' },
+  { mk: rng => ({ m: tRand(rng, 100, 9999) }),
+    src: () => 'def p(n):\n    if n > 0:\n        print(n % 10)\n        p(n // 10)',
+    run: (v, p, pr) => n => { if (n > 0) { pr(n % 10); p(pyDiv(n, 10)); } },
+    cap: () => 'Последняя цифра печатается до вызова, на спуске: цифры выходят задом наперёд.' },
+  { mk: rng => ({ m: tRand(rng, 100, 9999) }),
+    src: () => 'def p(n):\n    if n >= 10:\n        p(n // 10)\n    print(n % 10)',
+    run: (v, p, pr) => n => { if (n >= 10) p(pyDiv(n, 10)); pr(n % 10); },
+    cap: () => 'Сначала вызов для числа без последней цифры, потом печать своей цифры: цифры выходят по порядку, слева направо.' }
+];
+
+function m1(rng) {
+  const g = tPick(rng, PROCS), v = g.mk(rng);
+  const tr = tTrace();
+  let p; p = tr.fn('p', g.run(v, (...a) => p(...a), tr.print));
+  p(v.m);
+  const src = g.src(v) + '\np(' + v.m + ')';
+  return {
+    code: src, src,
+    meta: { calls: tr.calls, events: tr.events, kind: 'proc', check: 'print' },
+    question: 'Что напечатает программа? Числа через пробел, по порядку.',
+    answer: tr.out.join(' '),
+    explain: g.cap(v)
+  };
+}
+
+/* ------------------------------------------------- тип 2: сколько вызовов */
+const TREES = [
+  { name: 'f',
+    mk: rng => { const B = tRand(rng, 1, 2); return { B, m: B + tRand(rng, 2, 5) }; },
+    src: v => 'def f(n):\n    if n <= ' + v.B + ':\n        return 1\n    return f(n - 1) + f(n - 2)\nprint(f(' + v.m + '))',
+    run: (v, f) => n => (n <= v.B ? 1 : f(n - 1) + f(n - 2)),
+    cap: () => 'Каждый вызов выше базы порождает ещё два: f(n − 1) и f(n − 2). Число вызовов растёт почти так же быстро, как сам ответ.' },
+  { name: 'tree',
+    mk: rng => ({ m: tRand(rng, 2, 3) }),
+    src: v => 'def tree(n):\n    if n > 0:\n        tree(n - 1)\n        tree(n - 1)\ntree(' + v.m + ')',
+    run: (v, f) => n => { if (n > 0) { f(n - 1); f(n - 1); } },
+    cap: v => 'Как ветка дерева-фрактала: у каждой две ветки поменьше. Вызовов 1 + 2 + 4 + … — и вызовы с n = 0 тоже считаются, хоть и ничего не делают.' },
+  { name: 'draw',
+    mk: rng => ({ m: tRand(rng, 1, 2) }),
+    src: v => 'def draw(n):\n    if n > 0:\n        draw(n - 1)\n        draw(n - 1)\n        draw(n - 1)\ndraw(' + v.m + ')',
+    run: (v, f) => n => { if (n > 0) { f(n - 1); f(n - 1); f(n - 1); } },
+    cap: () => 'Три вызова в теле — как у треугольника Серпинского: каждый уровень втрое больше предыдущего. Вызовы с n = 0 тоже считаются.' },
+  { name: 'f',
+    mk: rng => ({ m: tRand(rng, 4, 8) }),
+    src: v => 'def f(n):\n    if n < 3:\n        return n\n    return f(n - 1) + f(n - 3)\nprint(f(' + v.m + '))',
+    run: (v, f) => n => (n < 3 ? n : f(n - 1) + f(n - 3)),
+    cap: () => 'Посчитай снизу: вызовов для f(n) = 1 + вызовы для f(n − 1) + вызовы для f(n − 3); у n < 3 — один.' }
+];
+
+function m2(rng) {
+  for (let k = 0; ; k++) {
+    tGiveUp(k, rng, 'сколько вызовов');
+    const g = tPick(rng, TREES), v = g.mk(rng);
+    const tr = tTrace();
+    let f; f = tr.fn(g.name, g.run(v, (...a) => f(...a)));
+    const r = f(v.m);
+    if (r !== undefined) tr.print(r);
+    const n = tr.calls.length;
+    if (n < 4 || n > 25) continue;
+    const src = g.src(v);
+    return {
+      code: src, src,
+      meta: { calls: tr.calls, events: tr.events, kind: 'tree', check: 'count', fn: g.name },
+      question: 'Сколько раз будет вызвана функция ' + g.name + '? Считай и самый первый вызов '
+              + g.name + '(' + v.m + ').',
+      answer: '' + n,
+      explain: g.cap(v)
+    };
+  }
+}
+
+/* --------------------------------- тип 3: функция по формуле (задание 16 ЕГЭ)
+   Так задание 16 и звучит: функция задана формулой по случаям, нужно её
+   значение. Формулу даём словами, как в ЕГЭ, а под ней — та же функция на
+   Python. */
+const FORMULAS = [
+  { mk: rng => ({ K: tRand(rng, 1, 3), m: tRand(rng, 5, 7) }),
+    def: v => 'F(n) = n при n ≤ 2;<br>F(n) = F(n − 1) + ' + (v.K === 1 ? '' : v.K + '·') + 'F(n − 2) при n > 2.',
+    src: v => 'def F(n):\n    if n <= 2:\n        return n\n    return F(n - 1) + ' + (v.K === 1 ? '' : v.K + ' * ') + 'F(n - 2)',
+    fns: (v, w) => ({ F: n => (n <= 2 ? n : w.F(n - 1) + v.K * w.F(n - 2)) }),
+    cap: () => 'Дерево вызовов ветвится, а таблица — нет: F(1), F(2), F(3)… каждое из двух предыдущих.' },
+  { mk: rng => ({ m: tRand(rng, 5, 8) }),
+    def: () => 'F(1) = 1;<br>F(n) = F(n − 1) + n, если n > 1 и n чётно;<br>F(n) = 2·F(n − 1), если n > 1 и n нечётно.',
+    src: () => 'def F(n):\n    if n == 1:\n        return 1\n    if n % 2 == 0:\n        return F(n - 1) + n\n    return 2 * F(n - 1)',
+    fns: (v, w) => ({ F: n => (n === 1 ? 1 : n % 2 === 0 ? w.F(n - 1) + n : 2 * w.F(n - 1)) }),
+    cap: () => 'Случай выбирается по чётности n: строим таблицу от F(1) вверх, на каждом шаге смотрим, какая строка формулы.' },
+  { mk: rng => ({ K: tRand(rng, 1, 4), m: tRand(rng, 4, 7) }),
+    def: v => 'F(1) = 1, G(1) = 1;<br>F(n) = G(n − 1) + ' + v.K + ', G(n) = 2·F(n − 1) при n > 1.',
+    src: v => 'def F(n):\n    if n == 1:\n        return 1\n    return G(n - 1) + ' + v.K
+            + '\ndef G(n):\n    if n == 1:\n        return 1\n    return 2 * F(n - 1)',
+    fns: (v, w) => ({ F: n => (n === 1 ? 1 : w.G(n - 1) + v.K), G: n => (n === 1 ? 1 : 2 * w.F(n - 1)) }),
+    cap: () => 'Две функции зовут друг друга. Таблица в две строки: F и G для n = 1, 2, 3… — каждое значение из соседней строки.' },
+  { mk: rng => ({ K: tRand(rng, 1, 3), m: tRand(rng, 11, 60) }),
+    def: v => 'F(1) = 1;<br>F(n) = F(n // 2) + 1, если n > 1 и n чётно;<br>F(n) = F(n − 1) + ' + v.K + ', если n > 1 и n нечётно.',
+    src: v => 'def F(n):\n    if n == 1:\n        return 1\n    if n % 2 == 0:\n        return F(n // 2) + 1\n    return F(n - 1) + ' + v.K,
+    fns: (v, w) => ({ F: n => (n === 1 ? 1 : n % 2 === 0 ? w.F(pyDiv(n, 2)) + 1 : w.F(n - 1) + v.K) }),
+    cap: () => 'Здесь таблица от 1 до n не нужна: выпиши цепочку вниз (чётное — пополам, нечётное — минус 1) и считай её снизу вверх.' }
+];
+
+function m3(rng) {
+  const g = tPick(rng, FORMULAS), v = g.mk(rng);
+  const tr = tTrace();
+  const w = {};
+  const raw = g.fns(v, w);
+  for (const name of Object.keys(raw)) w[name] = tr.fn(name, raw[name]);
+  tr.print(w.F(v.m));
+  const src = g.src(v) + '\nprint(F(' + v.m + '))';
+  return {
+    code: src, src,
+    meta: { calls: tr.calls, events: tr.events, kind: 'table', check: 'print' },
+    question: 'Функция задана формулой (так звучит задание 16 ЕГЭ):<br>' + g.def(v)
+            + '<br>Выше — та же функция на Python. Чему равно F(' + v.m + ')?',
+    answer: tr.out.join(' '),
+    explain: g.cap(v)
+  };
+}
+
+/* ------------------------------------------------------ тип 4: где упадёт */
+const CRASHES = ['ok', 'ok', 'skipok', 'skip', 'up', 'nobase', 'none', 'noreturn'];
+
+function m4(rng) {
+  const kind = tPick(rng, CRASHES);
+  let M = tRand(rng, 3, 9);
+  let lines, fail, why;
+  const step = ['def f(n):', '    if n == 0:', '        return 0'];
+  if (kind === 'ok') {
+    lines = step.concat(['    return f(n - 1) + n', 'print(f(' + M + '))']);
+    fail = 0;
+    why = 'База n == 0 есть, шаг n − 1 к ней ведёт — программа напечатает сумму 1 + 2 + … + ' + M + '.';
+  } else if (kind === 'skipok' || kind === 'skip') {
+    if ((M % 2 === 0) !== (kind === 'skipok')) M++;
+    lines = step.concat(['    return f(n - 2) + n', 'print(f(' + M + '))']);
+    fail = kind === 'skip' ? 4 : 0;
+    why = kind === 'skip'
+      ? 'Шаг через два: из нечётного ' + M + ' вызовы идут 1, −1, −3… и в ноль не попадают. Стек переполняется — RecursionError в строке 4.'
+      : 'Шаг через два, но ' + M + ' чётное: вызовы ' + M + ', ' + (M - 2) + ', … попадают ровно в 0 — всё законно.';
+  } else if (kind === 'up') {
+    lines = step.concat(['    return f(n + 1) + n', 'print(f(' + M + '))']);
+    fail = 4;
+    why = 'Шаг n + 1 уводит от базы: ' + M + ', ' + (M + 1) + ', … до нуля не дойдёт никогда. RecursionError в строке 4.';
+  } else if (kind === 'nobase') {
+    lines = ['def f(n):', '    return f(n - 1) + 1', 'print(f(' + M + '))'];
+    fail = 2;
+    why = 'Базы нет: функция зовёт себя без конца, пока стек не переполнится (в Python — около тысячи вызовов). RecursionError в строке 2.';
+  } else if (kind === 'none') {
+    lines = ['def f(n):', '    if n > 0:', '        return f(n - 1) + n', 'print(f(' + M + '))'];
+    fail = 3;
+    why = 'При n = 0 до return дело не доходит — f(0) возвращает None, и f(1) пытается сложить None + 1. TypeError в строке 3.';
+  } else {
+    lines = step.concat(['    f(n - 1) + n', 'print(f(' + M + '))']);
+    fail = 4;
+    why = 'В строке 4 забыт return: f(1) считает 0 + 1 и выбрасывает результат — возвращает None. '
+        + 'Тогда f(2) пытается сложить None + 2: TypeError в строке 4.';
+  }
+  const src = lines.join('\n');
+  return {
+    code: numbered(lines), src,
+    meta: { fail, kind: 'crash', check: 'crash', line: fail ? lines[fail - 1].trim() : '' },
+    question: 'Какая строка упадёт с ошибкой? Ответ — номер строки; если программа '
+            + 'отработает целиком, ответ 0.',
+    answer: '' + fail,
+    explain: why
+  };
+}
+
+/* -------------------------------------------------- тип 5: глубина стека */
+const DEPTHS = [
+  { mk: rng => { const B = tRand(rng, 0, 1); return { B, m: B + tRand(rng, 3, 8) }; },
+    src: v => 'def f(n):\n    if n <= ' + v.B + ':\n        return 1\n    return f(n - 1) + 1',
+    run: (v, f) => n => (n <= v.B ? 1 : f(n - 1) + 1),
+    cap: v => 'Цепочка ' + v.m + ' → ' + (v.m - 1) + ' → … → ' + v.B + ': пока не дошли до базы, ни один вызов не закончился — все ждут в стеке.' },
+  { mk: rng => { const S = tRand(rng, 2, 3); return { S, m: tRand(rng, 7, 16) }; },
+    src: v => 'def f(n):\n    if n <= 0:\n        return 0\n    return f(n - ' + v.S + ') + n',
+    run: (v, f) => n => (n <= 0 ? 0 : f(n - v.S) + n),
+    cap: v => 'Шаг ' + v.S + ': вызовы ' + v.m + ', ' + (v.m - v.S) + ', … до первого n ≤ 0 — их и считаем, вместе с последним.' },
+  { mk: rng => ({ m: tRand(rng, 5, 200) }),
+    src: () => 'def f(n):\n    if n == 0:\n        return 0\n    return f(n // 2) + 1',
+    run: (v, f) => n => (n === 0 ? 0 : f(pyDiv(n, 2)) + 1),
+    cap: v => 'Деление пополам: в двоичной записи ' + v.m + ' = ' + v.m.toString(2) + ' цифр ' + v.m.toString(2).length
+            + ', и ещё один вызов — f(0).' },
+  { mk: rng => ({ m: tRand(rng, 10, 999999) }),
+    src: () => 'def f(n):\n    if n < 10:\n        return n\n    return f(n // 10) + n % 10',
+    run: (v, f) => n => (n < 10 ? n : f(pyDiv(n, 10)) + n % 10),
+    cap: v => 'Каждый вызов отрезает одну цифру; последний получает однозначное число. Глубина — число цифр: ' + String(v.m).length + '.' },
+  { mk: rng => ({ m: tRand(rng, 4, 6) }),
+    src: () => 'def f(n):\n    if n <= 1:\n        return n\n    return f(n - 1) + f(n - 2)',
+    run: (v, f) => n => (n <= 1 ? n : f(n - 1) + f(n - 2)),
+    cap: v => 'Вызовов много, но одновременно в стеке — только одна цепочка. Самая длинная идёт по n − 1: '
+            + v.m + ' → ' + (v.m - 1) + ' → … → 1.' }
+];
+
+function m5(rng) {
+  const g = tPick(rng, DEPTHS), v = g.mk(rng);
+  const tr = tTrace();
+  let f; f = tr.fn('f', g.run(v, (...a) => f(...a)));
+  tr.print(f(v.m));
+  const src = g.src(v) + '\nprint(f(' + v.m + '))';
+  return {
+    code: src, src,
+    meta: { calls: tr.calls, events: tr.events, kind: 'depth', check: 'depth' },
+    question: 'Сколько вызовов f одновременно окажутся в стеке в самый глубокий момент '
+            + 'работы программы? Считай и первый вызов f(' + v.m + ').',
+    answer: '' + maxDepth(tr.calls),
+    explain: g.cap(v)
+  };
+}
+
+const T_MAKERS = [m0, m1, m2, m3, m4, m5];
+
+/* --------------------------------------------------------------- задачи */
+function tTask(type, rng) {
+  const m = T_MAKERS[type](rng);
+  const t = { type, code: m.code, src: m.src, answer: m.answer, explain: m.explain,
+              question: m.question || 'Что напечатает программа?' };
+  if (m.meta !== undefined) t.meta = m.meta;
+  return t;
+}
+
+/* Сверка ответа. Пробелы схлопываем, запятые между числами прощаем: «4, 17»
+   и «4 17» — одно и то же. Минус можно набрать и длинным «−». True, False и
+   None — как их печатает Python, с большой буквы. */
+function tNorm(s) {
+  return String(s).replace(/−/g, '-').replace(/[,;]/g, ' ')
+      .replace(/(\d)[.)](?=\s|$)/g, '$1')
+      .replace(/\s+/g, ' ').trim();
+}
+function tCheck(task, raw) {
+  return tNorm(raw) === tNorm(task.answer);
+}
+
+/* ================================================= разбор рисунком
+   Всё на инлайновых стилях: одна и та же картинка встаёт в практикум, ДЗ,
+   проверочную и на слайд, а стили у страниц разные. */
+const T_CAP = s => '<div style="font:700 12px/1.2 Segoe UI,system-ui,sans-serif;'
+    + 'letter-spacing:.08em;text-transform:uppercase;color:#5c6070;margin:10px 0 4px">'
+    + s + '</div>';
+const tEsc = s => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+
+/* плитка: значение в рамке; ok — зелёная, bad — красная, иначе нейтральная */
+function tTile(txt, how) {
+  const col = how === 'ok' ? ['#e6f5ec', '#137a41'] : how === 'bad' ? ['#fdecea', '#b3261e']
+            : how === 'muted' ? ['#f6f7fb', '#9aa0b0'] : how === 'hi' ? ['#fff4e2', '#8a4b00']
+            : ['#eaf1fa', '#1f5fa8'];
+  return '<span style="display:inline-block;min-width:34px;text-align:center;padding:4px 10px;'
+       + 'margin:2px 4px 2px 0;border:2px solid ' + col[1] + ';border-radius:8px;background:'
+       + col[0] + ';color:' + col[1] + ';font:700 18px/1.2 Consolas,monospace">' + tEsc(txt) + '</span>';
+}
+function tTiles(tokens, marks) {
+  return '<div>' + tokens.map((x, i) => tTile(x, marks ? marks[i] : '')).join('') + '</div>';
+}
+
+/* Ступенька лесенки: глубина в стеке — отступ. small — для больших деревьев. */
+const T_STEP = 26, T_STEP_SMALL = 18;
+function tIndent(depth, small) {
+  return (small ? T_STEP_SMALL : T_STEP) * Math.min(depth, 12);
+}
+
+/* Строка «вызов → что вернул»: вызов моноширинным, результат плиткой.
+   hi — подсветить (самый глубокий вызов). */
+function tCallRow(c, small, hi, noRet) {
+  const ret = c.ret === null
+    ? '<span style="color:#9aa0b0;font-size:14px">ничего не вернула</span>'
+    : tTile(pyShow(c.ret), hi ? 'hi' : '');
+  const fs = small ? 13 : (c.depth ? 15 : 17);
+  return '<div style="display:flex;align-items:center;gap:8px;margin:' + (small ? 1 : 3) + 'px 0 '
+       + (small ? 1 : 3) + 'px ' + tIndent(c.depth, small) + 'px">'
+       + (c.depth ? '<span style="color:#9aa0b0;font:700 ' + (small ? 13 : 16) + 'px Consolas,monospace">└</span>' : '')
+       + '<code style="font:600 ' + fs + 'px/1.2 Consolas,monospace;background:'
+       + (hi ? '#8a4b00' : c.depth ? '#3a4254' : '#1e2430') + ';color:#e7ecf5;'
+       + 'border-radius:7px;padding:' + (small ? '2px 7px' : '5px 10px') + '">'
+       + tEsc(c.fn + '(' + c.args.join(', ') + ')')
+       + '</code>' + (noRet || (small && c.ret === null) ? ''
+         : '<span style="font-size:' + (small ? 15 : 20) + 'px;color:#5c6070">→</span>' + ret) + '</div>';
+}
+
+/* Печать на той ступеньке, где она случилась. */
+function tPrintRow(e) {
+  return '<div style="display:flex;align-items:center;gap:8px;margin:3px 0 3px '
+       + tIndent(e.depth) + 'px"><span style="color:#137a41;font:700 13px/1 Segoe UI,'
+       + 'system-ui,sans-serif;letter-spacing:.06em">ПЕЧАТЬ</span>' + tTile(e.v, 'ok') + '</div>';
+}
+
+/* Таблица значений снизу вверх: по строке на функцию, столбцы — n. */
+function tTable(t) {
+  const seen = {};
+  for (const c of t.meta.calls) {
+    seen[c.fn] = seen[c.fn] || {};
+    seen[c.fn][c.args[0]] = c.ret;
+  }
+  const names = Object.keys(seen).sort();
+  const ns = [...new Set(t.meta.calls.map(c => c.args[0]))].sort((a, b) => a - b);
+  const cell = 'border:1px solid #d9dce6;padding:4px 9px;text-align:center;font:600 15px Consolas,monospace';
+  let h = '<div style="overflow-x:auto"><table style="border-collapse:collapse;margin:4px 0">'
+        + '<tr><th style="' + cell + ';background:#f6f7fb">n</th>'
+        + ns.map(n => '<th style="' + cell + ';background:#f6f7fb">' + n + '</th>').join('') + '</tr>';
+  for (const nm of names)
+    h += '<tr><th style="' + cell + ';background:#f6f7fb">' + nm + '(n)</th>'
+       + ns.map(n => '<td style="' + cell + ';color:#1f5fa8">'
+                   + (n in seen[nm] ? pyShow(seen[nm][n]) : '') + '</td>').join('') + '</tr>';
+  return h + '</table></div>';
+}
+
+/* noKey — без эталона: на слайде эталон раскрывается отдельным шагом. */
+function tSolution(t, noKey) {
+  let pic;
+  const m = t.meta;
+  if (m.kind === 'crash') {
+    pic = T_CAP('где падает')
+        + (m.fail
+          ? tTile('строка ' + m.fail, 'bad') + ' <code style="font:600 16px Consolas,monospace">'
+            + tEsc(m.line) + '</code>'
+          : tTile('0', 'ok') + ' <span style="color:#137a41;font-weight:600">отработает целиком</span>');
+  } else if (m.kind === 'proc') {
+    pic = T_CAP('вызовы и печать по времени; ступенька — глубина в стеке')
+        + m.events.map(e => (e.k === 'call' ? tCallRow(e.c, false, false, true) : tPrintRow(e))).join('');
+  } else if (m.kind === 'tree') {
+    pic = T_CAP('дерево вызовов: у каждого вызова — его дети ступенькой правее')
+        + m.calls.map(c => tCallRow(c, true)).join('')
+        + '<div style="margin-top:6px">всего вызовов ' + tTile(m.calls.length, 'hi') + '</div>';
+  } else if (m.kind === 'table') {
+    pic = T_CAP('таблица снизу вверх: каждое значение — из уже посчитанных') + tTable(t);
+  } else if (m.kind === 'depth') {
+    const d = maxDepth(m.calls) - 1;
+    const small = m.calls.length > 12;
+    pic = T_CAP('вызовы лесенкой: ступенька — глубина в стеке')
+        + m.calls.map(c => tCallRow(c, small, c.depth === d)).join('')
+        + '<div style="margin-top:6px">самая глубокая ступенька — ' + tTile(d + 1, 'hi')
+        + ' вызовов в стеке одновременно</div>';
+  } else {
+    pic = T_CAP('спуск до базы и подъём: ступенька — глубина в стеке')
+        + m.calls.map(c => tCallRow(c, m.calls.length > 12)).join('');
+  }
+  return pic + '<div style="margin:6px 0 0;color:#5c6070;font-size:15px">' + tEsc(t.explain) + '</div>'
+       + (noKey ? '' : tKey(t));
+}
+function tKey(t) { return T_CAP('эталон') + tTiles(tNorm(t.answer).split(' ')); }
+
+/* Чужой ответ против эталона: по местам, зелёное совпало, красное — нет.
+   Лишнее — красным, недостающее — пустой красной плиткой. */
+function tCompare(t, given) {
+  const want = tNorm(t.answer).split(' ');
+  const got = tNorm(given).split(' ').filter(x => x !== '');
+  if (!got.length) return '';
+  const n = Math.max(want.length, got.length);
+  const toks = [], marks = [];
+  for (let i = 0; i < n; i++) {
+    toks.push(i < got.length ? got[i] : '?');
+    marks.push(i < got.length && got[i] === want[i] ? 'ok' : 'bad');
+  }
+  return T_CAP('твой ответ') + tTiles(toks, marks);
+}
+
+/* Набор для практикума: T_PER_TYPE кругов по всем типам, внутри круга типы
+   перемешаны — одинаковые не идут подряд. Круг один: тренажёр в части 1 —
+   разминка, время пары уходит на три программы. Второй круг — одной цифрой. */
+function tMake(seed) {
+  const rng = tRng(seed);
+  const out = [];
+  for (let round = 0; round < T_PER_TYPE; round++) {
+    const order = tShuffle(rng, [0, 1, 2, 3, 4, 5]);
+    for (let i = 0; i < order.length; i++) out.push(tTask(order[i], rng));
+  }
+  return out;
+}
+/* ==== /ТИПЫ ==== */
+
+/* ==== ЗАДАЧИ ДЗ: вставлено gen.py, руками не править ==== */
+/* Домашнее задание: что сдают после пары «Рекурсия».
+   Источник правды. Вставляется gen.py --sync в homework.html и test.html.
+
+   Четыре типа берутся из types.js (значение рекурсивной функции, печать до
+   и после вызова, сколько вызовов, функция по формуле), дальше два своих:
+     4 «найди контрпример» — рекурсивная программа, ошибка спрятана в БАЗЕ
+                             или в порядке проверок: число цифр нуля,
+                             степень двойки с базой не первой, шаг через два
+                             мимо нуля, база «0» у наибольшей цифры. Ключа
+                             нет: считаем верным и кривым способом и смотрим,
+                             разошлись ли.
+     5 «как это работает»  — вопрос с тремя вариантами: база и шаг, стек,
+                             RecursionError, печать на спуске и подъёме,
+                             фрактал, задание 16 ЕГЭ, Евклид.
+*/
+
+const HW_TYPES = [
+  'значение рекурсивной функции',
+  'печать до и после вызова',
+  'сколько вызовов',
+  'функция по формуле (ЕГЭ 16)',
+  'найди контрпример',
+  'как это работает'
+];
+/* тип ДЗ -> тип задачи из types.js */
+const HW_FROM_TRAINER = { 0: 0, 1: 1, 2: 2, 3: 3 };
+
+/* --------------------------------------------- тип 4: найди контрпример */
+
+const HW_BUGS = {
+  cntzero: {
+    title: 'число цифр',
+    spec: 'Программа читает целое n (от 0 до 1000000) и должна напечатать, сколько '
+        + 'цифр в его записи: у 507 — три, у 0 — одна.',
+    code: 'def cnt(n):\n    if n == 0:\n        return 0\n    return cnt(n // 10) + 1\n'
+        + 'n = int(input())\nprint(cnt(n))',
+    fields: 'одно целое число от 0 до 1000000',
+    hint: 'Шаг cnt(n // 10) + 1 верный. Посмотри на базу: что она отвечает и для какого '
+        + 'числа это неправда, если его подать с самого начала?',
+    why: 'База n == 0 возвращает 0 — на спуске это верно (у «пустого остатка» цифр нет), '
+       + 'но число 0, поданное с самого начала, записывается одной цифрой. Базу «n < 10 '
+       + '→ 1» такая ошибка не берёт. Проверяй рекурсию на самом маленьком входе.'
+  },
+  pow2order: {
+    title: 'степень двойки',
+    spec: 'Программа читает натуральное n (от 1 до 1000) и должна напечатать True, '
+        + 'если n — степень двойки (1, 2, 4, 8, …), и False, если нет.',
+    code: 'def pow2(n):\n    if n % 2 == 1:\n        return False\n    if n == 1:\n'
+        + '        return True\n    return pow2(n // 2)\n'
+        + 'n = int(input())\nprint(pow2(n))',
+    fields: 'одно натуральное число от 1 до 1000',
+    hint: 'Все проверки на месте, но в каком порядке? Пройди вызовы для 8: 8 → 4 → 2 → 1. '
+        + 'Какая строка срабатывает при n = 1?',
+    why: '1 нечётное, поэтому первая проверка отвечает False раньше, чем дело дойдёт '
+       + 'до базы n == 1. А спуск любой степени двойки кончается именно на 1 — значит, '
+       + 'все степени двойки объявлены «не степенями». База проверяется первой.'
+  },
+  evenbase: {
+    title: 'сумма через два',
+    spec: 'Программа читает целое n (от 0 до 100) и должна напечатать сумму '
+        + 'n + (n − 2) + (n − 4) + … до последнего положительного слагаемого: '
+        + 'для 7 это 7 + 5 + 3 + 1 = 16, для 0 — 0.',
+    code: 'def s(n):\n    if n == 0:\n        return 0\n    return s(n - 2) + n\n'
+        + 'n = int(input())\nprint(s(n))',
+    fields: 'одно целое число от 0 до 100',
+    hint: 'Выпиши вызовы для 6 и для 5. В какой момент каждая цепочка должна '
+        + 'остановиться — и останавливается ли?',
+    why: 'Шаг через два попадает в 0 только из чётного n. Из нечётного вызовы идут '
+       + '1, −1, −3… мимо базы, пока не переполнится стек — RecursionError. База должна '
+       + 'ловить все концы: n <= 0.'
+  },
+  firstdig: {
+    title: 'наибольшая цифра',
+    spec: 'Программа читает натуральное n (от 1 до 100000) и должна напечатать его '
+        + 'наибольшую цифру: у 3815 это 8.',
+    code: 'def mx(n):\n    if n < 10:\n        return 0\n    m = mx(n // 10)\n'
+        + '    if n % 10 > m:\n        return n % 10\n    return m\n'
+        + 'n = int(input())\nprint(mx(n))',
+    fields: 'одно натуральное число от 1 до 100000',
+    hint: 'Когда спуск доходит до однозначного числа, это какая цифра исходного числа? '
+        + 'Что с ней делает база?',
+    why: 'Однозначное число в базе — это первая цифра всего числа, а база вместо неё '
+       + 'отвечает 0. Первая цифра так и не участвует в сравнении: если наибольшая '
+       + 'именно она (или число однозначное), ответ неверный. База должна вернуть n.'
+  }
+};
+const HW_BUG_NAMES = ['cntzero', 'pow2order', 'evenbase', 'firstdig'];
+
+function hwCounter(rng) {
+  const bug = tPick(rng, HW_BUG_NAMES);
+  const b = HW_BUGS[bug];
+  return {
+    kind: 'counter', bug,
+    code: b.code,
+    question: '<b>Что программа должна делать.</b> ' + b.spec
+            + '<br><b>Задание.</b> Здесь спрятана ошибка, из-за которой программа '
+            + 'врёт не всегда, а на особых данных. Назови такие данные (' + b.fields
+            + ').',
+    hint: b.hint,
+    explain: b.why
+  };
+}
+
+function hwDigits(n) { return String(n).length; }
+function hwMaxDigit(n) { return Math.max(...String(n).split('').map(Number)); }
+/* кривая mx: первая цифра не участвует */
+function hwBadMax(n) {
+  if (n < 10) return 0;
+  const m = hwBadMax(pyDiv(n, 10));
+  return n % 10 > m ? n % 10 : m;
+}
+/* кривая pow2: нечётная проверка раньше базы — всегда False */
+function hwBadPow2(n) {
+  if (n % 2 === 1) return false;
+  if (n === 1) return true;
+  return hwBadPow2(pyDiv(n, 2));
+}
+const HW_CRASH = 'ошибка: RecursionError';
+
+/* верный и кривой ответ каждой программы — ровно то, что она напечатает */
+function hwTrueFalse(bug, xs) {
+  const n = xs[0];
+  if (bug === 'cntzero') return ['' + hwDigits(n), '' + (n === 0 ? 0 : hwDigits(n))];
+  if (bug === 'pow2order') return [pyShow((n & (n - 1)) === 0), pyShow(hwBadPow2(n))];
+  if (bug === 'evenbase') {
+    let s = 0;
+    for (let k = n; k > 0; k -= 2) s += k;
+    return ['' + s, n % 2 === 0 ? '' + s : HW_CRASH];
+  }
+  return ['' + hwMaxDigit(n), '' + hwBadMax(n)];
+}
+
+const HW_SHAPE = {
+  cntzero:   { lo: 0, hi: 1000000, what: 'одно целое число' },
+  pow2order: { lo: 1, hi: 1000,    what: 'одно натуральное число' },
+  evenbase:  { lo: 0, hi: 100,     what: 'одно целое число' },
+  firstdig:  { lo: 1, hi: 100000,  what: 'одно натуральное число' }
+};
+
+function hwCheckCounter(task, raw) {
+  const parts = String(raw).trim().split(/[\s,;]+/).filter(function (s) { return s; });
+  const sh = HW_SHAPE[task.bug];
+  if (parts.length !== 1 || !/^[-−]?\d+$/.test(parts[0]))
+    return { ok: false, why: 'нужно ' + sh.what };
+  const n = Number(parts[0].replace('−', '-'));
+  if (n < sh.lo || n > sh.hi)
+    return { ok: false, why: 'число — от ' + sh.lo + ' до ' + sh.hi };
+  const tf = hwTrueFalse(task.bug, [n]);
+  if (tf[0] === tf[1])
+    return { ok: false, why: 'на этих данных программа печатает верное «' + tf[0]
+                           + '» — ошибка прячется в других' };
+  return { ok: true, why: 'верно: должно быть «' + tf[0] + '», а программа '
+                        + (tf[1] === HW_CRASH ? 'падает — стек переполнен'
+                                              : 'печатает «' + tf[1] + '»') };
+}
+
+/* Разбор контрпримера рисунком: что должно выйти и что вышло у программы. */
+function hwCounterPic(task, raw) {
+  const v = hwCheckCounter(task, raw);
+  const parts = String(raw).trim().split(/[\s,;]+/).filter(function (s) { return s; });
+  if (!/^верно|печатает верное/.test(v.why)) return '';
+  const n = Number(parts[0].replace('−', '-'));
+  const tf = hwTrueFalse(task.bug, [n]);
+  return T_CAP('на твоих данных ' + tEsc(parts.join(' ')))
+       + '<div>должно быть ' + tTile(tf[0], 'ok') + ' программа печатает '
+       + tTile(tf[1], tf[0] === tf[1] ? 'ok' : 'bad') + '</div>';
+}
+
+/* --------------------------------------------- тип 5: как это работает */
+const HW_THEORY = [
+  {
+    q: 'Без чего рекурсивная функция не может обойтись?',
+    opts: ['Без базы — случая, где ответ даётся сразу, без вызова себя, — и без шага, '
+           + 'который к базе приближает',
+           'Без цикла while внутри',
+           'Без print в каждой ветке'],
+    right: 0,
+    why: 'База останавливает спуск, шаг гарантирует, что до неё дойдём. Нет базы или шаг '
+       + 'мимо неё — вызовы идут без конца, пока не переполнится стек.'
+  },
+  {
+    q: 'Что произойдёт, если у рекурсивной функции нет базы?',
+    opts: ['Python остановит программу ошибкой RecursionError, когда вызовов в стеке '
+           + 'станет около тысячи',
+           'Функция вернёт 0',
+           'Программа будет работать вечно, пока её не закроют'],
+    right: 0,
+    why: 'Каждый незаконченный вызов занимает место в стеке. Стек у Python ограничен '
+       + '(примерно 1000 вызовов), и на переполнении он выдаёт RecursionError.'
+  },
+  {
+    q: 'Что хранится в стеке вызовов?',
+    opts: ['Незаконченные вызовы: у каждого свои значения параметров и место, куда '
+           + 'вернуться, когда внутренний вызов ответит',
+           'Только последнее напечатанное число',
+           'Тексты всех функций программы'],
+    right: 0,
+    why: 'У f(3), f(2), f(1) — у каждого своё n. Вызов кладётся на стек при входе и '
+       + 'снимается при return; ответ отдаётся тому, кто лежит под ним.'
+  },
+  {
+    q: 'В теле <code>p(n)</code> сначала <code>p(n - 1)</code>, потом '
+     + '<code>print(n)</code>. В каком порядке напечатаются числа при '
+     + '<code>p(3)</code> (база — n == 0)?',
+    opts: ['1 2 3: print после вызова срабатывает на подъёме, первым — самый глубокий',
+           '3 2 1',
+           '3 3 3'],
+    right: 0,
+    why: 'p(3) ждёт p(2), та ждёт p(1), та — p(0). Печатать начинают на обратном пути: '
+       + 'сначала 1, потом 2, потом 3. Поставь print до вызова — будет 3 2 1.'
+  },
+  {
+    q: 'Почему у фрактала «дерево» число веток растёт так быстро?',
+    opts: ['В теле процедуры два вызова себя: каждая ветка даёт две поменьше, и на каждом '
+           + 'уровне веток вдвое больше',
+           'Потому что каждая ветка рисуется циклом',
+           'Потому что ветки рисуются случайно'],
+    right: 0,
+    why: 'Один вызов в теле даёт цепочку, два — дерево вызовов. При глубине 10 это уже '
+       + '1 + 2 + 4 + … + 1024 = 2047 вызовов.'
+  },
+  {
+    q: 'Функция задана формулой: F(1) = 1, F(n) = F(n − 1) + 2n при n > 1. Как найти '
+     + 'F(5) на бумаге быстрее всего?',
+    opts: ['Снизу вверх: F(1) = 1, F(2) = 5, F(3) = 11, … — каждое из предыдущего',
+           'Сверху вниз, раскрывая F(5) до конца в одну длинную формулу',
+           'Подобрать: ответ обычно круглый'],
+    right: 0,
+    why: 'Таблица от базы вверх — короткий и надёжный путь. В задании 16 ЕГЭ так же '
+       + 'считает программа: значения от меньших n к большим.'
+  },
+  {
+    q: 'Как записать алгоритм Евклида рекурсией?',
+    opts: ['nod(a, b) = a, если b == 0, иначе nod(b, a % b)',
+           'nod(a, b) = nod(a, b) + 1',
+           'nod(a, b) = a % b'],
+    right: 0,
+    why: 'НОД не меняется, если пару (a, b) заменить на (b, a % b), а при b = 0 ответ — a. '
+       + 'Это и есть база и шаг: второе число каждый раз уменьшается.'
+  },
+  {
+    q: 'В теле <code>f(n)</code> написано <code>return f(n - 1) + f(n - 2)</code>. Что '
+     + 'будет с числом вызовов, если n увеличить на 1?',
+    opts: ['Вырастет примерно в полтора раза — дерево вызовов ветвится',
+           'Увеличится на один',
+           'Не изменится'],
+    right: 0,
+    why: 'Вызовов для f(n) — это вызовы для f(n − 1) плюс для f(n − 2) плюс один. Они '
+       + 'растут как сами числа Фибоначчи — поэтому такую рекурсию для больших n считают '
+       + 'снизу вверх.'
+  },
+  {
+    q: 'Функция F зовёт G, а G зовёт F. <code>def G</code> стоит ниже <code>def F</code>. '
+     + 'Что будет при вызове <code>print(F(5))</code> в конце программы?',
+    opts: ['Всё работает: имя G ищется в момент вызова, а к нему оба def уже выполнены',
+           'NameError: G определена ниже F',
+           'RecursionError: функции зовут друг друга'],
+    right: 0,
+    why: 'def только запоминает тело. Когда F позвали, обе функции уже определены. '
+       + 'Взаимная рекурсия законна, если у обеих есть база.'
+  },
+  {
+    q: 'В рекурсивной функции забыли <code>return</code> перед <code>f(n - 1) + n</code>. '
+     + 'Что вернёт вызов f(3)?',
+    opts: ['None: сумма посчитана и выброшена, а без return функция отдаёт None',
+           '6, как и с return',
+           '0'],
+    right: 0,
+    why: 'Значение выражения без return пропадает. Хуже того — следующий вызов наверху '
+       + 'попробует сложить None с числом и упадёт с TypeError.'
+  },
+  {
+    q: 'Сколько вызовов одновременно лежит в стеке в самый глубокий момент при '
+     + '<code>f(1000)</code>, если шаг — <code>f(n // 2)</code>, а база — '
+     + '<code>n == 0</code>?',
+    opts: ['11: число делится пополам 10 раз до 0, и ещё сам вызов f(0)',
+           '1000',
+           '500'],
+    right: 0,
+    why: 'Деление пополам укорачивает цепочку: в двоичной записи 1000 десять цифр — десять '
+       + 'вызовов до нуля и f(0). При шаге n − 1 было бы 1001.'
+  },
+  {
+    q: 'Когда рекурсия удобнее цикла?',
+    opts: ['Когда задача сама определена через меньшую такую же: фрактал, формула '
+           + 'F(n) через F(n − 1), разбор числа по цифрам',
+           'Всегда: рекурсия быстрее любого цикла',
+           'Никогда: это одно и то же'],
+    right: 0,
+    why: 'Рекурсия повторяет устройство задачи. Но каждый вызов стоит памяти в стеке, и '
+       + 'цепочку длиной в миллион Python не выдержит — там нужен цикл.'
+  }
+];
+
+function hwTheory(rng) {
+  const item = tPick(rng, HW_THEORY);
+  const idx = tShuffle(rng, [0, 1, 2]);
+  const letters = ['A', 'Б', 'В'];
+  const opts = idx.map(function (k, pos) {
+    return letters[pos] + ') ' + item.opts[k];
+  });
+  const right = letters[idx.indexOf(item.right)];
+  return {
+    kind: 'theory', qid: HW_THEORY.indexOf(item),
+    code: '',
+    question: item.q + '<br><br>' + opts.join('<br>')
+            + '<br><br>Ответ — одна буква.',
+    answer: right,
+    explain: 'Верно: ' + right + ') ' + item.opts[item.right] + '. ' + item.why
+  };
+}
+
+/* ------------------------------------------------------------ сборка */
+function hwMake(type, rng) {
+  let t;
+  if (type in HW_FROM_TRAINER) {
+    t = tTask(HW_FROM_TRAINER[type], rng);
+    t.kind = 'trainer';
+  } else if (type === 4) {
+    t = hwCounter(rng);
+  } else {
+    t = hwTheory(rng);
+  }
+  t.hwType = type;
+  return t;
+}
+
+function hwVerdict(task, raw) {
+  if (!String(raw).trim()) return { ok: false, why: '' };
+  if (task.kind === 'counter') return hwCheckCounter(task, raw);
+  if (task.kind === 'theory') {
+    const map = { 'A': 'A', 'А': 'A', 'a': 'A', 'а': 'A',
+                  'Б': 'Б', 'б': 'Б', 'B': 'Б',
+                  'В': 'В', 'в': 'В', 'C': 'В', 'c': 'В' };
+    const got = map[String(raw).trim().charAt(0)] || '';
+    return { ok: got === task.answer, why: '' };
+  }
+  return { ok: tCheck(task, raw), why: '' };
+}
+
+/* Разбор после ответа — одна функция на ДЗ и проверочную. Задачи тренажёра —
+   рисунком (tCompare + tSolution), контрпример — таблицей «должно / вышло»,
+   теория — словами: у неё рисовать нечего. */
+function hwExplain(task, raw, ok) {
+  if (task.kind === 'trainer')
+    return (ok ? '' : tCompare(task, raw)) + tSolution(task);
+  if (task.kind === 'counter')
+    return hwCounterPic(task, raw) + '<div style="margin-top:6px">' + task.explain + '</div>';
+  return '<div>' + task.explain + '</div>';
+}
+/* ==== /ЗАДАЧИ ДЗ ==== */
+
+/* Форма сдачи ДЗ — одна на все темы. Ссылку разносит set_form_link.py. */
+const FORM = "https://docs.google.com/forms/d/e/1FAIpQLSfQyhaxcnzn4ZaKSe_ZMsluw7qRQnrw_80H6SfrnYB5EThUIA/viewform?usp=pp_url&entry.853601231=ФАМИЛИЯ&entry.1091635917=КЛАСС&entry.487188307=КОД";
+const ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+const EPOCH = Date.UTC(2026, 0, 1);
+const PREFIX = "RK";
+const NEED_STREAK = 1;     // тип закрывает один верный ответ
+const MIN_TYPES = 4;       // ниже этого код не выдаётся
+const SCALE = [[6, 5], [5, 4], [4, 3]];
+const TOTAL = SCALE[0][0];
+
+// Тройку можно добрать, четвёрку и пятёрку — только заработать (Света,
+// 06.10.2026, общее правило тренажёра и ДЗ). Ошибочная задача тип не
+// закрывает, вместо неё приходит новая того же типа — без ограничений, до
+// тройки дойдёт любой, кто не бросит. Но ошибки ставят потолок: их можно
+// столько, сколько допускает та же отметка на проверочной (на «5» —
+// 6 − 6 = 0, на «4» — 6 − 5 = 1). Больше — потолок тройка; хочешь выше —
+// «Начать заново».
+const LOWEST = SCALE[SCALE.length - 1];
+const ceilingFor = errs =>
+    (SCALE.find(s => errs <= TOTAL - s[0]) || LOWEST)[1];
+
+// Формат кода прежний. В поле «закрыто типов» уходит число, уже упёртое в
+// потолок: разборщик (check_homework.py) ставит отметку по нему и ничего не
+// знает о потолке, а отметка выходит та же, что на странице.
+function countedFor(n, errs){
+  const higher = SCALE.find(s => s[1] === ceilingFor(errs) + 1);
+  return higher ? Math.min(n, higher[0] - 1) : n;
+}
+
+// Лесенка вместо одной цифры (Света, 06.10.2026): до тройки — не «двойка»,
+// а заполняющийся отрезок «на 3». Отрезки из SCALE: 4 клетки на тройку,
+// ещё 1 на четвёрку, ещё 1 на пятёрку. Отрезок выше потолка заштрихован.
+function ladderHtml(n, cap){
+  let from = 0;
+  return SCALE.slice().reverse().map(([need, m]) => {
+    const size = need - from;
+    const got = Math.max(0, Math.min(size, n - from));
+    const capped = m > cap, reached = n >= need && !capped;
+    from = need;
+    const cells = Array.from({length: size},
+        (_, k) => '<i class="' + (k < got ? "f" : "") + '"></i>').join("");
+    return '<div class="seg' + (reached ? " got" : "") + (capped ? " capped" : "")
+         + '" style="flex:' + size + ' 1 0"><div class="cells">' + cells + '</div>'
+         + '<div class="lab">' + (capped ? "на " + m + " — потолок"
+                                         : (reached ? "✓ " : "") + "на " + m) + '</div></div>';
+  }).join("");
+}
+
+const bin = (v, w) => v.toString(2).padStart(w, "0");
+// Семибитными частями строки: в нагрузке 33 бита, а побитовые операции в JS
+// 32-битные — старший бит молча потерялся бы.
+function checksum(bitstr){
+  let cs = 0x5B;
+  for (let i = 0; i < bitstr.length; i += 7)
+    cs ^= parseInt(bitstr.substr(i, 7).padEnd(7, "0"), 2);
+  return cs & 0x7F;
+}
+/* Фамилия в коде (Света, 26.09.2026). Фамилию понимаем как первое
+   слово строчными, ё -> е: «Синицына Мария» и «синицына» дают один
+   код. Из неё получаются 40 бит (FNV-1a и xorshift32), которыми код
+   перемешивается. Та же арифметика живёт в homework.py — surname_stream. */
+function surnameKey(s){
+  return String(s || "").toLowerCase().replace(/ё/g, "е")
+    .split(/[^а-яa-z-]+/).find(w => w.replace(/-/g, "")) || "";
+}
+
+function surnameStream(fam){
+  const s = surnameKey(fam);
+  if (!s) return "0".repeat(40);
+  let h = 0x811C9DC5;
+  for (const ch of s){
+    h ^= ch.charCodeAt(0);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  const step = x => { x ^= x << 13; x ^= x >>> 17; x ^= x << 5; return x >>> 0; };
+  let x = h || 0x9E3779B9;
+  for (let i = 0; i < 4; i++) x = step(x);
+  const w1 = x = step(x), w2 = step(x);
+  return (bin(w1, 32) + bin(w2, 32)).slice(0, 40);
+}
+
+function makeCode(st, fam){
+  const day = Math.max(0, Math.min(2047, Math.floor(
+      (Date.now() - EPOCH) / 86400000)));
+  const payload = bin(day, 11) + bin(Math.min(15, st.typesDone), 4) +
+                  bin(Math.min(15, st.cleanTypes), 4) +
+                  bin(Math.min(127, st.solved), 7) +
+                  bin(Math.min(127, st.wrong), 7);
+  const plain = payload + bin(checksum(payload), 7);
+  const key = surnameStream(fam);
+  let bitstr = "";
+  for (let i = 0; i < 40; i++) bitstr += plain[i] === key[i] ? "0" : "1";
+  let out = "";
+  for (let i = 0; i < 40; i += 5)
+    out += ALPHABET[parseInt(bitstr.substr(i, 5), 2)];
+  return PREFIX + "-" + out.slice(0, 4) + "-" + out.slice(4);
+}
+
+/* ---------------------------------------------------------- состояние */
+const N = HW_TYPES.length;
+const rng = tRng((Date.now() ^ (Math.random() * 1e9)) >>> 0);
+const st = {
+  streak: Array(N).fill(0),
+  done: Array(N).fill(false),
+  clean: Array(N).fill(true),
+  solved: 0, wrong: 0,
+  cur: null, answered: false, retry: null
+};
+// закрыто на самом деле
+Object.defineProperty(st, "closed",
+  {get(){ return st.done.filter(Boolean).length; }});
+// закрыто «для отметки и кода» — упёрто в потолок по ошибкам
+Object.defineProperty(st, "typesDone",
+  {get(){ return countedFor(st.closed, st.wrong); }});
+Object.defineProperty(st, "cleanTypes",
+  {get(){ return st.done.filter((d, i) => d && st.clean[i]).length; }});
+
+function markFor(n){
+  for (const [need, m] of SCALE) if (n >= need) return m;
+  return null;
+}
+/* После ошибки — тот же тип: разбор только что показан, применить его надо по
+   горячему. Иначе — любой незакрытый. */
+function pickType(){
+  if (st.retry !== null && !st.done[st.retry]) return st.retry;
+  const open = [];
+  for (let i = 0; i < N; i++) if (!st.done[i]) open.push(i);
+  if (!open.length) return null;
+  return open[tRand(rng, 0, open.length - 1)];
+}
+/* ==== FRZ: вставлено freeze.py, руками не править ==== */
+/* Код задачи — картинкой, прямо в браузере.
+   Вставляется freeze.py --sync между маркерами FRZ. Руками в html не править.
+
+   Тренажёр, ДЗ и проверочная рисуют код каждой задачи сами при открытии, и
+   заморозить его при выкладке нельзя — его ещё нет. Поэтому страница
+   рисует код на canvas и вставляет <img>: скопировать мышкой и запустить в
+   IDLE не выйдет — задача снова про чтение (Света, 14.09.2026).
+
+   Стиль тот же, что у блоков <pre>: Consolas 15px, тёмный фон, комментарий
+   после # серо-голубой. Рисуем в двойном размере — чётко на любом экране. */
+function frz(code) {
+  var S = 2, SIZE = 15, LEAD = 22, PX = 14, PY = 12;
+  var lines = String(code).replace(/\r/g, '').split('\n');
+  var c = document.createElement('canvas'), g = c.getContext('2d');
+  var font = (SIZE * S) + 'px Consolas, "Cascadia Mono", "Courier New", monospace';
+  g.font = font;
+  var w = 0;
+  for (var i = 0; i < lines.length; i++) w = Math.max(w, g.measureText(lines[i]).width);
+  c.width = Math.ceil(w) + 2 * PX * S;
+  c.height = lines.length * LEAD * S + 2 * PY * S;
+  g.fillStyle = '#1e2430';
+  g.fillRect(0, 0, c.width, c.height);
+  g.font = font;                       /* смена размера сбрасывает шрифт */
+  g.textBaseline = 'middle';
+  for (var k = 0; k < lines.length; k++) {
+    var y = PY * S + k * LEAD * S + LEAD * S / 2;
+    var line = lines[k], at = line.indexOf('#');
+    var head = at < 0 ? line : line.slice(0, at), tail = at < 0 ? '' : line.slice(at);
+    g.fillStyle = '#e7ecf5';
+    g.fillText(head, PX * S, y);
+    if (tail) {
+      g.fillStyle = '#8fa6c4';
+      g.fillText(tail, PX * S + g.measureText(head).width, y);
+    }
+  }
+  if (!document.getElementById('frz-css')) {
+    var st = document.createElement('style');
+    st.id = 'frz-css';
+    st.textContent = 'img.frz-b{display:block;max-width:100%;height:auto;'
+                   + 'border-radius:10px;margin:8px 0}';
+    document.head.appendChild(st);
+  }
+  return '<img class="frz-b" width="' + (c.width / S) + '" height="' + (c.height / S)
+       + '" alt="код задачи — читай с экрана" src="' + c.toDataURL('image/png') + '">';
+}
+/* ==== /FRZ ==== */
+
+function esc(s){ return String(s).replace(/[&<>]/g, c =>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+/* ------------------------------------------------------------- экран */
+function paintProgress(){
+  const box = document.getElementById("types");
+  box.innerHTML = "";
+  HW_TYPES.forEach((name, i) => {
+    const c = document.createElement("span");
+    c.className = "chip" + (st.done[i] ? " done"
+                          : (st.cur && st.cur.hwType === i ? " cur" : ""));
+    c.textContent = name + (st.done[i] ? " ✓" : "");
+    box.appendChild(c);
+  });
+  const cap = ceilingFor(st.wrong);
+  document.getElementById("ladder").innerHTML = ladderHtml(st.closed, cap);
+  // «2» по ходу не показываем: до тройки — прочерк и лесенка
+  const m = st.closed >= MIN_TYPES ? markFor(st.typesDone) : null;
+  const sb = document.getElementById("scorebox");
+  sb.className = "score" + (m ? " m" + m : "");
+  document.getElementById("mark").textContent = m || "—";
+  document.getElementById("stats").textContent =
+    "закрыто типов: " + st.closed + " из " + N + " · ошибок: " + st.wrong +
+    (st.closed < MIN_TYPES
+      ? " · до тройки осталось закрыть " + (MIN_TYPES - st.closed) : "") +
+    (cap < SCALE[0][1]
+      ? " · выше «" + cap + "» в этом заходе не получить"
+      : (st.wrong ? "" : " · без ошибок пока — пятёрка открыта"));
+}
+
+/* «Начать заново»: всё с нуля, задачи новые. Принудительного сброса нет —
+   это выбор того, кто хочет выше потолка. */
+function restart(){
+  if (!confirm("Начать заново? Закрытое в этом заходе пропадёт, задачи будут новые.")) return;
+  st.streak.fill(0); st.done.fill(false); st.clean.fill(true);
+  st.solved = 0; st.wrong = 0; st.retry = null;
+  nextTask();
+}
+
+function nextTask(){
+  const type = pickType();
+  if (type === null) { finish(); return; }
+  st.cur = hwMake(type, rng);
+  st.answered = false;
+  const t = st.cur;
+  const hint = t.hint
+    ? '<details><summary>Подсказка</summary><p>' + t.hint + '</p></details>' : "";
+  document.getElementById("area").innerHTML =
+    '<div class="card" id="task">' +
+      '<p class="tag">' + HW_TYPES[type] +
+        (st.retry === type ? ' · ещё раз, тот же тип' : '') + '</p>' +
+      (t.code ? frz(t.code) : '') +
+      (t.input !== undefined
+        ? '<p class="inp">Вход: <code>' + esc(t.input).replace(/\n/g, '</code>, затем <code>') + '</code></p>'
+        : '') +
+      '<p>' + (t.question || "Что напечатает программа?") + '</p>' +
+      '<div class="row">' +
+        '<input type="text" id="ans" autocomplete="off" spellcheck="false">' +
+        '<button class="primary" id="go">Проверить</button>' +
+      '</div>' +
+      hint +
+      '<div class="verdict" id="v"></div>' +
+    '</div>';
+  document.getElementById("go").addEventListener("click", judge);
+  document.getElementById("ans").addEventListener("keydown", e => {
+    if (e.key === "Enter") judge();
+  });
+  document.getElementById("ans").focus();
+  paintProgress();
+}
+
+function judge(){
+  if (st.answered) { nextTask(); return; }
+  const raw = document.getElementById("ans").value;
+  if (!raw.trim()) return;
+  const t = st.cur, type = t.hwType;
+  const res = hwVerdict(t, raw);
+  const card = document.getElementById("task");
+  const v = document.getElementById("v");
+  st.answered = true;
+  document.getElementById("go").textContent = "Дальше";
+  document.getElementById("ans").disabled = true;
+  if (res.ok){
+    st.solved++;
+    st.streak[type]++;
+    st.retry = null;
+    card.className = "card ok";
+    v.className = "verdict ok";
+    let text = res.why ? res.why.charAt(0).toUpperCase() + res.why.slice(1) + "." : "Верно.";
+    if (st.streak[type] >= NEED_STREAK){
+      st.done[type] = true;
+      text += " Тип закрыт.";
+    }
+    v.innerHTML = text + hwExplain(t, raw, true);
+  } else {
+    st.wrong++;
+    st.streak[type] = 0;
+    st.clean[type] = false;
+    st.retry = type;
+    card.className = "card err";
+    v.className = "verdict err";
+    /* разбор рисунком (Света, 26.09.2026): свой ответ зелёным и красным,
+       вызовы и что они вернули, эталон */
+    const cap = ceilingFor(st.wrong);
+    v.innerHTML = "Пока нет" + (res.why ? " — " + res.why : "") +
+      ". Следующая задача — того же типа." +
+      (cap < SCALE[0][1] ? " Ошибок: " + st.wrong + " — выше «" + cap +
+        "» в этом заходе не получить." : "") + hwExplain(t, raw, false);
+  }
+  paintProgress();
+}
+
+function finish(){
+  const m = markFor(st.typesDone);
+  const cap = ceilingFor(st.wrong);
+  const hasCode = st.closed >= MIN_TYPES;
+  const more = st.closed < N
+    ? '<button id="more">Закрыть ещё типы</button>' : "";
+  const again = cap < SCALE[0][1]
+    ? '<button id="restart">Начать заново — ради «' + (cap + 1) + '» и выше</button>' : "";
+  document.getElementById("area").innerHTML =
+    '<div class="card">' +
+      '<h2>Работа окончена</h2>' +
+      '<p>Закрыто типов: <b>' + st.closed + '</b> из ' + N +
+        '. Решено задач: ' + st.solved + ', ошибок: ' + st.wrong + '.' +
+        (hasCode ? ' Наработано на <b>' + m + '</b>.' : '') +
+        (hasCode && cap < SCALE[0][1] ? ' Выше «' + cap + '» с таким числом ошибок не выйдет.' : '') +
+      '</p>' +
+      (hasCode
+        ? '<p>Твой код работы:</p><div class="code" id="code"></div>' +
+          '<p class="stats">Он собран из твоей фамилии и того, сколько и как ' +
+            'ты решал: у соседа с тем же результатом код другой. Поменяешь ' +
+            'фамилию — поменяется и код.</p>' +
+          '<div class="fields">' +
+            '<div><label for="fam">Фамилия</label>' +
+              '<input type="text" id="fam" autocomplete="off"></div>' +
+            '<div><label for="kls">Класс</label>' +
+              '<input type="text" id="kls" autocomplete="off"></div>' +
+          '</div>' +
+          '<p class="stats" id="famhint"></p>' +
+          '<div class="row"><button id="send" class="primary">Сдать работу</button></div>' +
+          '<p class="stats" id="sendnote">Кнопка откроет форму: фамилия, класс и код уже ' +
+            'будут вписаны — останется нажать «Отправить».</p>'
+        : '<div class="note">Закрыто меньше ' + MIN_TYPES +
+          ' типов — кода работы нет. Закрой ещё хотя бы ' +
+          (MIN_TYPES - st.closed) + ', и он появится.</div>') +
+      '<div class="row">' + more + again + '</div>' +
+    '</div>';
+  const b = document.getElementById("more");
+  if (b) b.addEventListener("click", nextTask);
+  const r = document.getElementById("restart");
+  if (r) r.addEventListener("click", restart);
+  wireSend();
+}
+
+/* Кнопка «Сдать». Код привязан к фамилии (Света, 26.09.2026): пока
+   фамилия не вписана, кода нет, а вписанная подмешивается в код. Раньше
+   безошибочный прогон давал один код на весь класс, и проверка
+   отказывала честным. Теперь у двух учеников с одинаковым результатом
+   коды разные, а чужой код к своей фамилии не подходит.
+   Фамилию и класс страница помнит между заходами, но компьютер в классе
+   общий — подставленную фамилию просим проверить. Код в форму уходит сам:
+   переписывание руками и было источником «код не разобрался». */
+let CURRENT_CODE = "";
+function wireSend(){
+  const fam = document.getElementById("fam");
+  const kls = document.getElementById("kls");
+  const box = document.getElementById("code");
+  const send = document.getElementById("send");
+  const note = document.getElementById("sendnote");
+  const hint = document.getElementById("famhint");
+  let remembered = "";
+  if (fam) try {
+    remembered = localStorage.getItem("fam") || "";
+    fam.value = remembered;
+    kls.value = localStorage.getItem("kls") || "";
+  } catch (e) {}
+  const update = () => {
+    const f = fam ? fam.value.trim() : "";
+    CURRENT_CODE = surnameKey(f) ? makeCode(st, f) : "";
+    if (box){
+      box.textContent = CURRENT_CODE || "впиши фамилию — появится код";
+      box.classList.toggle("wait", !CURRENT_CODE);
+    }
+    if (hint) hint.textContent = remembered && f === remembered
+      ? "Фамилию подставил этот компьютер с прошлого раза — проверь, что она твоя."
+      : "";
+  };
+  if (fam) fam.addEventListener("input", update);
+  update();
+  if (!send) return;
+  send.addEventListener("click", () => {
+    const k = kls.value.trim();
+    if (!CURRENT_CODE || !k){
+      note.textContent = "Впиши фамилию и класс — иначе непонятно, "
+                       + "чья это работа.";
+      (CURRENT_CODE ? kls : fam).focus();
+      return;
+    }
+    try {
+      localStorage.setItem("fam", fam.value.trim());
+      localStorage.setItem("kls", k);
+    } catch (e) {}
+    const url = FORM.replace("ФАМИЛИЯ", encodeURIComponent(fam.value.trim()))
+                    .replace("КЛАСС", encodeURIComponent(k))
+                    .replace("КОД", encodeURIComponent(CURRENT_CODE));
+    window.open(url, "_blank", "noopener");
+    note.innerHTML = "Форма открылась в новой вкладке. Работа сдана, только "
+      + "когда в форме нажата «Отправить». Вкладка не открылась — "
+      + '<a href="' + url + '" target="_blank" rel="noopener">открой форму '
+      + "по этой ссылке</a>.";
+  });
+}
+
+paintProgress();
+nextTask();
+</script>
+<p class="ai-mark" style="margin:34px auto 0;max-width:860px;padding-top:12px;border-top:1px solid #d9dce6;color:#5c6070;font:13px/1.5 "Segoe UI",system-ui,sans-serif">Материалы подготовлены с использованием технологий искусственного интеллекта.</p>
+</body>
+</html>
