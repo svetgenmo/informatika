@@ -1,0 +1,1486 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Архиватор — практикум</title>
+<meta name="description" content="Практикум по информатике, 7 класс: упаковать файлы в архив, заглянуть внутрь, сравнить размеры, распаковать архив задания и ответить на вопросы о сжатии.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='22' font-family='Consolas,monospace' font-size='12' font-weight='700' fill='%23fff' text-anchor='middle'%3Ezip%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{margin:0;padding:20px 16px 60px;
+     font:17px/1.5 "Segoe UI",system-ui,sans-serif}
+.wrap{max-width:860px;margin:0 auto}
+
+h1{font-size:22px;margin:0 0 4px}
+h2.part{font-size:19px;margin:30px 0 4px}
+.sub{color:var(--muted);font-size:15px;margin:0 0 14px}
+
+/* ---- лесенка: отрезок на каждую отметку (Света, 06.10.2026) ---- */
+.ladders{display:flex;gap:18px;flex:1 1 100%;flex-wrap:wrap}
+.ladder{display:flex;gap:8px;flex:3 1 260px}
+.ladder.bonus{flex:2 1 180px}
+.ladder .cap{flex:0 0 auto;font-size:13px;color:var(--muted);
+             font-weight:600;padding-top:0}
+.seg{min-width:0}
+.cells{display:flex;gap:3px}
+.cells i{flex:1 1 0;height:14px;border-radius:4px;background:#e4e7ef}
+.cells i.f{background:var(--accent)}
+.seg.got .cells i{background:var(--ok)}
+.seg .lab{font-size:13px;color:var(--muted);text-align:center;
+          margin-top:4px;font-weight:600;white-space:nowrap}
+.seg.got .lab{color:var(--ok)}
+
+/* ---- панель оценки ---- */
+.panel{display:flex;align-items:center;gap:14px 18px;flex-wrap:wrap;
+       border:2px solid var(--accent);border-radius:12px;
+       padding:12px 18px;background:var(--card);margin-bottom:20px;
+       position:sticky;top:0;z-index:5}
+.mark{display:flex;align-items:baseline;gap:10px}
+.mark span{color:var(--muted);font-size:15px}
+.mark b{font:700 40px/1 "Segoe UI",system-ui,sans-serif;min-width:44px;
+        text-align:center;border-radius:8px;padding:2px 10px;
+        background:#fff;border:2px solid var(--line)}
+.m5{color:var(--ok);border-color:var(--ok-line)!important}
+.m4{color:var(--accent);border-color:#a9c6e8!important}
+.m3{color:#8a5a00;border-color:#e6c98a!important}
+.stats{color:var(--muted);font-size:14px;line-height:1.35}
+.spacer{flex:1 1 auto}
+button{font:600 15px/1 inherit;padding:11px 16px;border-radius:9px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);
+       cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);
+                color:var(--muted);background:#fff}
+button:focus-visible{outline:3px solid #a9c6e8;outline-offset:2px}
+
+/* ---- карточки ---- */
+.task{border:1px solid var(--line);border-radius:12px;padding:14px 18px;
+      margin-bottom:14px;background:#fff}
+.task.ok{border-color:var(--ok-line);background:var(--ok-bg)}
+.task.err{border-color:var(--err-line);background:var(--err-bg)}
+.task.hinted{border-color:var(--hi-line);background:var(--hi-bg)}
+.task.free{border-style:dashed}
+.q{display:flex;gap:12px;align-items:flex-start}
+.num{flex:0 0 28px;height:28px;border-radius:50%;background:var(--accent);
+     color:#fff;font:700 15px/28px sans-serif;text-align:center}
+.task.ok .num{background:var(--ok)}
+.task.err .num{background:var(--err)}
+.task.hinted .num{background:var(--hi)}
+.task.free .num{background:#fff;color:var(--muted);border:2px dashed var(--line);
+                line-height:24px}
+.text{flex:1 1 auto;padding-top:3px;min-width:0}
+.text h3{font-size:17px;margin:0 0 6px}
+.opt{display:inline-block;margin-left:8px;font-size:12px;font-weight:600;
+     color:var(--hi);background:var(--hi-bg);border:1px solid var(--hi-line);
+     border-radius:20px;padding:1px 9px;vertical-align:2px}
+.extra{display:inline-block;margin-left:8px;font-size:12px;font-weight:600;
+       color:var(--hi);border:1px solid var(--hi-line);border-radius:10px;
+       padding:0 8px;background:#fff}
+.text ol,.text ul{margin:6px 0 0;padding-left:22px}
+.text li{margin:4px 0}
+code{font:600 15px/1.4 Consolas,"Courier New",monospace;
+     background:var(--card);border:1px solid var(--line);border-radius:5px;
+     padding:1px 5px}
+kbd{font:600 14px/1 Consolas,"Courier New",monospace;background:#fff;
+    border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;
+    padding:2px 6px;white-space:nowrap}
+.menu{font-weight:600;white-space:nowrap}
+
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;
+     margin:14px 0 0 40px}
+input[type=text]{font:600 18px/1 "Segoe UI",system-ui,sans-serif;
+     padding:11px 14px;width:200px;
+     border:2px solid var(--line);border-radius:9px;background:#fff;
+     color:var(--ink)}
+input[type=text]:focus{outline:none;border-color:var(--accent)}
+input[type=text]:disabled{background:#f1f2f6;color:var(--muted)}
+input.small{width:110px;font-size:17px;padding:8px 10px;text-align:right}
+input.seed{width:96px;text-align:center;letter-spacing:2px}
+.verdict{font-weight:700}
+.verdict.ok{color:var(--ok)}
+.verdict.err{color:var(--err)}
+.verdict.hi{color:var(--hi)}
+
+.why{margin:12px 0 0 40px;border-left:4px solid var(--hi-line);
+     background:var(--hi-bg);border-radius:0 8px 8px 0;
+     padding:8px 14px;color:var(--ink);font-size:15px}
+.why p{margin:4px 0}
+.why.good{border-left-color:var(--ok-line);background:#fff}
+.why.bad{border-left-color:var(--err-line);background:#fff}
+.why ul{margin:4px 0;padding-left:20px}
+
+/* ---- свой архив ---- */
+.drop{display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+      margin:14px 0 0 40px;padding:14px 16px;border:2px dashed #a9c6e8;
+      border-radius:10px;background:#f5f9fe;color:var(--muted);font-size:15px}
+.drop.over{border-color:var(--accent);background:#eaf1fa}
+.drop input{display:none}
+.drop .pick{font:600 15px/1 inherit;padding:11px 16px;border-radius:9px;
+            background:var(--accent);color:#fff;cursor:pointer}
+.drop .pick:hover{background:#194f8c}
+
+table{border-collapse:collapse;margin:8px 0;font-size:15px}
+td,th{border:1px solid var(--line);padding:5px 10px;text-align:left}
+th{background:#fff;color:var(--muted);font-size:14px;font-weight:600}
+td.f{font:600 15px/1.4 Consolas,"Courier New",monospace}
+td.n{text-align:right;font-variant-numeric:tabular-nums}
+.sizes{margin-left:40px}
+.sizes td{background:#fff}
+
+.files-list{font:15px/1.5 Consolas,"Courier New",monospace}
+
+.done{margin:18px 0 0;padding:12px 16px;border-radius:10px;
+      background:var(--ok-bg);border:1px solid var(--ok-line);
+      color:var(--ok);font-weight:600}
+
+details{margin-top:26px;border:1px solid var(--line);border-radius:12px;
+        padding:12px 18px;background:var(--card)}
+summary{cursor:pointer;font-weight:600;font-size:17px}
+details h3{font-size:16px;margin:18px 0 6px}
+details p{margin:6px 0}
+details code{background:#fff}
+
+@media (max-width:700px){
+  .row,.why,.drop,.sizes{margin-left:0}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Архиватор — практикум</h1>
+<p class="sub">Сначала работа руками: упаковать свои файлы, заглянуть в
+   архив, распаковать чужой и найти в нём ответы. Потом шесть вопросов о
+   сжатии. Всё делается на компьютере с Windows; с телефона доступны
+   только вопросы.</p>
+<p class="sub">Оценку дают <b>шаги практики</b>: 3 шага — «3», 4 — «4»,
+   5 — «5». Вопросы <b>добавляют балл</b>, если пять из них решены
+   с первой попытки. Ошибся в вопросе — страница объяснит, в чём дело,
+   а внизу появится новый такой же, с другими числами.</p>
+
+<div class="panel">
+  <div class="mark">
+    <span>Оценка</span><b id="mark">—</b>
+  </div>
+  <div class="stats" id="stats"></div>
+  <div class="spacer"></div>
+  <button id="again">Начать заново</button>
+  <div class="ladders">
+    <div class="ladder" id="ladderP"></div>
+    <div class="ladder bonus" id="ladderT"></div>
+  </div>
+</div>
+
+<h2 class="part">Часть 1. Работа руками</h2>
+<p class="sub">Шаги засчитываются, когда страница приняла результат.
+   Пробовать можно сколько угодно раз.</p>
+
+<!-- ============================================================ шаг 1 -->
+<div class="task" id="s1">
+  <div class="q"><div class="num">1</div><div class="text">
+    <h3>Собери свой архив</h3>
+    <ol>
+      <li>На рабочем столе: правой кнопкой →
+          <span class="menu">«Создать» → «Папку»</span>, имя
+          <code>Архив</code>.</li>
+      <li>Внутри неё правой кнопкой → <span class="menu">«Создать» →
+          «Текстовый документ»</span>, имя <code>текст</code>. Открой,
+          напиши любую фразу. Теперь три захода: <kbd>Ctrl+A</kbd>,
+          <kbd>Ctrl+C</kbd>, потом <kbd>Ctrl+V</kbd> десять раз. Фраз
+          станет тысяча. Сохрани: <kbd>Ctrl+S</kbd>.</li>
+      <li>Нажми <kbd>PrtScn</kbd> — снимок экрана попал в буфер. Открой
+          Paint, <kbd>Ctrl+V</kbd>, <span class="menu">«Файл» →
+          «Сохранить как» → «Изображение в формате PNG»</span>, имя
+          <code>экран</code>, в папку <code>Архив</code>.</li>
+      <li>Выдели оба файла → правой кнопкой →
+          <span class="menu">«Отправить» → «Сжатая ZIP-папка»</span>.
+          Рядом появится архив — назови его <code>Архив</code>.
+          (Можно и через 7-Zip: правой кнопкой →
+          <span class="menu">«7-Zip» → «Добавить к архиву…»</span>,
+          формат <code>zip</code>.)</li>
+      <li>Покажи архив странице — кнопкой ниже или перетащи его мышью
+          в эту рамку. Файл никуда не отправляется: его читает сама
+          страница, на твоём компьютере.</li>
+    </ol>
+  </div></div>
+  <label class="drop" id="drop">
+    <input type="file" id="own" accept=".zip,application/zip">
+    <span class="pick">Выбрать архив</span>
+    <span id="ownName">или перетащи файл <b>Архив.zip</b> сюда</span>
+  </label>
+  <div id="s1out"></div>
+</div>
+
+<!-- ============================================================ шаг 2 -->
+<div class="task" id="s2">
+  <div class="q"><div class="num">2</div><div class="text">
+    <h3>Загляни внутрь и перепиши размеры</h3>
+    <ol>
+      <li>Двойной щелчок по <code>Архив.zip</code>. Открылось как папка,
+          но это не папка — это один файл.</li>
+      <li>Переключи вид на таблицу: <span class="menu">«Вид» →
+          «Таблица»</span>. Появятся столбцы <b>Сжатый размер</b> и
+          <b>Размер</b>.</li>
+      <li>Перепиши их сюда так, как написано: <code>71,2</code>,
+          <code>401 КБ</code>, <code>332 байт</code>. «КБ» можно не
+          писать, а «байт» и «МБ» — обязательно.</li>
+    </ol>
+  </div></div>
+  <table class="sizes">
+    <tr><th>файл</th><th>Размер</th><th>Сжатый размер</th></tr>
+    <tr><td class="f" id="s2t">текст.txt</td>
+        <td><input type="text" class="small" id="s2a" autocomplete="off"></td>
+        <td><input type="text" class="small" id="s2b" autocomplete="off"></td></tr>
+    <tr><td class="f" id="s2p">экран.png</td>
+        <td><input type="text" class="small" id="s2c" autocomplete="off"></td>
+        <td><input type="text" class="small" id="s2d" autocomplete="off"></td></tr>
+  </table>
+  <div class="row"><button class="primary" id="s2go">Проверить</button>
+    <span id="s2v"></span></div>
+  <div id="s2out"></div>
+</div>
+
+<!-- ============================================================= опыт -->
+<div class="task free" id="exp">
+  <div class="q"><div class="num">?</div><div class="text">
+    <h3>Опыт: поправить файл, не распаковав <span class="opt">без оценки</span></h3>
+    <p>Не выходя из архива, открой <code>текст.txt</code>, допиши в конце
+       своё имя, сохрани и закрой. Теперь открой его из архива ещё раз.
+       Что с именем?</p>
+  </div></div>
+  <div class="row">
+    <button data-exp="1">Имя на месте</button>
+    <button data-exp="0">Имени нет</button>
+  </div>
+  <div id="expout"></div>
+</div>
+
+<!-- ============================================================ шаг 3 -->
+<div class="task" id="s3">
+  <div class="q"><div class="num">3</div><div class="text">
+    <h3>Распакуй архив задания</h3>
+    <p>Это архив, который приготовила страница: у тебя он свой, у соседа
+       другой. Ответы на шаги 3–5 лежат внутри.</p>
+    <ol>
+      <li>Скачай его кнопкой ниже. Он окажется в папке
+          <span class="menu">«Загрузки»</span>.</li>
+      <li>Правой кнопкой по архиву → <span class="menu">«Извлечь всё…»
+          → «Извлечь»</span>. Появится обычная папка.</li>
+      <li>Правой кнопкой по этой папке → <span class="menu">«Свойства»</span>.
+          Найди строку <b>Размер</b> и перепиши число <b>байт</b> — оно в
+          скобках.</li>
+    </ol>
+  </div></div>
+  <div class="row">
+    <button class="primary" id="dl">Скачать архив задания</button>
+    <span>номер архива <input type="text" class="seed" id="seed"
+          inputmode="numeric" autocomplete="off" maxlength="4"></span>
+  </div>
+  <p class="sub" style="margin:8px 0 0 40px">Номер стоит в имени
+     скачанного файла. Если страницу перезагрузили — впиши его сюда, и
+     проверка снова будет по твоему архиву.</p>
+  <div class="row">
+    <input type="text" id="s3in" inputmode="numeric" autocomplete="off"
+           placeholder="размер в байтах">
+    <button id="s3go">Проверить</button>
+    <span id="s3v"></span>
+  </div>
+  <div id="s3out"></div>
+</div>
+
+<!-- ============================================================ шаг 4 -->
+<div class="task" id="s4">
+  <div class="q"><div class="num">4</div><div class="text">
+    <h3>Найди файлы по типу</h3>
+    <p id="s4q"></p>
+  </div></div>
+  <div class="row">
+    <input type="text" id="s4in" inputmode="numeric" autocomplete="off"
+           placeholder="сколько">
+    <button id="s4go">Проверить</button>
+    <span id="s4v"></span>
+  </div>
+  <div id="s4out"></div>
+</div>
+
+<!-- ============================================================ шаг 5 -->
+<div class="task" id="s5">
+  <div class="q"><div class="num">5</div><div class="text">
+    <h3>Архив в архиве</h3>
+    <p>В папке задания лежит <code>Тайник.zip</code>. Внутри него —
+       файл с тайным словом. Какое это слово?</p>
+  </div></div>
+  <div class="row">
+    <input type="text" id="s5in" autocomplete="off" spellcheck="false"
+           placeholder="слово">
+    <button id="s5go">Проверить</button>
+    <span id="s5v"></span>
+  </div>
+  <div id="s5out"></div>
+</div>
+
+<h2 class="part">Часть 2. Вопросы о сжатии</h2>
+<p class="sub">В зачёт идут ответы <b>с первой попытки</b>: пять таких —
+   плюс балл к оценке за практику. Ответ — число цифрами.</p>
+
+<div id="tasks"></div>
+<div id="done"></div>
+
+<details>
+  <summary>Подсказка: как работает архиватор</summary>
+
+  <h3>Что делает архиватор</h3>
+  <p>Складывает много файлов в один и при этом сжимает их. Ищет в файле
+     повторы и записывает каждый один раз, а дальше только ссылается на
+     него.</p>
+
+  <h3>Что сжимается, а что нет</h3>
+  <table>
+    <tr><th>сжимается в разы</th><th>почти не сжимается</th></tr>
+    <tr><td>текст <code>txt</code>, <code>rtf</code><br>
+            таблицы <code>csv</code><br>
+            веб-страницы <code>htm</code>, <code>html</code><br>
+            картинки без сжатия <code>bmp</code></td>
+        <td>фото <code>jpg</code>, <code>png</code>, <code>gif</code><br>
+            звук <code>mp3</code><br>
+            видео <code>mp4</code>, <code>avi</code><br>
+            архивы <code>zip</code>, <code>rar</code>, <code>7z</code></td></tr>
+  </table>
+  <p>Правый столбец уже сжат внутри самого файла — повторы оттуда
+     убраны, архиватору нечего делать.</p>
+
+  <h3>Во сколько раз сжался</h3>
+  <p>Делим исходный размер на сжатый: было 120 КБ, стало 8 КБ —
+     сжался в <code>120 : 8 = 15</code> раз. «На сколько КБ меньше» —
+     это уже вычитание: <code>120 − 8 = 112</code>.</p>
+
+  <h3>Без потерь</h3>
+  <p>После распаковки файл точно такой же, как до упаковки, байт в байт.
+     Размер в архиве — только пока он в архиве.</p>
+
+  <h3>Работать внутри архива нельзя</h3>
+  <p>Файл, открытый прямо из архива, — временная копия. Правки в ней
+     пропадают. Сначала <span class="menu">«Извлечь всё»</span>, потом
+     работать.</p>
+
+  <h3>Если расширения не видно</h3>
+  <p>Проводник часто прячет расширения. Включить:
+     <span class="menu">«Вид» → «Расширения имён файлов»</span>. Или
+     смотри столбец <b>Тип</b> в виде «Таблица»: «Файл "PNG"»,
+     «Точечный рисунок» (это bmp), «Звук в формате WAV».</p>
+</details>
+
+</div>
+
+<script>
+"use strict";
+
+/* ==== ЯДРО: без DOM; node lab_selftest.mjs гоняет его как есть ==== */
+const LAB = (() => {
+
+/* ------------------------------------------------------- случайность */
+
+function rng(seed){
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6D2B79F5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const int = (r, lo, hi) => lo + Math.floor(r() * (hi - lo + 1));
+const pick = (r, a) => a[Math.floor(r() * a.length)];
+function shuffle(r, a){
+  const x = a.slice();
+  for (let i = x.length - 1; i > 0; i--){
+    const j = Math.floor(r() * (i + 1));
+    [x[i], x[j]] = [x[j], x[i]];
+  }
+  return x;
+}
+
+/* ----------------------------------------------------------- байты */
+
+const CRC_T = (() => {
+  const t = new Uint32Array(256);
+  for (let n = 0; n < 256; n++){
+    let c = n;
+    for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1;
+    t[n] = c >>> 0;
+  }
+  return t;
+})();
+function crc32(b){
+  let c = 0xFFFFFFFF;
+  for (let i = 0; i < b.length; i++) c = CRC_T[(c ^ b[i]) & 255] ^ (c >>> 8);
+  return (c ^ 0xFFFFFFFF) >>> 0;
+}
+function adler32(b){
+  let a = 1, s = 0;
+  for (let i = 0; i < b.length; i++){ a = (a + b[i]) % 65521; s = (s + a) % 65521; }
+  return ((s << 16) | a) >>> 0;
+}
+const utf8 = s => new TextEncoder().encode(s);
+const BOM = [0xEF, 0xBB, 0xBF];
+const utf8bom = s => concat([Uint8Array.from(BOM), utf8(s)]);
+function concat(list){
+  const n = list.reduce((s, x) => s + x.length, 0);
+  const out = new Uint8Array(n);
+  let p = 0;
+  for (const x of list){ out.set(x, p); p += x.length; }
+  return out;
+}
+
+// Имена в zip. Проводник пишет кириллицу в кодировке DOS (cp866) без
+// флага UTF-8 — так же пишем и мы: свой формат он читает наверняка.
+// Рядом — то же имя в UTF-8 (поле 0x7075), его понимает 7-Zip.
+function to866(s){
+  const out = [];
+  for (const ch of s){
+    const c = ch.codePointAt(0);
+    if (c < 128) out.push(c);
+    else if (c >= 0x410 && c <= 0x43F) out.push(0x80 + c - 0x410);
+    else if (c >= 0x440 && c <= 0x44F) out.push(0xE0 + c - 0x440);
+    else if (c === 0x401) out.push(0xF0);
+    else if (c === 0x451) out.push(0xF1);
+    else out.push(0x5F);
+  }
+  return Uint8Array.from(out);
+}
+function from866(b){
+  let s = "";
+  for (const x of b){
+    if (x < 128) s += String.fromCharCode(x);
+    else if (x <= 0xAF) s += String.fromCharCode(0x410 + x - 0x80);
+    else if (x >= 0xE0 && x <= 0xEF) s += String.fromCharCode(0x440 + x - 0xE0);
+    else if (x === 0xF0) s += "Ё";
+    else if (x === 0xF1) s += "ё";
+    else s += "?";
+  }
+  return s;
+}
+
+async function through(data, ts){
+  const s = new Blob([data]).stream().pipeThrough(ts);
+  return new Uint8Array(await new Response(s).arrayBuffer());
+}
+const deflateRaw = typeof CompressionStream === "function"
+  ? d => through(d, new CompressionStream("deflate-raw")) : null;
+const inflateRaw = typeof DecompressionStream === "function"
+  ? d => through(d, new DecompressionStream("deflate-raw")) : null;
+
+// zlib для картинки PNG. Без CompressionStream — блоками без сжатия.
+async function zlib(data){
+  let body;
+  if (deflateRaw) body = await deflateRaw(data);
+  else {
+    const parts = [];
+    for (let p = 0; p < data.length || p === 0; p += 65535){
+      const chunk = data.subarray(p, p + 65535);
+      const last = p + 65535 >= data.length;
+      const n = chunk.length;
+      parts.push(Uint8Array.from([last ? 1 : 0, n & 255, n >> 8,
+                                  ~n & 255, (~n >> 8) & 255]), chunk);
+      if (last) break;
+    }
+    body = concat(parts);
+  }
+  const a = adler32(data);
+  return concat([Uint8Array.from([0x78, 0x9C]), body,
+                 Uint8Array.from([a >>> 24, (a >>> 16) & 255, (a >>> 8) & 255, a & 255])]);
+}
+
+/* -------------------------------------------------------- zip: запись */
+
+function dosTime(d){
+  return {
+    time: (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1),
+    date: ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate(),
+  };
+}
+
+// entries: [{name, data}]; имя на «/» — папка.
+async function makeZip(entries, when){
+  const t = dosTime(when || new Date());
+  const local = [], central = [];
+  let off = 0;
+  for (const e of entries){
+    const dir = e.name.endsWith("/");
+    const data = dir ? new Uint8Array(0) : e.data;
+    const crc = crc32(data);
+    let method = 0, body = data;
+    if (!dir && deflateRaw && data.length){
+      const z = await deflateRaw(data);
+      if (z.length < data.length){ method = 8; body = z; }
+    }
+    const nm = to866(e.name), u = utf8(e.name);
+    const ascii = nm.every(x => x < 128);
+    const extra = new Uint8Array(ascii ? 0 : 9 + u.length);
+    if (!ascii){
+      const xv = new DataView(extra.buffer);
+      xv.setUint16(0, 0x7075, true); xv.setUint16(2, 5 + u.length, true);
+      extra[4] = 1; xv.setUint32(5, crc32(nm), true); extra.set(u, 9);
+    }
+    const lh = new Uint8Array(30), lv = new DataView(lh.buffer);
+    lv.setUint32(0, 0x04034b50, true); lv.setUint16(4, 20, true);
+    lv.setUint16(6, 0, true); lv.setUint16(8, method, true);
+    lv.setUint16(10, t.time, true); lv.setUint16(12, t.date, true);
+    lv.setUint32(14, crc, true); lv.setUint32(18, body.length, true);
+    lv.setUint32(22, data.length, true); lv.setUint16(26, nm.length, true);
+    lv.setUint16(28, extra.length, true);
+    local.push(lh, nm, extra, body);
+
+    const ch = new Uint8Array(46), cv = new DataView(ch.buffer);
+    cv.setUint32(0, 0x02014b50, true); cv.setUint16(4, 20, true);
+    cv.setUint16(6, 20, true); cv.setUint16(8, 0, true);
+    cv.setUint16(10, method, true); cv.setUint16(12, t.time, true);
+    cv.setUint16(14, t.date, true); cv.setUint32(16, crc, true);
+    cv.setUint32(20, body.length, true); cv.setUint32(24, data.length, true);
+    cv.setUint16(28, nm.length, true); cv.setUint16(30, extra.length, true);
+    cv.setUint32(38, dir ? 0x10 : 0x20, true); cv.setUint32(42, off, true);
+    central.push(ch, nm, extra);
+    off += 30 + nm.length + extra.length + body.length;
+  }
+  const cd = concat(central);
+  const end = new Uint8Array(22), ev = new DataView(end.buffer);
+  ev.setUint32(0, 0x06054b50, true);
+  ev.setUint16(8, entries.length, true); ev.setUint16(10, entries.length, true);
+  ev.setUint32(12, cd.length, true); ev.setUint32(16, off, true);
+  return concat([...local, cd, end]);
+}
+
+/* -------------------------------------------------------- zip: чтение */
+
+function sniff(b){
+  const h = (...xs) => xs.every((x, i) => b[i] === x);
+  if (b.length >= 4 && h(0x50, 0x4B) && (h(0x50, 0x4B, 3, 4) || h(0x50, 0x4B, 5, 6))) return "zip";
+  if (h(0x52, 0x61, 0x72, 0x21)) return "rar";
+  if (h(0x37, 0x7A, 0xBC, 0xAF, 0x27, 0x1C)) return "7z";
+  if (h(0x1F, 0x8B)) return "gz";
+  return "other";
+}
+
+function readZip(b){
+  const kind = sniff(b);
+  if (kind !== "zip") return {error: kind};
+  const dv = new DataView(b.buffer, b.byteOffset, b.byteLength);
+  let eocd = -1;
+  for (let i = b.length - 22; i >= Math.max(0, b.length - 22 - 65535); i--){
+    if (dv.getUint32(i, true) === 0x06054b50){ eocd = i; break; }
+  }
+  if (eocd < 0) return {error: "broken"};
+  const n = dv.getUint16(eocd + 10, true);
+  let p = dv.getUint32(eocd + 16, true);
+  const entries = [];
+  for (let k = 0; k < n; k++){
+    if (p + 46 > b.length || dv.getUint32(p, true) !== 0x02014b50) return {error: "broken"};
+    const flag = dv.getUint16(p + 8, true);
+    const nlen = dv.getUint16(p + 28, true), xlen = dv.getUint16(p + 30, true);
+    const clen = dv.getUint16(p + 32, true);
+    const nb = b.subarray(p + 46, p + 46 + nlen);
+    let name = flag & 0x800 ? new TextDecoder().decode(nb) : null;
+    for (let q = p + 46 + nlen, xe = q + xlen; !name && q + 4 <= xe; ){
+      const id = dv.getUint16(q, true), sz = dv.getUint16(q + 2, true);
+      if (id === 0x7075 && sz >= 5) name = new TextDecoder().decode(b.subarray(q + 9, q + 4 + sz));
+      q += 4 + sz;
+    }
+    if (!name) name = from866(nb);
+    name = name.replace(/\\/g, "/");
+    entries.push({
+      name, method: dv.getUint16(p + 10, true),
+      csize: dv.getUint32(p + 20, true), usize: dv.getUint32(p + 24, true),
+      crc: dv.getUint32(p + 16, true), off: dv.getUint32(p + 42, true),
+      dir: name.endsWith("/"),
+    });
+    p += 46 + nlen + xlen + clen;
+  }
+  return {entries};
+}
+
+async function unzipEntry(b, e){
+  const dv = new DataView(b.buffer, b.byteOffset, b.byteLength);
+  if (dv.getUint32(e.off, true) !== 0x04034b50) throw new Error("local header");
+  const s = e.off + 30 + dv.getUint16(e.off + 26, true) + dv.getUint16(e.off + 28, true);
+  const body = b.subarray(s, s + e.csize);
+  if (e.method === 0) return body.slice();
+  if (e.method === 8 && inflateRaw) return inflateRaw(body);
+  throw new Error("method " + e.method);
+}
+
+const baseName = path => path.replace(/\/+$/, "").split("/").pop();
+const extOf = name => { const m = /\.([^.\/]+)$/.exec(name); return m ? m[1].toLowerCase() : ""; };
+
+/* ---------------------------------------------- файлы архива задания */
+
+function makeBmp(r){
+  const w = int(r, 24, 48), h = int(r, 16, 40);
+  const row = Math.ceil(w * 3 / 4) * 4, size = 54 + row * h;
+  const b = new Uint8Array(size), v = new DataView(b.buffer);
+  b[0] = 0x42; b[1] = 0x4D; v.setUint32(2, size, true); v.setUint32(10, 54, true);
+  v.setUint32(14, 40, true); v.setInt32(18, w, true); v.setInt32(22, h, true);
+  v.setUint16(26, 1, true); v.setUint16(28, 24, true); v.setUint32(34, row * h, true);
+  v.setInt32(38, 2835, true); v.setInt32(42, 2835, true);
+  // полосы — как флаг: повторов много, архиватор ужмёт в разы
+  const bands = int(r, 2, 4);
+  const cols = Array.from({length: bands}, () => [int(r, 0, 255), int(r, 0, 255), int(r, 0, 255)]);
+  for (let y = 0; y < h; y++){
+    const c = cols[Math.min(bands - 1, Math.floor(y * bands / h))];
+    for (let x = 0; x < w; x++){
+      const p = 54 + y * row + x * 3;
+      b[p] = c[2]; b[p + 1] = c[1]; b[p + 2] = c[0];
+    }
+  }
+  return b;
+}
+
+async function makePng(r){
+  const w = int(r, 24, 48), h = int(r, 20, 40);
+  const raw = new Uint8Array((w * 3 + 1) * h);
+  const base = [int(r, 40, 200), int(r, 40, 200), int(r, 40, 200)];
+  for (let y = 0; y < h; y++){
+    const p0 = y * (w * 3 + 1);
+    raw[p0] = 0;
+    for (let x = 0; x < w; x++){
+      for (let k = 0; k < 3; k++){
+        // переход цвета плюс шум — как у фотографии: повторов почти нет
+        const v = base[k] + (k === 0 ? x : k === 1 ? y : x + y) * 2 + int(r, -40, 40);
+        raw[p0 + 1 + x * 3 + k] = Math.max(0, Math.min(255, v));
+      }
+    }
+  }
+  const chunk = (type, data) => {
+    const t = utf8(type), len = new Uint8Array(4), crc = new Uint8Array(4);
+    new DataView(len.buffer).setUint32(0, data.length);
+    new DataView(crc.buffer).setUint32(0, crc32(concat([t, data])));
+    return concat([len, t, data, crc]);
+  };
+  const ihdr = new Uint8Array(13), iv = new DataView(ihdr.buffer);
+  iv.setUint32(0, w); iv.setUint32(4, h); ihdr[8] = 8; ihdr[9] = 2;
+  return concat([Uint8Array.from([137, 80, 78, 71, 13, 10, 26, 10]),
+                 chunk("IHDR", ihdr), chunk("IDAT", await zlib(raw)),
+                 chunk("IEND", new Uint8Array(0))]);
+}
+
+function makeWav(r){
+  const rate = 8000, n = int(r, 2000, 6000), f = int(r, 300, 900);
+  const b = new Uint8Array(44 + n), v = new DataView(b.buffer);
+  b.set(utf8("RIFF"), 0); v.setUint32(4, 36 + n, true); b.set(utf8("WAVEfmt "), 8);
+  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, rate, true); v.setUint32(28, rate, true);
+  v.setUint16(32, 1, true); v.setUint16(34, 8, true);
+  b.set(utf8("data"), 36); v.setUint32(40, n, true);
+  for (let i = 0; i < n; i++){
+    const fade = Math.min(1, i / 400, (n - i) / 400);
+    b[44 + i] = Math.round(128 + 90 * fade * Math.sin(2 * Math.PI * f * i / rate));
+  }
+  return b;
+}
+
+const LINES = [
+  "Сегодня на уроке мы разбирали типы файлов.",
+  "Архиватор складывает много файлов в один.",
+  "Не забыть полить цветы на подоконнике.",
+  "Купить тетрадь в клетку и два карандаша.",
+  "В субботу идём в музей всем классом.",
+  "Повторить расширения: txt, docx, jpg, mp3.",
+  "Позвонить бабушке вечером.",
+  "Прочитать две главы к четвергу.",
+  "На кружке собирали робота из конструктора.",
+  "Тренировка в среду переносится на пятницу.",
+];
+function makeTxt(r){
+  const n = int(r, 4, 14);
+  return utf8bom(Array.from({length: n}, () => pick(r, LINES)).join("\r\n") + "\r\n");
+}
+function makeHtml(r, title){
+  const p = Array.from({length: int(r, 2, 5)}, () => `<p>${pick(r, LINES)}</p>`).join("\n");
+  return utf8(`<!doctype html>\n<html lang="ru">\n<head>\n<meta charset="utf-8">\n` +
+              `<title>${title}</title>\n</head>\n<body>\n<h1>${title}</h1>\n${p}\n</body>\n</html>\n`);
+}
+function makeCsv(r){
+  const subj = ["Математика", "Русский язык", "Информатика", "История",
+                "Физкультура", "Литература", "Биология", "Музыка"];
+  const rows = shuffle(r, subj).slice(0, int(r, 4, 8))
+    .map(s => `${s};${int(r, 3, 5)};${int(r, 3, 5)};${int(r, 3, 5)}`);
+  return utf8bom(["Предмет;Оценка 1;Оценка 2;Оценка 3", ...rows].join("\r\n") + "\r\n");
+}
+
+const WORDS = ["КОМЕТА", "ГАЛАКТИКА", "МАЯК", "ЖИРАФ", "БАОБАБ", "ПАРУС",
+  "КАКТУС", "ВУЛКАН", "ПИНГВИН", "ЛАБИРИНТ", "ТЕЛЕСКОП", "ГЛОБУС", "КОМПАС",
+  "ФОНАРЬ", "ЯНТАРЬ", "МЕТЕОР", "АЙСБЕРГ", "КЕНГУРУ", "ОРБИТА", "СПУТНИК",
+  "ЭКВАТОР", "МАМОНТ", "ГЕЙЗЕР", "ДИРИЖАБЛЬ"];
+
+// Категории — как в тренажёре этой темы (gen.py, CATS). Шаг 4 спрашивает
+// про одну из трёх: в «Тайнике» таких файлов нет, считать однозначно.
+const CATS = {
+  IMAGE: {exts: ["png", "bmp"], label: "графических файлов (изображений)",
+          names: ["кот", "закат", "море", "лес", "горы", "дом", "цветок",
+                  "собака", "радуга", "снеговик"]},
+  AUDIO: {exts: ["wav"], label: "звуковых файлов",
+          names: ["звонок", "мелодия", "гудок", "сигнал", "нота", "будильник",
+                  "свисток"]},
+  WEB:   {exts: ["html", "htm"], label: "веб-страниц",
+          names: ["расписание", "новости", "кружки", "главная", "контакты",
+                  "библиотека"]},
+  TEXT:  {exts: ["txt"], label: "текстовых файлов",
+          names: ["заметка", "план", "список дел", "рецепт", "стих"]},
+  TABLE: {exts: ["csv"], label: "таблиц",
+          names: ["оценки", "покупки", "погода"]},
+};
+const TARGETS = ["IMAGE", "AUDIO", "WEB"];
+const SUBDIRS = ["Разное", "Старое", "Для урока", "Фото и звук", "Мои файлы"];
+
+async function makeFile(r, cat, ext, name){
+  if (ext === "png") return makePng(r);
+  if (ext === "bmp") return makeBmp(r);
+  if (ext === "wav") return makeWav(r);
+  if (ext === "html" || ext === "htm") return makeHtml(r, name[0].toUpperCase() + name.slice(1));
+  if (ext === "csv") return makeCsv(r);
+  return makeTxt(r);
+}
+
+// Архив задания по номеру. Один номер — один и тот же набор файлов, а
+// значит и ответы: перезагрузил страницу — вписал номер, проверка та же.
+async function genTask(seed){
+  const r = rng(seed * 7919 + 17);
+  const root = `Задание-${seed}/`;
+  const sub = pick(r, SUBDIRS) + "/";
+  const target = pick(r, TARGETS);
+  const files = [];
+
+  const readme = utf8bom(
+    "Это архив для практикума «Архиватор».\r\n" +
+    "Ответы на шаги 3-5 ищи в этой папке.\r\n" +
+    "Расширения не видно? Проводник: Вид -> Расширения имён файлов.\r\n");
+  files.push({path: root + "Прочитай меня.txt", data: readme, cat: "TEXT"});
+
+  for (const cat of Object.keys(CATS)){
+    const c = CATS[cat];
+    const n = cat === target ? int(r, 2, 5) : cat === "TEXT" || cat === "TABLE"
+      ? int(r, 1, 2) : int(r, 1, 3);
+    const names = shuffle(r, c.names).slice(0, n);
+    // у искомого типа файлы и в корне, и во вложенной папке: кто не
+    // заглянул внутрь, недосчитается
+    const where = names.map((_, i) => cat === target
+      ? (i === 0 ? root : i === 1 ? root + sub : pick(r, [root, root + sub]))
+      : pick(r, [root, root + sub]));
+    for (let i = 0; i < n; i++){
+      const ext = c.exts[cat === target && c.exts.length > 1 ? i % c.exts.length
+                         : int(r, 0, c.exts.length - 1)];
+      const data = await makeFile(r, cat, ext, names[i]);
+      files.push({path: where[i] + names[i] + "." + ext, data, cat, ext});
+    }
+  }
+
+  const word = pick(r, WORDS);
+  const secret = utf8bom("Тайное слово: " + word + "\r\n");
+  const nested = await makeZip([{name: "слово.txt", data: secret}], new Date(2026, 9, 1, 12));
+  files.push({path: root + "Тайник.zip", data: nested, cat: "ARCH", ext: "zip"});
+
+  // порядок как в Проводнике не важен, но пусть не по категориям
+  const body = shuffle(r, files.slice(1));
+  const ordered = [files[0], ...body].sort((a, b) =>
+    (a.path.split("/").length - b.path.split("/").length));
+
+  const bytes = files.reduce((s, f) => s + f.data.length, 0);
+  const inTarget = files.filter(f => f.cat === target);
+  const perExt = {};
+  inTarget.forEach(f => { perExt[f.ext] = (perExt[f.ext] || 0) + 1; });
+  return {
+    seed, root, sub, target, word, files: ordered,
+    zipName: `Задание-${seed}.zip`,
+    answers: {
+      bytes,
+      bytesNested: bytes + secret.length,
+      count: inTarget.length,
+      countRoot: inTarget.filter(f => f.path.split("/").length === 2).length,
+      countAll: files.length,
+      perExt,
+      nestedSize: nested.length,
+    },
+  };
+}
+
+async function taskZip(task){
+  const entries = [{name: task.root}, {name: task.root + task.sub}];
+  task.files.forEach(f => entries.push({name: f.path, data: f.data}));
+  return makeZip(entries);
+}
+
+/* ------------------------------------------- свой архив ученика (шаг 1) */
+
+const PICS = ["png", "jpg", "jpeg", "gif"];
+
+// Возвращает {ok, msgs[], txt, img}. Размеры наружу не показываем: их
+// ученик найдёт сам в шаге 2.
+function judgeOwn(entries){
+  const files = entries.filter(e => !e.dir);
+  const msgs = [];
+  const txts = files.filter(e => extOf(e.name) === "txt");
+  const imgs = files.filter(e => PICS.includes(extOf(e.name)));
+  const bmps = files.filter(e => extOf(e.name) === "bmp");
+  const prefer = (list, stem) => list.find(e => baseName(e.name).toLowerCase()
+      .startsWith(stem)) || list.slice().sort((a, b) => b.usize - a.usize)[0];
+  const txt = prefer(txts, "текст"), img = prefer(imgs, "экран");
+
+  if (!files.length) return {ok: false, msgs: ["Архив пустой — в нём нет ни одного файла."]};
+  if (!txt) msgs.push("В архиве нет текстового файла <code>.txt</code>.");
+  if (!img){
+    msgs.push(bmps.length
+      ? "Картинка сохранена как <code>bmp</code> — это изображение без сжатия, " +
+        "архиватор ужмёт его в разы, и опыт не получится. Сохрани снимок в Paint " +
+        "как <b>PNG</b>."
+      : "В архиве нет картинки <code>.png</code> — снимка экрана из Paint.");
+  }
+  if (txt && txt.usize < 4000){
+    msgs.push(`Текст слишком маленький: ${txt.usize} байт. Сделай заходы ` +
+      "<kbd>Ctrl+A</kbd>, <kbd>Ctrl+C</kbd>, десять <kbd>Ctrl+V</kbd>, " +
+      "сохрани и упакуй заново.");
+  } else if (txt && txt.csize * 3 > txt.usize){
+    msgs.push(txt.method === 0
+      ? "Архив собран <b>без сжатия</b> — в 7-Zip выбран уровень «Без сжатия». " +
+        "Упакуй заново с обычным уровнем или через «Отправить → Сжатая ZIP-папка»."
+      : "Текст сжался слабо. Опыт работает на повторах: одна фраза, потом " +
+        "<kbd>Ctrl+A</kbd>, <kbd>Ctrl+C</kbd> и десять <kbd>Ctrl+V</kbd>. " +
+        "Вставленный разный текст сжимается хуже.");
+  }
+  if (img && img.usize === 0) msgs.push("Картинка пустая — 0 байт.");
+  return {ok: msgs.length === 0, msgs, txt, img};
+}
+
+/* ------------------------------------------------- размеры (шаг 2) */
+
+// Проводник пишет размеры в архиве как Windows везде: «332 байт»,
+// «71,2 КБ», «401 КБ», «1,52 МБ» — три значащие цифры, хвост отброшен
+// (замер 07.10.2026: 73003 байт показаны как «71,2 КБ»). Ученик
+// переписывает как видит; «КБ» может не писать.
+function parseSize(raw){
+  const s = String(raw).replace(/[\s  ‎‏]/g, "").toLowerCase();
+  if (!s) return {empty: true};
+  const m = /^(\d+(?:[.,]\d+)?)(байта?|байтов|б|bytes?|b|кбайта?|кб|kb|к|мбайта?|мб|mb|м)?$/.exec(s);
+  if (!m) return {bad: true};
+  const u = m[2] || "";
+  return {x: parseFloat(m[1].replace(",", ".")),
+          unit: /^[бb]/.test(u) ? "b" : /^[мm]/.test(u) ? "mb" : /^[кk]/.test(u) ? "kb" : ""};
+}
+function sizeFits(p, bytes){
+  if (!p || p.empty || p.bad) return false;
+  const near = mult => Math.abs(p.x * mult - bytes) <=
+                       Math.max(mult === 1024 ? 1024 : 0, bytes * 0.011);
+  if (p.unit === "b") return p.x === bytes;
+  if (p.unit === "kb") return near(1024);
+  if (p.unit === "mb") return near(1048576);
+  return p.x === bytes || near(1024) || (bytes >= 1048576 && near(1048576));
+}
+
+/* ------------------------------------------------ вопросы (часть 2) */
+
+const rz = k => {
+  const a = k % 10, b = k % 100;
+  return a >= 2 && a <= 4 && !(b >= 12 && b <= 14) ? "раза" : "раз";
+};
+
+const QTYPES = [
+  // 1. во сколько раз
+  r => {
+    const k = int(r, 4, 25), c = int(r, 2, 30), A = c * k;
+    return {
+      kind: "во сколько раз",
+      q: `Текстовый файл весил <b>${A} КБ</b>, а в архиве занял <b>${c} КБ</b>.
+          Во сколько раз архиватор его сжал?`,
+      ans: k,
+      diag: g => g === A - c
+        ? "Это разность — на сколько КБ файл уменьшился. А спрашивают «во сколько раз»: это деление." : null,
+      rule: "«Во сколько раз» — делим исходный размер на сжатый, большее на меньшее.",
+    };
+  },
+  // 2. сколько было до упаковки
+  r => {
+    const k = int(r, 4, 20), c = int(r, 2, 25), A = c * k;
+    return {
+      kind: "сколько было",
+      q: `Текст сжался в архиве <b>в ${k} ${rz(k)}</b> и занимает там
+          <b>${c} КБ</b>. Сколько КБ весил файл до упаковки?`,
+      ans: A,
+      diag: g => g === c + k
+        ? `Сжался в ${k} ${rz(k)} — значит, до упаковки был в ${k} ${rz(k)} больше. Тут умножение, а не сложение.`
+        : g <= c
+        ? "До упаковки файл был больше, чем в архиве, а не меньше. Делить не нужно." : null,
+      rule: "Если файл сжался в несколько раз, то до упаковки он был во столько же раз больше: размер в архиве умножаем.",
+    };
+  },
+  // 3. на сколько КБ архив меньше
+  r => {
+    const c1 = int(r, 3, 20), k = int(r, 6, 15), A = c1 * k;
+    const B = int(r, 800, 3000), b = B - int(r, 5, 40);
+    const ans = (A + B) - (c1 + b);
+    return {
+      kind: "на сколько меньше",
+      q: `В архив положили текст <b>${A} КБ</b> и фотографию <b>${B} КБ</b>.
+          В архиве текст занял <b>${c1} КБ</b>, а фотография —
+          <b>${b} КБ</b>. На сколько КБ архив меньше, чем эти два файла
+          вместе?`,
+      ans,
+      diag: g => g === A - c1
+        ? "Это экономия только на тексте. Фотография тоже чуть-чуть ужалась — её экономию прибавь."
+        : g === c1 + b ? "Это размер самого архива. А спрашивают, на сколько он меньше двух файлов."
+        : g === A + B ? "Это размер двух файлов до упаковки. Вычти из него размер архива."
+        : g === B - b ? "Это экономия только на фотографии. Прибавь экономию на тексте." : null,
+      rule: "Сложи размеры до упаковки, сложи размеры в архиве и вычти одно из другого.",
+    };
+  },
+  // 4. сколько сожмётся в разы
+  r => {
+    const GOOD = [["txt", "дневник"], ["html", "главная"], ["csv", "оценки"],
+                  ["rtf", "доклад"], ["bmp", "рисунок"], ["htm", "контакты"]];
+    const BAD = [["jpg", "море"], ["png", "скриншот"], ["gif", "смайлик"],
+                 ["mp3", "песня"], ["mp4", "клип"], ["avi", "фильм"],
+                 ["zip", "проект"], ["rar", "фото с похода"], ["7z", "игра"],
+                 ["jpeg", "портрет"]];
+    const g = int(r, 1, 5);
+    const good = shuffle(r, GOOD).slice(0, g), bad = shuffle(r, BAD).slice(0, 6 - g);
+    const list = shuffle(r, [...good, ...bad]);
+    const hasBmp = good.some(x => x[0] === "bmp");
+    const badPng = bad.some(x => x[0] === "png");
+    return {
+      kind: "что сжимается",
+      q: `Эти файлы положили в архив. <b>Сколько из них</b> архиватор
+          сожмёт в несколько раз? Остальные почти не уменьшатся.
+          <div class="files-list">${list.map(x => x[1] + "." + x[0]).join("<br>")}</div>`,
+      ans: g,
+      diag: v => hasBmp && v === g - 1
+        ? "Похоже, не засчитан bmp. Это картинка без сжатия, «точка в точку»: повторов в ней много, архиватор ужмёт её в разы."
+        : badPng && v === g + 1
+        ? "Похоже, засчитан png. Он уже сжат внутри самого файла — архиватору там делать нечего." : null,
+      rule: "В разы сжимается то, что хранится «как есть»: текст (txt, rtf), таблицы csv, веб-страницы (htm, html), картинки bmp. " +
+            "Почти не сжимается то, что уже сжато внутри: фото jpg, png, gif, звук mp3, видео, архивы.",
+    };
+  },
+  // 5. какой из файлов — текст (или фотография)
+  r => {
+    const oddText = r() < 0.5;
+    const rows = [];
+    const squeeze = () => { const u = int(r, 40, 600); return [u, Math.max(1, Math.round(u / int(r, 6, 15)))]; };
+    const keep = () => { const u = int(r, 300, 5000); return [u, u - int(r, 1, Math.max(2, Math.floor(u * 0.04)))]; };
+    const odd = int(r, 0, 3);
+    for (let i = 0; i < 4; i++) rows.push(i === odd ? (oddText ? squeeze() : keep())
+                                                     : (oddText ? keep() : squeeze()));
+    const largest = rows.reduce((m, x, i) => x[0] > rows[m][0] ? i : m, 0);
+    return {
+      kind: "размер против типа",
+      q: `Имена файлов спрятали — остались только размеры, в КБ.
+          ${oddText ? "Один файл — текстовый, остальные — фото, музыка и видео. Под каким номером <b>текст</b>?"
+                    : "Три файла — текстовые, один — фотография. Под каким номером <b>фотография</b>?"}
+          <table><tr><th>№</th><th>Размер</th><th>Сжатый размер</th></tr>
+          ${rows.map((x, i) => `<tr><td>${i + 1}</td><td class="n">${x[0]}</td><td class="n">${x[1]}</td></tr>`).join("")}
+          </table>`,
+      ans: odd + 1,
+      diag: g => g === largest + 1 && largest !== odd
+        ? "Размер файла про его тип ничего не говорит. Смотри, насколько сжатый размер меньше исходного." : null,
+      rule: "Текст в архиве сжимается в разы, фотография, музыка и видео — почти нет. Сравни два столбца в каждой строке.",
+    };
+  },
+  // 6. размер после распаковки
+  r => {
+    const photo = r() < 0.4;
+    const A = photo ? int(r, 900, 4000) : int(r, 30, 600);
+    const a = photo ? A - int(r, 5, 60) : Math.max(1, Math.round(A / int(r, 5, 15)));
+    return {
+      kind: "после распаковки",
+      q: `${photo ? "Фотография весила" : "Текстовый файл весил"} <b>${A} КБ</b>,
+          в архиве ${photo ? "заняла" : "занял"} <b>${a} КБ</b>. Архив распаковали.
+          Сколько КБ весит ${photo ? "распакованная фотография" : "распакованный файл"}?`,
+      ans: A,
+      diag: g => g === a
+        ? "Столько файл занимает только внутри архива. Распаковка возвращает его целиком, байт в байт."
+        : g === A - a ? "Это сколько сэкономило сжатие. А распакованный файл снова такой, как до упаковки." : null,
+      rule: "Архиватор сжимает без потерь: после распаковки файл точно такой же, как до упаковки.",
+    };
+  },
+];
+
+function makeQuestion(type, seed){
+  return Object.assign({type}, QTYPES[type](rng(seed)));
+}
+
+return {rng, int, crc32, to866, from866, makeZip, readZip, unzipEntry,
+        baseName, extOf, genTask, taskZip, judgeOwn, parseSize, sizeFits,
+        QTYPES, makeQuestion, sniff, WORDS, CATS,
+        hasDeflate: !!deflateRaw};
+})();
+/* ==== /ЯДРО ==== */
+
+/* ================================================================ шкала */
+
+// Практика — база, вопросы — плюс балл (так устроены практикумы 11 базы,
+// Света приняла 12.09.2026). Шаги практики засчитываются, когда страница
+// приняла результат; вопросы — только с первой попытки (06.10.2026).
+const SCALE = [[5, 5], [4, 4], [3, 3]];
+const STEPS = 5;
+const Q_TOTAL = LAB.QTYPES.length;
+const BONUS_AT = 5;
+
+function markNow(){
+  const p = stepsDone(), n = clean();
+  const base = (SCALE.find(s => p >= s[0]) || [0, null])[1];
+  if (base === null) return null;
+  return Math.min(5, base + (n >= BONUS_AT ? 1 : 0));
+}
+
+function ladderHtml(n, scale, cap){
+  let from = 0;
+  return `<span class="cap">${cap}</span>` + scale.slice().reverse().map(([need, m]) => {
+    const size = need - from;
+    const got = Math.max(0, Math.min(size, n - from));
+    const reached = n >= need;
+    from = need;
+    const cells = Array.from({length: size},
+        (_, k) => `<i class="${k < got ? "f" : ""}"></i>`).join("");
+    return `<div class="seg${reached ? " got" : ""}" style="flex:${size} 1 0">
+      <div class="cells">${cells}</div>
+      <div class="lab">${(reached ? "✓ " : "") + m}</div>
+    </div>`;
+  }).join("");
+}
+
+/* =============================================================== состояние */
+
+let st;
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
+                          .replace(/>/g, "&gt;");
+const randSeed = () => 1000 + Math.floor(Math.random() * 9000);
+
+function num(raw){
+  const s = String(raw).replace(/[\s  ]/g, "").replace(/(кб|kb|байт|байта|байтов)$/i, "");
+  if (!s) return {empty: true};
+  if (!/^\d+$/.test(s)) return {bad: true, comma: /[.,]/.test(s)};
+  return {v: parseInt(s, 10)};
+}
+
+const norm = s => String(s).normalize("NFKC").toLowerCase().replace(/ё/g, "е")
+  .replace(/[^0-9a-zа-я]+/g, "");
+
+const stepsDone = () => [1, 2, 3, 4, 5].filter(k => st.steps[k]).length;
+const clean = () => st.tasks.filter(t => t.status === "ok" && t.tries === 0).length;
+const mistakes = () => st.tasks.filter(t => t.tries > 0).length;
+
+/* =================================================================== шаги */
+
+function setStep(k, ok){
+  st.steps[k] = ok || st.steps[k];
+  $("s" + k).className = "task" + (st.steps[k] ? " ok" : "");
+  updatePanel();
+}
+function say(id, html, cls){
+  $(id).innerHTML = html ? `<div class="why ${cls || ""}">${html}</div>` : "";
+}
+function verdict(id, ok, text){
+  $(id).innerHTML = text ? `<span class="verdict ${ok ? "ok" : "err"}">${text}</span>` : "";
+}
+
+/* ---------- шаг 1: свой архив */
+
+async function takeOwn(file){
+  if (!file) return;
+  $("ownName").innerHTML = `<b>${esc(file.name)}</b>`;
+  const b = new Uint8Array(await file.arrayBuffer());
+  const z = LAB.readZip(b);
+  if (z.error){
+    const why = {
+      rar: "Это архив <b>rar</b>. Для проверки нужен zip: «Отправить → Сжатая ZIP-папка» или в 7-Zip формат <code>zip</code>.",
+      "7z": "Это архив <b>7z</b>. Для проверки нужен zip: «Отправить → Сжатая ZIP-папка» или в 7-Zip формат <code>zip</code>.",
+      gz: "Это архив <b>gz</b>. Для проверки нужен zip: «Отправить → Сжатая ZIP-папка».",
+      broken: "Архив повреждён или не дописан. Упакуй файлы заново.",
+      other: "Это не архив. Выбери файл <code>Архив.zip</code> — тот, что появился после «Отправить → Сжатая ZIP-папка».",
+    }[z.error];
+    st.own = null;
+    say("s1out", why, "bad");
+    return;
+  }
+  const j = LAB.judgeOwn(z.entries);
+  const inside = z.entries.filter(e => !e.dir).map(e => `<code>${esc(e.name)}</code>`).join(", ");
+  if (!j.ok){
+    st.own = null;
+    say("s1out", `<p>Внутри: ${inside || "ничего"}.</p><ul>${j.msgs.map(m => `<li>${m}</li>`).join("")}</ul>`, "bad");
+    return;
+  }
+  const changed = st.own && (st.own.txt.usize !== j.txt.usize || st.own.img.usize !== j.img.usize);
+  st.own = j;
+  $("s2t").textContent = LAB.baseName(j.txt.name);
+  $("s2p").textContent = LAB.baseName(j.img.name);
+  const extra = z.entries.some(e => e.name.includes("/"))
+    ? "<p>Файлы лежат в архиве внутри папки — так тоже можно.</p>" : "";
+  say("s1out", `<p><b>Архив принят.</b> Внутри: ${inside}.</p>${extra}
+       <p>Размеры не показываю — их ты найдёшь сам в шаге 2.</p>`, "good");
+  if (changed && !st.steps[2]) { verdict("s2v", false, ""); say("s2out", ""); }
+  setStep(1, true);
+}
+
+/* ---------- шаг 2: размеры */
+
+function checkSizes(){
+  if (!st.own){
+    verdict("s2v", false, "Сначала шаг 1");
+    say("s2out", "Покажи странице свой архив в шаге 1 — числа проверяются по нему.", "bad");
+    return;
+  }
+  const ids = ["s2a", "s2b", "s2c", "s2d"];
+  const vals = ids.map(id => LAB.parseSize($(id).value));
+  if (vals.some(v => v.empty)){ verdict("s2v", false, "Заполни все четыре клетки"); return; }
+  if (vals.some(v => v.bad)){
+    verdict("s2v", false, "Не разобрать число");
+    say("s2out", "Перепиши так, как написано в Проводнике: <code>71,2</code>, " +
+        "<code>401 КБ</code>, <code>332 байт</code>, <code>1,52 МБ</code>. «КБ» можно не писать, " +
+        "а «байт» и «МБ» — обязательно.", "bad");
+    return;
+  }
+  const [a, b, c, d] = vals;
+  const T = st.own.txt, P = st.own.img;
+  const want = [T.usize, T.csize, P.usize, P.csize];
+  const got = [a, b, c, d];
+  const fits = LAB.sizeFits;
+  const okAll = got.every((v, i) => fits(v, want[i]));
+  if (!okAll){
+    const notes = [];
+    if (fits(a, T.csize) && fits(b, T.usize) || fits(c, P.csize) && fits(d, P.usize)){
+      notes.push("Похоже, перепутаны столбцы. В Проводнике <b>Сжатый размер</b> стоит левее, чем <b>Размер</b>: «Размер» — сколько файл весит сам, «Сжатый» — сколько он занимает в архиве.");
+    } else if (fits(a, P.usize) && fits(c, T.usize)){
+      notes.push("Похоже, перепутаны строки: числа картинки стоят у текста, и наоборот.");
+    } else {
+      const names = [LAB.baseName(T.name), LAB.baseName(P.name)];
+      got.forEach((v, i) => {
+        if (!fits(v, want[i])){
+          const u = got[i].unit;
+          notes.push(`${esc(names[i >> 1])}, «${i % 2 ? "Сжатый размер" : "Размер"}»: в архиве другое число` +
+            (u === "" && want[i] < 1024 ? " — может, там написано «байт»? Тогда допиши «байт»." : "."));
+        }
+      });
+      notes.push("Смотри строку своего файла в архиве, вид «Таблица», и единицы: байт, КБ или МБ. Если ты успел перепаковать архив — покажи странице новый в шаге 1.");
+    }
+    verdict("s2v", false, "Не совпадает");
+    say("s2out", notes.map(n => `<p>${n}</p>`).join(""), "bad");
+    return;
+  }
+  verdict("s2v", true, "Верно");
+  say("s2out", explainSizes(T, P), "good");
+  setStep(2, true);
+}
+
+function times(a, c){
+  if (c === 0) return "почти до нуля";
+  const t = a / c;
+  const s = t >= 10 ? String(Math.round(t)) : t.toFixed(1).replace(".", ",");
+  return "в " + s + " " + (t >= 10 ? rzWord(Math.round(t)) : "раза");
+}
+function rzWord(k){ const a = k % 10, b = k % 100; return a >= 2 && a <= 4 && !(b >= 12 && b <= 14) ? "раза" : "раз"; }
+const kb = x => (x / 1024).toFixed(1).replace(".", ",").replace(/,0$/, "");
+
+function explainSizes(T, P){
+  const tSaved = Math.min(99, Math.round((1 - T.csize / T.usize) * 100));
+  const pSaved = Math.round((1 - P.csize / P.usize) * 100);
+  const pic = P.csize / P.usize >= 0.8
+    ? `<p><b>Картинка</b> почти не сжалась: ушло всего ${pSaved}%.
+       Она уже сжата внутри самого файла — PNG и JPG так устроены. Так же
+       ведут себя фотографии, музыка и видео: архиватору там нечего делать.</p>`
+    : `<p><b>Картинка</b> сжалась на ${pSaved}% — для картинок это много.
+       На снимке экрана большие одноцветные участки, они и ужались.
+       С фотографией так не выйдет: она уже сжата внутри.</p>`;
+  const a = T.usize + P.usize, c = T.csize + P.csize;
+  return `<p><b>Текст</b> сжался ${times(T.usize, T.csize)}: ушло ${tSaved === 99 ? "больше 99" : tSaved}% объёма.
+       В нём одна фраза повторяется тысячу раз, а архиватор записывает
+       повтор один раз и дальше только ссылается на него.</p>${pic}
+     <p><b>Итог:</b> до упаковки ${kb(a)} КБ, в архиве ${kb(c)} КБ. Почти всю
+       экономию дал текст: сжимается то, в чём есть повторы.</p>
+     <p>В Проводнике есть ещё столбец <b>Сжатие</b> (в некоторых версиях
+       Windows — <b>Коэффициент</b>) — это и есть «сколько процентов ушло».</p>`;
+}
+
+/* ---------- опыт */
+
+function experiment(kept){
+  say("expout", kept
+    ? `<p>Проверь ещё раз: закрой архив, открой его снова и посмотри файл.
+       Обычно правка пропадает — или Блокнот при сохранении спрашивает, куда
+       сохранить, и кладёт файл <b>рядом с архивом</b>, а не в него.</p>
+       <p>Пока файл лежит в архиве, работать с ним нельзя: сначала
+       «Извлечь всё».</p>`
+    : `<p>Так и есть. Из архива открылась <b>временная копия</b> файла — её
+       ты и поправил. Сам архив не изменился.</p>
+       <p>Поэтому на ВПР задание начинается словами «распакуйте архив»: сначала
+       «Извлечь всё», потом работать.</p>`, kept ? "" : "good");
+}
+
+/* ---------- шаги 3–5: архив задания */
+
+async function loadTask(seed){
+  st.seed = seed;
+  $("seed").value = seed;
+  st.task = await LAB.genTask(seed);
+  const t = st.task;
+  $("s4q").innerHTML = `Сколько в папке задания <b>${LAB.CATS[t.target].label}</b>?
+     Считай во всех папках внутри неё.`;
+}
+
+async function download(){
+  const t = st.task;
+  const z = await LAB.taskZip(t);
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([z], {type: "application/zip"}));
+  a.download = t.zipName;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+  st.zipLen = z.length;
+}
+
+async function seedChanged(){
+  const v = num($("seed").value);
+  if (v.v >= 1000 && v.v <= 9999 && v.v !== st.seed){
+    await loadTask(v.v);
+    ["s3", "s4", "s5"].forEach(id => { if (!st.steps[+id[1]]){ verdict(id + "v", false, ""); say(id + "out", ""); } });
+  }
+}
+
+function checkBytes(){
+  const v = num($("s3in").value);
+  if (v.empty) return;
+  const A = st.task.answers;
+  if (v.bad){
+    verdict("s3v", false, "Нужно число байт");
+    say("s3out", v.comma
+      ? "Это размер в КБ. В свойствах рядом в скобках стоит точное число <b>байт</b> — перепиши его. Пробелы между цифрами можно не ставить."
+      : "Впиши только число, например <code>48213</code>.", "bad");
+    return;
+  }
+  const g = v.v;
+  if (g === A.bytes || g === A.bytesNested){
+    verdict("s3v", true, "Верно");
+    say("s3out", g === A.bytesNested
+      ? `<p>Ты уже распаковал и <code>Тайник.zip</code> — в папке прибавился его файл. Засчитано.</p>`
+      : `<p>Папка весит ${g} байт. А сам архив был меньше — на это и нужен архиватор.</p>`, "good");
+    setStep(3, true);
+    return;
+  }
+  let why;
+  const zipLen = st.zipLen;
+  if (zipLen && g === zipLen){
+    why = "Это размер самого архива <code>.zip</code>. А нужна папка, которая появилась после «Извлечь всё».";
+  } else if (g % 4096 === 0 && g > A.bytes){
+    why = "Это строка <b>«На диске»</b> — сколько места заняли кусочки диска. Нужна строка <b>«Размер»</b>, она выше.";
+  } else if (g < 100000 && Math.abs(g - A.bytes) < 1024 && g !== A.bytes){
+    why = "Близко, но не то. Проверь, что смотришь свойства всей папки задания, а не одного файла.";
+  } else {
+    why = `Не совпадает с архивом номер <b>${st.seed}</b>. Проверь номер в имени скачанного
+           файла — если он другой, впиши его в поле «номер архива». И смотри свойства
+           <b>папки</b>, строку «Размер», число в скобках.`;
+  }
+  verdict("s3v", false, "Не то");
+  say("s3out", why, "bad");
+}
+
+function checkCount(){
+  const v = num($("s4in").value);
+  if (v.empty) return;
+  if (v.bad){ verdict("s4v", false, "Нужно число"); say("s4out", "Впиши только число цифрами.", "bad"); return; }
+  const A = st.task.answers, t = st.task, g = v.v;
+  if (g === A.count){
+    verdict("s4v", true, "Верно");
+    const exts = LAB.CATS[t.target].exts.map(x => `<code>${x}</code>`).join(" и ");
+    say("s4out", `<p>Это файлы с расширением ${exts}.</p>`, "good");
+    setStep(4, true);
+    return;
+  }
+  const notes = [];
+  if (g === A.countRoot) notes.push(`Загляни и во вложенную папку <code>${esc(t.sub.slice(0, -1))}</code>.`);
+  else if (g === A.countAll || g === A.countAll + 2) notes.push("Похоже, посчитаны все файлы подряд. Нужны только файлы одного типа.");
+  const pe = A.perExt, keys = Object.keys(pe);
+  if (keys.length > 1 && keys.some(k => pe[k] === g)){
+    notes.push(t.target === "IMAGE"
+      ? "И <code>png</code>, и <code>bmp</code> — изображения. Считай оба."
+      : "И <code>htm</code>, и <code>html</code> — веб-страницы. Считай оба.");
+  }
+  if (!notes.length) notes.push("Пересчитай. Расширения не видно — включи «Вид → Расширения имён файлов» или смотри столбец «Тип» в виде «Таблица».");
+  verdict("s4v", false, "Не то");
+  say("s4out", notes.map(n => `<p>${n}</p>`).join(""), "bad");
+}
+
+function checkWord(){
+  const raw = $("s5in").value;
+  if (!norm(raw)) return;
+  const w = norm(st.task.word), g = norm(raw);
+  if (g === w || g.endsWith(w) && g.length <= w.length + 14){
+    verdict("s5v", true, "Верно");
+    say("s5out", "<p>Архив внутри архива — обычное дело: распаковывать приходится по очереди.</p>", "good");
+    setStep(5, true);
+    return;
+  }
+  verdict("s5v", false, "Не то");
+  say("s5out", `<p><code>Тайник.zip</code> — тоже архив. Его надо распаковать отдельно:
+     правой кнопкой по нему → «Извлечь всё». Слово — в файле <code>слово.txt</code>.</p>
+     <p>Проверь и номер архива: он должен совпадать с номером в имени скачанного файла.</p>`, "bad");
+}
+
+/* ============================================================== вопросы */
+
+const asTask = (type, extra) => Object.assign(
+  LAB.makeQuestion(type, Math.floor(Math.random() * 2 ** 31)),
+  {status: "open", tries: 0, draft: "", given: "", note: "", extra});
+
+function checkQ(i){
+  const t = st.tasks[i];
+  if (!t || t.status === "ok") return;
+  const el = $("in" + i);
+  const v = num(el ? el.value : "");
+  if (v.empty) return;
+  if (v.bad){
+    t.draft = el.value;
+    t.note = "ответ — целое число цифрами";
+    renderQ();
+    return;
+  }
+  t.note = "";
+  t.given = String(v.v);
+  if (v.v === t.ans){
+    t.status = "ok";
+  } else {
+    t.status = "err";
+    t.draft = el.value;
+    t.last = t.diag(v.v);
+    if (t.tries++ === 0) st.tasks.push(asTask(t.type, true));
+  }
+  renderQ();
+  if (t.status === "ok") focusNextOpen(i + 1);
+}
+
+function focusNextOpen(from){
+  let idx = st.tasks.findIndex((t, k) => k >= from && t.status !== "ok");
+  if (idx < 0) idx = st.tasks.findIndex(t => t.status !== "ok");
+  const el = idx >= 0 && $("in" + idx);
+  if (el) el.focus();
+}
+
+function renderQ(){
+  st.tasks.forEach((t, i) => {
+    const el = $("in" + i);
+    if (el && t.status !== "ok") t.draft = el.value;
+  });
+  const box = $("tasks");
+  box.innerHTML = "";
+  st.tasks.forEach((t, i) => {
+    const hinted = t.status === "ok" && t.tries > 0;
+    const card = document.createElement("div");
+    card.className = "task" + (hinted ? " hinted" : t.status === "open" ? "" : " " + t.status);
+    let tail;
+    if (t.status === "ok"){
+      tail = `<div class="row"><input type="text" value="${esc(t.given)}" disabled>
+        ${hinted ? `<span class="verdict hi">Решено после подсказки — в зачёт не идёт</span>`
+                 : `<span class="verdict ok">Правильно</span>`}</div>`;
+    } else {
+      const note = t.note ? `<span class="verdict err">${esc(t.note)}</span>`
+        : t.status === "err" ? `<span class="verdict err">Неверно</span>` : "";
+      tail = `<div class="row">
+          <input type="text" id="in${i}" inputmode="numeric" autocomplete="off"
+                 placeholder="число" value="${esc(t.draft || "")}">
+          <button data-q="${i}">Проверить</button>${note}</div>` +
+        (t.tries > 0 ? `<div class="why">${t.last ? `<p>${t.last}</p>` : ""}<p>${t.rule}</p>
+          ${t.tries === 1 ? `<p>Ниже появился новый такой же вопрос — он пойдёт в зачёт.</p>` : ""}</div>` : "");
+    }
+    card.innerHTML = `<div class="q"><div class="num">${i + 1}</div>
+      <div class="text">${t.q}${t.extra ? `<span class="extra">вместо ошибки</span>` : ""}</div></div>${tail}`;
+    box.appendChild(card);
+  });
+  box.querySelectorAll("button[data-q]").forEach(b =>
+    b.addEventListener("click", () => checkQ(+b.dataset.q)));
+  box.querySelectorAll("input[id^=in]").forEach(inp =>
+    inp.addEventListener("keydown", e => {
+      if (e.key === "Enter"){ e.preventDefault(); checkQ(+inp.id.slice(2)); }
+    }));
+  updatePanel();
+}
+
+/* ================================================================ панель */
+
+function updatePanel(){
+  const p = stepsDone(), n = clean(), errs = mistakes();
+  const m = markNow();
+  const el = $("mark");
+  el.textContent = m === null ? "—" : m;
+  el.className = m === null ? "" : "m" + m;
+  $("ladderP").innerHTML = ladderHtml(p, SCALE, "практика");
+  $("ladderT").innerHTML = ladderHtml(n, [[BONUS_AT, "+1"]], "вопросы");
+  $("stats").innerHTML =
+    `практика: <b>${p}</b> из ${STEPS} шагов<br>` +
+    `вопросы с первой попытки: <b>${n}</b> из ${Q_TOTAL}` +
+    (n >= BONUS_AT ? " — плюс балл" : ` (для балла нужно ${BONUS_AT})`) +
+    (errs ? `<br>ошибок в вопросах: <b>${errs}</b>` : "");
+  const allQ = st.tasks.every(t => t.status === "ok");
+  $("done").innerHTML = p === STEPS && allQ
+    ? `<div class="done">Практикум пройден: все ${STEPS} шагов, вопросы с первой
+       попытки — ${n} из ${Q_TOTAL}. Оценка ${m}.</div>` : "";
+}
+
+/* =============================================================== запуск */
+
+async function newRun(){
+  st = {steps: {}, own: null, task: null, seed: 0, zipLen: 0,
+        tasks: LAB.QTYPES.map((_, k) => k).sort(() => Math.random() - 0.5)
+               .map(k => asTask(k, false))};
+  ["s1", "s2", "s3", "s4", "s5"].forEach(id => { $(id).className = "task"; say(id + "out", ""); });
+  ["s2v", "s3v", "s4v", "s5v"].forEach(id => { $(id).innerHTML = ""; });
+  ["s2a", "s2b", "s2c", "s2d", "s3in", "s4in", "s5in"].forEach(id => { $(id).value = ""; });
+  $("own").value = "";
+  $("ownName").innerHTML = "или перетащи файл <b>Архив.zip</b> сюда";
+  $("s2t").textContent = "текст.txt";
+  $("s2p").textContent = "экран.png";
+  say("expout", "");
+  await loadTask(randSeed());
+  renderQ();
+  window.scrollTo(0, 0);
+}
+
+$("own").addEventListener("change", e => takeOwn(e.target.files[0]));
+const drop = $("drop");
+["dragenter", "dragover"].forEach(ev => drop.addEventListener(ev, e => {
+  e.preventDefault(); drop.classList.add("over");
+}));
+["dragleave", "drop"].forEach(ev => drop.addEventListener(ev, e => {
+  e.preventDefault(); drop.classList.remove("over");
+}));
+drop.addEventListener("drop", e => takeOwn(e.dataTransfer.files[0]));
+// файл, брошенный мимо рамки, браузер открыл бы вместо страницы
+window.addEventListener("dragover", e => e.preventDefault());
+window.addEventListener("drop", e => e.preventDefault());
+
+$("s2go").addEventListener("click", checkSizes);
+document.querySelectorAll("[data-exp]").forEach(b =>
+  b.addEventListener("click", () => experiment(b.dataset.exp === "1")));
+$("dl").addEventListener("click", download);
+$("seed").addEventListener("change", seedChanged);
+$("seed").addEventListener("keydown", e => { if (e.key === "Enter") seedChanged(); });
+$("s3go").addEventListener("click", checkBytes);
+$("s4go").addEventListener("click", checkCount);
+$("s5go").addEventListener("click", checkWord);
+[["s2a", checkSizes], ["s2b", checkSizes], ["s2c", checkSizes], ["s2d", checkSizes],
+ ["s3in", checkBytes], ["s4in", checkCount], ["s5in", checkWord]].forEach(([id, fn]) =>
+  $(id).addEventListener("keydown", e => { if (e.key === "Enter"){ e.preventDefault(); fn(); } }));
+$("again").addEventListener("click", newRun);
+newRun();
+</script>
+<p class="ai-mark" style="margin:34px auto 0;max-width:860px;padding-top:12px;border-top:1px solid #d9dce6;color:#5c6070;font:13px/1.5 'Segoe UI',system-ui,sans-serif">Материалы подготовлены с использованием технологий искусственного интеллекта.</p>
+</body>
+</html>
