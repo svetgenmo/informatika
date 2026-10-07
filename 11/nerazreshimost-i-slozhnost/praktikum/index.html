@@ -1,0 +1,1456 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Неразрешимые задачи и сложность вычислений — обзорный практикум</title>
+<meta name="description" content="Обзорный практикум 11 класса (углублённый) к тринадцатой паре: машина Поста и нормальные алгорифмы Маркова — выполнить программу Поста, стёртая команда, выполнить алгорифм Маркова, что делает алгорифм, составить свой алгорифм.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E11%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{margin:0;padding:20px 16px 60px;font:17px/1.55 "Segoe UI",system-ui,sans-serif}
+.wrap{max-width:820px;margin:0 auto}
+h1{font-size:23px;margin:0 0 4px}
+h2{font-size:18px;margin:0 0 10px}
+.sub{color:var(--muted);font-size:15px;margin:0 0 18px}
+code{font-family:Consolas,"Cascadia Mono",monospace;background:var(--card);
+     border:1px solid var(--line);border-radius:5px;padding:1px 6px;
+     font-size:15px;letter-spacing:.04em}
+.intro{border:1px solid var(--line);border-radius:12px;background:var(--card);
+       padding:14px 18px;margin-bottom:18px}
+.intro dl{margin:0}
+.intro dt{font-weight:700;margin-top:10px}
+.intro dt:first-child{margin-top:0}
+.intro dd{margin:2px 0 0}
+.progress{border:2px solid var(--accent);border-radius:12px;padding:12px 16px;
+          background:#fff;margin-bottom:18px}
+.ptop{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.ptop h2{margin:0}
+.sp{flex:1 1 auto}
+.score{display:flex;align-items:baseline;gap:10px;color:var(--muted);font-size:15px}
+.score b{font:700 34px/1 "Segoe UI",system-ui,sans-serif;color:var(--ink);
+         min-width:40px;text-align:center;border:2px solid var(--line);
+         border-radius:8px;padding:2px 8px}
+.m5 b{color:var(--ok);border-color:var(--ok-line)}
+.m4 b{color:var(--accent);border-color:#a9c6e8}
+.m3 b{color:#8a5a00;border-color:var(--hi-line)}
+/* Лесенка отметки (правило «тройку добрать, 4 и 5 заработать», 06.10.2026). */
+.ladder{display:flex;gap:10px;flex:1 1 100%;margin-top:4px}
+.seg{min-width:0}
+.cells{display:flex;gap:3px}
+.cells i{flex:1 1 0;height:14px;border-radius:4px;background:#e4e7ef}
+.cells i.f{background:var(--accent)}
+.seg.got .cells i{background:var(--ok)}
+.seg .lab{font-size:13px;color:var(--muted);text-align:center;margin-top:2px}
+.seg.got .lab{color:var(--ok)}
+.seg.capped .cells i{background:repeating-linear-gradient(45deg,
+  #f3d3d0 0 4px,#fdecea 4px 8px)}
+.seg.capped .lab{color:var(--err)}
+.types{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);border-radius:20px;padding:4px 12px;
+      font-size:14px;color:var(--muted);background:var(--card)}
+.chip.done{border-color:var(--ok-line);background:var(--ok-bg);color:var(--ok);
+           font-weight:600}
+.chip.miss{border-color:var(--err-line);background:var(--err-bg);color:var(--err)}
+.chip.cur{border-color:var(--accent);color:var(--accent);font-weight:600}
+.card{border:1px solid var(--line);border-radius:12px;padding:16px 18px;
+      background:#fff;margin-bottom:14px}
+.card.ok{border-color:var(--ok-line);background:var(--ok-bg)}
+.card.err{border-color:var(--err-line);background:var(--err-bg)}
+.tag{font-size:13px;color:var(--muted);margin:0 0 6px}
+.q{font-size:17px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+input[type=text]{font:16px/1 Consolas,monospace;padding:10px 12px;border-radius:8px;
+                 border:1px solid var(--line);width:100%;max-width:340px}
+button{font:600 15px/1 inherit;padding:11px 16px;border-radius:9px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);color:var(--muted)}
+.verdict{margin-top:10px;font-size:15.5px;font-weight:600}
+.verdict.ok{color:var(--ok)}
+.verdict.err{color:var(--err)}
+.why{margin-top:8px;font-size:15.5px;color:var(--ink)}
+.note{border:1px solid var(--hi-line);background:var(--hi-bg);border-radius:10px;
+      padding:11px 15px;margin:12px 0;font-size:15.5px}
+.code{font:700 26px/1.2 Consolas,monospace;letter-spacing:.06em;
+      background:var(--card);border:2px dashed var(--accent);border-radius:12px;
+      padding:16px;text-align:center;margin:12px 0;user-select:all}
+.code.wait{font-size:18px;letter-spacing:0;color:#888}
+.stats{color:var(--muted);font-size:14px}
+label{display:block;font-size:14px;color:var(--muted);margin-bottom:3px}
+.fields{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0}
+.fields div{flex:1 1 180px}
+.fields input{max-width:none}
+sup,sub{font-size:12px}
+h3{font-size:16.5px;margin:16px 0 6px;color:var(--accent)}
+details.help{margin-top:26px;border:1px solid var(--line);border-radius:12px;
+        padding:12px 18px;background:var(--card)}
+details.help summary{cursor:pointer;font-weight:600;font-size:17px;
+        color:var(--accent)}
+details.help p{margin:6px 0}
+details.help ol,details.help ul{margin:6px 0;padding-left:22px}
+details.help li{margin:4px 0}
+details.help table{border-collapse:collapse;margin:8px 0;font-size:15px}
+details.help th,details.help td{border:1px solid var(--line);
+        padding:4px 10px;text-align:center;background:#fff}
+details.help th{background:#fff;color:var(--muted);font-weight:600}
+table.gm{border-collapse:collapse;margin:10px 0;font:15px/1.2 Consolas,"Cascadia Mono",monospace}
+table.gm th,table.gm td{border:1px solid var(--line);min-width:34px;height:30px;
+        text-align:center;padding:0 4px;background:#fff}
+table.gm th{background:var(--card);color:var(--muted);font-weight:600}
+/* Список утверждений в понятийной задаче: строки длинные, их надо разделить. */
+.q ol.st{margin:10px 0;padding-left:26px}
+.q ol.st li{margin:6px 0}
+/* Пост и Марков: клетка под кареткой, стёртая команда, программы, варианты. */
+table.gm td.h{background:var(--hi-bg);border:2px solid var(--hi);font-weight:700}
+table.gm td.miss{background:var(--hi-bg);color:var(--hi);font-weight:700}
+table.post td,table.mk td{min-width:110px;text-align:left;padding:0 12px;white-space:nowrap}
+table.tape td{min-width:30px}
+table.tape tr:first-child td{color:var(--muted);font-size:13px;height:22px}
+.q p.rules{font-size:14.5px;color:var(--muted);margin:6px 0 10px}
+.q p.rules code{font-size:13.5px}
+.q ol.op{margin:10px 0;padding-left:26px}
+.q ol.op li{margin:4px 0}
+.q i{font-style:normal;font-weight:600}
+textarea.prog{font:16px/1.45 Consolas,"Cascadia Mono",monospace;padding:10px 12px;
+              border-radius:8px;border:1px solid var(--line);width:100%;max-width:520px;
+              resize:vertical}
+details.help pre{font-family:Consolas,"Cascadia Mono",monospace;
+        background:#1e2430;color:#e7ecf5;padding:10px 12px;border-radius:9px;
+        font-size:14.5px;overflow-x:auto}
+</style>
+
+<style>img.frz-b{display:block;max-width:100%;height:auto;border-radius:10px;margin:8px 0}img.frz-i{display:inline-block;vertical-align:-0.32em;max-width:100%;height:auto;border-radius:5px}</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Неразрешимые задачи и сложность вычислений</h1>
+<p class="sub">11 класс, углублённый уровень. Обзорный практикум к четырнадцатой паре:
+шесть задач — остановится ли программа, где ошибётся проверенная функция и как
+растёт время работы.</p>
+
+<div class="intro">
+  <dl>
+    <dt>Что нужно сделать</dt>
+    <dd>Шесть задач — по одной на каждый вопрос темы, и все сразу на
+        странице: решай в любом порядке. Ответил верно — вопрос закрыт.
+        Ошибся — сразу видно, как это решается, а вопрос остаётся
+        открытым: кнопка «Новые числа» даёт ту же задачу с другими данными.
+        Времени нужно минут двадцать пять; значения переменных удобно
+        выписывать на черновике столбиком.</dd>
+    <dt>Программы — картинкой</dt>
+    <dd>Код в задачах нарисован картинкой: его не запускают, а читают. Вся
+        тема как раз про то, что можно узнать о программе, не запуская её, —
+        и чего нельзя узнать даже запуском.</dd>
+    <dt>Отметка</dt>
+    <dd>Закрыто 6 из 6 — «5», 5 — «4», 3 или 4 — «3». Исправленная задача не
+        засчитывается — за ошибку приходит новая, без ограничений: добирать
+        можно до пятёрки. Кнопка <b>«Получить код»</b> появляется, как только
+        закрыто три вопроса.</dd>
+    <dt>Короткий ответ — знак в знак</dt>
+    <dd>Ответ везде — целое число: <code>153</code>, а не <code>153 раза</code>.
+        На КЕГЭ ответ читает машина, и здесь так же.</dd>
+    <dt>Как сдать</dt>
+    <dd>В конце появится код работы и кнопка <b>«Сдать работу»</b>: впишешь
+        фамилию и класс, кнопка сама откроет форму с уже вписанным кодом.
+        Переписывать код руками не надо — на этом чаще всего и ошибаются.</dd>
+    <dt>Не успел на уроке</dt>
+    <dd>Открой эту же страницу дома и пройди целиком: вариант будет другой,
+        а сдаётся всё так же — одним кодом.</dd>
+  </dl>
+</div>
+
+<div class="progress">
+  <div class="ptop">
+    <h2>Вопросы темы</h2>
+    <span class="sp"></span>
+    <div class="score" id="scorebox">
+      <span>наработано на</span><b id="mark">—</b>
+    </div>
+    <div class="ladder" id="ladder"></div>
+  </div>
+  <div class="types" id="types"></div>
+  <p class="stats" id="stats"></p>
+</div>
+
+<div id="area"></div>
+<div id="bottom"></div>
+
+<details class="help">
+  <summary>Подсказка: неразрешимые задачи и сложность вычислений</summary>
+  <h3>Алгоритмически неразрешимые задачи</h3>
+  <p>Задача <b>алгоритмически неразрешима</b>, если не существует алгоритма,
+     который решает её <b>при любых</b> входных данных. Самая известная —
+     <b>задача останова</b> (Тьюринг, 1936): по тексту любой программы и её
+     входным данным узнать, завершится ли она.</p>
+  <p>Почему такой программы-«анализатора» нет. Допустим, она есть. Напишем
+     программу <b>Наоборот</b>: она берёт текст программы, спрашивает
+     анализатор, остановится ли эта программа на собственном тексте, и
+     делает наоборот — если «остановится», уходит в вечный цикл, если «нет» —
+     сразу останавливается. Что будет, если дать Наоборот её собственный
+     текст? Остановится — значит, анализатор сказал «нет»; не остановится —
+     значит, он сказал «да». Анализатор ошибся в любом случае — значит, его
+     не бывает.</p>
+  <p>«Запустить и подождать» не помогает: если программа не остановилась за
+     час, неизвестно, остановится ли она через два.</p>
+
+  <h3>Невозможность автоматической отладки</h3>
+  <p>Не бывает и программы, которая про <b>любую</b> программу скажет, верно
+     ли та работает на всех входах: с её помощью решалась бы задача останова.
+     Тесты помогают, но <b>тестирование показывает наличие ошибок, а не их
+     отсутствие</b> (Э. Дейкстра): тестов конечное число, входов — бесконечно
+     много. Функция, верная на числах до 100, может ошибиться на 121.</p>
+
+  <h3>А конкретную программу проверить можно</h3>
+  <p>Неразрешима задача для всех программ сразу. Про конкретную программу
+     часто можно рассуждать. Если всё, что программа помнит, — одно число n,
+     выпиши его значения столбиком: дошли до выхода из цикла — программа
+     завершится; значение <b>повторилось</b> — дальше всё пойдёт по тому же
+     кругу, программа не завершится никогда.</p>
+
+  <h3>Сложность вычислений</h3>
+  <p>Время работы оценивают <b>числом действий</b> в зависимости от размера
+     данных n, память — числом хранимых значений. Важен порядок роста:
+     <b>O(n²)</b> — растёт не быстрее c·n².</p>
+  <table>
+    <tr><th>что в программе</th><th>сколько раз выполнится тело</th><th>порядок</th></tr>
+    <tr><td>цикл по n, в нём цикл по m</td><td>n · m</td><td>n²</td></tr>
+    <tr><td>внутренний цикл до i (или от i до n)</td><td>0 + 1 + … + (n − 1) = n(n − 1)/2</td><td>n²</td></tr>
+    <tr><td>три цикла, i &lt; j &lt; k</td><td>n(n − 1)(n − 2)/6</td><td>n³</td></tr>
+    <tr><td>i умножается на 2, пока i &lt; n</td><td>столько, во сколько шагов 2<sup>c</sup> дорастёт до n</td><td>log n</td></tr>
+    <tr><td>цикл по n, в нём деление пополам</td><td>n · (число делений)</td><td>n · log n</td></tr>
+  </table>
+
+  <h3>Как растут время и память</h3>
+  <table>
+    <tr><th>сложность</th><th>n выросло в r раз</th></tr>
+    <tr><td>n</td><td>время ×r</td></tr>
+    <tr><td>n²</td><td>время ×r² (вдвое больше n — вчетверо дольше)</td></tr>
+    <tr><td>n³</td><td>время ×r³</td></tr>
+    <tr><td>2ⁿ (перебор)</td><td>n выросло <b>на</b> d — время ×2<sup>d</sup></td></tr>
+  </table>
+  <p>Таблица n × n чисел при n вдвое больше занимает вчетверо больше памяти.
+     Паролей длины L из k знаков — k<sup>L</sup>: длиннее на один знак — перебор в
+     k раз дольше.</p>
+
+  <h3>Какой алгоритм выгоднее</h3>
+  <p>Одну задачу решают алгоритмы разной сложности: поиск — линейный (n
+     сравнений) и двоичный (около log₂n, только в упорядоченном массиве);
+     сортировка — выбором (n(n − 1)/2) и слиянием (около n · log₂n). Сравнить
+     a·n² и b·n просто: a·n² &gt; b·n при n &gt; b/a. <b>Полиномиальные</b>
+     алгоритмы (n, n², n³) при больших n всегда выгоднее <b>переборных</b>
+     (2ⁿ), хотя при малых n бывает наоборот: 2⁵ = 32 &lt; 5³ = 125. В заданиях
+     26–27 ЕГЭ перебор всех пар для n = 10⁶ — это 10¹² действий, и программа
+     не успеет: нужен алгоритм порядка n.</p>
+</details>
+
+</div>
+
+<script>
+/* ==== ЗАДАЧИ: вставлено gen.py, руками не править ==== */
+/* Обзорный практикум к четырнадцатой паре 11 класса (углублённый уровень).
+   Содержание ФГОС, уроки 27–28 официального плана: «Алгоритмически
+   неразрешимые задачи. Задача останова. Невозможность автоматической
+   отладки программ» и «Сложность вычислений» (у урока 28 в столбце
+   «Задание ЕГЭ» — 26 и 27: там без оценки сложности не уложиться во время).
+
+   Единственный источник задач. В practice.html вписывается скриптом
+   gen.py между маркерами — руками страницу не править.
+
+   Все шесть вопросов — короткий ответ (целое число), сверка знак в знак,
+   как на КЕГЭ. Код задачи страница рисует картинкой (frz из блока FRZ):
+   у задачи поле code — текст программы, question — что до неё, after —
+   что после. */
+
+const T_TYPES = [
+  "понятия: неразрешимость и сложность",
+  "остановится ли программа",
+  "сколько раз выполнится",
+  "рост времени и памяти",
+  "какой алгоритм выгоднее",
+  "тесты и первая ошибка"
+];
+
+function tRng(seed) {
+  let s = seed >>> 0;
+  return function () {
+    s ^= s << 13; s >>>= 0;
+    s ^= s >> 17;
+    s ^= s << 5;  s >>>= 0;
+    return s / 4294967296;
+  };
+}
+
+function tRand(rng, a, b) { return a + Math.floor(rng() * (b - a + 1)); }
+function tPick(rng, arr) { return arr[tRand(rng, 0, arr.length - 1)]; }
+
+function tShuffle(rng, arr) {
+  const a = arr.slice();
+  for (let j = a.length - 1; j > 0; j--) {
+    const k = tRand(rng, 0, j);
+    const t = a[j]; a[j] = a[k]; a[k] = t;
+  }
+  return a;
+}
+
+function tPl(n, one, few, many) {
+  const h = n % 100, t = n % 10;
+  if (h >= 11 && h <= 14) return many;
+  if (t === 1) return one;
+  if (t >= 2 && t <= 4) return few;
+  return many;
+}
+
+function tEsc(s) {
+  return String(s).replace(/[&<>]/g, function (c) {
+    return {"&": "&amp;", "<": "&lt;", ">": "&gt;"}[c];
+  });
+}
+
+/* Цепочка значений: 7 → 12 → 6 → … (не длиннее max). */
+function tChain(arr, max) {
+  if (arr.length <= max) return arr.join(" → ");
+  return arr.slice(0, max - 2).join(" → ") + " → … → " + arr.slice(-2).join(" → ");
+}
+
+/* Степень словами-индексами: n², n³. */
+function tPow(base, p) {
+  return p === 1 ? base : base + ["", "", "²", "³"][p];
+}
+
+/* ==== БАНК УТВЕРЖДЕНИЙ (JSON; читает и gen.py) ==== */
+const T_BANK = [
+{"t": "Задача останова — по тексту любой программы и её входным данным узнать, завершится ли она, — алгоритмически неразрешима.", "v": true, "w": "верно: это доказал Тьюринг в 1936 году"},
+{"t": "Неразрешимость задачи останова не мешает доказать, что конкретная программа на конкретных данных остановится или зациклится.", "v": true, "w": "верно: неразрешима задача для ВСЕХ программ сразу, частный случай часто решается"},
+{"t": "Если в программе всё состояние — одна переменная, и её значение перед проверкой условия цикла повторилось, программа зациклится.", "v": true, "w": "верно: дальше вычисление пойдёт по тому же кругу"},
+{"t": "Тестирование может показать, что в программе есть ошибка, но не может доказать, что ошибок нет.", "v": true, "w": "верно: тестов конечное число, входных данных — бесконечно много"},
+{"t": "Не существует программы, которая для любой программы проверяет, выдаёт ли та верный ответ на всех входных данных.", "v": true, "w": "верно: иначе с её помощью решалась бы задача останова"},
+{"t": "Алгоритмически неразрешимой называют задачу, для которой не существует алгоритма, решающего её при любых входных данных.", "v": true, "w": "верно, это определение"},
+{"t": "Время работы алгоритма оценивают числом элементарных действий в зависимости от размера входных данных.", "v": true, "w": "верно: так оценка не зависит от быстродействия компьютера"},
+{"t": "Если время работы пропорционально n², то при увеличении n вдвое оно вырастает примерно вчетверо.", "v": true, "w": "верно: (2n)² = 4n²"},
+{"t": "Полный перебор всех подмножеств множества из n элементов требует порядка 2ⁿ шагов.", "v": true, "w": "верно: у множества из n элементов 2ⁿ подмножеств"},
+{"t": "Двоичный поиск в упорядоченном массиве из n элементов делает порядка log₂n сравнений.", "v": true, "w": "верно: каждое сравнение вдвое сужает отрезок поиска"},
+{"t": "При больших n алгоритм сложности n³ работает быстрее алгоритма сложности 2ⁿ.", "v": true, "w": "верно: экспонента рано или поздно обгоняет любой многочлен"},
+{"t": "Одна и та же задача может решаться алгоритмами разной сложности.", "v": true, "w": "верно: например, сортировка выбором (n²) и слиянием (n·log n)"},
+{"t": "Объём памяти, нужный алгоритму, тоже зависит от размера входных данных и тоже входит в оценку сложности.", "v": true, "w": "верно: оценивают и время, и память"},
+{"t": "Запись O(n²) означает, что при больших n число действий растёт не быстрее, чем c·n² для некоторой постоянной c.", "v": true, "w": "верно, это смысл асимптотической оценки"},
+{"t": "Задача останова неразрешима только потому, что современные компьютеры недостаточно быстрые.", "v": false, "w": "неверно: дело не в скорости — такого алгоритма нет в принципе"},
+{"t": "Чтобы узнать, остановится ли любая программа, достаточно запустить её и подождать подольше.", "v": false, "w": "неверно: если программа не остановилась за час, неизвестно, остановится ли она через два"},
+{"t": "Если программа прошла все тесты, ошибок в ней нет.", "v": false, "w": "неверно: тесты проверяют только те данные, на которых их запускали"},
+{"t": "Можно написать отладчик, который найдёт все ошибки в любой программе.", "v": false, "w": "неверно: полная автоматическая отладка невозможна"},
+{"t": "Алгоритмически неразрешимые задачи бывают только в чистой математике и к программированию отношения не имеют.", "v": false, "w": "неверно: задача останова — как раз про программы"},
+{"t": "Если время работы пропорционально n², то при увеличении n вдвое оно тоже вырастает вдвое.", "v": false, "w": "неверно: вчетверо, (2n)² = 4n²"},
+{"t": "Алгоритм сложности 2ⁿ при любом n работает дольше, чем алгоритм сложности n³.", "v": false, "w": "неверно: при малых n бывает наоборот — например, 2⁵ = 32 < 5³ = 125"},
+{"t": "Двоичный поиск работает на любом массиве, упорядочен он или нет.", "v": false, "w": "неверно: отбрасывать половину можно только в упорядоченном массиве"},
+{"t": "Сложность алгоритма — это число строк в тексте программы.", "v": false, "w": "неверно: это зависимость числа действий от размера данных"},
+{"t": "Два вложенных цикла, каждый по n повторений, дают число действий порядка n.", "v": false, "w": "неверно: порядка n², тело выполняется n·n раз"},
+{"t": "Время работы программы зависит только от быстродействия компьютера, а не от размера входных данных.", "v": false, "w": "неверно: при росте данных растёт и число действий"},
+{"t": "Перебор всех паролей длины 10 занимает вдвое больше времени, чем перебор всех паролей длины 5.", "v": false, "w": "неверно: паролей длины 10 больше в k⁵ раз, где k — число знаков алфавита"},
+{"t": "Если задача алгоритмически неразрешима, то неразрешим и любой её частный случай.", "v": false, "w": "неверно: частные случаи часто решаются, неразрешима задача целиком"},
+{"t": "Задача останова неразрешима для машины Тьюринга, но для программ на Python её решить можно.", "v": false, "w": "неверно: модели вычислений равносильны, и для Python она тоже неразрешима"}
+];
+/* ==== /БАНК ==== */
+
+/* ---------------------------------------------------------------- задачи */
+
+function tTask(type, rng) {
+  if (type === 0) return tConcepts(rng);
+  if (type === 1) return tHalt(rng);
+  if (type === 2) return tCount(rng);
+  if (type === 3) return tGrowth(rng);
+  if (type === 4) return tCompare(rng);
+  return tTests(rng);
+}
+
+/* 0. Понятия: сколько из пяти утверждений верны. Верных не 0 и не 5. */
+function tConcepts(rng) {
+  const SHOW = 5;
+  let pick = [];
+  for (let t = 0; t < 400; t++) {
+    pick = tShuffle(rng, T_BANK.map(function (_, i) { return i; })).slice(0, SHOW);
+    const k = pick.filter(function (i) { return T_BANK[i].v; }).length;
+    if (k >= 1 && k <= SHOW - 1) break;
+  }
+  const items = pick.map(function (i) { return "<li>" + T_BANK[i].t + "</li>"; });
+  const right = pick.filter(function (i) { return T_BANK[i].v; }).length;
+  const why = pick.map(function (i, n) { return (n + 1) + ") " + T_BANK[i].w; });
+  return {
+    type: 0, kind: "concepts", answer: String(right),
+    question: "Ниже пять утверждений об алгоритмически неразрешимых задачах и " +
+      "сложности вычислений. Сколько из них верны?<ol class=\"st\">" + items.join("") +
+      "</ol><p>В ответе укажите число.</p>",
+    code: "", after: "",
+    explain: why.join("; ") + ". Верных — " + right + "."
+  };
+}
+
+/* ======================================================= 1. останов
+   Две семьи программ, у обеих всё состояние — одно число n, и оно не
+   выходит из конечного набора значений. Значит, программа либо доходит до
+   выхода из цикла, либо значение n повторяется — и тогда она зациклится.
+   half: чётное n делим на 2, нечётное увеличиваем на нечётное K, выход при
+         n = 1 (n не растёт выше max(n, 2K));
+   mod:  n = (A·n + B) % M, выход при n = T (n от 0 до M − 1).
+   Повороты: для скольких n из отрезка завершится; что напечатает при
+   данном вводе (счётчик витков); наименьшее n, при котором зациклится. */
+const H_LIMIT = 100000;
+
+function hStep(p, n) {
+  if (p.fam === "half") return n % 2 === 0 ? n / 2 : n + p.K;
+  return (p.A * n + p.B) % p.M;
+}
+
+function hRun(p, n) {
+  const target = p.fam === "half" ? 1 : p.T;
+  const seen = new Set();
+  const trace = [n];
+  let k = 0;
+  while (n !== target) {
+    if (seen.has(n)) return {stop: false, trace: trace, k: k};
+    seen.add(n);
+    n = hStep(p, n);
+    k++;
+    trace.push(n);
+    if (k > H_LIMIT) return {stop: false, trace: trace, k: k, lim: true};
+  }
+  return {stop: true, trace: trace, k: k};
+}
+
+function hCode(p) {
+  if (p.fam === "half")
+    return ["n = int(input())", "k = 0", "while n != 1:",
+            "    if n % 2 == 0:", "        n = n // 2", "    else:",
+            "        n = n + " + p.K, "    k = k + 1", "print(k)"].join("\n");
+  return ["n = int(input())", "k = 0", "while n != " + p.T + ":",
+          "    n = (" + p.A + " * n + " + p.B + ") % " + p.M,
+          "    k = k + 1", "print(k)"].join("\n");
+}
+
+function tHalt(rng) {
+  const kind = tPick(rng, ["count", "steps", "first"]);
+  let best = null;
+  for (let t = 0; t < 3000 && !best; t++) {
+    const fam = tPick(rng, ["half", "mod"]);
+    let p, lo, hi;
+    if (fam === "half") {
+      p = {fam: fam, K: 2 * tRand(rng, 1, 12) + 1};
+      lo = 1; hi = tRand(rng, 12, 30);
+    } else {
+      const M = tRand(rng, 7, 16);
+      p = {fam: fam, M: M, A: tRand(rng, 2, M - 1), B: tRand(rng, 1, M - 1),
+           T: tRand(rng, 0, M - 1)};
+      lo = 0; hi = M - 1;
+    }
+    const runs = {};
+    let good = 0, first = null;
+    for (let n = lo; n <= hi; n++) {
+      runs[n] = hRun(p, n);
+      if (runs[n].lim) { good = -1; break; }
+      if (runs[n].stop) good++;
+      else if (first === null) first = n;
+    }
+    const size = hi - lo + 1;
+    if (good < 2 || good > size - 2 || first === null) continue;
+    /* у first цикл должен быть виден: хотя бы три значения до повтора */
+    if (runs[first].trace.length < 4) continue;
+    /* перед первым зацикливанием — хотя бы два завершившихся n */
+    if (kind === "first" && first - lo < 2) continue;
+    let x = null;
+    if (kind === "steps") {
+      const cands = [];
+      for (let n = lo; n <= hi; n++)
+        if (runs[n].stop && runs[n].k >= 4 && runs[n].k <= 16) cands.push(n);
+      if (!cands.length) continue;
+      x = tPick(rng, cands);
+    }
+    /* в «сколько» должна быть видна хоть одна петля длиной от трёх */
+    best = {p: p, lo: lo, hi: hi, runs: runs, good: good, first: first, x: x};
+  }
+  const b = best;
+  const p = b.p;
+  let ask, ans, why;
+  const loopOf = function (n) {
+    return "n = " + n + ": " + tChain(b.runs[n].trace, 12) + " — значение " +
+      b.runs[n].trace[b.runs[n].trace.length - 1] + " повторилось, дальше по кругу";
+  };
+  if (kind === "count") {
+    ans = b.good;
+    ask = "Для скольких значений n от " + b.lo + " до " + b.hi +
+      " программа завершит работу?";
+    const ok = [];
+    for (let n = b.lo; n <= b.hi; n++) if (b.runs[n].stop) ok.push(n);
+    why = "Выполним программу для каждого n. Завершается при n = " + ok.join(", ") +
+      " — всего " + ok.length + ". Для остальных значение n повторяется, например " +
+      loopOf(b.first) + ".";
+  } else if (kind === "steps") {
+    const r = b.runs[b.x];
+    ans = r.k;
+    ask = "Что напечатает программа, если ввести число " + b.x + "?";
+    why = "Значения n: " + r.trace.join(" → ") + ". Тело цикла выполнилось " + r.k +
+      " " + tPl(r.k, "раз", "раза", "раз") + " — столько и напечатано.";
+  } else {
+    ans = b.first;
+    ask = "При каком наименьшем вводимом числе n ≥ " + b.lo +
+      " программа никогда не завершит работу?";
+    const fine = [];
+    for (let n = b.lo; n < b.first; n++) fine.push(n);
+    why = (fine.length ? "При n = " + fine.join(", ") + " программа завершается. " : "") +
+      "А при " + loopOf(b.first) + ": программа никогда не завершится.";
+  }
+  return {
+    type: 1, kind: kind, answer: String(ans),
+    question: "Дана программа:",
+    code: hCode(p),
+    after: "<p>" + ask + "</p>" +
+      "<p>Подсказка к приёму: всё, что программа помнит, — число n. Если оно " +
+      "повторилось, дальше вычисление пойдёт по тому же кругу.</p>",
+    explain: why + " Ответ: " + ans + "."
+  };
+}
+
+/* ====================================================== 2. сколько раз
+   Программа со счётчиком c во вложенных циклах. Ответ — что она напечатает;
+   страница считает его прогоном тех же циклов, gen.py — exec текста кода. */
+const C_KINDS = {
+  sq:   {n: [6, 40]},
+  lt:   {n: [15, 60]},
+  ge:   {n: [15, 60]},
+  tri3: {n: [6, 14]},
+  log:  {n: [500, 1000000]},
+  nlog: {n: [10, 100]},
+  harm: {n: [8, 30]}
+};
+
+function cBody(kind, p) {
+  const r = function (a, n) { return a ? "range(" + a + ", " + n + ")" : "range(" + n + ")"; };
+  if (kind === "sq")
+    return ["for i in " + r(p.A, "n") + ":", "    for j in " + r(p.B, "n") + ":",
+            "        c = c + 1"];
+  if (kind === "lt")
+    return ["for i in range(n):", "    for j in range(i):", "        c = c + 1"];
+  if (kind === "ge")
+    return ["for i in range(n):", "    for j in range(i, n):", "        c = c + 1"];
+  if (kind === "tri3")
+    return ["for i in range(n):", "    for j in range(i + 1, n):",
+            "        for k in range(j + 1, n):", "            c = c + 1"];
+  if (kind === "log")
+    return ["i = 1", "while i < n:", "    i = i * " + p.B, "    c = c + 1"];
+  if (kind === "nlog")
+    return ["for i in range(n):", "    j = n", "    while j > 1:",
+            "        j = j // 2", "        c = c + 1"];
+  return ["for i in range(1, n + 1):", "    for j in range(0, n, i):", "        c = c + 1"];
+}
+
+function cRun(kind, p, n) {
+  let c = 0;
+  if (kind === "sq") {
+    for (let i = p.A; i < n; i++) for (let j = p.B; j < n; j++) c++;
+  } else if (kind === "lt") {
+    for (let i = 0; i < n; i++) for (let j = 0; j < i; j++) c++;
+  } else if (kind === "ge") {
+    for (let i = 0; i < n; i++) for (let j = i; j < n; j++) c++;
+  } else if (kind === "tri3") {
+    for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++)
+      for (let k = j + 1; k < n; k++) c++;
+  } else if (kind === "log") {
+    let i = 1;
+    while (i < n) { i = i * p.B; c++; }
+  } else if (kind === "nlog") {
+    for (let i = 0; i < n; i++) { let j = n; while (j > 1) { j = Math.floor(j / 2); c++; } }
+  } else {
+    for (let i = 1; i <= n; i++) for (let j = 0; j < n; j += i) c++;
+  }
+  return c;
+}
+
+function cWhy(kind, p, n, c) {
+  if (kind === "sq") {
+    const a = n - p.A, b = n - p.B;
+    return "Внешний цикл повторяется " + a + " раз, на каждом его витке внутренний — " +
+      b + " раз: " + a + " · " + b + " = " + c + ". Число действий растёт как n².";
+  }
+  if (kind === "lt")
+    return "При i = 0 внутренний цикл не выполняется ни разу, при i = 1 — один раз, …, " +
+      "при i = " + (n - 1) + " — " + (n - 1) + " раз: 0 + 1 + … + " + (n - 1) +
+      " = " + n + " · " + (n - 1) + " / 2 = " + c + ". Растёт как n².";
+  if (kind === "ge")
+    return "При i = 0 внутренний цикл выполняется " + n + " раз, при i = 1 — " + (n - 1) +
+      ", …, при i = " + (n - 1) + " — один раз: " + n + " + " + (n - 1) + " + … + 1 = " +
+      n + " · " + (n + 1) + " / 2 = " + c + ". Растёт как n².";
+  if (kind === "tri3")
+    return "Счётчик растёт один раз на каждую тройку i < j < k из чисел 0…" + (n - 1) +
+      ". Число таких троек — " + n + " · " + (n - 1) + " · " + (n - 2) + " / 6 = " + c +
+      ". Растёт как n³.";
+  if (kind === "log") {
+    const pw = [];
+    let i = 1;
+    for (let s = 0; s <= c; s++) { pw.push(i); i *= p.B; }
+    return "i пробегает " + tChain(pw, 9) + ": цикл выполняется, пока i < " + n +
+      ", — " + c + " " + tPl(c, "раз", "раза", "раз") + ". Растёт как log n: " +
+      "чтобы счётчик вырос на 1, n надо умножить на " + p.B + ".";
+  }
+  if (kind === "nlog") {
+    const m = c / n;
+    const js = [];
+    for (let j = n; j >= 1; j = Math.floor(j / 2)) { js.push(j); if (j === 1) break; }
+    return "Для каждого i внутренний цикл делает одно и то же: j = " + js.join(" → ") +
+      " — это " + m + " " + tPl(m, "шаг", "шага", "шагов") + ". Всего " + n + " · " + m +
+      " = " + c + ". Растёт как n · log n.";
+  }
+  const parts = [];
+  for (let i = 1; i <= n; i++) parts.push(Math.ceil(n / i));
+  return "При данном i внутренний цикл делает ⌈" + n + "/i⌉ шагов: " + parts.join(" + ") +
+    " = " + c + ". Растёт как n · log n.";
+}
+
+function tCount(rng) {
+  const kind = tPick(rng, Object.keys(C_KINDS));
+  const lim = C_KINDS[kind].n;
+  let n, p = {};
+  if (kind === "log") {
+    p.B = tPick(rng, [2, 3]);
+    n = tRand(rng, 5, 1000) * tPick(rng, [1, 10, 100, 1000]);
+    if (n < lim[0]) n = lim[0] + tRand(rng, 0, 99);
+    if (n > lim[1]) n = lim[1];
+  } else {
+    n = tRand(rng, lim[0], lim[1]);
+    if (kind === "sq") { p.A = tRand(rng, 0, 5); p.B = tRand(rng, 0, 5); }
+  }
+  const c = cRun(kind, p, n);
+  const code = ["n = " + n, "c = 0"].concat(cBody(kind, p), ["print(c)"]).join("\n");
+  return {
+    type: 2, kind: kind, answer: String(c),
+    question: "Дана программа:",
+    code: code,
+    after: "<p>Что она напечатает? Программу не запускайте — посчитайте, сколько раз " +
+      "выполнится строка <code>c = c + 1</code>.</p>",
+    explain: cWhy(kind, p, n, c) + " Ответ: " + c + "."
+  };
+}
+
+/* ======================================================== 3. рост
+   Ответ — во столько-то раз больше исходного времени или памяти, а значит
+   целое. poly — время ∝ n, n² или n³ (то словами, то вложенными циклами);
+   exp — перебор 2ⁿ наборов; memory — таблица n×n или n×n×n; pass — пароли. */
+function gLoops(p) {
+  const v = ["i", "j", "k"];
+  const out = [];
+  for (let d = 0; d < p; d++)
+    out.push("    ".repeat(d) + "for " + v[d] + " in range(n):");
+  out.push("    ".repeat(p) + "s = s + " + v.slice(0, p).join(" * "));
+  return out.join("\n");
+}
+
+function tGrowth(rng) {
+  const kind = tPick(rng, ["poly", "exp", "memory", "pass"]);
+  if (kind === "poly") {
+    let pw, r, t0, ans;
+    for (let t = 0; t < 200; t++) {
+      pw = tRand(rng, 1, 3); r = tRand(rng, 2, 5); t0 = tRand(rng, 1, 12);
+      ans = t0 * Math.pow(r, pw);
+      if (ans <= 3000 && !(pw === 1 && r === 2)) break;
+    }
+    const n0 = tPick(rng, [100, 200, 300, 500, 1000, 2000]);
+    const n1 = n0 * r;
+    const shown = rng() < 0.5;
+    const intro = shown
+      ? "Время работы программы пропорционально числу выполнений тела цикла:"
+      : "Время работы алгоритма пропорционально " + tPow("n", pw) + ", где n — размер входных данных.";
+    return {
+      type: 3, kind: kind, answer: String(ans),
+      question: intro,
+      code: shown ? gLoops(pw) : "",
+      after: "<p>При n = " + n0 + " программа работала " + t0 + " с. Сколько секунд " +
+        "она будет работать при n = " + n1 + "?</p><p>В ответе укажите число.</p>",
+      explain: (shown ? pw + " " + tPl(pw, "цикл", "вложенных цикла", "вложенных циклов") +
+        " по n — тело выполняется " + tPow("n", pw) + " раз. " : "") +
+        "n выросло в " + n1 + " / " + n0 + " = " + r + " " + tPl(r, "раз", "раза", "раз") +
+        ", время — в " + r + (pw > 1 ? tPow("", pw) + " = " + Math.pow(r, pw) : "") + " " +
+        tPl(Math.pow(r, pw), "раз", "раза", "раз") + ": " + t0 + " · " +
+        Math.pow(r, pw) + " = " + ans + ". Ответ: " + ans + "."
+    };
+  }
+  if (kind === "exp") {
+    const n0 = tRand(rng, 18, 30), d = tRand(rng, 1, 8), t0 = tRand(rng, 1, 6);
+    const ans = t0 * Math.pow(2, d);
+    return {
+      type: 3, kind: kind, answer: String(ans),
+      question: "Программа перебирает все наборы из n нулей и единиц (их 2ⁿ) и на каждый " +
+        "тратит одинаковое время.",
+      code: "",
+      after: "<p>При n = " + n0 + " программа работала " + t0 + " с. Сколько секунд " +
+        "она будет работать при n = " + (n0 + d) + "?</p><p>В ответе укажите число.</p>",
+      explain: "n выросло на " + d + ", число наборов — в 2" + ["⁰", "¹", "²", "³", "⁴", "⁵", "⁶", "⁷", "⁸"][d] +
+        " = " + Math.pow(2, d) + " раз: " + t0 + " · " + Math.pow(2, d) + " = " + ans +
+        ". Каждая единица в n удваивает время — так растёт перебор. Ответ: " + ans + "."
+    };
+  }
+  if (kind === "memory") {
+    const dim = tPick(rng, [2, 3]);
+    let r, m0, ans;
+    for (let t = 0; t < 200; t++) {
+      r = tRand(rng, 2, 4); m0 = tRand(rng, 1, 16);
+      ans = m0 * Math.pow(r, dim);
+      if (ans <= 1024) break;
+    }
+    const n0 = tPick(rng, dim === 2 ? [500, 1000, 2000] : [50, 100, 200]);
+    const what = dim === 2 ? "таблицу из n строк и n столбцов (n × n чисел)"
+                           : "трёхмерный массив n × n × n чисел";
+    return {
+      type: 3, kind: kind, answer: String(ans),
+      question: "Программа хранит в памяти " + what + "; все числа занимают одинаковое " +
+        "число байтов.",
+      code: "",
+      after: "<p>При n = " + n0 + " массив занял " + m0 + " МБ. Сколько мегабайтов он " +
+        "займёт при n = " + (n0 * r) + "?</p><p>В ответе укажите число.</p>",
+      explain: "Чисел в массиве " + tPow("n", dim) + ". n выросло в " + r + " " + tPl(r, "раз", "раза", "раз") + ", чисел — в " +
+        r + tPow("", dim) + " = " + Math.pow(r, dim) + " раз: " + m0 + " · " +
+        Math.pow(r, dim) + " = " + ans + ". Ответ: " + ans + "."
+    };
+  }
+  const alpha = tPick(rng, [
+    {k: 2, name: "двух знаков 0 и 1", d: [1, 8]},
+    {k: 10, name: "десяти цифр", d: [1, 3]},
+    {k: 26, name: "26 строчных латинских букв", d: [1, 2]}
+  ]);
+  const L0 = tRand(rng, 4, 8), d = tRand(rng, alpha.d[0], alpha.d[1]), t0 = tRand(rng, 1, 9);
+  const ans = t0 * Math.pow(alpha.k, d);
+  return {
+    type: 3, kind: "pass", answer: String(ans),
+    question: "Пароль состоит из символов алфавита из " + alpha.name + ". Программа " +
+      "перебирает все пароли одной длины и на каждый тратит одинаковое время.",
+    code: "",
+    after: "<p>Перебор всех паролей длины " + L0 + " занял " + t0 + " мин. Сколько минут " +
+      "займёт перебор всех паролей длины " + (L0 + d) + "?</p><p>В ответе укажите число.</p>",
+    explain: "Паролей длины L — " + alpha.k + "^L. Длина выросла на " + d + ", паролей — в " +
+      alpha.k + "^" + d + " = " + Math.pow(alpha.k, d) + " " + tPl(Math.pow(alpha.k, d), "раз", "раза", "раз") + ": " + t0 + " · " +
+      Math.pow(alpha.k, d) + " = " + ans + ". Ответ: " + ans + "."
+  };
+}
+
+/* ===================================================== 4. что выгоднее
+   lin_sq, sq_cube — a·n² против b·n (a·n³ против b·n²): Б выгоднее, когда
+   n > b/a, ответ ⌊b/a⌋ + 1; exp_poly — перебор 2ⁿ против c·n^k, отбор
+   оставляет только такие c, при которых «перебор дороже» с некоторого n и
+   навсегда (без островков при малых n); sort — выбором n(n−1)/2 против
+   слияния n·log₂n при n — степени двойки, ответ — разница. */
+function tCompare(rng) {
+  const kind = tPick(rng, ["lin_sq", "sq_cube", "exp_poly", "sort"]);
+  if (kind === "lin_sq" || kind === "sq_cube") {
+    const hiP = kind === "lin_sq" ? 2 : 3;
+    let a, b;
+    for (let t = 0; t < 200; t++) {
+      a = tRand(rng, 2, 9); b = tRand(rng, 20, 400);
+      if (Math.floor(b / a) >= 3) break;
+    }
+    const ans = Math.floor(b / a) + 1;
+    return {
+      type: 4, kind: kind, answer: String(ans),
+      question: "Одну и ту же задачу решают два алгоритма. Для входных данных размера n " +
+        "алгоритм А выполняет " + a + "·" + tPow("n", hiP) + " операций, алгоритм Б — " +
+        b + "·" + tPow("n", hiP - 1) + " операций.",
+      code: "",
+      after: "<p>При каком наименьшем натуральном n алгоритм Б выполняет строго меньше " +
+        "операций, чем А?</p><p>В ответе укажите число.</p>",
+      explain: "Б меньше, когда " + b + "·" + tPow("n", hiP - 1) + " < " + a + "·" +
+        tPow("n", hiP) + ", то есть (сократив на " + tPow("n", hiP - 1) + ") " + b +
+        " < " + a + "·n, n > " + b + "/" + a + (b % a ? " ≈ " + (b / a).toFixed(2) : " = " + (b / a)) +
+        ". Наименьшее такое n — " + ans + "; при больших n Б выгоднее всё сильнее. " +
+        "Ответ: " + ans + "."
+    };
+  }
+  if (kind === "exp_poly") {
+    let c, k, ans = null;
+    for (let t = 0; t < 500 && ans === null; t++) {
+      k = tPick(rng, [2, 3]);
+      c = tRand(rng, 2, 60);
+      const hold = [];
+      for (let n = 1; n <= 200; n++) hold.push(Math.pow(2, n) > c * Math.pow(n, k));
+      const n0 = hold.indexOf(true) + 1;
+      if (n0 < 3) continue;
+      if (hold.slice(n0 - 1).every(function (h) { return h; })) ans = n0;
+    }
+    const v = [];
+    for (let n = ans - 2; n <= ans; n++)
+      v.push("n = " + n + ": 2" + "^" + n + " = " + Math.pow(2, n) + (Math.pow(2, n) > c * Math.pow(n, k) ? " > " : " ≤ ") +
+             c + "·" + n + tPow("", k) + " = " + c * Math.pow(n, k));
+    return {
+      type: 4, kind: kind, answer: String(ans),
+      question: "Алгоритм А решает задачу полным перебором и выполняет 2ⁿ операций, " +
+        "алгоритм Б — " + c + "·" + tPow("n", k) + " операций.",
+      code: "",
+      after: "<p>При каком наименьшем натуральном n алгоритм А выполняет строго больше " +
+        "операций, чем Б?</p><p>В ответе укажите число.</p>",
+      explain: "Считаем подряд: " + v.join("; ") + ". С n = " + ans + " перебор дороже — " +
+        "и дальше только сильнее: при n + 1 2ⁿ удваивается, а " + tPow("n", k) +
+        " растёт меньше чем вдвое. Ответ: " + ans + "."
+    };
+  }
+  const m = tRand(rng, 4, 11);
+  const n = Math.pow(2, m);
+  const sel = n * (n - 1) / 2, mer = n * m;
+  const ans = sel - mer;
+  return {
+    type: 4, kind: "sort", answer: String(ans),
+    question: "Будем считать, что сортировка выбором массива из n элементов делает " +
+      "n(n − 1)/2 сравнений, а сортировка слиянием — n·log₂n сравнений (n — степень двойки).",
+    code: "",
+    after: "<p>На сколько сравнений меньше сделает сортировка слиянием, чем сортировка " +
+      "выбором, для массива из " + n + " элементов?</p><p>В ответе укажите число.</p>",
+    explain: "Выбором: " + n + " · " + (n - 1) + " / 2 = " + sel + ". Слиянием: log₂" + n +
+      " = " + m + ", " + n + " · " + m + " = " + mer + ". Разница " + sel + " − " + mer +
+      " = " + ans + ". Ответ: " + ans + "."
+  };
+}
+
+/* ================================================= 5. тесты и ошибка
+   Функция с ошибкой, которая на первых входных данных не видна. Её
+   «проверили» на отрезке — всё верно; найти, где она впервые ошибётся.
+   Ответ ищется перебором: эталон против функции с ошибкой. */
+const PRIMES = [2, 3, 5, 7, 11, 13, 17, 19];
+
+function xPrime(n) {
+  if (n < 2) return false;
+  for (let d = 2; d * d <= n; d++) if (n % d === 0) return false;
+  return true;
+}
+function xDigits(n) { let s = 0; while (n > 0) { s += n % 10; n = Math.floor(n / 10); } return s; }
+function xLeap(y) { return (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0; }
+function xPow2(n) { while (n % 2 === 0) n /= 2; return n === 1; }
+
+const X_FAM = {
+  prime: {
+    desc: "должна возвращать True, если n — простое число, и False, если составное (n ≥ 2)",
+    lo: 2, ref: xPrime,
+    make: function (rng) {
+      const k = tRand(rng, 2, 6);
+      const ds = PRIMES.slice(0, k);
+      return {ds: ds, code: ["def check(n):", "    for d in (" + ds.join(", ") + "):",
+                             "        if n % d == 0 and n != d:", "            return False",
+                             "    return True"].join("\n"),
+              f: function (n) {
+                for (const d of ds) if (n % d === 0 && n !== d) return false;
+                return true;
+              }};
+    },
+    why: function (b, ans) {
+      return "Функция пробует делители только " + b.ds.join(", ") + ". Составное число, у " +
+        "которого все простые делители больше " + b.ds[b.ds.length - 1] + ", она примет " +
+        "за простое. Наименьшее такое — квадрат следующего простого: " + Math.sqrt(ans) +
+        " · " + Math.sqrt(ans) + " = " + ans + ".";
+    }
+  },
+  digits: {
+    desc: "должна возвращать сумму цифр натурального числа n",
+    lo: 1, ref: xDigits,
+    make: function (rng) {
+      const D = tRand(rng, 2, 4);
+      const parts = [];
+      for (let i = 0; i < D; i++)
+        parts.push(i === 0 ? "n % 10" : "n // " + Math.pow(10, i) + " % 10");
+      return {D: D, code: ["def check(n):", "    return " + parts.join(" + ")].join("\n"),
+              f: function (n) {
+                let s = 0;
+                for (let i = 0; i < D; i++) s += Math.floor(n / Math.pow(10, i)) % 10;
+                return s;
+              }};
+    },
+    why: function (b, ans) {
+      return "Функция складывает только " + b.D + " младших цифры. Пока в числе не больше " +
+        b.D + " цифр, ответ верный; первое число из " + (b.D + 1) + " цифр — " + ans +
+        ": сумма цифр 1, а функция вернёт 0.";
+    }
+  },
+  leap4: {
+    desc: "должна возвращать True, если год y високосный, и False иначе. Високосный — " +
+      "год, номер которого делится на 4, кроме тех, что делятся на 100 и не делятся на 400",
+    lo: null, ref: xLeap,
+    make: function () {
+      return {code: ["def check(y):", "    return y % 4 == 0"].join("\n"),
+              f: function (y) { return y % 4 === 0; }};
+    },
+    why: function (b, ans) {
+      return "Функция забыла про годы, делящиеся на 100. Первый такой год, не делящийся на " +
+        "400, начиная с " + b.lo + " — " + ans + ": он не високосный, а функция скажет True.";
+    }
+  },
+  leap100: {
+    desc: "должна возвращать True, если год y високосный, и False иначе. Високосный — " +
+      "год, номер которого делится на 4, кроме тех, что делятся на 100 и не делятся на 400",
+    lo: null, ref: xLeap,
+    make: function () {
+      return {code: ["def check(y):", "    return y % 4 == 0 and y % 100 != 0"].join("\n"),
+              f: function (y) { return y % 4 === 0 && y % 100 !== 0; }};
+    },
+    why: function (b, ans) {
+      return "Функция забыла про годы, делящиеся на 400. Первый такой год начиная с " + b.lo +
+        " — " + ans + ": он високосный, а функция скажет False.";
+    }
+  },
+  pow2: {
+    desc: "должна возвращать True, если n — степень двойки (1, 2, 4, 8, …), и False иначе",
+    lo: 1, ref: xPow2,
+    make: function (rng) {
+      const M = tPick(rng, [4, 8, 16]);
+      const small = [];
+      for (let q = 1; q < M; q *= 2) small.push(q);
+      return {M: M, code: ["def check(n):", "    return n % " + M + " == 0 or n in (" +
+                           small.join(", ") + ")"].join("\n"),
+              f: function (n) { return n % M === 0 || small.indexOf(n) >= 0; }};
+    },
+    why: function (b, ans) {
+      return "Функция считает степенью двойки любое число, делящееся на " + b.M + ". Первое " +
+        "такое число, которое степенью двойки не является, — " + ans + " = " + b.M +
+        " · " + (ans / b.M) + ".";
+    }
+  }
+};
+
+function tTests(rng) {
+  const kind = tPick(rng, Object.keys(X_FAM));
+  const fam = X_FAM[kind];
+  let b = null, ans = null, lo = fam.lo, T = 0;
+  for (let t = 0; t < 200 && ans === null; t++) {
+    b = fam.make(rng);
+    lo = fam.lo === null ? tRand(rng, 1801, 2300) : fam.lo;
+    for (let n = lo; n < lo + 100000; n++)
+      if (b.f(n) !== fam.ref(n)) { ans = n; break; }
+    if (ans === null || ans - lo < 20) { ans = null; continue; }
+    T = tRand(rng, lo + Math.floor((ans - lo) / 2), ans - 1);
+  }
+  b.lo = lo;
+  const isYear = fam.lo === null;
+  return {
+    type: 5, kind: kind, answer: String(ans),
+    question: "Функция <code>check</code> " + fam.desc + ":",
+    code: b.code,
+    after: "<p>Её проверили на всех " + (isYear ? "годах" : "n") + " от " + lo + " до " +
+      T + " — все ответы верны. При каком наименьшем " + (isYear ? "годе y" : "n") +
+      " ≥ " + lo + " функция впервые ответит неверно?</p><p>В ответе укажите число.</p>",
+    explain: fam.why(b, ans) + " Тесты до " + T + " этого не видят: тестирование " +
+      "показывает наличие ошибок, но не их отсутствие. Ответ: " + ans + "."
+  };
+}
+
+/* ------------------------------------------------------------- сборка */
+
+function tMake(seed) {
+  const rng = tRng(seed || 1);
+  const order = tShuffle(rng, [0, 1, 2, 3, 4, 5]);
+  return order.map(function (type) { return tTask(type, rng); });
+}
+
+/* Сверка знак в знак. Прощаются только пробелы по краям — их не видно. */
+function tCheck(task, raw) {
+  const s = String(raw === undefined || raw === null ? "" : raw).trim();
+  return s === task.answer;
+}
+
+/* Что не так с ФОРМОЙ ответа. null — форма в порядке, ошибка в сути. */
+function tHint(task, raw) {
+  const s = String(raw === undefined || raw === null ? "" : raw).trim();
+  if (!s) return "Ответ пустой.";
+  if (/^\d+$/.test(s)) return null;
+  if (/[А-Яа-яA-Za-z]/.test(s)) return "Ответ — целое число, без слов и единиц.";
+  if (/\d/.test(s)) return "Только число — без пробелов, запятых, точек и знаков.";
+  return "Ответ — целое число.";
+}
+/* ==== /ЗАДАЧИ ==== */
+
+/* Форма сдачи ДЗ — одна на все темы. Ссылку разносит set_form_link.py. */
+const FORM = "https://docs.google.com/forms/d/e/1FAIpQLSfQyhaxcnzn4ZaKSe_ZMsluw7qRQnrw_80H6SfrnYB5EThUIA/viewform?usp=pp_url&entry.853601231=ФАМИЛИЯ&entry.1091635917=КЛАСС&entry.487188307=КОД";
+
+const ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+const EPOCH = Date.UTC(2026, 0, 1);
+const PREFIX = "OS";
+const SCALE = [[6, 5], [5, 4], [3, 3]];
+const TOTAL = SCALE[0][0];
+
+/* Тройку можно добрать, четвёрку и пятёрку — только заработать (Света,
+   06.10.2026, общее правило тренажёра и ДЗ). Ошибочная задача вопрос не
+   закрывает, «Новые числа» дают новую — без ограничений, до тройки дойдёт
+   любой, кто не бросит. Но ошибки ставят потолок: их можно столько, сколько
+   допускает та же отметка (на «5» — 6 − 6 = 0, на «4» — 6 − 5 = 1). Больше —
+   потолок тройка; хочешь выше — «Начать заново». */
+const LOWEST = SCALE[SCALE.length - 1];
+// ПОТОЛОК СНЯТ (Света, 06.10.2026, после урока: «слишком жёстко — в
+// тренажёре новый материал, сразу чисто не выходит»). Добирать можно до
+// «5». Функция оставлена ради разметки вокруг неё, но всегда отдаёт верхнюю
+// отметку: ветки «выше N не получить» не срабатывают, отрезки лесенки не
+// штрихуются, countedFor отдаёт число как есть.
+const ceilingFor = () => SCALE[0][1];
+
+/* Формат кода прежний. В поле «закрыто» уходит число, уже упёртое в потолок:
+   разборщик (check_homework.py) ставит отметку по нему и ничего не знает о
+   потолке, а отметка выходит та же, что на странице. */
+function countedFor(n, errs){
+  const higher = SCALE.find(s => s[1] === ceilingFor(errs) + 1);
+  return higher ? Math.min(n, higher[0] - 1) : n;
+}
+
+/* Лесенка вместо одной цифры (Света, 06.10.2026): до тройки — не «двойка»,
+   а заполняющийся отрезок «на 3». Отрезки из SCALE: 3 клетки на тройку,
+   ещё 2 на четвёрку, ещё 1 на пятёрку. Отрезок выше потолка заштрихован. */
+function ladderHtml(n, cap){
+  let from = 0;
+  return SCALE.slice().reverse().map(([need, m]) => {
+    const size = need - from;
+    const got = Math.max(0, Math.min(size, n - from));
+    const capped = m > cap, reached = n >= need && !capped;
+    from = need;
+    const cells = Array.from({length: size},
+        (_, k) => '<i class="' + (k < got ? "f" : "") + '"></i>').join("");
+    return '<div class="seg' + (reached ? " got" : "") + (capped ? " capped" : "")
+         + '" style="flex:' + size + ' 1 0"><div class="cells">' + cells + '</div>'
+         + '<div class="lab">' + (capped ? "на " + m + " — потолок"
+                                         : (reached ? "✓ " : "") + "на " + m) + '</div></div>';
+  }).join("");
+}
+
+const bin = (v, w) => v.toString(2).padStart(w, "0");
+
+/* Семибитными частями строки: в нагрузке 33 бита, а побитовые операции в JS
+   32-битные — старший бит молча потерялся бы. */
+function checksum(bitstr){
+  let cs = 0x5B;
+  for (let i = 0; i < bitstr.length; i += 7)
+    cs ^= parseInt(bitstr.substr(i, 7).padEnd(7, "0"), 2);
+  return cs & 0x7F;
+}
+
+/* Фамилия в коде (Света, 26.09.2026). Фамилию понимаем как первое
+   слово строчными, ё -> е: «Синицына Мария» и «синицына» дают один
+   код. Из неё получаются 40 бит (FNV-1a и xorshift32), которыми код
+   перемешивается. Та же арифметика живёт в homework.py — surname_stream. */
+function surnameKey(s){
+  return String(s || "").toLowerCase().replace(/ё/g, "е")
+    .split(/[^а-яa-z-]+/).find(w => w.replace(/-/g, "")) || "";
+}
+
+function surnameStream(fam){
+  const s = surnameKey(fam);
+  if (!s) return "0".repeat(40);
+  let h = 0x811C9DC5;
+  for (const ch of s){
+    h ^= ch.charCodeAt(0);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  const step = x => { x ^= x << 13; x ^= x >>> 17; x ^= x << 5; return x >>> 0; };
+  let x = h || 0x9E3779B9;
+  for (let i = 0; i < 4; i++) x = step(x);
+  const w1 = x = step(x), w2 = step(x);
+  return (bin(w1, 32) + bin(w2, 32)).slice(0, 40);
+}
+
+function makeCode(st, fam){
+  const day = Math.max(0, Math.min(2047, Math.floor(
+      (Date.now() - EPOCH) / 86400000)));
+  const payload = bin(day, 11) + bin(Math.min(15, st.typesDone), 4) +
+                  bin(Math.min(15, st.cleanTypes), 4) +
+                  bin(Math.min(127, st.solved), 7) +
+                  bin(Math.min(127, st.wrong), 7);
+  const plain = payload + bin(checksum(payload), 7);
+  const key = surnameStream(fam);
+  let bitstr = "";
+  for (let i = 0; i < 40; i++) bitstr += plain[i] === key[i] ? "0" : "1";
+  let out = "";
+  for (let i = 0; i < 40; i += 5)
+    out += ALPHABET[parseInt(bitstr.substr(i, 5), 2)];
+  return PREFIX + "-" + out.slice(0, 4) + "-" + out.slice(4);
+}
+
+/* ---------------------------------------------------------- состояние
+   Все вопросы темы лежат на странице сразу — решать можно в любом
+   порядке, объём виден с первого взгляда. Вопрос закрывается одним верным
+   ответом и больше не спрашивается. Ошибся — разбор сразу, а вопрос
+   остаётся открытым: кнопка «Новые числа» на той же карточке даёт задачу с
+   другими данными. Код выдаётся, когда закрыто хотя бы MIN_TO_FINISH;
+   после кода карточки запираются. */
+const T_COUNT = T_TYPES.length;
+const MIN_TO_FINISH = 3;
+
+let st;
+
+function esc(s){ return String(s).replace(/[&<>]/g, c =>
+  ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+
+function markFor(n){
+  for (const [need, m] of SCALE) if (n >= need) return m;
+  return null;
+}
+
+function wordQ(n){
+  const a = n % 100, b = a % 10;
+  if (a > 4 && a < 21) return "вопросов";
+  if (b === 1) return "вопрос";
+  if (b > 1 && b < 5) return "вопроса";
+  return "вопросов";
+}
+
+function newRng(){ return tRng((Date.now() ^ (Math.random() * 1e9)) >>> 0); }
+
+function freshState(){
+  const s = {
+    done:   Array(T_COUNT).fill(false),
+    clean:  Array(T_COUNT).fill(true),
+    tried:  Array(T_COUNT).fill(false),
+    failed: Array(T_COUNT).fill(false),   /* схема этой задачи уже не прошла */
+    tasks:  Array(T_COUNT).fill(null),
+    solved: 0, wrong: 0, code: null
+  };
+  for (let i = 0; i < T_COUNT; i++) s.tasks[i] = tTask(i, newRng());
+  /* закрыто на самом деле */
+  Object.defineProperty(s, "closed",
+    {get(){ return s.done.filter(Boolean).length; }});
+  /* закрыто «для отметки и кода» — упёрто в потолок по ошибкам */
+  Object.defineProperty(s, "typesDone",
+    {get(){ return countedFor(s.closed, s.wrong); }});
+  Object.defineProperty(s, "cleanTypes",
+    {get(){ return s.done.filter((d, i) => d && s.clean[i]).length; }});
+  return s;
+}
+
+function paint(){
+  const box = document.getElementById("types");
+  box.innerHTML = "";
+  for (let i = 0; i < T_COUNT; i++) {
+    const el = document.createElement("span");
+    el.className = "chip" + (st.done[i] ? " done" : st.tried[i] ? " miss" : "");
+    el.textContent = (i + 1) + ". " + T_TYPES[i];
+    box.appendChild(el);
+  }
+  const cap = ceilingFor(st.wrong);
+  document.getElementById("ladder").innerHTML = ladderHtml(st.closed, cap);
+  /* «2» по ходу не показываем: до тройки — прочерк и лесенка */
+  const m = st.closed >= MIN_TO_FINISH ? markFor(st.typesDone) : null;
+  const sb = document.getElementById("scorebox");
+  sb.className = "score" + (m ? " m" + m : "");
+  document.getElementById("mark").textContent = m || "—";
+  document.getElementById("stats").textContent =
+    "Закрыто: " + st.closed + " из " + T_COUNT + " · ошибок: " + st.wrong +
+    (st.closed < MIN_TO_FINISH
+      ? " · до тройки осталось закрыть " + (MIN_TO_FINISH - st.closed) : "") +
+    (cap < SCALE[0][1]
+      ? " · выше «" + cap + "» в этом заходе не получить"
+      : (st.wrong ? "" : " · без ошибок пока — пятёрка открыта"));
+  renderBottom();
+}
+
+/* ==== FRZ: вставлено freeze.py, руками не править ==== */
+/* Код задачи — картинкой, прямо в браузере.
+   Вставляется freeze.py --sync между маркерами FRZ. Руками в html не править.
+
+   Тренажёр, ДЗ и проверочная рисуют код каждой задачи сами при открытии, и
+   заморозить его при выкладке нельзя — его ещё нет. Поэтому страница
+   рисует код на canvas и вставляет <img>: скопировать мышкой и запустить в
+   IDLE не выйдет — задача снова про чтение (Света, 14.09.2026).
+
+   Стиль тот же, что у блоков <pre>: Consolas 15px, тёмный фон, комментарий
+   после # серо-голубой. Рисуем в двойном размере — чётко на любом экране. */
+function frz(code) {
+  var S = 2, SIZE = 15, LEAD = 22, PX = 14, PY = 12;
+  var lines = String(code).replace(/\r/g, '').split('\n');
+  var c = document.createElement('canvas'), g = c.getContext('2d');
+  var font = (SIZE * S) + 'px Consolas, "Cascadia Mono", "Courier New", monospace';
+  g.font = font;
+  var w = 0;
+  for (var i = 0; i < lines.length; i++) w = Math.max(w, g.measureText(lines[i]).width);
+  c.width = Math.ceil(w) + 2 * PX * S;
+  c.height = lines.length * LEAD * S + 2 * PY * S;
+  g.fillStyle = '#1e2430';
+  g.fillRect(0, 0, c.width, c.height);
+  g.font = font;                       /* смена размера сбрасывает шрифт */
+  g.textBaseline = 'middle';
+  for (var k = 0; k < lines.length; k++) {
+    var y = PY * S + k * LEAD * S + LEAD * S / 2;
+    var line = lines[k], at = line.indexOf('#');
+    var head = at < 0 ? line : line.slice(0, at), tail = at < 0 ? '' : line.slice(at);
+    g.fillStyle = '#e7ecf5';
+    g.fillText(head, PX * S, y);
+    if (tail) {
+      g.fillStyle = '#8fa6c4';
+      g.fillText(tail, PX * S + g.measureText(head).width, y);
+    }
+  }
+  if (!document.getElementById('frz-css')) {
+    var st = document.createElement('style');
+    st.id = 'frz-css';
+    st.textContent = 'img.frz-b{display:block;max-width:100%;height:auto;'
+                   + 'border-radius:10px;margin:8px 0}';
+    document.head.appendChild(st);
+  }
+  return '<img class="frz-b" width="' + (c.width / S) + '" height="' + (c.height / S)
+       + '" alt="код задачи — читай с экрана" src="' + c.toDataURL('image/png') + '">';
+}
+/* ==== /FRZ ==== */
+
+function cardHtml(i){
+  const t = st.tasks[i];
+  return '<div class="card" id="task-' + i + '">' +
+      '<p class="tag">' + (i + 1) + ' &middot; ' + T_TYPES[i] + '</p>' +
+      '<div class="q">' + t.question + (t.code ? frz(t.code) : '') +
+        (t.after || '') + '</div>' +
+      '<div class="row">' +
+        (t.prog
+          ? '<textarea class="prog" id="ans-' + i + '" rows="7" autocomplete="off" ' +
+              'spellcheck="false" placeholder="ba -> ab"></textarea>'
+          : '<input type="text" id="ans-' + i + '" autocomplete="off" spellcheck="false" ' +
+              'placeholder="ответ"' + '>') +
+        '<button class="primary" id="go-' + i + '">' +
+          (t.prog ? 'Проверить алгорифм' : 'Ответить') + '</button>' +
+      '</div>' +
+      '<div class="verdict" id="v-' + i + '"></div>' +
+    '</div>';
+}
+
+function bindCard(i){
+  /* В поле схемы Enter — новая строка, а не «Ответить». */
+  if (!st.tasks[i].prog)
+    document.getElementById("ans-" + i).addEventListener("keydown", function(e){
+      if (e.key === "Enter") judge(i);
+    });
+  document.getElementById("go-" + i).addEventListener("click", function(){ judge(i); });
+}
+
+function renderAll(){
+  let html = "";
+  for (let i = 0; i < T_COUNT; i++) html += cardHtml(i);
+  document.getElementById("area").innerHTML = html;
+  for (let i = 0; i < T_COUNT; i++) bindCard(i);
+}
+
+function renderCard(i){
+  document.getElementById("task-" + i).outerHTML = cardHtml(i);
+  bindCard(i);
+}
+
+function capNote(){
+  const cap = ceilingFor(st.wrong);
+  return cap < SCALE[0][1] ? " Ошибок: " + st.wrong + " — выше «" + cap +
+    "» в этом заходе не получить." : "";
+}
+
+/* Схему не сверяют с ключом, а выполняют на проверочных словах. Не прошла —
+   поле остаётся открытым: страница называет слово, на котором алгорифм
+   ошибся, и схему правят тут же, без новой задачи. Ошибкой считается
+   только первая неудача; ошибка формы — не ошибка. */
+function judgeProg(i){
+  const t = st.tasks[i];
+  const raw = document.getElementById("ans-" + i).value;
+  const r = tVerdict(t, raw);
+  const card = document.getElementById("task-" + i);
+  const v = document.getElementById("v-" + i);
+  if (r.ok) {
+    st.tried[i] = true;
+    st.done[i] = true; st.solved++;
+    card.className = "card ok";
+    document.getElementById("ans-" + i).disabled = true;
+    document.getElementById("go-" + i).disabled = true;
+    v.className = "verdict ok";
+    v.innerHTML = "Алгорифм работает на всех " + r.n + " проверочных словах — вопрос закрыт.";
+    card.insertAdjacentHTML("beforeend", '<div class="why">' + t.explain + '</div>');
+  } else if (r.form) {
+    card.className = "card err";
+    v.className = "verdict err";
+    v.innerHTML = "Схема не прочитана. " + esc(r.msg) + " Это опечатка, а не ошибка — исправь и проверь.";
+  } else {
+    st.tried[i] = true;
+    if (!st.failed[i]) { st.failed[i] = true; st.wrong++; st.clean[i] = false; }
+    card.className = "card err";
+    v.className = "verdict err";
+    v.innerHTML = "Не работает. " + r.msg +
+      (r.trace ? " Шаги: " + r.trace + "." : "") +
+      " Исправь схему и проверь ещё раз — повторные проверки ошибкой не считаются." +
+      capNote();
+  }
+  paint();
+}
+
+function judge(i){
+  if (st.code) return;
+  const t = st.tasks[i];
+  if (t.prog) return judgeProg(i);
+  const raw = document.getElementById("ans-" + i).value;
+  if (!raw.trim()) return;
+  const ok = tCheck(t, raw);
+  st.tried[i] = true;
+  if (ok) { st.done[i] = true; st.solved++; }
+  else { st.wrong++; st.clean[i] = false; }
+
+  const card = document.getElementById("task-" + i);
+  card.className = "card " + (ok ? "ok" : "err");
+  document.getElementById("ans-" + i).disabled = true;
+  document.getElementById("go-" + i).disabled = true;
+  const v = document.getElementById("v-" + i);
+  v.className = "verdict " + (ok ? "ok" : "err");
+  v.innerHTML = ok
+    ? "Правильно — вопрос закрыт."
+    : "Ошибка. Твой ответ: <code>" + esc(raw) + "</code>, верный: <code>" +
+      esc(t.answer) + "</code>." +  (tHint(t, raw) ? " " + tHint(t, raw) : "") +
+      " Вопрос остался открытым: возьми ту же задачу с другими данными." + capNote();
+  card.insertAdjacentHTML("beforeend",
+    '<div class="why">' + t.explain + '</div>' +
+    (ok ? '' : '<div class="row"><button class="primary" id="re-' + i +
+               '">Новые числа</button></div>'));
+  if (!ok) document.getElementById("re-" + i).addEventListener("click", function(){
+    st.tasks[i] = tTask(i, newRng());
+    st.tried[i] = false;
+    renderCard(i);
+    document.getElementById("ans-" + i).focus();
+    paint();
+  });
+  paint();
+}
+
+function renderBottom(){
+  const box = document.getElementById("bottom");
+  if (st.code) return;
+  const done = st.closed, open = T_COUNT - done;
+  if (done < MIN_TO_FINISH) {
+    box.innerHTML = '<p class="stats">Код работы появится, когда будет закрыто ' +
+      'хотя бы ' + MIN_TO_FINISH + ' ' + wordQ(MIN_TO_FINISH) + ' (сейчас ' +
+      done + ').</p>';
+    return;
+  }
+  const m = markFor(st.typesDone);
+  const cap = ceilingFor(st.wrong);
+  const up = SCALE.filter(s => s[0] > done && s[1] <= cap).pop();
+  let msg;
+  if (up) {
+    msg = "Наработано на <b>" + m + "</b> (закрыто " + done + " из " + T_COUNT +
+      "). Можно забрать код сейчас, а можно дорешать ещё " + open + " " +
+      wordQ(open) + " и дойти до <b>" + up[1] + "</b>.";
+  } else if (open > 0) {
+    msg = "Наработано на <b>" + m + "</b> (закрыто " + done + " из " + T_COUNT +
+      "). С ошибками этого захода выше «" + cap + "» не подняться — забирай код " +
+      "или после него начни заново.";
+  } else {
+    msg = "Все " + T_COUNT + " " + wordQ(T_COUNT) + " закрыты — наработано на <b>" +
+      m + "</b>.";
+  }
+  box.innerHTML =
+    '<div class="card">' +
+      '<p>' + msg + '</p>' +
+      '<div class="row"><button class="primary" id="stop">Получить код' +
+        (open > 0 ? ' сейчас' : '') + '</button></div>' +
+    '</div>';
+  document.getElementById("stop").addEventListener("click", finish);
+}
+
+/* Код привязан к фамилии (Света, 26.09.2026): пока фамилия не вписана,
+   кода нет, а вписанная подмешивается в код. Фамилию и класс страница
+   помнит между заходами, но компьютер в классе общий — подставленную
+   фамилию просим проверить. Код считается по завершённой работе (fin):
+   «Начать заново» заменяет st. */
+let CURRENT_CODE = "";
+function finish(){
+  const fin = st;
+  st.code = "done";
+  document.querySelectorAll("#area input, #area textarea, #area button").forEach(function(el){
+    el.disabled = true;
+  });
+  const m = markFor(st.typesDone);
+  const cap = ceilingFor(st.wrong);
+  const open = [];
+  for (let i = 0; i < T_COUNT; i++) if (!st.done[i]) open.push(T_TYPES[i]);
+  document.getElementById("bottom").innerHTML =
+    '<div class="card">' +
+      '<h2>Работа завершена</h2>' +
+      '<p>Закрыто <b>' + st.closed + '</b> из ' + T_COUNT + ', ошибок ' + st.wrong +
+        (m ? ', это отметка <b>' + m + '</b>' : '') + '.' +
+        (cap < SCALE[0][1] ? ' Выше «' + cap + '» с таким числом ошибок не выйдет.' : '') +
+        (open.length ? ' Не закрыто: ' + open.join(", ") + '.' : '') +
+      '</p>' +
+      '<p>Код работы — его и надо сдать:</p>' +
+      '<div class="code" id="code"></div>' +
+      '<div class="note">Это код твоей работы. Он собран из твоей фамилии и ' +
+        'того, сколько и как ты решал: у соседа с тем же результатом код ' +
+        'другой. Поменяешь фамилию — поменяется и код. Переписывать его ' +
+        'руками не нужно: впиши фамилию и класс, и кнопка откроет форму с уже ' +
+        'подставленным кодом.</div>' +
+      '<div class="fields">' +
+        '<div><label for="fam">Фамилия и имя</label>' +
+          '<input type="text" id="fam" autocomplete="off"></div>' +
+        '<div><label for="kls">Класс</label>' +
+          '<input type="text" id="kls" autocomplete="off" value="11"></div>' +
+      '</div>' +
+      '<p class="stats" id="famhint"></p>' +
+      '<div class="row">' +
+        '<button id="send" class="primary">Сдать работу</button>' +
+        '<button id="again">Начать заново' +
+          (cap < SCALE[0][1] ? ' — ради «' + (cap + 1) + '» и выше' : '') + '</button>' +
+      '</div>' +
+      '<p class="stats" id="sendnote"></p>' +
+      '<p class="stats">«Начать заново» откроет все ' + T_COUNT + ' вопросов с ' +
+        'нуля и обнулит ошибки. Сдавать нужно тот код, который получен сейчас, ' +
+        'или код нового захода, если он лучше.</p>' +
+    '</div>';
+  document.getElementById("bottom").scrollIntoView({behavior: "smooth", block: "start"});
+  const fam = document.getElementById("fam");
+  const kls = document.getElementById("kls");
+  const box = document.getElementById("code");
+  const note = document.getElementById("sendnote");
+  const hint = document.getElementById("famhint");
+  let remembered = "";
+  try {
+    remembered = localStorage.getItem("hw-fam") || "";
+    fam.value = remembered;
+    kls.value = localStorage.getItem("hw-kls") || kls.value;
+  } catch (e) {}
+  const update = function(){
+    const f = fam.value.trim();
+    CURRENT_CODE = surnameKey(f) ? makeCode(fin, f) : "";
+    box.textContent = CURRENT_CODE || "впиши фамилию — появится код";
+    box.classList.toggle("wait", !CURRENT_CODE);
+    hint.textContent = remembered && f === remembered
+      ? "Фамилию подставил этот компьютер с прошлого раза — проверь, что она твоя."
+      : "";
+  };
+  fam.addEventListener("input", update);
+  update();
+  document.getElementById("send").addEventListener("click", function(){
+    if (!CURRENT_CODE) {
+      note.textContent = "Впиши фамилию — иначе непонятно, чья это работа.";
+      fam.focus();
+      return;
+    }
+    const k = kls.value.trim() || "11";
+    try {
+      localStorage.setItem("hw-fam", fam.value.trim());
+      localStorage.setItem("hw-kls", k);
+    } catch (e) {}
+    const url = FORM.replace("ФАМИЛИЯ", encodeURIComponent(fam.value.trim()))
+                    .replace("КЛАСС", encodeURIComponent(k))
+                    .replace("КОД", encodeURIComponent(CURRENT_CODE));
+    window.open(url, "_blank", "noopener");
+    note.innerHTML = "Форма открылась в новой вкладке. Работа сдана, только " +
+      "когда в форме нажата «Отправить». Вкладка не открылась — " +
+      '<a href="' + url + '" target="_blank" rel="noopener">открой форму ' +
+      "по этой ссылке</a>.";
+  });
+  document.getElementById("again").addEventListener("click", resetAll);
+  paint();
+}
+
+function resetAll(){
+  st = freshState();
+  renderAll();
+  paint();
+}
+
+resetAll();
+</script>
+<p class="ai-mark" style="margin:34px auto 0;max-width:860px;padding-top:12px;border-top:1px solid #d9dce6;color:#5c6070;font:13px/1.5 "Segoe UI",system-ui,sans-serif">Материалы подготовлены с использованием технологий искусственного интеллекта.</p>
+</body>
+</html>
