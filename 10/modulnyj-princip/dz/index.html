@@ -1,0 +1,1444 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Модульный принцип — домашнее задание</title>
+<meta name="description" content="Домашнее задание 10 класса (углублённый) по модульному принципу: что напечатает импорт, какой файл запущен (__name__), чьё имя, где упадёт, данные, на которых врёт модуль, и вопросы про модули; код работы и кнопка «Сдать»">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E10%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{margin:0;padding:20px 16px 60px;font:17px/1.55 "Segoe UI",system-ui,sans-serif}
+.wrap{max-width:820px;margin:0 auto}
+h1{font-size:23px;margin:0 0 4px}
+h2{font-size:18px;margin:0 0 10px}
+.sub{color:var(--muted);font-size:15px;margin:0 0 18px}
+code,pre{font-family:Consolas,"Cascadia Mono",monospace}
+pre{background:#1e2430;color:#e7ecf5;padding:13px 16px;border-radius:10px;
+    overflow-x:auto;font-size:15px;line-height:1.5;margin:10px 0}
+code{background:var(--card);border:1px solid var(--line);border-radius:5px;
+     padding:1px 5px;font-size:15px}
+pre code{background:none;border:0;padding:0;color:inherit;font-size:inherit}
+.intro{border:1px solid var(--line);border-radius:12px;background:var(--card);
+       padding:14px 18px;margin-bottom:18px}
+.intro dl{margin:0}
+.intro dt{font-weight:700;margin-top:10px}
+.intro dt:first-child{margin-top:0}
+.intro dd{margin:2px 0 0}
+.progress{border:2px solid var(--accent);border-radius:12px;padding:12px 16px;
+          background:#fff;margin-bottom:18px}
+.ptop{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.ptop h2{margin:0}
+.sp{flex:1 1 auto}
+.score{display:flex;align-items:baseline;gap:10px;color:var(--muted);font-size:15px}
+.score b{font:700 34px/1 "Segoe UI",system-ui,sans-serif;color:var(--ink);
+         min-width:40px;text-align:center;border:2px solid var(--line);
+         border-radius:8px;padding:2px 8px}
+.m5 b{color:var(--ok);border-color:var(--ok-line)}
+.m4 b{color:var(--accent);border-color:#a9c6e8}
+.m3 b{color:#8a5a00;border-color:var(--hi-line)}
+.ladder{display:flex;gap:10px;flex:1 1 100%;margin-top:4px}
+.seg{min-width:0}
+.cells{display:flex;gap:3px}
+.cells i{flex:1 1 0;height:14px;border-radius:4px;background:#e4e7ef}
+.cells i.f{background:var(--accent)}
+.seg.got .cells i{background:var(--ok)}
+.seg .lab{font-size:13px;color:var(--muted);text-align:center;margin-top:2px}
+.seg.got .lab{color:var(--ok)}
+.seg.capped .cells i{background:repeating-linear-gradient(45deg,
+  #f3d3d0 0 4px,#fdecea 4px 8px)}
+.seg.capped .lab{color:var(--err)}
+.types{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);border-radius:20px;padding:4px 12px;
+      font-size:14px;color:var(--muted);background:var(--card)}
+.chip.done{border-color:var(--ok-line);background:var(--ok-bg);color:var(--ok);
+           font-weight:600}
+.chip.cur{border-color:var(--accent);color:var(--accent);font-weight:600}
+.card{border:1px solid var(--line);border-radius:12px;padding:16px 18px;
+      background:#fff;margin-bottom:14px}
+.card.ok{border-color:var(--ok-line);background:var(--ok-bg)}
+.card.err{border-color:var(--err-line);background:var(--err-bg)}
+.tag{font-size:13px;color:var(--muted);margin:0 0 6px}
+.inp{font-size:15px;color:var(--muted);margin:4px 0}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px}
+input[type=text]{font:16px/1 Consolas,monospace;padding:10px 12px;border-radius:8px;
+                 border:1px solid var(--line);width:100%;max-width:340px}
+button{font:600 15px/1 inherit;padding:11px 16px;border-radius:9px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);color:var(--muted)}
+.verdict{margin-top:10px;font-size:15.5px}
+.verdict.ok{color:var(--ok)}
+.verdict.err{color:var(--err)}
+.note{border:1px solid var(--hi-line);background:var(--hi-bg);border-radius:10px;
+      padding:11px 15px;margin:12px 0;font-size:15.5px}
+.code.wait{font-size:18px;letter-spacing:0;color:#888}
+.code{font:700 26px/1.2 Consolas,monospace;letter-spacing:.06em;
+      background:var(--card);border:2px dashed var(--accent);border-radius:12px;
+      padding:16px;text-align:center;margin:12px 0;user-select:all}
+.stats{color:var(--muted);font-size:14px}
+label{display:block;font-size:14px;color:var(--muted);margin-bottom:3px}
+.fields{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0}
+.fields div{flex:1 1 180px}
+.fields input{max-width:none}
+details{margin-top:10px;border:1px dashed var(--line);border-radius:9px;padding:8px 12px}
+summary{cursor:pointer;color:var(--accent);font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Домашнее задание — модульный принцип</h1>
+<p class="sub">10 класс, углублённый уровень. Читаем программы из нескольких файлов:
+что напечатает импорт модуля, какой файл запущен и что тогда делает
+<code>if __name__ == "__main__"</code>, чья переменная окажется в функции, в какой
+строке программа упадёт; ищем данные, на которых врёт модуль; отвечаем на вопросы про
+модули. Python не нужен.</p>
+
+<div class="intro">
+  <dl>
+    <dt>Что нужно сделать</dt>
+    <dd>Закрыть шесть типов задач — по одной верно решённой на каждый. Ошибся —
+        тип не закрыт, и следующей придёт новая задача того же типа: разбор только
+        что показан, примени его. Новых задач сколько угодно.</dd>
+    <dt>Отметка</dt>
+    <dd>Четыре закрытых типа — «3», пять — «4», шесть — «5», сколько бы ошибок
+        ни было по дороге: исправленная задача тип не закрывает, но вместо неё
+        приходит новая — добирать можно до пятёрки. Меньше четырёх типов — кода
+        не будет: сдавать нечего.</dd>
+    <dt>Главный приём — идти по строкам запускаемого файла</dt>
+    <dd>Дошёл до <code>import</code> — выполни файл модуля сверху вниз, если он ещё не
+        загружен: <code>def</code> только запоминает функцию, а <code>print</code>
+        печатает сразу. Второй <code>import</code> того же модуля ничего не выполняет.
+        После <code>import calc</code> функции зовут через точку, после
+        <code>from calc import f</code> — без неё. Ответ — всё напечатанное через пробел
+        или номер строки, о котором спрашивают. Считать в уме и на бумаге: на
+        проверочной Python тоже не будет.</dd>
+    <dt>Как сдать</dt>
+    <dd>В конце появится кнопка <b>«Сдать работу»</b>: впишешь фамилию и
+        класс, кнопка сама откроет форму с уже вписанным кодом. Переписывать
+        код руками не надо — именно на этом чаще всего и ошибаются.</dd>
+  </dl>
+</div>
+
+<div class="progress">
+  <div class="ptop">
+    <h2>Что осталось закрыть</h2>
+    <span class="sp"></span>
+    <div class="score" id="scorebox">
+      <span>наработано на</span><b id="mark">—</b>
+    </div>
+    <div class="ladder" id="ladder"></div>
+  </div>
+  <div class="types" id="types"></div>
+  <p class="stats" id="stats"></p>
+</div>
+
+<div id="area"></div>
+
+</div>
+
+<script>
+/* ==== ТИПЫ: вставлено gen.py, руками не править ==== */
+/* Модульный принцип — источник правды для тренажёра практикума, ДЗ,
+   проверочной и слайдов-примеров. Вставляется скриптом gen.py --sync между
+   маркерами. Руками в html не править.
+
+   Шесть типов задач — уроки 25–26 плана («Модульный принцип построения
+   программ» и резервное время). В каждой задаче ДВА-ТРИ ФАЙЛА: модуль (или
+   два) и программа main.py, которая их подключает.
+     0 «что напечатает импорт»    — модуль без защиты: при import файл
+                                    выполняется целиком, его print срабатывает
+     1 «__name__»                 — какой файл запускают: проверки под
+                                    if __name__ == "__main__" и само имя
+     2 «чьё имя»                  — пространство имён: k модуля и k программы,
+                                    mod.k = …, from … import k, своя def f
+     3 «импорт один раз»          — второй import того же модуля файл не
+                                    выполняет, и через другой модуль тоже
+     4 «где упадёт»               — f без приставки после import mod, mod.f
+                                    после from, нет такой функции, import mod.py
+     5 «цепочка модулей»          — модуль подключает модуль: from a import f
+                                    внутри b, и b.f тогда тоже есть
+
+   Ответ каждой задачи страница считает сама, а gen.py --selftest кладёт файлы
+   задачи (meta.files) во временную папку и ЗАПУСКАЕТ meta.run настоящим
+   Python: напечатанное обязано совпасть с ответом, а у типа 4 — номер строки
+   main.py, где случилась ошибка, и её вид (meta.err).
+
+   Разбор — рисунком (правило Светы 26.09.2026): порядок выполнения по
+   строкам, у каждой строки — значок файла, из которого она, и что случилось:
+   печать плиткой, «выполняется calc.py», «уже загружен», ошибка красным.
+
+   Списков в коде задач нет: класс их не проходил. */
+
+const T_TYPES = [
+  'что напечатает импорт',
+  '__name__: какой файл запущен',
+  'чьё имя',
+  'импорт один раз',
+  'где упадёт',
+  'цепочка модулей'
+];
+const T_PER_TYPE = 1;      /* задач каждого типа в наборе: один проход, правило Светы 21.09.2026 */
+
+/* Одна строка-подпись к разбору: приём, а не пересказ решения. */
+const T_HINTS = [
+  'import выполняет файл модуля целиком, сверху вниз: def запоминает функцию, а print срабатывает сразу.',
+  'Запущенный файл называется __main__, подключённый — своим именем. Блок под if __name__ == "__main__" работает только у запущенного.',
+  'У модуля свои имена: f берёт k из своего файла. mod.k = … меняет k модуля, а k = … в программе — только своё.',
+  'Модуль выполняется один раз — при первом import. Дальше Python берёт уже загруженный, сколько бы раз его ни подключали.',
+  'После import mod — только mod.f; после from mod import f — только f. Имя модуля пишется без .py.',
+  'Иди по цепочке: main берёт g у b, b берёт f у a. Что b импортировал, то у него и есть: b.f — та же f.'
+];
+
+function tRng(seed) {
+  let s = seed >>> 0;
+  const rng = function () {
+    s = (s * 1664525 + 1013904223) >>> 0;
+    return s / 4294967296;
+  };
+  rng.seed = seed;
+  return rng;
+}
+/* Циклы подбора не бесконечные: если для зерна задачи нет, лучше громкая
+   ошибка с номером зерна, чем node, крутящийся всю ночь (письмо health 01.10). */
+const T_TRIES = 10000;
+function tGiveUp(k, rng, where) {
+  if (k >= T_TRIES)
+    throw new Error(where + ': за ' + T_TRIES + ' попыток задача не подобралась, зерно ' + rng.seed);
+}
+function tRand(rng, a, b) { return a + Math.floor(rng() * (b - a + 1)); }
+function tPick(rng, arr) { return arr[tRand(rng, 0, arr.length - 1)]; }
+function tShuffle(rng, arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = tRand(rng, 0, i);
+    const tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+  }
+  return a;
+}
+/* два разных числа из отрезка */
+function tTwo(rng, a, b) {
+  const x = tRand(rng, a, b);
+  let y = x, k = 0;
+  while (y === x) { y = tRand(rng, a, b); tGiveUp(++k, rng, 'tTwo'); }
+  return [x, y];
+}
+
+/* Имена модулей: ни одно не совпадает с модулем стандартной библиотеки —
+   иначе import взял бы не тот файл. */
+const T_MODS = ['calc', 'tools', 'numlib', 'mymath', 'helper', 'geom'];
+function tMods(rng, k) { return tShuffle(rng, T_MODS).slice(0, k); }
+const T_MAIN = 'main.py';
+
+/* Листинг задачи: все файлы подряд, у каждого заголовок-комментарий.
+   Запускаемый — последним, с пометкой. nums — пронумеровать его строки. */
+function tListing(files, run, nums) {
+  const parts = [];
+  for (const name of Object.keys(files)) {
+    if (name === run) continue;
+    parts.push('# ═══ файл ' + name + ' ═══\n' + files[name]);
+  }
+  const body = nums
+    ? files[run].split('\n').map((l, i) => String(i + 1).padStart(2, ' ') + '  ' + l).join('\n')
+    : files[run];
+  parts.push('# ═══ файл ' + run + ' — его запускают ═══\n' + body);
+  return parts.join('\n\n');
+}
+
+/* Шаг разбора: из какого файла строка, сама строка и что случилось.
+   out — что напечатала (список), note — пояснение, err — ошибка. */
+const ev = (f, code, o) => Object.assign({ f, code }, o || {});
+
+/* ------------------------------------------- тип 0: что напечатает импорт */
+function m0(rng) {
+  const [M] = tMods(rng, 1);
+  const K = tRand(rng, 2, 9), C = tRand(rng, 0, 5);
+  const [A, B] = tTwo(rng, 1, 9);
+  const P = rng() < 0.4 ? tRand(rng, 10, 99) : null;
+  const style = tPick(rng, ['import', 'from']);
+  const f = x => x * K + C;
+  const body = C ? 'x * k + ' + C : 'x * k';
+  const mod = ['k = ' + K, 'def f(x):', '    return ' + body, 'print(f(' + A + '))'].join('\n');
+  const main = [], events = [], out = [];
+  if (P !== null) {
+    main.push('print(' + P + ')');
+    events.push(ev(T_MAIN, 'print(' + P + ')', { out: ['' + P] }));
+    out.push('' + P);
+  }
+  const imp = style === 'import' ? 'import ' + M : 'from ' + M + ' import f';
+  const call = style === 'import' ? M + '.f(' + B + ')' : 'f(' + B + ')';
+  main.push(imp, 'print(' + call + ')');
+  events.push(ev(T_MAIN, imp, { note: 'выполняется ' + M + '.py — весь, сверху вниз' }));
+  events.push(ev(M + '.py', 'k = ' + K, { note: 'запомнили k' }));
+  events.push(ev(M + '.py', 'def f(x):', { note: 'запомнили функцию, тело не выполняется' }));
+  events.push(ev(M + '.py', 'print(f(' + A + '))', { out: ['' + f(A)] }));
+  out.push('' + f(A));
+  events.push(ev(T_MAIN, 'print(' + call + ')', { out: ['' + f(B)] }));
+  out.push('' + f(B));
+  const files = {};
+  files[M + '.py'] = mod;
+  files[T_MAIN] = main.join('\n');
+  return {
+    code: tListing(files, T_MAIN), src: files[T_MAIN],
+    meta: { files, run: T_MAIN, events, kind: 'flow', check: 'print' },
+    question: 'Запускают main.py. Что напечатает программа? Всё напечатанное — через пробел.',
+    answer: out.join(' '),
+    explain: 'В модуле нет защиты if __name__ == "__main__", поэтому его print(f(' + A
+           + ')) срабатывает прямо при импорте — раньше, чем программа дойдёт до своего print.'
+  };
+}
+
+/* ------------------------------------------------- тип 1: __name__ */
+function m1(rng) {
+  const [M] = tMods(rng, 1);
+  const K = tRand(rng, 2, 9);
+  const [A, B] = tTwo(rng, 2, 9);
+  const E = tRand(rng, 10, 99);
+  const kind = tPick(rng, ['guard', 'name', 'else']);
+  const runMod = rng() < 0.5;
+  const mul = kind !== 'name';
+  const f = x => (mul ? x * K : x + K);
+  const fdef = ['def f(x):', '    return ' + (mul ? 'x * ' + K : 'x + ' + K)];
+  let mod;
+  if (kind === 'guard')
+    mod = fdef.concat(['if __name__ == "__main__":', '    print(f(' + A + '))']);
+  else if (kind === 'name')
+    mod = ['print(__name__)'].concat(fdef, ['if __name__ == "__main__":', '    print(f(' + A + '))']);
+  else
+    mod = fdef.concat(['if __name__ == "__main__":', '    print(f(' + A + '))', 'else:',
+                       '    print(' + E + ')']);
+  const main = ['import ' + M, 'print(' + M + '.f(' + B + '))'];
+  const MF = M + '.py';
+  const run = runMod ? MF : T_MAIN;
+  const events = [], out = [];
+  const nameIs = runMod ? '__main__' : M;
+  if (!runMod) events.push(ev(T_MAIN, 'import ' + M, { note: 'выполняется ' + MF + '; в нём __name__ = "' + M + '"' }));
+  else events.push(ev(MF, '', { note: 'файл запущен сам: __name__ = "__main__"' }));
+  if (kind === 'name') {
+    events.push(ev(MF, 'print(__name__)', { out: [nameIs] }));
+    out.push(nameIs);
+  }
+  if (runMod) {
+    events.push(ev(MF, 'if __name__ == "__main__":', { note: 'да — блок выполняется' }));
+    events.push(ev(MF, '    print(f(' + A + '))', { out: ['' + f(A)] }));
+    out.push('' + f(A));
+  } else {
+    events.push(ev(MF, 'if __name__ == "__main__":', { note: 'нет — имя "' + M + '", блок пропущен' }));
+    if (kind === 'else') {
+      events.push(ev(MF, '    print(' + E + ')', { out: ['' + E] }));
+      out.push('' + E);
+    }
+    events.push(ev(T_MAIN, 'print(' + M + '.f(' + B + '))', { out: ['' + f(B)] }));
+    out.push('' + f(B));
+  }
+  const files = {};
+  files[MF] = mod.join('\n');
+  files[T_MAIN] = main.join('\n');
+  return {
+    code: tListing(files, run), src: files[run],
+    meta: { files, run, events, kind: 'flow', check: 'print' },
+    question: 'Запускают <b>' + run + '</b>' + (runMod ? ' — сам модуль, а не программу' : '')
+            + '. Что напечатает? Всё напечатанное — через пробел.',
+    answer: out.join(' '),
+    explain: runMod
+      ? 'Запущенный файл всегда называется __main__ — поэтому срабатывает блок под if, '
+        + 'а main.py вообще не участвует.'
+      : 'При импорте __name__ у модуля — его имя, "' + M + '", поэтому блок под if пропущен'
+        + (kind === 'else' ? ', а ветка else выполняется.' : '. Так модуль и прячет свои проверки от программы.')
+  };
+}
+
+/* --------------------------------------------------------- тип 2: чьё имя */
+function m2(rng) {
+  const [M] = tMods(rng, 1);
+  const kind = tPick(rng, ['own', 'set', 'copy', 'sum', 'redef']);
+  const [K1, K2] = [tRand(rng, 2, 9), tRand(rng, 10, 30)];
+  const K3 = tRand(rng, 31, 50), D = tRand(rng, 1, 9), N = tRand(rng, 1, 9);
+  const mod = ['k = ' + K1, 'def f(n):', '    return n + k'].join('\n');
+  let main, events = [], out, why;
+  const MF = M + '.py';
+  if (kind === 'own') {
+    main = ['from ' + M + ' import f', 'k = ' + K2, 'print(f(' + N + '), k)'];
+    out = ['' + (N + K1), '' + K2];
+    events = [ev(T_MAIN, main[0], { note: 'f пришла из ' + MF + ' и смотрит на k того файла' }),
+              ev(T_MAIN, main[1], { note: 'своя k программы — другая переменная' }),
+              ev(T_MAIN, main[2], { out })];
+    why = 'f берёт k из своего модуля: ' + N + ' + ' + K1 + '. Строка k = ' + K2
+        + ' создала k в программе — у модуля своё пространство имён, его k не тронута.';
+  } else if (kind === 'set') {
+    main = ['import ' + M, M + '.k = ' + K3, 'print(' + M + '.f(' + N + '))'];
+    out = ['' + (N + K3)];
+    events = [ev(T_MAIN, main[0], { note: 'выполняется ' + MF + ': k = ' + K1 }),
+              ev(T_MAIN, main[1], { note: 'k ВНУТРИ модуля теперь ' + K3 }),
+              ev(T_MAIN, main[2], { out })];
+    why = M + '.k = ' + K3 + ' меняет переменную самого модуля, и f видит уже её: '
+        + N + ' + ' + K3 + '.';
+  } else if (kind === 'copy') {
+    main = ['from ' + M + ' import f, k', 'k = k + ' + D, 'print(f(' + N + '), k)'];
+    out = ['' + (N + K1), '' + (K1 + D)];
+    events = [ev(T_MAIN, main[0], { note: 'своя k программы = ' + K1 + ' (копия значения)' }),
+              ev(T_MAIN, main[1], { note: 'своя k = ' + (K1 + D) + ', k модуля по-прежнему ' + K1 }),
+              ev(T_MAIN, main[2], { out })];
+    why = 'from … import k кладёт значение в имя k программы. Присваивание меняет только это имя: '
+        + 'f по-прежнему видит k модуля, ' + K1 + '.';
+  } else if (kind === 'sum') {
+    main = ['import ' + M, 'k = ' + K2, 'print(' + M + '.f(' + N + ') + k)'];
+    out = ['' + (N + K1 + K2)];
+    events = [ev(T_MAIN, main[0], { note: 'k модуля = ' + K1 }),
+              ev(T_MAIN, main[1], { note: 'k программы = ' + K2 }),
+              ev(T_MAIN, main[2], { note: M + '.f(' + N + ') = ' + N + ' + ' + K1 + ', плюс своя k', out })];
+    why = 'Две разные k: внутри ' + M + '.f — k модуля (' + K1 + '), снаружи — k программы ('
+        + K2 + '): ' + (N + K1) + ' + ' + K2 + '.';
+  } else {
+    main = ['from ' + M + ' import f', 'def f(n):', '    return n * 2', 'print(f(' + N + '))'];
+    out = ['' + 2 * N];
+    events = [ev(T_MAIN, main[0], { note: 'имя f — функция из ' + MF }),
+              ev(T_MAIN, main[1], { note: 'имя f заменено своей функцией' }),
+              ev(T_MAIN, main[3], { out })];
+    why = 'Имя f значит то, что ему присвоили последним: def f в программе заменил функцию '
+        + 'модуля. Отсюда правило: своих функций с именами из модуля не заводить.';
+  }
+  const files = {};
+  files[MF] = mod;
+  files[T_MAIN] = main.join('\n');
+  return {
+    code: tListing(files, T_MAIN), src: files[T_MAIN],
+    meta: { files, run: T_MAIN, events, kind: 'flow', check: 'print' },
+    question: 'Запускают main.py. Что напечатает программа? Всё напечатанное — через пробел.',
+    answer: out.join(' '),
+    explain: why
+  };
+}
+
+/* ------------------------------------------------- тип 3: импорт один раз */
+function m3(rng) {
+  const [M, H] = tMods(rng, 2);
+  const P = tRand(rng, 10, 49), Q = tRand(rng, 50, 99);
+  const K = tRand(rng, 1, 9), N = tRand(rng, 1, 9);
+  const kind = tPick(rng, ['mh', 'hm', 'mm', 'from']);
+  const MF = M + '.py', HF = H + '.py';
+  const mod = ['print(' + P + ')', 'def f(x):', '    return x + ' + K].join('\n');
+  const hel = ['import ' + M, 'print(' + Q + ')', 'def g(x):', '    return ' + M + '.f(x) * 2'].join('\n');
+  const f = x => x + K, g = x => f(x) * 2;
+  const files = {};
+  files[MF] = mod;
+  let main, events, out;
+  const runM = ev(MF, 'print(' + P + ')', { out: ['' + P] });
+  const runH = ev(HF, 'print(' + Q + ')', { out: ['' + Q] });
+  if (kind === 'mh') {
+    files[HF] = hel;
+    main = ['import ' + M, 'import ' + H, 'print(' + H + '.g(' + N + '))'];
+    out = ['' + P, '' + Q, '' + g(N)];
+    events = [ev(T_MAIN, main[0], { note: 'первый раз — выполняется ' + MF }), runM,
+              ev(T_MAIN, main[1], { note: 'выполняется ' + HF }),
+              ev(HF, 'import ' + M, { note: M + ' уже загружен — второй раз не выполняется' }), runH,
+              ev(T_MAIN, main[2], { out: ['' + g(N)] })];
+  } else if (kind === 'hm') {
+    files[HF] = hel;
+    main = ['import ' + H, 'import ' + M, 'print(' + M + '.f(' + N + '))'];
+    out = ['' + P, '' + Q, '' + f(N)];
+    events = [ev(T_MAIN, main[0], { note: 'выполняется ' + HF }),
+              ev(HF, 'import ' + M, { note: 'первый раз — выполняется ' + MF }), runM, runH,
+              ev(T_MAIN, main[1], { note: M + ' уже загружен — второй раз не выполняется' }),
+              ev(T_MAIN, main[2], { out: ['' + f(N)] })];
+  } else if (kind === 'mm') {
+    main = ['import ' + M, 'import ' + M, 'print(' + M + '.f(' + N + '))'];
+    out = ['' + P, '' + f(N)];
+    events = [ev(T_MAIN, main[0], { note: 'первый раз — выполняется ' + MF }), runM,
+              ev(T_MAIN, main[1], { note: 'уже загружен — второй раз не выполняется' }),
+              ev(T_MAIN, main[2], { out: ['' + f(N)] })];
+  } else {
+    files[HF] = hel;
+    main = ['from ' + H + ' import g', 'from ' + M + ' import f', 'print(g(' + N + '), f(' + N + '))'];
+    out = ['' + P, '' + Q, '' + g(N), '' + f(N)];
+    events = [ev(T_MAIN, main[0], { note: 'выполняется ' + HF }),
+              ev(HF, 'import ' + M, { note: 'первый раз — выполняется ' + MF }), runM, runH,
+              ev(T_MAIN, main[1], { note: M + ' уже загружен — берём f, файл не выполняется' }),
+              ev(T_MAIN, main[2], { out: ['' + g(N), '' + f(N)] })];
+  }
+  files[T_MAIN] = main.join('\n');
+  return {
+    code: tListing(files, T_MAIN), src: files[T_MAIN],
+    meta: { files, run: T_MAIN, events, kind: 'flow', check: 'print' },
+    question: 'Запускают main.py. Что напечатает программа? Всё напечатанное — через пробел.',
+    answer: out.join(' '),
+    explain: 'Файл ' + MF + ' выполняется один раз — при первом import, кто бы его ни подключил. '
+           + 'Остальные import берут уже загруженный модуль, и ' + P + ' второй раз не печатается.'
+  };
+}
+
+/* ------------------------------------------------------ тип 4: где упадёт */
+const CRASHES = ['ok', 'ok', 'okstar', 'noprefix', 'nomod', 'nofunc', 'noname', 'dotpy', 'alias', 'fromonly'];
+
+function m4(rng) {
+  const [M] = tMods(rng, 1);
+  const K = tRand(rng, 1, 9), G = tRand(rng, 2, 5), N = tRand(rng, 1, 9);
+  const kind = tPick(rng, CRASHES);
+  const MF = M + '.py';
+  const mod = ['def f(x):', '    return x + ' + K, 'def g(x):', '    return x * ' + G].join('\n');
+  const x = 'x = ' + N;
+  let lines, fail = 0, err = '', why;
+  if (kind === 'ok') {
+    if (rng() < 0.5) {
+      lines = ['from ' + M + ' import f, g', x, 'print(f(x))', 'print(g(x))'];
+      why = 'from … import f, g положил оба имени в программу — f и g без приставки законны.';
+    } else {
+      lines = ['import ' + M, x, 'print(' + M + '.f(x))', 'print(' + M + '.g(x))'];
+      why = 'После import ' + M + ' функции зовутся с приставкой ' + M + '. — так и написано.';
+    }
+  } else if (kind === 'okstar') {
+    lines = ['from ' + M + ' import *', x, 'print(g(f(x)))'];
+    why = 'import * кладёт в программу все имена модуля — и f, и g. Работает, но так легко '
+        + 'не заметить, откуда взялось имя.';
+  } else if (kind === 'noprefix') {
+    lines = ['import ' + M, x, 'print(' + M + '.f(x))', 'print(g(x))'];
+    fail = 4; err = 'NameError';
+    why = 'import ' + M + ' даёт программе одно имя — ' + M + '. Функции — только через него: '
+        + M + '.g(x). Голое g неизвестно — NameError в строке 4.';
+  } else if (kind === 'nomod') {
+    lines = ['from ' + M + ' import f', x, 'print(f(x))', 'print(' + M + '.g(x))'];
+    fail = 4; err = 'NameError';
+    why = 'from ' + M + ' import f даёт программе имя f, а само имя ' + M
+        + ' не появляется. ' + M + '.g — NameError в строке 4.';
+  } else if (kind === 'nofunc') {
+    lines = ['import ' + M, x, 'print(' + M + '.h(x))'];
+    fail = 3; err = 'AttributeError';
+    why = 'В ' + MF + ' нет функции h — AttributeError в строке 3: у модуля нет такого имени.';
+  } else if (kind === 'noname') {
+    lines = ['from ' + M + ' import f, h', x, 'print(f(x))'];
+    fail = 1; err = 'ImportError';
+    why = 'Взять из модуля h нельзя — её там нет. ImportError уже в строке 1, до print дело не дойдёт.';
+  } else if (kind === 'dotpy') {
+    lines = ['import ' + M + '.py', x, 'print(' + M + '.f(x))'];
+    fail = 1; err = 'ModuleNotFoundError';
+    why = 'Модуль подключают по имени, без .py: import ' + M + '. С точкой Python ищет внутри '
+        + M + ' вложенный модуль py — ModuleNotFoundError в строке 1.';
+  } else if (kind === 'alias') {
+    lines = ['import ' + M + ' as m', x, 'print(m.f(x))', 'print(' + M + '.g(x))'];
+    fail = 4; err = 'NameError';
+    why = 'import ' + M + ' as m даёт модулю короткое имя m — и только его. ' + M
+        + '.g — NameError в строке 4.';
+  } else {
+    lines = ['from ' + M + ' import f', x, 'print(f(x))', 'print(g(x))'];
+    fail = 4; err = 'NameError';
+    why = 'Из модуля взята только f. g осталась в ' + MF + ' — в программе её нет: NameError в строке 4.';
+  }
+  const files = {};
+  files[MF] = mod;
+  files[T_MAIN] = lines.join('\n');
+  const events = lines.map((l, i) => i + 1 === fail
+    ? ev(T_MAIN, l, { err, line: i + 1 })
+    : ev(T_MAIN, l, { line: i + 1, note: i + 1 > fail && fail ? 'не выполняется' : 'ок' }))
+    .filter(e => !(fail && e.line > fail));
+  return {
+    code: tListing(files, T_MAIN, true), src: files[T_MAIN],
+    meta: { files, run: T_MAIN, events, fail, err, kind: 'crash', check: 'crash',
+            line: fail ? lines[fail - 1] : '' },
+    question: 'Запускают main.py. В какой строке программа упадёт с ошибкой? Ответ — номер '
+            + 'строки main.py; если программа отработает целиком, ответ 0.',
+    answer: '' + fail,
+    explain: why
+  };
+}
+
+/* ------------------------------------------------- тип 5: цепочка модулей */
+function m5(rng) {
+  const [A, B] = tMods(rng, 2);
+  const K = tRand(rng, 1, 5), G = tRand(rng, 2, 3), N = tRand(rng, 1, 5);
+  const style = tPick(rng, ['from', 'import']);
+  const kind = tPick(rng, style === 'from' ?['g', 'bf', 'fg', 'gg'] : ['g', 'fg', 'gg']);
+  const AF = A + '.py', BF = B + '.py';
+  const f = x => x + K, g = x => f(x) * G;
+  const amod = ['def f(x):', '    return x + ' + K].join('\n');
+  const bmod = (style === 'from'
+    ? ['from ' + A + ' import f', 'def g(x):', '    return f(x) * ' + G]
+    : ['import ' + A, 'def g(x):', '    return ' + A + '.f(x) * ' + G]).join('\n');
+  let main, out, note;
+  if (kind === 'g') {
+    main = ['from ' + B + ' import g', 'print(g(' + N + '))'];
+    out = ['' + g(N)];
+    note = 'g(' + N + ') = f(' + N + ') · ' + G + ' = ' + f(N) + ' · ' + G;
+  } else if (kind === 'bf') {
+    main = ['import ' + B, 'print(' + B + '.g(' + N + '), ' + B + '.f(' + N + '))'];
+    out = ['' + g(N), '' + f(N)];
+    note = B + ' сделал from ' + A + ' import f — значит, у ' + B + ' есть имя f';
+  } else if (kind === 'fg') {
+    main = ['from ' + B + ' import g', 'from ' + A + ' import f', 'print(f(g(' + N + ')))'];
+    out = ['' + f(g(N))];
+    note = 'g(' + N + ') = ' + g(N) + ', потом f(' + g(N) + ') = ' + g(N) + ' + ' + K;
+  } else {
+    main = ['from ' + B + ' import g', 'print(g(g(' + N + ')))'];
+    out = ['' + g(g(N))];
+    note = 'g(' + N + ') = ' + g(N) + ', потом g(' + g(N) + ') = (' + g(N) + ' + ' + K + ') · ' + G;
+  }
+  const files = {};
+  files[AF] = amod;
+  files[BF] = bmod;
+  files[T_MAIN] = main.join('\n');
+  const events = [
+    ev(T_MAIN, main[0], { note: 'выполняется ' + BF }),
+    ev(BF, bmod.split('\n')[0], { note: 'выполняется ' + AF + ': запомнили f' }),
+    ev(BF, 'def g(x):', { note: 'запомнили g' })
+  ];
+  if (kind === 'fg') events.push(ev(T_MAIN, main[1], { note: A + ' уже загружен — берём f' }));
+  events.push(ev(T_MAIN, main[main.length - 1], { note, out }));
+  return {
+    code: tListing(files, T_MAIN), src: files[T_MAIN],
+    meta: { files, run: T_MAIN, events, kind: 'flow', check: 'print' },
+    question: 'Запускают main.py. Что напечатает программа? Всё напечатанное — через пробел.',
+    answer: out.join(' '),
+    explain: 'main берёт g у ' + B + ', а ' + B + ' берёт f у ' + A + '. '
+           + (kind === 'bf' ? 'Что модуль импортировал, то лежит в его пространстве имён: '
+              + B + '.f — та же функция, что ' + A + '.f.'
+              : 'Каждый модуль подключает то, что нужно ему самому, — main про ' + A
+                + ' может и не знать.')
+  };
+}
+
+const T_MAKERS = [m0, m1, m2, m3, m4, m5];
+
+/* --------------------------------------------------------------- задачи */
+function tTask(type, rng) {
+  const m = T_MAKERS[type](rng);
+  const t = { type, code: m.code, src: m.src, answer: m.answer, explain: m.explain,
+              question: m.question || 'Что напечатает программа?' };
+  if (m.meta !== undefined) t.meta = m.meta;
+  return t;
+}
+
+/* Сверка ответа. Пробелы схлопываем, запятые между числами прощаем: «4, 17»
+   и «4 17» — одно и то же. Кавычки вокруг имени прощаем: «'calc'» и «calc».
+   Минус можно набрать и длинным «−». */
+function tNorm(s) {
+  return String(s).replace(/−/g, '-').replace(/[,;]/g, ' ').replace(/["'«»]/g, '')
+      .replace(/(\d)[.)](?=\s|$)/g, '$1')
+      .replace(/\s+/g, ' ').trim();
+}
+function tCheck(task, raw) {
+  return tNorm(raw) === tNorm(task.answer);
+}
+
+/* ================================================= разбор рисунком
+   Всё на инлайновых стилях: одна и та же картинка встаёт в практикум, ДЗ,
+   проверочную и на слайд, а стили у страниц разные. */
+const T_CAP = s => '<div style="font:700 12px/1.2 Segoe UI,system-ui,sans-serif;'
+    + 'letter-spacing:.08em;text-transform:uppercase;color:#5c6070;margin:10px 0 4px">'
+    + s + '</div>';
+const tEsc = s => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+
+/* плитка: значение в рамке; ok — зелёная, bad — красная, иначе нейтральная */
+function tTile(txt, how) {
+  const col = how === 'ok' ? ['#e6f5ec', '#137a41'] : how === 'bad' ? ['#fdecea', '#b3261e']
+            : how === 'muted' ? ['#f6f7fb', '#9aa0b0'] : how === 'hi' ? ['#fff4e2', '#8a4b00']
+            : ['#eaf1fa', '#1f5fa8'];
+  return '<span style="display:inline-block;min-width:34px;text-align:center;padding:4px 10px;'
+       + 'margin:2px 4px 2px 0;border:2px solid ' + col[1] + ';border-radius:8px;background:'
+       + col[0] + ';color:' + col[1] + ';font:700 18px/1.2 Consolas,monospace">' + tEsc(txt) + '</span>';
+}
+function tTiles(tokens, marks) {
+  return '<div>' + tokens.map((x, i) => tTile(x, marks ? marks[i] : '')).join('') + '</div>';
+}
+
+/* Значок файла: main.py тёмный, модули — каждый своим цветом. */
+const T_FILE_COL = ['#1f5fa8', '#8a4b00', '#6a3fa0'];
+function tFileBadge(name, files) {
+  const mods = Object.keys(files).filter(n => n !== T_MAIN);
+  const bg = name === T_MAIN ? '#1e2430' : T_FILE_COL[Math.max(0, mods.indexOf(name)) % 3];
+  return '<span style="display:inline-block;min-width:78px;text-align:center;padding:3px 8px;'
+       + 'border-radius:6px;background:' + bg + ';color:#fff;font:700 13px/1.3 Consolas,monospace">'
+       + tEsc(name) + '</span>';
+}
+
+/* Строка разбора: файл, строка кода, что случилось. Строки модуля — со
+   ступенькой: модуль выполняется «внутри» строки import. */
+function tFlowRow(e, files) {
+  const inner = e.f !== T_MAIN;
+  let what = '';
+  if (e.err) what = tTile(e.err, 'bad');
+  else if (e.out) what = (e.note ? '<span style="color:#5c6070;font-size:14px">' + tEsc(e.note)
+                                  + '</span> ' : '')
+                       + '<span style="color:#137a41;font:700 12px Segoe UI,system-ui,sans-serif;'
+                       + 'letter-spacing:.06em">ПЕЧАТЬ</span> ' + e.out.map(v => tTile(v, 'ok')).join('');
+  else if (e.note) what = '<span style="color:' + (e.note === 'не выполняется' ? '#9aa0b0' : '#5c6070')
+                        + ';font-size:14px">' + tEsc(e.note) + '</span>';
+  return '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:3px 0 3px '
+       + (inner ? 26 : 0) + 'px">' + (inner ? '<span style="color:#9aa0b0;font:700 16px Consolas,monospace">└</span>' : '')
+       + tFileBadge(e.f, files)
+       + (e.line ? '<span style="color:#9aa0b0;font:700 13px Consolas,monospace">' + e.line + '</span>' : '')
+       + (e.code ? '<code style="font:600 15px/1.2 Consolas,monospace;background:#f6f7fb;color:#1b1b1f;'
+                   + 'border:1px solid #d9dce6;border-radius:6px;padding:3px 8px">' + tEsc(e.code.trim()) + '</code>' : '')
+       + (what ? '<span style="font-size:18px;color:#5c6070">→</span>' + what : '') + '</div>';
+}
+
+/* noKey — без эталона: на слайде эталон раскрывается отдельным шагом. */
+function tSolution(t, noKey) {
+  const m = t.meta;
+  let pic = T_CAP(m.kind === 'crash' ? 'строки main.py по порядку — до первой ошибки'
+                                     : 'порядок выполнения: файл, строка, что случилось')
+          + m.events.map(e => tFlowRow(e, m.files)).join('');
+  if (m.kind === 'crash')
+    pic += '<div style="margin-top:6px">' + (m.fail
+      ? 'падает строка ' + tTile(m.fail, 'bad')
+      : tTile('0', 'ok') + ' <span style="color:#137a41;font-weight:600">отработает целиком</span>') + '</div>';
+  return pic + '<div style="margin:6px 0 0;color:#5c6070;font-size:15px">' + tEsc(t.explain) + '</div>'
+       + (noKey ? '' : tKey(t));
+}
+function tKey(t) { return T_CAP('эталон') + tTiles(tNorm(t.answer).split(' ')); }
+
+/* Чужой ответ против эталона: по местам, зелёное совпало, красное — нет.
+   Лишнее — красным, недостающее — пустой красной плиткой. */
+function tCompare(t, given) {
+  const want = tNorm(t.answer).split(' ');
+  const got = tNorm(given).split(' ').filter(x => x !== '');
+  if (!got.length) return '';
+  const n = Math.max(want.length, got.length);
+  const toks = [], marks = [];
+  for (let i = 0; i < n; i++) {
+    toks.push(i < got.length ? got[i] : '?');
+    marks.push(i < got.length && got[i] === want[i] ? 'ok' : 'bad');
+  }
+  return T_CAP('твой ответ') + tTiles(toks, marks);
+}
+
+/* Набор для практикума: T_PER_TYPE кругов по всем типам, внутри круга типы
+   перемешаны — одинаковые не идут подряд. Круг один: тренажёр в части 1 —
+   разминка, время пары уходит на три программы. Второй круг — одной цифрой. */
+function tMake(seed) {
+  const rng = tRng(seed);
+  const out = [];
+  for (let round = 0; round < T_PER_TYPE; round++) {
+    const order = tShuffle(rng, [0, 1, 2, 3, 4, 5]);
+    for (let i = 0; i < order.length; i++) out.push(tTask(order[i], rng));
+  }
+  return out;
+}
+/* ==== /ТИПЫ ==== */
+
+/* ==== ЗАДАЧИ ДЗ: вставлено gen.py, руками не править ==== */
+/* Домашнее задание: что сдают после пары «Модульный принцип».
+   Источник правды. Вставляется gen.py --sync в homework.html и test.html.
+
+   Четыре типа берутся из types.js (что напечатает импорт, __name__, чьё
+   имя, где упадёт), дальше два своих:
+     4 «найди контрпример» — программа и модуль из практикума, ошибка
+                             спрятана в функции модуля: високосный без
+                             правила сотен, февраль всегда 28, 30 дней не
+                             у того месяца, 1 — «простое». Ключа нет:
+                             считаем верным и кривым способом и смотрим,
+                             разошлись ли.
+     5 «как это работает»  — вопрос с тремя вариантами: что такое модуль,
+                             как подключить, где лежит, __name__, импорт один
+                             раз, import против from, тёзка библиотеки.
+*/
+
+const HW_TYPES = [
+  'что напечатает импорт',
+  '__name__: какой файл запущен',
+  'чьё имя',
+  'где упадёт',
+  'найди контрпример',
+  'как это работает'
+];
+/* тип ДЗ -> тип задачи из types.js */
+const HW_FROM_TRAINER = { 0: 0, 1: 1, 2: 2, 3: 4 };
+
+/* --------------------------------------------- тип 4: найди контрпример */
+
+const HW_BUGS = {
+  leap100: {
+    spec: 'Программа читает год (от 1600 до 2400) и должна напечатать True, если он '
+        + 'високосный, и False, если нет. Високосный — каждый четвёртый, кроме кратных 100; '
+        + 'но кратные 400 — снова високосные.',
+    files: { 'datetools.py': 'def is_leap(y):\n    return y % 4 == 0',
+             'main.py': 'from datetools import is_leap\ny = int(input())\nprint(is_leap(y))' },
+    fields: 'один год от 1600 до 2400',
+    shape: [[1600, 2400]],
+    hint: 'Для обычных лет функция права. Перечитай правило: о каких годах в ней ничего не сказано?',
+    why: 'Функция знает только «каждый четвёртый». Годы, кратные 100, но не кратные 400 '
+       + '(1700, 1800, 1900, 2100…), она объявляет високосными. Ошибка в модуле — значит, врут '
+       + 'ВСЕ программы, которые его подключили: модуль чинится один раз, но и ломает сразу всех.'
+  },
+  feb28: {
+    spec: 'Программа читает номер месяца m (от 1 до 12) и год y (от 1600 до 2400) и должна '
+        + 'напечатать, сколько дней в этом месяце.',
+    files: { 'datetools.py': 'def days_in_month(m, y):\n    if m == 2:\n        return 28\n'
+                           + '    if m == 4 or m == 6 or m == 9 or m == 11:\n        return 30\n'
+                           + '    return 31',
+             'main.py': 'from datetools import days_in_month\nm = int(input())\ny = int(input())\n'
+                      + 'print(days_in_month(m, y))' },
+    fields: 'два числа: месяц и год',
+    shape: [[1, 12], [1600, 2400]],
+    hint: 'Параметр y в функцию передаётся. А используется ли он хоть где-нибудь?',
+    why: 'Год функция принимает, но не смотрит на него: у февраля всегда 28 дней. В високосный '
+       + 'год их 29 — нужен вызов is_leap(y) из того же модуля.'
+  },
+  month10: {
+    spec: 'Программа читает номер месяца m (от 1 до 12) и год y (от 1600 до 2400) и должна '
+        + 'напечатать, сколько дней в этом месяце.',
+    files: { 'datetools.py': 'def is_leap(y):\n    return y % 4 == 0 and y % 100 != 0 or y % 400 == 0\n'
+                           + 'def days_in_month(m, y):\n    if m == 2:\n        if is_leap(y):\n'
+                           + '            return 29\n        return 28\n'
+                           + '    if m == 4 or m == 6 or m == 9 or m == 10:\n        return 30\n'
+                           + '    return 31',
+             'main.py': 'from datetools import days_in_month\nm = int(input())\ny = int(input())\n'
+                      + 'print(days_in_month(m, y))' },
+    fields: 'два числа: месяц и год',
+    shape: [[1, 12], [1600, 2400]],
+    hint: 'Февраль в порядке. Сверь список тридцатидневных месяцев с календарём.',
+    why: 'Тридцать дней в апреле, июне, сентябре и НОЯБРЕ (4, 6, 9, 11). В модуле вместо 11 '
+       + 'стоит 10: октябрю досталось 30 дней, ноябрю — 31.'
+  },
+  prime1: {
+    spec: 'Программа читает целое n (от 0 до 1000) и должна напечатать True, если n простое, '
+        + 'и False, если нет. Простое — больше 1 и делится только на 1 и на себя.',
+    files: { 'mytools.py': 'def is_prime(n):\n    d = 2\n    while d * d <= n:\n'
+                         + '        if n % d == 0:\n            return False\n        d += 1\n'
+                         + '    return True',
+             'main.py': 'from mytools import is_prime\nn = int(input())\nprint(is_prime(n))' },
+    fields: 'одно целое число от 0 до 1000',
+    shape: [[0, 1000]],
+    hint: 'Делители перебираются верно. Что функция ответит, если цикл не выполнится ни разу?',
+    why: 'Для 0 и 1 цикл не начинается (2 · 2 > n), и функция сразу отвечает True. Но простое '
+       + 'число по определению больше 1: в начале нужно if n < 2: return False.'
+  }
+};
+const HW_BUG_NAMES = ['leap100', 'feb28', 'month10', 'prime1'];
+
+function hwCounter(rng) {
+  const bug = tPick(rng, HW_BUG_NAMES);
+  const b = HW_BUGS[bug];
+  return {
+    kind: 'counter', bug,
+    code: tListing(b.files, 'main.py'),
+    question: '<b>Что программа должна делать.</b> ' + b.spec
+            + '<br><b>Задание.</b> Ошибка спрятана в модуле: программа врёт не всегда, а на '
+            + 'особых данных. Назови такие данные (' + b.fields + ').',
+    hint: b.hint,
+    explain: b.why
+  };
+}
+
+function hwLeap(y) { return y % 4 === 0 && y % 100 !== 0 || y % 400 === 0; }
+function hwDays(m, y) {
+  if (m === 2) return hwLeap(y) ? 29 : 28;
+  return (m === 4 || m === 6 || m === 9 || m === 11) ? 30 : 31;
+}
+function hwPrime(n) {
+  if (n < 2) return false;
+  for (let d = 2; d * d <= n; d++) if (n % d === 0) return false;
+  return true;
+}
+
+/* верный и кривой ответ каждой программы — ровно то, что она напечатает */
+function hwTrueFalse(bug, xs) {
+  if (bug === 'leap100') return [pyShow(hwLeap(xs[0])), pyShow(xs[0] % 4 === 0)];
+  if (bug === 'feb28') {
+    const [m, y] = xs;
+    return ['' + hwDays(m, y), '' + (m === 2 ? 28 : hwDays(m, y))];
+  }
+  if (bug === 'month10') {
+    const [m, y] = xs;
+    const bad = m === 2 ? hwDays(m, y) : (m === 4 || m === 6 || m === 9 || m === 10) ? 30 : 31;
+    return ['' + hwDays(m, y), '' + bad];
+  }
+  const n = xs[0];
+  return [pyShow(hwPrime(n)), pyShow(n < 2 ? true : hwPrime(n))];
+}
+/* как Python печатает значение: True, False, None, число */
+function pyShow(v) {
+  if (v === null || v === undefined) return 'None';
+  if (v === true) return 'True';
+  if (v === false) return 'False';
+  return String(v);
+}
+
+function hwCheckCounter(task, raw) {
+  const parts = String(raw).trim().split(/[\s,;.]+/).filter(function (s) { return s; });
+  const sh = HW_BUGS[task.bug].shape;
+  const what = HW_BUGS[task.bug].fields;
+  if (parts.length !== sh.length || !parts.every(p => /^[-−]?\d+$/.test(p)))
+    return { ok: false, why: 'нужно ' + what };
+  const xs = parts.map(p => Number(p.replace('−', '-')));
+  for (let i = 0; i < sh.length; i++)
+    if (xs[i] < sh[i][0] || xs[i] > sh[i][1])
+      return { ok: false, why: (sh.length > 1 ? (i ? 'год' : 'месяц') : 'число') + ' — от '
+                               + sh[i][0] + ' до ' + sh[i][1] };
+  const tf = hwTrueFalse(task.bug, xs);
+  if (tf[0] === tf[1])
+    return { ok: false, why: 'на этих данных программа печатает верное «' + tf[0]
+                           + '» — ошибка прячется в других' };
+  return { ok: true, why: 'верно: должно быть «' + tf[0] + '», а программа печатает «'
+                        + tf[1] + '»' };
+}
+
+/* Разбор контрпримера рисунком: что должно выйти и что вышло у программы. */
+function hwCounterPic(task, raw) {
+  const v = hwCheckCounter(task, raw);
+  const parts = String(raw).trim().split(/[\s,;.]+/).filter(function (s) { return s; });
+  if (!/^верно|печатает верное/.test(v.why)) return '';
+  const xs = parts.map(p => Number(p.replace('−', '-')));
+  const tf = hwTrueFalse(task.bug, xs);
+  return T_CAP('на твоих данных ' + tEsc(parts.join(' ')))
+       + '<div>должно быть ' + tTile(tf[0], 'ok') + ' программа печатает '
+       + tTile(tf[1], tf[0] === tf[1] ? 'ok' : 'bad') + '</div>';
+}
+
+/* --------------------------------------------- тип 5: как это работает */
+const HW_THEORY = [
+  {
+    q: 'Что такое модуль в Python?',
+    opts: ['Файл .py с функциями и переменными, который другая программа подключает через import',
+           'Функция, написанная внутри программы через def',
+           'Папка, в которой лежат программы'],
+    right: 0,
+    why: 'Модуль — это обычный файл с кодом. Его имя без .py и есть имя модуля: calc.py → import calc.'
+  },
+  {
+    q: 'Функции лежат в файле calc.py. Как подключить их в программе?',
+    opts: ['import calc', 'import calc.py', 'open("calc.py")'],
+    right: 0,
+    why: 'Модуль подключают по имени, без расширения. import calc.py Python поймёт как «модуль py '
+       + 'внутри calc» и упадёт с ModuleNotFoundError.'
+  },
+  {
+    q: 'Где должен лежать calc.py, чтобы import calc в main.py нашёл его?',
+    opts: ['В той же папке, что и main.py',
+           'В любой папке компьютера — Python найдёт сам',
+           'Только в папке, куда установлен Python'],
+    right: 0,
+    why: 'Python ищет модуль сначала в папке запущенной программы, потом в своей библиотеке. '
+       + 'Поэтому на практикуме модули и программы лежат в одной папке.'
+  },
+  {
+    q: 'Зачем в модуле пишут if __name__ == "__main__":?',
+    opts: ['Чтобы проверки модуля работали, когда его запускают самого, и молчали, когда его импортируют',
+           'Чтобы модуль работал быстрее',
+           'Без этой строки модуль нельзя импортировать'],
+    right: 0,
+    why: 'У запущенного файла __name__ равно "__main__", у импортированного — его имя. Блок под '
+       + 'if выполняется только в первом случае.'
+  },
+  {
+    q: 'В программе два раза подряд написано import calc, а в calc.py есть print. Сколько раз он сработает?',
+    opts: ['Один раз', 'Два раза', 'Ни разу — будет ошибка'],
+    right: 0,
+    why: 'Модуль выполняется при первом импорте. Дальше Python берёт уже загруженный модуль, '
+       + 'файл заново не читает.'
+  },
+  {
+    q: 'Чем import calc отличается от from calc import f?',
+    opts: ['После import calc функцию зовут calc.f(x), после from calc import f — просто f(x)',
+           'Ничем, это одно и то же',
+           'from подключает модуль без функций'],
+    right: 0,
+    why: 'import calc даёт программе одно имя — calc, а функции достаются через точку. '
+       + 'from calc import f кладёт в программу имя f, но не имя calc.'
+  },
+  {
+    q: 'Свой модуль назвали random.py и положили рядом с программой. Что будет с from random import randint?',
+    opts: ['Python возьмёт свой файл random.py, а не библиотечный, и randint не найдётся',
+           'Python всё равно возьмёт библиотечный random',
+           'Файл с таким именем нельзя сохранить'],
+    right: 0,
+    why: 'Папка программы просматривается первой, и свой файл заслоняет библиотеку. Модулям '
+       + 'дают имена, которых нет в стандартной библиотеке.'
+  },
+  {
+    q: 'В чём смысл модульного принципа?',
+    opts: ['Программа делится на части с ясным назначением; каждую пишут, проверяют и используют отдельно',
+           'Вся программа пишется в одном большом файле',
+           'Каждая строка программы — в своём файле'],
+    right: 0,
+    why: 'Модуль пишут и проверяют один раз, а подключают в любую программу: is_prime из '
+       + 'mytools служит и в задании 1, и в задании 3 практикума.'
+  },
+  {
+    q: 'В модуле b.py стоит from a import f. Есть ли у модуля b имя f?',
+    opts: ['Да: b.f — та же функция, что a.f',
+           'Нет: f есть только у модуля a',
+           'Только если f заново написана в b через def'],
+    right: 0,
+    why: 'Всё, что модуль импортировал, лежит в его пространстве имён наравне с его собственными '
+       + 'функциями.'
+  },
+  {
+    q: 'В модуле calc.py есть строка k = 5 и функция f, которая использует k. В программе написано '
+     + 'from calc import f, а потом k = 100. Какое k увидит f?',
+    opts: ['5 — k своего модуля', '100 — k программы', 'Будет ошибка NameError'],
+    right: 0,
+    why: 'Функция ищет имена в том модуле, где написана. k = 100 в программе — другая переменная.'
+  }
+];
+
+function hwTheory(rng) {
+  const item = tPick(rng, HW_THEORY);
+  const idx = tShuffle(rng, [0, 1, 2]);
+  const letters = ['A', 'Б', 'В'];
+  const opts = idx.map(function (k, pos) {
+    return letters[pos] + ') ' + tEsc(item.opts[k]);
+  });
+  const right = letters[idx.indexOf(item.right)];
+  return {
+    kind: 'theory', qid: HW_THEORY.indexOf(item),
+    code: '',
+    question: tEsc(item.q) + '<br><br>' + opts.join('<br>')
+            + '<br><br>Ответ — одна буква.',
+    answer: right,
+    explain: 'Верно: ' + right + ') ' + tEsc(item.opts[item.right]) + '. ' + tEsc(item.why)
+  };
+}
+
+/* ------------------------------------------------------------ сборка */
+function hwMake(type, rng) {
+  let t;
+  if (type in HW_FROM_TRAINER) {
+    t = tTask(HW_FROM_TRAINER[type], rng);
+    t.kind = 'trainer';
+  } else if (type === 4) {
+    t = hwCounter(rng);
+  } else {
+    t = hwTheory(rng);
+  }
+  t.hwType = type;
+  return t;
+}
+
+function hwVerdict(task, raw) {
+  if (!String(raw).trim()) return { ok: false, why: '' };
+  if (task.kind === 'counter') return hwCheckCounter(task, raw);
+  if (task.kind === 'theory') {
+    const map = { 'A': 'A', 'А': 'A', 'a': 'A', 'а': 'A',
+                  'Б': 'Б', 'б': 'Б', 'B': 'Б',
+                  'В': 'В', 'в': 'В', 'C': 'В', 'c': 'В' };
+    const got = map[String(raw).trim().charAt(0)] || '';
+    return { ok: got === task.answer, why: '' };
+  }
+  return { ok: tCheck(task, raw), why: '' };
+}
+
+/* Разбор после ответа — одна функция на ДЗ и проверочную. Задачи тренажёра —
+   рисунком (tCompare + tSolution), контрпример — плитками «должно / вышло»,
+   теория — словами: у неё рисовать нечего. */
+function hwExplain(task, raw, ok) {
+  if (task.kind === 'trainer')
+    return (ok ? '' : tCompare(task, raw)) + tSolution(task);
+  if (task.kind === 'counter')
+    return hwCounterPic(task, raw) + '<div style="margin-top:6px">' + task.explain + '</div>';
+  return '<div>' + task.explain + '</div>';
+}
+/* ==== /ЗАДАЧИ ДЗ ==== */
+
+/* Форма сдачи ДЗ — одна на все темы. Ссылку разносит set_form_link.py. */
+const FORM = "https://docs.google.com/forms/d/e/1FAIpQLSfQyhaxcnzn4ZaKSe_ZMsluw7qRQnrw_80H6SfrnYB5EThUIA/viewform?usp=pp_url&entry.853601231=ФАМИЛИЯ&entry.1091635917=КЛАСС&entry.487188307=КОД";
+const ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+const EPOCH = Date.UTC(2026, 0, 1);
+const PREFIX = "MD";
+const NEED_STREAK = 1;     // тип закрывает один верный ответ
+const MIN_TYPES = 4;       // ниже этого код не выдаётся
+const SCALE = [[6, 5], [5, 4], [4, 3]];
+const TOTAL = SCALE[0][0];
+
+// Тройку можно добрать, четвёрку и пятёрку — только заработать (Света,
+// 06.10.2026, общее правило тренажёра и ДЗ). Ошибочная задача тип не
+// закрывает, вместо неё приходит новая того же типа — без ограничений, до
+// тройки дойдёт любой, кто не бросит. Но ошибки ставят потолок: их можно
+// столько, сколько допускает та же отметка на проверочной (на «5» —
+// 6 − 6 = 0, на «4» — 6 − 5 = 1). Больше — потолок тройка; хочешь выше —
+// «Начать заново».
+const LOWEST = SCALE[SCALE.length - 1];
+// ПОТОЛОК СНЯТ (Света, 06.10.2026, после урока: «слишком жёстко — в
+// тренажёре новый материал, сразу чисто не выходит»). Добирать можно до
+// «5». Функция оставлена ради разметки вокруг неё, но всегда отдаёт верхнюю
+// отметку: ветки «выше N не получить» не срабатывают, отрезки лесенки не
+// штрихуются, countedFor отдаёт число как есть.
+const ceilingFor = () => SCALE[0][1];
+
+// Формат кода прежний. В поле «закрыто типов» уходит число, уже упёртое в
+// потолок: разборщик (check_homework.py) ставит отметку по нему и ничего не
+// знает о потолке, а отметка выходит та же, что на странице.
+function countedFor(n, errs){
+  const higher = SCALE.find(s => s[1] === ceilingFor(errs) + 1);
+  return higher ? Math.min(n, higher[0] - 1) : n;
+}
+
+// Лесенка вместо одной цифры (Света, 06.10.2026): до тройки — не «двойка»,
+// а заполняющийся отрезок «на 3». Отрезки из SCALE: 4 клетки на тройку,
+// ещё 1 на четвёрку, ещё 1 на пятёрку. Отрезок выше потолка заштрихован.
+function ladderHtml(n, cap){
+  let from = 0;
+  return SCALE.slice().reverse().map(([need, m]) => {
+    const size = need - from;
+    const got = Math.max(0, Math.min(size, n - from));
+    const capped = m > cap, reached = n >= need && !capped;
+    from = need;
+    const cells = Array.from({length: size},
+        (_, k) => '<i class="' + (k < got ? "f" : "") + '"></i>').join("");
+    return '<div class="seg' + (reached ? " got" : "") + (capped ? " capped" : "")
+         + '" style="flex:' + size + ' 1 0"><div class="cells">' + cells + '</div>'
+         + '<div class="lab">' + (capped ? "на " + m + " — потолок"
+                                         : (reached ? "✓ " : "") + "на " + m) + '</div></div>';
+  }).join("");
+}
+
+const bin = (v, w) => v.toString(2).padStart(w, "0");
+// Семибитными частями строки: в нагрузке 33 бита, а побитовые операции в JS
+// 32-битные — старший бит молча потерялся бы.
+function checksum(bitstr){
+  let cs = 0x5B;
+  for (let i = 0; i < bitstr.length; i += 7)
+    cs ^= parseInt(bitstr.substr(i, 7).padEnd(7, "0"), 2);
+  return cs & 0x7F;
+}
+/* Фамилия в коде (Света, 26.09.2026). Фамилию понимаем как первое
+   слово строчными, ё -> е: «Синицына Мария» и «синицына» дают один
+   код. Из неё получаются 40 бит (FNV-1a и xorshift32), которыми код
+   перемешивается. Та же арифметика живёт в homework.py — surname_stream. */
+function surnameKey(s){
+  return String(s || "").toLowerCase().replace(/ё/g, "е")
+    .split(/[^а-яa-z-]+/).find(w => w.replace(/-/g, "")) || "";
+}
+
+function surnameStream(fam){
+  const s = surnameKey(fam);
+  if (!s) return "0".repeat(40);
+  let h = 0x811C9DC5;
+  for (const ch of s){
+    h ^= ch.charCodeAt(0);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  const step = x => { x ^= x << 13; x ^= x >>> 17; x ^= x << 5; return x >>> 0; };
+  let x = h || 0x9E3779B9;
+  for (let i = 0; i < 4; i++) x = step(x);
+  const w1 = x = step(x), w2 = step(x);
+  return (bin(w1, 32) + bin(w2, 32)).slice(0, 40);
+}
+
+function makeCode(st, fam){
+  const day = Math.max(0, Math.min(2047, Math.floor(
+      (Date.now() - EPOCH) / 86400000)));
+  const payload = bin(day, 11) + bin(Math.min(15, st.typesDone), 4) +
+                  bin(Math.min(15, st.cleanTypes), 4) +
+                  bin(Math.min(127, st.solved), 7) +
+                  bin(Math.min(127, st.wrong), 7);
+  const plain = payload + bin(checksum(payload), 7);
+  const key = surnameStream(fam);
+  let bitstr = "";
+  for (let i = 0; i < 40; i++) bitstr += plain[i] === key[i] ? "0" : "1";
+  let out = "";
+  for (let i = 0; i < 40; i += 5)
+    out += ALPHABET[parseInt(bitstr.substr(i, 5), 2)];
+  return PREFIX + "-" + out.slice(0, 4) + "-" + out.slice(4);
+}
+
+/* ---------------------------------------------------------- состояние */
+const N = HW_TYPES.length;
+const rng = tRng((Date.now() ^ (Math.random() * 1e9)) >>> 0);
+const st = {
+  streak: Array(N).fill(0),
+  done: Array(N).fill(false),
+  clean: Array(N).fill(true),
+  solved: 0, wrong: 0,
+  cur: null, answered: false, retry: null
+};
+// закрыто на самом деле
+Object.defineProperty(st, "closed",
+  {get(){ return st.done.filter(Boolean).length; }});
+// закрыто «для отметки и кода» — упёрто в потолок по ошибкам
+Object.defineProperty(st, "typesDone",
+  {get(){ return countedFor(st.closed, st.wrong); }});
+Object.defineProperty(st, "cleanTypes",
+  {get(){ return st.done.filter((d, i) => d && st.clean[i]).length; }});
+
+function markFor(n){
+  for (const [need, m] of SCALE) if (n >= need) return m;
+  return null;
+}
+/* После ошибки — тот же тип: разбор только что показан, применить его надо по
+   горячему. Иначе — любой незакрытый. */
+function pickType(){
+  if (st.retry !== null && !st.done[st.retry]) return st.retry;
+  const open = [];
+  for (let i = 0; i < N; i++) if (!st.done[i]) open.push(i);
+  if (!open.length) return null;
+  return open[tRand(rng, 0, open.length - 1)];
+}
+/* ==== FRZ: вставлено freeze.py, руками не править ==== */
+/* Код задачи — картинкой, прямо в браузере.
+   Вставляется freeze.py --sync между маркерами FRZ. Руками в html не править.
+
+   Тренажёр, ДЗ и проверочная рисуют код каждой задачи сами при открытии, и
+   заморозить его при выкладке нельзя — его ещё нет. Поэтому страница
+   рисует код на canvas и вставляет <img>: скопировать мышкой и запустить в
+   IDLE не выйдет — задача снова про чтение (Света, 14.09.2026).
+
+   Стиль тот же, что у блоков <pre>: Consolas 15px, тёмный фон, комментарий
+   после # серо-голубой. Рисуем в двойном размере — чётко на любом экране. */
+function frz(code) {
+  var S = 2, SIZE = 15, LEAD = 22, PX = 14, PY = 12;
+  var lines = String(code).replace(/\r/g, '').split('\n');
+  var c = document.createElement('canvas'), g = c.getContext('2d');
+  var font = (SIZE * S) + 'px Consolas, "Cascadia Mono", "Courier New", monospace';
+  g.font = font;
+  var w = 0;
+  for (var i = 0; i < lines.length; i++) w = Math.max(w, g.measureText(lines[i]).width);
+  c.width = Math.ceil(w) + 2 * PX * S;
+  c.height = lines.length * LEAD * S + 2 * PY * S;
+  g.fillStyle = '#1e2430';
+  g.fillRect(0, 0, c.width, c.height);
+  g.font = font;                       /* смена размера сбрасывает шрифт */
+  g.textBaseline = 'middle';
+  for (var k = 0; k < lines.length; k++) {
+    var y = PY * S + k * LEAD * S + LEAD * S / 2;
+    var line = lines[k], at = line.indexOf('#');
+    var head = at < 0 ? line : line.slice(0, at), tail = at < 0 ? '' : line.slice(at);
+    g.fillStyle = '#e7ecf5';
+    g.fillText(head, PX * S, y);
+    if (tail) {
+      g.fillStyle = '#8fa6c4';
+      g.fillText(tail, PX * S + g.measureText(head).width, y);
+    }
+  }
+  if (!document.getElementById('frz-css')) {
+    var st = document.createElement('style');
+    st.id = 'frz-css';
+    st.textContent = 'img.frz-b{display:block;max-width:100%;height:auto;'
+                   + 'border-radius:10px;margin:8px 0}';
+    document.head.appendChild(st);
+  }
+  return '<img class="frz-b" width="' + (c.width / S) + '" height="' + (c.height / S)
+       + '" alt="код задачи — читай с экрана" src="' + c.toDataURL('image/png') + '">';
+}
+/* ==== /FRZ ==== */
+
+function esc(s){ return String(s).replace(/[&<>]/g, c =>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+/* ------------------------------------------------------------- экран */
+function paintProgress(){
+  const box = document.getElementById("types");
+  box.innerHTML = "";
+  HW_TYPES.forEach((name, i) => {
+    const c = document.createElement("span");
+    c.className = "chip" + (st.done[i] ? " done"
+                          : (st.cur && st.cur.hwType === i ? " cur" : ""));
+    c.textContent = name + (st.done[i] ? " ✓" : "");
+    box.appendChild(c);
+  });
+  const cap = ceilingFor(st.wrong);
+  document.getElementById("ladder").innerHTML = ladderHtml(st.closed, cap);
+  // «2» по ходу не показываем: до тройки — прочерк и лесенка
+  const m = st.closed >= MIN_TYPES ? markFor(st.typesDone) : null;
+  const sb = document.getElementById("scorebox");
+  sb.className = "score" + (m ? " m" + m : "");
+  document.getElementById("mark").textContent = m || "—";
+  document.getElementById("stats").textContent =
+    "закрыто типов: " + st.closed + " из " + N + " · ошибок: " + st.wrong +
+    (st.closed < MIN_TYPES
+      ? " · до тройки осталось закрыть " + (MIN_TYPES - st.closed) : "") +
+    (cap < SCALE[0][1]
+      ? " · выше «" + cap + "» в этом заходе не получить"
+      : (st.wrong ? "" : " · без ошибок пока — пятёрка открыта"));
+}
+
+/* «Начать заново»: всё с нуля, задачи новые. Принудительного сброса нет —
+   это выбор того, кто хочет выше потолка. */
+function restart(){
+  if (!confirm("Начать заново? Закрытое в этом заходе пропадёт, задачи будут новые.")) return;
+  st.streak.fill(0); st.done.fill(false); st.clean.fill(true);
+  st.solved = 0; st.wrong = 0; st.retry = null;
+  nextTask();
+}
+
+function nextTask(){
+  const type = pickType();
+  if (type === null) { finish(); return; }
+  st.cur = hwMake(type, rng);
+  st.answered = false;
+  const t = st.cur;
+  const hint = t.hint
+    ? '<details><summary>Подсказка</summary><p>' + t.hint + '</p></details>' : "";
+  document.getElementById("area").innerHTML =
+    '<div class="card" id="task">' +
+      '<p class="tag">' + HW_TYPES[type] +
+        (st.retry === type ? ' · ещё раз, тот же тип' : '') + '</p>' +
+      (t.code ? frz(t.code) : '') +
+      (t.input !== undefined
+        ? '<p class="inp">Вход: <code>' + esc(t.input).replace(/\n/g, '</code>, затем <code>') + '</code></p>'
+        : '') +
+      '<p>' + (t.question || "Что напечатает программа?") + '</p>' +
+      '<div class="row">' +
+        '<input type="text" id="ans" autocomplete="off" spellcheck="false">' +
+        '<button class="primary" id="go">Проверить</button>' +
+      '</div>' +
+      hint +
+      '<div class="verdict" id="v"></div>' +
+    '</div>';
+  document.getElementById("go").addEventListener("click", judge);
+  document.getElementById("ans").addEventListener("keydown", e => {
+    if (e.key === "Enter") judge();
+  });
+  document.getElementById("ans").focus();
+  paintProgress();
+}
+
+function judge(){
+  if (st.answered) { nextTask(); return; }
+  const raw = document.getElementById("ans").value;
+  if (!raw.trim()) return;
+  const t = st.cur, type = t.hwType;
+  const res = hwVerdict(t, raw);
+  const card = document.getElementById("task");
+  const v = document.getElementById("v");
+  st.answered = true;
+  document.getElementById("go").textContent = "Дальше";
+  document.getElementById("ans").disabled = true;
+  if (res.ok){
+    st.solved++;
+    st.streak[type]++;
+    st.retry = null;
+    card.className = "card ok";
+    v.className = "verdict ok";
+    let text = res.why ? res.why.charAt(0).toUpperCase() + res.why.slice(1) + "." : "Верно.";
+    if (st.streak[type] >= NEED_STREAK){
+      st.done[type] = true;
+      text += " Тип закрыт.";
+    }
+    v.innerHTML = text + hwExplain(t, raw, true);
+  } else {
+    st.wrong++;
+    st.streak[type] = 0;
+    st.clean[type] = false;
+    st.retry = type;
+    card.className = "card err";
+    v.className = "verdict err";
+    /* разбор рисунком (Света, 26.09.2026): свой ответ зелёным и красным,
+       вызовы и что они вернули, эталон */
+    const cap = ceilingFor(st.wrong);
+    v.innerHTML = "Пока нет" + (res.why ? " — " + res.why : "") +
+      ". Следующая задача — того же типа." +
+      (cap < SCALE[0][1] ? " Ошибок: " + st.wrong + " — выше «" + cap +
+        "» в этом заходе не получить." : "") + hwExplain(t, raw, false);
+  }
+  paintProgress();
+}
+
+function finish(){
+  const m = markFor(st.typesDone);
+  const cap = ceilingFor(st.wrong);
+  const hasCode = st.closed >= MIN_TYPES;
+  const more = st.closed < N
+    ? '<button id="more">Закрыть ещё типы</button>' : "";
+  const again = cap < SCALE[0][1]
+    ? '<button id="restart">Начать заново — ради «' + (cap + 1) + '» и выше</button>' : "";
+  document.getElementById("area").innerHTML =
+    '<div class="card">' +
+      '<h2>Работа окончена</h2>' +
+      '<p>Закрыто типов: <b>' + st.closed + '</b> из ' + N +
+        '. Решено задач: ' + st.solved + ', ошибок: ' + st.wrong + '.' +
+        (hasCode ? ' Наработано на <b>' + m + '</b>.' : '') +
+        (hasCode && cap < SCALE[0][1] ? ' Выше «' + cap + '» с таким числом ошибок не выйдет.' : '') +
+      '</p>' +
+      (hasCode
+        ? '<p>Твой код работы:</p><div class="code" id="code"></div>' +
+          '<p class="stats">Он собран из твоей фамилии и того, сколько и как ' +
+            'ты решал: у соседа с тем же результатом код другой. Поменяешь ' +
+            'фамилию — поменяется и код.</p>' +
+          '<div class="fields">' +
+            '<div><label for="fam">Фамилия</label>' +
+              '<input type="text" id="fam" autocomplete="off"></div>' +
+            '<div><label for="kls">Класс</label>' +
+              '<input type="text" id="kls" autocomplete="off"></div>' +
+          '</div>' +
+          '<p class="stats" id="famhint"></p>' +
+          '<div class="row"><button id="send" class="primary">Сдать работу</button></div>' +
+          '<p class="stats" id="sendnote">Кнопка откроет форму: фамилия, класс и код уже ' +
+            'будут вписаны — останется нажать «Отправить».</p>'
+        : '<div class="note">Закрыто меньше ' + MIN_TYPES +
+          ' типов — кода работы нет. Закрой ещё хотя бы ' +
+          (MIN_TYPES - st.closed) + ', и он появится.</div>') +
+      '<div class="row">' + more + again + '</div>' +
+    '</div>';
+  const b = document.getElementById("more");
+  if (b) b.addEventListener("click", nextTask);
+  const r = document.getElementById("restart");
+  if (r) r.addEventListener("click", restart);
+  wireSend();
+}
+
+/* Кнопка «Сдать». Код привязан к фамилии (Света, 26.09.2026): пока
+   фамилия не вписана, кода нет, а вписанная подмешивается в код. Раньше
+   безошибочный прогон давал один код на весь класс, и проверка
+   отказывала честным. Теперь у двух учеников с одинаковым результатом
+   коды разные, а чужой код к своей фамилии не подходит.
+   Фамилию и класс страница помнит между заходами, но компьютер в классе
+   общий — подставленную фамилию просим проверить. Код в форму уходит сам:
+   переписывание руками и было источником «код не разобрался». */
+let CURRENT_CODE = "";
+function wireSend(){
+  const fam = document.getElementById("fam");
+  const kls = document.getElementById("kls");
+  const box = document.getElementById("code");
+  const send = document.getElementById("send");
+  const note = document.getElementById("sendnote");
+  const hint = document.getElementById("famhint");
+  let remembered = "";
+  if (fam) try {
+    remembered = localStorage.getItem("fam") || "";
+    fam.value = remembered;
+    kls.value = localStorage.getItem("kls") || "";
+  } catch (e) {}
+  const update = () => {
+    const f = fam ? fam.value.trim() : "";
+    CURRENT_CODE = surnameKey(f) ? makeCode(st, f) : "";
+    if (box){
+      box.textContent = CURRENT_CODE || "впиши фамилию — появится код";
+      box.classList.toggle("wait", !CURRENT_CODE);
+    }
+    if (hint) hint.textContent = remembered && f === remembered
+      ? "Фамилию подставил этот компьютер с прошлого раза — проверь, что она твоя."
+      : "";
+  };
+  if (fam) fam.addEventListener("input", update);
+  update();
+  if (!send) return;
+  send.addEventListener("click", () => {
+    const k = kls.value.trim();
+    if (!CURRENT_CODE || !k){
+      note.textContent = "Впиши фамилию и класс — иначе непонятно, "
+                       + "чья это работа.";
+      (CURRENT_CODE ? kls : fam).focus();
+      return;
+    }
+    try {
+      localStorage.setItem("fam", fam.value.trim());
+      localStorage.setItem("kls", k);
+    } catch (e) {}
+    const url = FORM.replace("ФАМИЛИЯ", encodeURIComponent(fam.value.trim()))
+                    .replace("КЛАСС", encodeURIComponent(k))
+                    .replace("КОД", encodeURIComponent(CURRENT_CODE));
+    window.open(url, "_blank", "noopener");
+    note.innerHTML = "Форма открылась в новой вкладке. Работа сдана, только "
+      + "когда в форме нажата «Отправить». Вкладка не открылась — "
+      + '<a href="' + url + '" target="_blank" rel="noopener">открой форму '
+      + "по этой ссылке</a>.";
+  });
+}
+
+paintProgress();
+nextTask();
+</script>
+<p class="ai-mark" style="margin:34px auto 0;max-width:860px;padding-top:12px;border-top:1px solid #d9dce6;color:#5c6070;font:13px/1.5 "Segoe UI",system-ui,sans-serif">Материалы подготовлены с использованием технологий искусственного интеллекта.</p>
+</body>
+</html>
