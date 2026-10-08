@@ -23,6 +23,7 @@
   - [Двоичная система счисления](https://svetgenmo.github.io/informatika/8/dvoichnaya-sistema/) — Переводы 2↔10 и все четыре действия
   - [Восьмеричная система счисления](https://svetgenmo.github.io/informatika/8/vosmerichnaya-sistema/) — Триады 2↔8, арифметика и сравнение чисел
   - [Шестнадцатеричная система счисления](https://svetgenmo.github.io/informatika/8/shestnadcaterichnaya-sistema/) — Тетрады 2↔16, арифметика с ответом в десятичной
+  - [Логические высказывания](https://svetgenmo.github.io/informatika/8/logicheskie-vyskazyvaniya/) — Седьмой урок 8 класса, начало раздела «Элементы математической логики»: высказывание и не-высказывание, логическое значение, элементарные и составные высказывания, высказывание про буквы имени (задание 5 ВПР)
 - **9 класс** — https://svetgenmo.github.io/informatika/9/
   - [Информационный объём текста](https://svetgenmo.github.io/informatika/9/obem-teksta/) — Задание 1 ОГЭ: вычеркнутое слово
   - [Кодирование и декодирование информации](https://svetgenmo.github.io/informatika/9/kodirovanie-dekodirovanie/) — Задание 2 ОГЭ и демоверсия 2027: кодовая таблица и разбор цепочки
