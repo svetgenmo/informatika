@@ -1,0 +1,1398 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Двоичное кодирование — презентация</title>
+<meta name="description" content="Презентация к уроку 7 10 класса (базовый уровень): информация, данные и знания, дискретное представление, двоичный код, равномерные и неравномерные коды, условие Фано и дерево кода. Слайды-примеры собирает генератор, ответ класса сверяется с эталоном.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E10%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ink)}
+body{font:20px/1.5 "Segoe UI",system-ui,sans-serif}
+.deck{height:100vh;display:flex;flex-direction:column}
+.stage{flex:1 1 auto;overflow-y:auto;padding:28px 56px 12px}
+.slide{display:none;max-width:1100px;margin:0 auto}
+.slide.on{display:block}
+
+h1{font-size:46px;line-height:1.1;margin:0 0 18px;text-wrap:balance}
+h2{font-size:32px;line-height:1.15;margin:0 0 16px;text-wrap:balance}
+.lead{font-size:23px;color:var(--muted);margin:0 0 24px}
+.eyebrow{font-size:15px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin:0 0 4px}
+p{margin:0 0 12px}
+ul,ol{margin:0 0 12px;padding-left:28px}
+li{margin:6px 0}
+code{font-family:Consolas,"Cascadia Mono",monospace;background:var(--card);
+     border:1px solid var(--line);border-radius:6px;padding:1px 7px;font-size:.92em}
+.bits{font-family:Consolas,"Cascadia Mono",monospace;letter-spacing:1px;word-break:break-all}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;align-items:start}
+.box{border:1px solid var(--line);border-radius:14px;padding:14px 18px;background:#fff}
+.box h3{margin:0 0 6px;font-size:22px}
+.good{border-color:var(--ok-line);background:var(--ok-bg)}
+.bad{border-color:var(--err-line);background:var(--err-bg)}
+.warn{border-color:var(--hi-line);background:var(--hi-bg)}
+.big{font-size:24px}
+table{border-collapse:collapse;font-size:19px;margin:10px 0}
+th,td{border:1px solid var(--line);padding:6px 14px;text-align:center}
+th{background:var(--card)}
+.step[hidden]{display:none}
+.tag{display:inline-block;background:var(--accent);color:#fff;border-radius:20px;
+     padding:3px 14px;font-size:16px;font-weight:700;margin-bottom:12px}
+.bar{flex:0 0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+     border-top:1px solid var(--line);background:var(--card);padding:12px 24px}
+.bar .spacer{flex:1 1 auto}
+.count{color:var(--muted);font-size:17px;font-variant-numeric:tabular-nums}
+.keys{color:var(--muted);font-size:15px}
+.keys kbd{font:600 13px/1 Consolas,monospace;border:1px solid var(--line);
+          border-bottom-width:2px;border-radius:5px;padding:2px 6px;background:#fff}
+button{font:600 17px/1 inherit;padding:11px 18px;border-radius:10px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);color:var(--muted)}
+.zoom{display:inline-flex;align-items:center;gap:3px;margin-left:8px}
+.zoom button{padding:8px 10px;font-size:15px;min-width:36px;line-height:1}
+.zoom .z{color:var(--muted);font-size:15px;min-width:46px;text-align:center;
+         font-variant-numeric:tabular-nums}
+svg.ftree{display:block;width:100%;max-width:520px;height:auto;max-height:46vh;margin:6px auto}
+
+/* ---- слайд-пример: условие слева на месте, разбор справа ---- */
+.exwrap{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:22px;align-items:start}
+.exwrap .task{position:sticky;top:0;font-size:18px;padding:12px 18px;border:1px solid var(--line);
+              border-radius:14px;background:var(--card)}
+.exwrap .task.tall{position:static}
+.exwrap .task p{margin:6px 0}
+.exwrap .task .ask{font-weight:700}
+.exwrap .task ul.plain{list-style:none;padding-left:0;margin:4px 0}
+.exwrap .task ul.plain li{margin:3px 0;font-size:17px}
+.exwrap .steps{display:flex;flex-direction:column;gap:10px}
+.exwrap .step{border:1px solid var(--line);border-radius:14px;padding:10px 18px;font-size:18px;background:#fff}
+@media (max-width:1000px){ .exwrap{grid-template-columns:1fr} .exwrap .task{position:static} }
+.xcheck{display:flex;gap:10px;margin-top:12px}
+.xcheck .xin{font:700 22px/1 Consolas,monospace;width:260px;padding:8px 12px;
+             border:2px solid var(--line);border-radius:10px}
+.xcheck .xin:focus{outline:none;border-color:var(--accent)}
+.steps .xres:empty{display:none}
+.steps .xres{border:3px dashed var(--accent);border-radius:12px;padding:6px 16px 10px;background:#fff}
+.xres .xverd{font:800 24px/1.2 "Segoe UI",system-ui,sans-serif;margin:4px 0 2px}
+.xres .xverd.ok{color:var(--ok)}
+.xres .xverd.bad{color:var(--err)}
+.xres .xwhy{color:var(--muted);font-size:16px}
+</style>
+</head>
+<body>
+<div class="deck">
+<div class="stage" id="stage">
+
+<section class="slide on">
+  <h1>Двоичное<br>кодирование</h1>
+  <p class="lead">Как любая информация превращается в нули и единицы —
+  и почему одни коды короче других.</p>
+  <p>10 класс, урок 7. Информация и данные · равномерный код · неравномерный
+     код · условие Фано.</p>
+</section>
+
+<section class="slide">
+  <span class="tag">понятия</span>
+  <h2>Информация, данные, знания</h2>
+  <div class="three">
+    <div class="box"><h3>Информация</h3>
+      <p>Сведения, которые что-то сообщают. Одно и то же сообщение для одного
+         — новость, для другого — ничего нового.</p></div>
+    <div class="box"><h3>Данные</h3>
+      <p>Информация, <b>записанная знаками</b> так, чтобы её можно было
+         хранить, передавать и обрабатывать: текст, таблица, файл.</p></div>
+    <div class="box"><h3>Знания</h3>
+      <p>Информация, которую человек <b>понял, проверил и умеет
+         применять</b>.</p></div>
+  </div>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="box warn"><p><b>Компьютер хранит данные</b>, а не знания:
+         расписание поездов в памяти телефона — данные; умение по нему
+         добраться до дома — знание.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">дискретность</span>
+  <h2>Любую информацию можно записать знаками</h2>
+  <table>
+    <tr><th>что</th><th>как разбить на знаки</th></tr>
+    <tr><td>текст</td><td style="text-align:left">буквы, цифры, пробелы — по одной</td></tr>
+    <tr><td>изображение</td><td style="text-align:left">сетка точек (пикселей), у каждой — номер цвета</td></tr>
+    <tr><td>звук</td><td style="text-align:left">громкость, измеренная через равные малые промежутки</td></tr>
+    <tr><td>число</td><td style="text-align:left">цифры в какой-то системе счисления</td></tr>
+  </table>
+  <div class="steps">
+    <div class="step" hidden>
+      <p class="big">Это <b>универсальность дискретного представления</b>:
+         всё, что угодно, — последовательность знаков из конечного набора.
+         А раз так, хватит и <b>двух</b> знаков.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">двоичный код</span>
+  <h2>Почему именно 0 и 1</h2>
+  <div class="two">
+    <div>
+      <ul class="big">
+        <li>ток есть — нет;</li>
+        <li>намагничено — нет;</li>
+        <li>лампочка горит — нет;</li>
+        <li>отверстие есть — нет.</li>
+      </ul>
+    </div>
+    <div class="box good">
+      <p class="big">Два состояния техника различает надёжнее всего. Один
+         двоичный знак — <b>бит</b>.</p>
+    </div>
+  </div>
+  <div class="steps">
+    <div class="step" hidden>
+      <p class="big">Кодирование — замена каждого знака сообщения
+         <b>кодовым словом</b> из нулей и единиц: А → <code>00</code>,
+         Б → <code>01</code>, …</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">равномерный код</span>
+  <h2>Все кодовые слова одной длины</h2>
+  <table>
+    <tr><th>длина <i>i</i></th><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td></tr>
+    <tr><th>слов 2<sup><i>i</i></sup></th><td>2</td><td>4</td><td>8</td><td>16</td><td>32</td><td>64</td><td>128</td><td>256</td></tr>
+  </table>
+  <p class="big">На каждом месте 0 или 1 — два варианта; мест <i>i</i>
+     — значит, слов 2 · 2 · … · 2 = 2<sup><i>i</i></sup>.</p>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="box good"><p class="big">Для <i>N</i> знаков: наименьшее
+         <i>i</i>, при котором <b>2<sup><i>i</i></sup> ≥ <i>N</i></b>.
+         33 буквы: 2<sup>5</sup> = 32 — мало, 2<sup>6</sup> = 64 — хватит,
+         <b>6 знаков</b>.</p></div>
+    </div>
+    <div class="step" hidden>
+      <p>Сообщение режут подряд кусками по <i>i</i> знаков — разделители не
+         нужны: <span class="bits">01|11|00</span>.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-ex data-type="1"></section>
+
+<section class="slide">
+  <span class="tag">сколько кодов</span>
+  <h2>Сигналы разной длины</h2>
+  <p class="big">Азбука из точек и тире, в сигнале от 1 до 4 знаков. Сколько
+     разных сигналов?</p>
+  <div class="steps">
+    <div class="step" hidden>
+      <table>
+        <tr><th>длина</th><td>1</td><td>2</td><td>3</td><td>4</td><th>всего</th></tr>
+        <tr><th>сигналов</th><td>2</td><td>4</td><td>8</td><td>16</td><th>30</th></tr>
+      </table>
+      <p>Каждую длину — отдельно, потом сложить. Ловушки: 2<sup>4</sup> = 16
+         (забыли короткие), 2 · 4 = 8 (умножили вместо степени).</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-ex data-type="3"></section>
+
+<section class="slide">
+  <span class="tag">неравномерный код</span>
+  <h2>Частым буквам — короткие слова</h2>
+  <p class="big">АБРАКАДАБРА: 11 букв, 5 разных. А — 5 раз, Б и Р — по 2,
+     К и Д — по 1.</p>
+  <div class="two">
+    <div class="box"><h3>Равномерный</h3>
+      <p>5 букв → 3 знака на букву (2<sup>3</sup> = 8 ≥ 5).</p>
+      <p class="big">11 · 3 = <b>33</b> знака</p></div>
+    <div class="steps">
+      <div class="step" hidden>
+        <div class="box good"><h3>Неравномерный</h3>
+          <p>А – <code>0</code>, Б – <code>10</code>, Р – <code>110</code>,
+             К – <code>1110</code>, Д – <code>1111</code></p>
+          <p class="big">5·1 + 2·2 + 2·3 + 1·4 + 1·4 = <b>23</b> знака</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">опасность</span>
+  <h2>Коротко — хорошо, но можно не расшифровать</h2>
+  <p class="big">А – <code>0</code>, Б – <code>01</code>, В – <code>10</code>.
+     Пришло сообщение <span class="bits"><b>010</b></span>. Что это?</p>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="two">
+        <div class="box bad"><h3>Два прочтения</h3>
+          <p><code>0 | 10</code> — это <b>АВ</b><br><code>01 | 0</code> — это <b>БА</b></p>
+          <p>Получатель не поймёт, что прислали.</p></div>
+        <div data-tree="А:0:bad,Б:01:bad,В:10"></div>
+      </div>
+    </div>
+    <div class="step" hidden>
+      <p class="big">Беда: <code>0</code> (А) — <b>начало</b> <code>01</code> (Б).
+         На дереве А стоит на пути к Б.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">определение</span>
+  <h2>Условие Фано</h2>
+  <p class="big">Никакое кодовое слово не является <b>началом</b> другого
+     кодового слова.</p>
+  <div class="two">
+    <div class="steps">
+      <div class="step" hidden>
+        <p><b>Дерево кода:</b> 0 — влево, 1 — вправо, слово — путь от корня.
+           Фано выполняется, когда <b>каждая буква — лист</b>, ниже неё
+           ничего не растёт.</p>
+      </div>
+      <div class="step" hidden>
+        <p>Тогда расшифровка однозначна: читаем слева и отрезаем кусок, как
+           только он совпал с кодом буквы, — другой буквы с таким началом нет.</p>
+      </div>
+    </div>
+    <div data-tree="А:0,Б:10,Р:110,К:1110,Д:1111"></div>
+  </div>
+</section>
+
+<section class="slide" data-ex data-type="4"></section>
+
+<section class="slide" data-ex data-type="5"></section>
+
+<section class="slide" data-ex data-type="6"></section>
+
+<section class="slide">
+  <span class="tag">дальше</span>
+  <h2>Практикум и домашняя</h2>
+  <ul class="big">
+    <li><b>Практикум, часть 1</b> — тренажёр-разминка: семь задач, по одной на
+        тип. Ошибся — «Новые числа», засчитывается новая задача.</li>
+    <li><b>Практикум, часть 2 — «Мой код»</b>: своё слово, свой неравномерный
+        код с условием Фано, запись короче равномерной. <b>Отметка за урок —
+        по ней.</b></li>
+    <li><b>Домашняя</b> — семь типов по задаче, код работы <code>DV-</code>.</li>
+  </ul>
+</section>
+
+</div>
+
+<div class="bar">
+  <button id="prev">← Назад</button>
+  <button id="step" class="primary">Раскрыть</button>
+  <button id="next">Вперёд →</button>
+  <button id="reroll" hidden>Другие числа</button>
+  <span class="count" id="count"></span>
+  <span class="zoom" title="Размер шрифта на экране: клавиши + и −"><button id="zoomOut" title="Мельче (клавиша −)">A−</button><span class="z" id="zoomVal"></span><button id="zoomIn" title="Крупнее (клавиша +)">A+</button></span>
+  <div class="spacer"></div>
+  <span class="ai-mark" style="color:#5c6070;font-size:13px">Материалы подготовлены с использованием технологий искусственного интеллекта.</span>
+  <span class="keys"><kbd>Пробел</kbd> раскрыть и дальше ·
+    <kbd>←</kbd> <kbd>→</kbd> слайды</span>
+</div>
+</div>
+
+<script>
+/* ==== ЗАДАЧИ: вставлено gen.py, руками не править ==== */
+/* Урок 7 10 класса (база): двоичное кодирование. Равномерные и
+   неравномерные коды, условие Фано.
+
+   ЕДИНСТВЕННЫЙ ИСТОЧНИК ЗАДАЧ для тренажёра (часть 1 практикума),
+   домашней работы, примеров на слайдах и проверки продукта «Мой код»
+   (часть 2 практикума). В html вписывается скриптом gen.py --sync между
+   маркерами — руками страницы не править.
+
+   Содержание — строка 7 поурочного плана (planning/plan10b_map.py):
+   «Информация, данные и знания. Универсальность дискретного представления
+   информации. Двоичное кодирование. Равномерные и неравномерные коды.
+   Условие Фано». Деревья и типы «условие Фано» и «расшифровка» взяты из
+   урока задания 4 ЕГЭ в 11 классе (lessons/11/kod-fano) — тот же приём на
+   базовом уровне, без форм ЕГЭ.
+
+   Семь типов:
+     0 «информация и данные»  сколько из пяти утверждений верны
+     1 «сколько бит»          наименьшая длина равномерного кода для N знаков
+     2 «сколько кодов»        сколько разных сигналов из двоичных знаков
+     3 «равномерный код»      расшифровать или закодировать равномерным кодом
+     4 «условие Фано»         в каких из четырёх наборов оно выполняется
+     5 «неравномерный код»    расшифровать сообщение кодом с условием Фано
+     6 «длина сообщения»      длина записи слова неравномерным кодом и выигрыш
+                              против равномерного
+
+   Машинные поля лежат в task.meta: по ним gen.py --selftest пересчитывает
+   ответ своим способом на Python. Разбор — рисунком (fPic): при ошибке на
+   нём же красным то, что, судя по ответу, сломано (pictures-over-words). */
+
+const F_TYPES = [
+  'информация и данные',
+  'сколько бит',
+  'сколько кодов',
+  'равномерный код',
+  'условие Фано',
+  'неравномерный код',
+  'длина сообщения'
+];
+
+/* ----------------------------------------------------------- случайность */
+
+function tRng(seed) {
+  let s = (seed >>> 0) || 1;
+  return function () {
+    s ^= s << 13; s >>>= 0;
+    s ^= s >> 17;
+    s ^= s << 5;  s >>>= 0;
+    return s / 4294967296;
+  };
+}
+
+function tRand(rng, a, b) { return a + Math.floor(rng() * (b - a + 1)); }
+function tPick(rng, arr) { return arr[tRand(rng, 0, arr.length - 1)]; }
+
+function tPl(n, one, few, many) {
+  const h = n % 100, t = n % 10;
+  if (h >= 11 && h <= 14) return many;
+  if (t === 1) return one;
+  if (t >= 2 && t <= 4) return few;
+  return many;
+}
+
+function tShuffle(rng, arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = tRand(rng, 0, i);
+    const t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+/* Наименьшее i, при котором 2^i >= n. Подбором степени, без log2. */
+function fBitsFor(n) {
+  let i = 1;
+  while (2 ** i < n) i++;
+  return i;
+}
+
+/* ------------------------------------------------------------------ дерево */
+
+function fPrefix(a, b) { return a.startsWith(b) || b.startsWith(a); }
+
+/* Нарушение условия Фано: первая пара, где одно слово — начало другого. */
+function fClash(codes) {
+  for (let i = 0; i < codes.length; i++)
+    for (let j = 0; j < codes.length; j++)
+      if (i !== j && codes[j].startsWith(codes[i])) return [i, j];
+  return null;
+}
+
+function fByTree(a, b) {
+  return a.length - b.length || (a < b ? -1 : a > b ? 1 : 0);
+}
+
+/* Случайное полное дерево: делим случайный лист, пока листьев не n. */
+function fTree(rng, n, maxDepth) {
+  for (let tries = 0; tries < 200; tries++) {
+    let leaves = ['0', '1'];
+    while (leaves.length < n) {
+      const can = leaves.filter(c => c.length < maxDepth);
+      if (!can.length) break;
+      const c = tPick(rng, can);
+      leaves = leaves.filter(x => x !== c).concat([c + '0', c + '1']);
+    }
+    if (leaves.length === n) return leaves.sort(fByTree);
+  }
+  return null;
+}
+
+/* Рисунок дерева (SVG): буквы в листьях, ребро влево — 0, вправо — 1.
+   kind: known — обычная буква, bad — буква, нарушившая Фано (красным).
+   Слово-начало другого слова оказывается не в листе, а на пути — так
+   нарушение и видно глазами. */
+function fTreeSvg(items, opts) {
+  opts = opts || {};
+  const all = items.filter(e => /^[01]+$/.test(e.code) && e.code.length <= 8);
+  let D = 1;
+  for (const e of all) D = Math.max(D, e.code.length);
+  const W = opts.width || Math.max(360, Math.min(760, 2 ** D * 46)), top = 18,
+        dy = opts.dy || 48;
+  const slot = (W - 28) / 2 ** D, bw = Math.min(30, slot - 4), tight = slot < 44;
+  const H = top + dy * D + (tight ? 56 : 42);
+  const X = c => {
+    const d = c.length, v = d ? parseInt(c, 2) : 0, span = 2 ** (D - d);
+    return 14 + (v * span + (span - 1) / 2 + 0.5) / 2 ** D * (W - 28);
+  };
+  const Y = c => top + dy * c.length;
+  const nodes = new Set(['']);
+  for (const e of all) for (let i = 1; i <= e.code.length; i++) nodes.add(e.code.slice(0, i));
+  const ends = {};
+  for (const e of all) ends[e.code] = e;
+  let s = '<svg class="ftree" viewBox="0 0 ' + W + ' ' + H + '" width="' + W +
+          '" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="дерево кода">';
+  for (const c of nodes) {
+    if (!c) continue;
+    const p = c.slice(0, -1);
+    s += '<line x1="' + X(p) + '" y1="' + Y(p) + '" x2="' + X(c) + '" y2="' + Y(c) +
+         '" stroke="#8c93a6" stroke-width="1.6"/>';
+    const mx = (X(p) + X(c)) / 2 + (c.endsWith('0') ? -7 : 7), my = (Y(p) + Y(c)) / 2 - 2;
+    s += '<text x="' + mx + '" y="' + my + '" font-size="12" fill="#5c6070" ' +
+         'text-anchor="middle" font-family="Consolas,monospace">' + c.slice(-1) + '</text>';
+  }
+  for (const c of nodes) {
+    const e = ends[c];
+    if (!e) {
+      s += '<circle cx="' + X(c) + '" cy="' + Y(c) + '" r="4" fill="#8c93a6"/>';
+      continue;
+    }
+    const bad = e.kind === 'bad';
+    const col = bad ? '#b3261e' : '#1b1b1f';
+    const bg = bad ? '#fdecea' : '#eef0f5';
+    s += '<rect x="' + (X(c) - bw / 2) + '" y="' + (Y(c) - 12) + '" width="' + bw +
+         '" height="24" rx="6" fill="' + bg + '" stroke="' + col + '" stroke-width="' +
+         (bad ? 2.4 : 1.5) + '"/>';
+    s += '<text x="' + X(c) + '" y="' + (Y(c) + 5) + '" font-size="14" font-weight="700" ' +
+         'fill="' + col + '" text-anchor="middle" font-family="Segoe UI,sans-serif">' +
+         e.label + '</text>';
+    s += '<text x="' + X(c) + '" y="' + (Y(c) + 27 +
+         (tight && c.length === D && c.endsWith('1') ? 13 : 0)) + '" font-size="11" fill="' + col +
+         '" text-anchor="middle" font-family="Consolas,monospace">' + c + '</text>';
+  }
+  return s + '</svg>';
+}
+
+/* ------------------------------------------------------------- слова и буквы */
+
+const F_ABC = 'АБВГДЕЖЗИКЛМНОПРСТУФХЦЧШЩЫЭЮЯ';
+
+/* Слова 7–9 букв, 4–7 разных, буквы повторяются. */
+const F_WORDS = [
+  'БАРАБАН', 'КАРАВАН', 'ТАРАКАН', 'КАРАНДАШ', 'МОЛОТОК', 'ПОТОЛОК',
+  'ЧЕРЕПАХА', 'САМОКАТ', 'КОМАНДА', 'ТЕЛЕФОН', 'КОЛОСОК', 'ВОДОПАД',
+  'САМОВАР', 'ПАРОВОЗ', 'ГАЛАКТИКА', 'КАРТОШКА', 'КОРОБКА', 'ЛОПАТКА',
+  'ПОЛОСКА', 'КОЛОННА', 'ВЕРЕТЕНО', 'СЕРЕБРО', 'ВЕТЕРОК', 'ПАЛАТКА',
+  'КАССЕТА', 'КАНАРЕЙКА', 'ПРОПЕЛЛЕР', 'ЛАСТОЧКА', 'ПОМИДОР',
+  'КАПУСТА', 'ХОРОВОД', 'ПОРОШОК', 'ГОРОШЕК', 'ТЕРЕМОК', 'ВОРОНКА',
+  'БАРАНКА', 'ПАНАМКА', 'ОГОРОДНИК', 'КОЛОКОЛА', 'ЧЕМОДАН', 'ДОРОЖКА',
+  'ОБОРОНА', 'КОЛОБОК', 'КОРИДОР', 'КОТЕЛОК', 'ТАРАНТАС'
+];
+
+function fDistinct(word) {
+  return Array.from(new Set(word.split(''))).sort((a, b) => F_ABC.indexOf(a) - F_ABC.indexOf(b));
+}
+
+function fCount(word, ch) { return word.split(ch).length - 1; }
+
+function fAbcSort(arr) {
+  return arr.slice().sort((a, b) => {
+    const i = F_ABC.indexOf(a), j = F_ABC.indexOf(b);
+    return i >= 0 && j >= 0 ? i - j : (a < b ? -1 : a > b ? 1 : 0);
+  });
+}
+
+/* «А, Б и В». */
+function fList(arr) {
+  return arr.length < 2 ? arr.join('') :
+    arr.slice(0, -1).join(', ') + ' и ' + arr[arr.length - 1];
+}
+
+/* «Б – 00, Н – 010, Л – 111». */
+function fPairs(known) {
+  return known.map(e => e.label + ' – ' + e.code).join(', ');
+}
+
+function fCodeTable(known) {
+  return '<table class="codes"><tr>' + known.map(e => '<th>' + e.label + '</th>').join('') +
+         '</tr><tr>' + known.map(e => '<td>' + e.code + '</td>').join('') + '</tr></table>';
+}
+
+/* Плитка разбора: подпись и значение; cls — ok / bad / пусто. */
+function fTile(lab, val, cls) {
+  return '<div class="xt' + (cls ? ' ' + cls : '') + '"><div class="xl">' + lab +
+         '</div><div class="xv">' + val + '</div></div>';
+}
+
+function fRow(tiles) { return '<div class="xrow">' + tiles.join('') + '</div>'; }
+
+/* Сообщение, разрезанное на кодовые слова: над словом код, под ним буква.
+   want — верные буквы; got — что ответил ученик (буквы по позициям). */
+function fCutPic(parts, letters, got) {
+  return '<div class="xcut">' + parts.map((p, i) => {
+    const g = got ? got[i] : undefined;
+    const bad = got !== undefined && g !== letters[i];
+    return '<div class="xc' + (bad ? ' bad' : got !== undefined ? ' ok' : '') + '">' +
+           '<div class="xb">' + p + '</div><div class="xa">' + letters[i] + '</div>' +
+           (bad ? '<div class="xg">' + (g === undefined || g === '' ? '—' : g) + '</div>' : '') +
+           '</div>';
+  }).join('') + '</div>';
+}
+
+/* CSS разборов: одна строка на страницу, чтобы плитки выглядели одинаково
+   в тренажёре, ДЗ и на слайдах. */
+const F_CSS =
+  '.xrow{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}' +
+  '.xt{border:1px solid #d9dce6;border-radius:10px;padding:6px 12px;background:#fff;min-width:90px}' +
+  '.xt .xl{font-size:13px;color:#5c6070}' +
+  '.xt .xv{font:700 18px/1.3 Consolas,monospace}' +
+  '.xt.ok{border-color:#9dd4b4;background:#e6f5ec}.xt.ok .xv{color:#137a41}' +
+  '.xt.bad{border-color:#f0b3ae;background:#fdecea}.xt.bad .xv{color:#b3261e}' +
+  '.xcut{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}' +
+  '.xc{border:1px solid #d9dce6;border-radius:8px;padding:4px 10px;text-align:center;background:#fff}' +
+  '.xc .xb{font:15px/1.3 Consolas,monospace;color:#5c6070}' +
+  '.xc .xa{font:700 18px/1.3 "Segoe UI",sans-serif}' +
+  '.xc.ok{border-color:#9dd4b4;background:#e6f5ec}' +
+  '.xc.bad{border-color:#f0b3ae;background:#fdecea}' +
+  '.xc .xg{font:700 14px/1.2 "Segoe UI",sans-serif;color:#b3261e;text-decoration:line-through}' +
+  'table.codes{border-collapse:collapse;margin:8px 0;font:16px Consolas,monospace}' +
+  'table.codes th,table.codes td{border:1px solid #d9dce6;padding:4px 10px;text-align:center}' +
+  'table.codes th{background:#f6f7fb;font-family:"Segoe UI",sans-serif}' +
+  'table.codes td.bad{background:#fdecea;color:#b3261e;font-weight:700}' +
+  'table.codes td.ok{background:#e6f5ec;color:#137a41;font-weight:700}' +
+  'ul.xst{list-style:none;padding-left:0;margin:6px 0}' +
+  'ul.xst li{margin:4px 0;padding:4px 10px;border-radius:8px}' +
+  'ul.xst li.t{background:#e6f5ec}ul.xst li.f{background:#fdecea}' +
+  'ul.xst li .w{display:block;color:#5c6070;font-size:14px}' +
+  'svg.ftree{display:block;max-width:100%;height:auto;margin:6px 0}';
+
+function fCss() {
+  if (typeof document === 'undefined' || document.getElementById('f-css')) return;
+  const st = document.createElement('style');
+  st.id = 'f-css';
+  st.textContent = F_CSS;
+  document.head.appendChild(st);
+}
+
+/* --------------------------------------- тип 0: информация, данные, знания */
+
+/* Банк утверждений. Признак верности здесь — для генератора; независимая
+   разметка тех же утверждений лежит в gen.py (BANK_TRUTH) и сверяется
+   самотестом (conceptual-topics-as-counts). why — объяснение для разбора. */
+const F_BANK = [
+  {s: 'Данные — это информация, зафиксированная в форме, удобной для хранения, передачи и обработки.', ok: true,
+   why: 'Так и есть: данные — запись информации знаками, с которыми может работать человек или компьютер.'},
+  {s: 'Знания — это информация, которую человек осмыслил, проверил и умеет применять.', ok: true,
+   why: 'Верно: знания — то, что человек понял и может использовать в деле.'},
+  {s: 'Текст, звук и изображение можно представить в дискретной форме — последовательностью знаков.', ok: true,
+   why: 'Верно: это и есть универсальность дискретного представления — любую информацию можно записать конечным набором знаков.'},
+  {s: 'В двоичном коде используются только два знака — 0 и 1.', ok: true,
+   why: 'Верно: «двоичный» и значит «из двух знаков».'},
+  {s: 'Код называют равномерным, если все его кодовые слова одной длины.', ok: true,
+   why: 'Верно: таково определение равномерного кода.'},
+  {s: 'Равномерным двоичным кодом длины 3 можно закодировать не больше 8 разных символов.', ok: true,
+   why: 'Верно: слов из трёх двоичных знаков ровно 2³ = 8.'},
+  {s: 'Сообщение в равномерном коде можно разрезать на кодовые слова, зная только их длину.', ok: true,
+   why: 'Верно: режем подряд кусками одинаковой длины, разделители не нужны.'},
+  {s: 'Если для кода выполнено условие Фано, любое сообщение расшифровывается однозначно.', ok: true,
+   why: 'Верно: для этого условие Фано и придумано.'},
+  {s: 'В неравномерном коде часто встречающимся символам выгодно давать короткие кодовые слова.', ok: true,
+   why: 'Верно: частые символы повторяются много раз, и каждый сэкономленный знак окупается многократно.'},
+  {s: 'Одно и то же сообщение может быть новой информацией для одного человека и не нести ничего нового для другого.', ok: true,
+   why: 'Верно: информативность сообщения зависит от того, что получатель уже знает.'},
+  {s: 'Данные и знания — одно и то же: и то и другое хранится в компьютере.', ok: false,
+   why: 'Неверно: компьютер хранит данные, а знания — у человека, это осмысленная информация.'},
+  {s: 'Непрерывный сигнал, например звук, нельзя представить в двоичном коде.', ok: false,
+   why: 'Неверно: звук дискретизируют — измеряют через равные промежутки — и записывают числа двоичным кодом.'},
+  {s: 'Двоичным кодом можно записывать только числа, для текста и картинок нужны другие знаки.', ok: false,
+   why: 'Неверно: текст, картинки и звук тоже кодируют нулями и единицами — это и есть универсальность двоичного кода.'},
+  {s: 'Неравномерный код всегда даёт более длинную запись, чем равномерный.', ok: false,
+   why: 'Неверно: если частым символам дать короткие слова, запись выйдет короче.'},
+  {s: 'Код А – 0, Б – 01, В – 11 удовлетворяет условию Фано.', ok: false,
+   why: 'Неверно: слово 0 (А) — начало слова 01 (Б).'},
+  {s: 'Условие Фано требует, чтобы все кодовые слова были одной длины.', ok: false,
+   why: 'Неверно: Фано — про начала слов, а длина может быть разной. Равномерный код ему удовлетворяет, но и многие неравномерные тоже.'},
+  {s: 'Если в коде есть кодовые слова разной длины, сообщение нельзя расшифровать однозначно.', ok: false,
+   why: 'Неверно: при условии Фано неравномерный код расшифровывается однозначно.'},
+  {s: 'Тремя двоичными знаками можно закодировать не больше 6 разных символов.', ok: false,
+   why: 'Неверно: слов из трёх двоичных знаков 2³ = 8, а не 2 · 3.'},
+  {s: 'Чем длиннее кодовое слово у частого символа, тем короче закодированное сообщение.', ok: false,
+   why: 'Неверно, наоборот: длинное слово у частого символа удлиняет запись сильнее всего.'},
+  {s: 'Равномерным двоичным кодом длины 4 можно закодировать 20 разных символов.', ok: false,
+   why: 'Неверно: слов длины 4 всего 2⁴ = 16.'}
+];
+
+function fType0(rng) {
+  for (let tries = 0; tries < 200; tries++) {
+    const pick = tShuffle(rng, F_BANK.map((_, i) => i)).slice(0, 5);
+    const good = pick.filter(i => F_BANK[i].ok).length;
+    if (good < 1 || good > 4) continue;
+    const items = pick.map((i, k) => '<li>' + (k + 1) + ') ' + F_BANK[i].s + '</li>').join('');
+    return {
+      form: 'num',
+      question: '<p>Прочитайте утверждения.</p><ul class="plain">' + items + '</ul>' +
+        '<p class="ask">Сколько из них верны? В ответе — одно число.</p>',
+      answer: String(good),
+      explain: 'Разберём каждое утверждение: [[PIC]]',
+      meta: {ids: pick, want: good, traps: {wrong: pick.length - good}}
+    };
+  }
+}
+
+/* ----------------------------------------------------- тип 1: сколько бит */
+
+/* Сюжеты: N разных знаков, сигналов или номеров — какой наименьшей длины
+   нужен равномерный двоичный код. */
+const F_BIT_PLOTS = [
+  n => 'В языке выдуманного племени ' + n + ' ' + tPl(n, 'буква', 'буквы', 'букв') + '. Каждую букву ' +
+       'кодируют равномерным двоичным кодом — одинаковым для всех букв числом двоичных знаков.',
+  n => 'Метеостанция различает ' + n + ' ' + tPl(n, 'состояние', 'состояния', 'состояний') + ' погоды и ' +
+       'передаёт каждое равномерным двоичным кодом — одинаковым для всех состояний числом двоичных знаков.',
+  n => 'В школе ' + n + ' ' + tPl(n, 'ученик', 'ученика', 'учеников') + '. Каждому выдают свой номер, ' +
+       'записанный двоичным кодом; длина номера у всех одинаковая.',
+  n => 'Робот понимает ' + n + ' ' + tPl(n, 'команду', 'команды', 'команд') + '. Каждая команда передаётся ' +
+       'равномерным двоичным кодом — одинаковым для всех команд числом двоичных знаков.',
+  n => 'На складе ' + n + ' ' + tPl(n, 'ячейка', 'ячейки', 'ячеек') + '. Номер каждой ячейки записывают ' +
+       'двоичным кодом, и у всех номеров одна и та же длина.'
+];
+
+function fType1(rng) {
+  for (let tries = 0; tries < 200; tries++) {
+    const exact = rng() < 0.3;
+    const n = exact ? 2 ** tRand(rng, 3, 8) : tRand(rng, 5, 300);
+    const i = fBitsFor(n);
+    if (!exact && 2 ** i === n) continue;
+    const plot = tPick(rng, F_BIT_PLOTS)(n);
+    const traps = {less: i - 1, nself: n};
+    if (exact) traps.over = i + 1;
+    if (n === i || n === i - 1 || n === i + 1) continue;
+    return {
+      form: 'num',
+      question: '<p>' + plot + '</p><p class="ask">Какое наименьшее число двоичных знаков ' +
+        'для этого нужно?</p>',
+      answer: String(i),
+      explain: 'Кодовых слов длины <i>i</i> ровно 2<sup><i>i</i></sup>, и их должно хватить на все ' + n +
+        ': ищем наименьшее <i>i</i>, при котором 2<sup><i>i</i></sup> ≥ ' + n + '. [[PIC]]',
+      meta: {n: n, want: i, traps: traps}
+    };
+  }
+}
+
+/* --------------------------------------------------- тип 2: сколько кодов */
+
+function fType2(rng) {
+  const kind = tPick(rng, ['lamps', 'exact', 'upto', 'range']);
+  if (kind === 'lamps') {
+    const k = tRand(rng, 3, 8);
+    return {
+      form: 'num',
+      question: '<p>На табло ' + k + ' ' + tPl(k, 'лампочка', 'лампочки', 'лампочек') + ' в ряд, каждая ' +
+        'либо горит, либо нет. Сигнал — то, какие лампочки горят; когда не горит ни одна, это тоже ' +
+        'сигнал.</p><p class="ask">Сколько разных сигналов можно подать?</p>',
+      answer: String(2 ** k),
+      explain: 'Каждая лампочка — один двоичный знак: горит — 1, не горит — 0. Сигнал — слово из ' +
+        k + ' знаков, а у каждого знака два варианта. [[PIC]]',
+      meta: {kind: kind, from: k, to: k, want: 2 ** k, traps: {twice: 2 * k, square: k * k, noZero: 2 ** k - 1}}
+    };
+  }
+  if (kind === 'exact') {
+    const k = tRand(rng, 3, 8);
+    return {
+      form: 'num',
+      question: '<p>Сколько существует разных двоичных кодовых слов длиной ровно ' + k + ' ' +
+        tPl(k, 'знак', 'знака', 'знаков') + '?</p>',
+      answer: String(2 ** k),
+      explain: 'На каждом из ' + k + ' мест стоит 0 или 1 — два варианта, и выбор на одном месте ' +
+        'не зависит от других. [[PIC]]',
+      meta: {kind: kind, from: k, to: k, want: 2 ** k, traps: {twice: 2 * k, square: k * k}}
+    };
+  }
+  const to = tRand(rng, 3, 6);
+  const from = kind === 'upto' ? 1 : tRand(rng, 2, to - 1);
+  let want = 0;
+  for (let L = from; L <= to; L++) want += 2 ** L;
+  const what = tPick(rng, [
+    'Сигналы азбуки собирают из точек и тире',
+    'Сигнальщик передаёт сообщения вспышками фонаря — короткими и длинными',
+    'Кодовые слова составляют из нулей и единиц'
+  ]);
+  return {
+    form: 'num',
+    question: '<p>' + what + '. В сигнале может быть от ' + from + ' до ' + to + ' знаков.</p>' +
+      '<p class="ask">Сколько разных сигналов можно составить?</p>',
+    answer: String(want),
+    explain: 'Длины разные — считаем слова каждой длины отдельно и складываем: слов длины <i>L</i> ' +
+      'ровно 2<sup><i>L</i></sup>. [[PIC]]',
+    meta: {kind: kind, from: from, to: to, want: want,
+           traps: {onlyMax: 2 ** to, twice: 2 * to, withZero: want + (from === 1 ? 1 : 2 ** (from - 1))}}
+  };
+}
+
+/* ------------------------------------------------- тип 3: равномерный код */
+
+function fType3(rng) {
+  for (let tries = 0; tries < 200; tries++) {
+    const L = rng() < 0.4 ? 2 : 3;
+    const n = L === 2 ? 4 : tRand(rng, 5, 8);
+    const letters = fAbcSort(tShuffle(rng, F_ABC.slice(0, 20).split('')).slice(0, n));
+    const all = [];
+    for (let v = 0; v < 2 ** L; v++) all.push(v.toString(2).padStart(L, '0'));
+    const codes = tShuffle(rng, all).slice(0, n);
+    const map = {};
+    letters.forEach((l, i) => { map[l] = codes[i]; });
+    const len = tRand(rng, 5, 7);
+    const msg = [];
+    for (let i = 0; i < len; i++) msg.push(tPick(rng, letters));
+    if (new Set(msg).size < 3) continue;
+    const word = msg.join('');
+    const bits = msg.map(l => map[l]).join('');
+    const known = letters.map(l => ({label: l, code: map[l]}));
+    const encode = rng() < 0.4;
+    if (encode) {
+      return {
+        form: 'bits', kind: 'encode',
+        question: '<p>Буквы закодированы равномерным двоичным кодом:</p>' + fCodeTable(known) +
+          '<p class="ask">Запишите код сообщения <b>' + word + '</b> — нули и единицы подряд, ' +
+          'без пробелов.</p>',
+        answer: bits,
+        explain: 'Заменяем каждую букву её кодовым словом и пишем слова подряд, без разделителей: ' +
+          'в равномерном коде получатель сам разрежет запись по ' + L + ' ' + tPl(L, 'знаку', 'знака', 'знаков') + '. [[PIC]]',
+        meta: {L: L, map: map, msg: msg, word: word, bits: bits, want: bits}
+      };
+    }
+    return {
+      form: 'word', kind: 'decode',
+      question: '<p>Буквы закодированы равномерным двоичным кодом:</p>' + fCodeTable(known) +
+        '<p class="ask">Расшифруйте сообщение <b class="bits">' + bits + '</b> и запишите буквы ' +
+        'подряд.</p>',
+      answer: word,
+      explain: 'Код равномерный, все слова длины ' + L + ': режем сообщение подряд кусками по ' + L +
+        ' ' + tPl(L, 'знаку', 'знака', 'знаков') + ' и каждый кусок ищем в таблице. [[PIC]]',
+      meta: {L: L, map: map, msg: msg, word: word, bits: bits, want: word}
+    };
+  }
+}
+
+/* -------------------------------------------------- тип 4: условие Фано */
+
+function fType4(rng) {
+  for (let tries = 0; tries < 200; tries++) {
+    const n = tRand(rng, 4, 5);
+    const letters = F_ABC.slice(0, n).split('');
+    const valid = tShuffle(rng, [true, true, false, false, tRand(rng, 0, 1) === 1]).slice(0, 4);
+    if (!valid.some(Boolean) || valid.every(Boolean)) continue;
+    const sets = [];
+    let bad = false;
+    for (const v of valid) {
+      const leaves = fTree(rng, tRand(rng, n, n + 2), 4);
+      const codes = tShuffle(rng, leaves).slice(0, n);
+      if (!v) {
+        /* Порча: одно слово заменяется началом другого (или другое —
+           продолжением этого) — ровно то, чего Фано не допускает. */
+        const i = tRand(rng, 0, n - 1);
+        let j = tRand(rng, 0, n - 2); if (j >= i) j++;
+        const long = codes.slice().sort((a, b) => b.length - a.length)[0];
+        if (rng() < 0.5 && long.length >= 2) {
+          const k = codes.indexOf(long);
+          const m = (k + 1) % n;
+          codes[m] = long.slice(0, tRand(rng, 1, long.length - 1));
+        } else {
+          codes[j] = codes[i] + tPick(rng, ['0', '1', '01', '10']).slice(0, tRand(rng, 1, 2));
+        }
+      }
+      if (new Set(codes).size !== n || (!fClash(codes)) !== v) { bad = true; break; }
+      if (codes.some(c => c.length > 5)) { bad = true; break; }
+      sets.push(codes);
+    }
+    if (bad) continue;
+    const answer = valid.map((v, i) => v ? String(i + 1) : '').join('');
+    const rows = sets.map((codes, i) =>
+      '<tr><th>' + (i + 1) + '</th>' + codes.map(c => '<td>' + c + '</td>').join('') + '</tr>').join('');
+    return {
+      form: 'digits',
+      question: '<p>Буквы ' + fList(letters) + ' можно закодировать четырьмя способами — они ' +
+        'в таблице.</p><table class="codes"><tr><th>№</th>' +
+        letters.map(l => '<th>' + l + '</th>').join('') + '</tr>' + rows + '</table>' +
+        '<p class="ask">В каких наборах выполняется условие Фано? Запишите их номера ' +
+        '<b>по возрастанию</b>, без пробелов и запятых.</p>',
+      answer: answer,
+      explain: 'Условие Фано: ни одно кодовое слово не является <b>началом</b> другого. Для каждого ' +
+        'короткого слова смотрим, не начинается ли с него какое-нибудь длинное. [[PIC]]',
+      meta: {letters: letters, sets: sets, want: answer}
+    };
+  }
+}
+
+/* ---------------------------------------------- тип 5: неравномерный код */
+
+function fType5(rng) {
+  for (let tries = 0; tries < 200; tries++) {
+    const n = tRand(rng, 4, 6);
+    const abc = fAbcSort(tShuffle(rng, F_ABC.slice(0, 20).split('')).slice(0, n));
+    const leaves = fTree(rng, n, 4);
+    if (!leaves) continue;
+    const codes = tShuffle(rng, leaves);
+    if (new Set(codes.map(c => c.length)).size < 2) continue;
+    const map = {};
+    abc.forEach((l, i) => { map[l] = codes[i]; });
+    /* Сообщение — случайные буквы: слово угадывается по первым трём, и
+       расшифровка превращается в отгадку. */
+    const len = tRand(rng, 5, 7);
+    const msg = [];
+    for (let i = 0; i < len; i++) msg.push(tPick(rng, abc));
+    if (new Set(msg).size < 3) continue;
+    const word = msg.join('');
+    const bits = msg.map(l => map[l]).join('');
+    if (bits.length < 12 || bits.length > 20) continue;
+    const known = abc.map(l => ({label: l, code: map[l]}));
+    return {
+      form: 'word',
+      question: '<p>Буквы закодированы неравномерным двоичным кодом, и для него выполняется ' +
+        'условие Фано: ' + fPairs(known) + '.</p><p class="ask">Расшифруйте сообщение ' +
+        '<b class="bits">' + bits + '</b> и запишите буквы подряд.</p>',
+      answer: word,
+      explain: 'Читаем слева и отрезаем кусок, как только он совпал с кодом какой-то буквы: по ' +
+        'условию Фано другой буквы с таким началом нет, поэтому разрез единственный. [[PIC]]',
+      meta: {map: map, msg: msg, bits: bits, want: word}
+    };
+  }
+}
+
+/* --------------------------------------------- тип 6: длина сообщения */
+
+function fType6(rng) {
+  for (let tries = 0; tries < 300; tries++) {
+    const word = tPick(rng, F_WORDS);
+    const abc = fDistinct(word);
+    const n = abc.length;
+    if (n < 4 || n > 6) continue;
+    const leaves = fTree(rng, n, 4);
+    if (!leaves) continue;
+    /* Короткие слова — частым буквам: так код и придумывают. */
+    const byFreq = abc.slice().sort((a, b) => fCount(word, b) - fCount(word, a) ||
+                                               F_ABC.indexOf(a) - F_ABC.indexOf(b));
+    const map = {};
+    byFreq.forEach((l, i) => { map[l] = leaves[i]; });
+    let total = 0;
+    for (const ch of word) total += map[ch].length;
+    const ub = fBitsFor(n), uni = word.length * ub;
+    let once = 0;
+    for (const l of abc) once += map[l].length;
+    const diff = rng() < 0.5 && uni - total >= 2;
+    const known = tShuffle(rng, abc).map(l => ({label: l, code: map[l]}));
+    const traps = {letters: word.length, once: once};
+    if (diff) { traps.total = total; traps.uni = uni; }
+    else traps.uni = uni;
+    let bad = false;
+    const want = diff ? uni - total : total;
+    for (const v of Object.values(traps)) if (v === want) bad = true;
+    if (bad || once === total) continue;
+    const head = '<p>В сообщениях встречаются только буквы ' + fList(fAbcSort(abc)) + '. Их ' +
+      'закодировали неравномерным двоичным кодом с условием Фано: ' + fPairs(known) + '.</p>';
+    return {
+      form: 'num', kind: diff ? 'diff' : 'total',
+      question: head + (diff
+        ? '<p class="ask">На сколько двоичных знаков запись слова <b>' + word + '</b> этим кодом ' +
+          'короче, чем запись того же слова равномерным двоичным кодом наименьшей возможной ' +
+          'длины для этих ' + n + ' букв?</p>'
+        : '<p class="ask">Сколько двоичных знаков в записи слова <b>' + word + '</b> этим ' +
+          'кодом?</p>'),
+      answer: String(want),
+      explain: 'Каждую букву считаем столько раз, сколько она встречается в слове: длина ' +
+        'записи — сумма «раз × длина кода».' + (diff ? ' Равномерному коду на ' + n +
+        ' букв нужно по ' + ub + ' ' + tPl(ub, 'знаку', 'знака', 'знаков') + ' на букву.' : '') +
+        ' [[PIC]]',
+      meta: {word: word, map: map, n: n, ub: ub, uni: uni, total: total, diff: diff,
+             want: want, traps: traps}
+    };
+  }
+}
+
+/* --------------------------------------------------------------- разборы */
+
+/* Рисунок решения. raw — ответ ученика: на рисунке красным то, что,
+   судя по ответу, сломано. Без raw — чистый эталон. */
+function fPic(t, raw) {
+  fCss();
+  const m = t.meta;
+  const has = raw !== undefined && raw !== null && String(raw).trim() !== '';
+  const r = has ? String(raw).trim() : '';
+  if (t.type === 0) {
+    return '<ul class="xst">' + m.ids.map((id, k) => {
+      const e = F_BANK[id];
+      return '<li class="' + (e.ok ? 't' : 'f') + '">' + (e.ok ? '✓ ' : '✗ ') + (k + 1) + ') ' +
+             e.s + '<span class="w">' + e.why + '</span></li>';
+    }).join('') + '</ul>' + fRow([fTile('верных', m.want, 'ok')].concat(
+      has && r !== String(m.want) ? [fTile('в ответе', r, 'bad')] : []));
+  }
+  if (t.type === 1) {
+    const i = m.want, tiles = [];
+    if (i > 1) tiles.push(fTile('2<sup>' + (i - 1) + '</sup>', 2 ** (i - 1) + ' &lt; ' + m.n, 'bad'));
+    tiles.push(fTile('2<sup>' + i + '</sup>', 2 ** i + ' ≥ ' + m.n, 'ok'));
+    tiles.push(fTile('ответ', i, 'ok'));
+    let note = '';
+    if (has && /^\d+$/.test(r) && r !== String(i)) {
+      const k = Number(r);
+      note = k > 0 && k < 31
+        ? fRow([fTile('в ответе ' + k + ': 2<sup>' + k + '</sup>', 2 ** k + (2 ** k < m.n
+            ? ' &lt; ' + m.n + ' — не хватит' : ' — хватит, но ' + i + ' короче'), 'bad')])
+        : fRow([fTile('в ответе', k, 'bad')]);
+    }
+    return fRow(tiles) + note;
+  }
+  if (t.type === 2) {
+    const tiles = [];
+    for (let L = m.from; L <= m.to; L++)
+      tiles.push(fTile('длина ' + L, '2<sup>' + L + '</sup> = ' + 2 ** L));
+    if (m.from !== m.to) tiles.push(fTile('всего', m.want, 'ok'));
+    else tiles[0] = fTile('длина ' + m.from, '2<sup>' + m.from + '</sup> = ' + m.want, 'ok');
+    return fRow(tiles) + (has && r !== String(m.want) ? fRow([fTile('в ответе', r, 'bad')]) : '');
+  }
+  if (t.type === 3) {
+    const parts = m.msg.map(l => m.map[l]);
+    if (t.kind === 'encode') {
+      let got;
+      if (has) {
+        got = [];
+        let at = 0;
+        for (const p of parts) { got.push(r.slice(at, at + p.length) === p ? undefined : r.slice(at, at + p.length)); at += p.length; }
+      }
+      return '<div class="xcut">' + parts.map((p, i) => {
+        const bad = got && got[i] !== undefined;
+        return '<div class="xc' + (bad ? ' bad' : has ? ' ok' : '') + '"><div class="xa">' + m.msg[i] +
+               '</div><div class="xb">' + p + '</div>' +
+               (bad ? '<div class="xg">' + (got[i] || '—') + '</div>' : '') + '</div>';
+      }).join('') + '</div>' + fRow([fTile('код сообщения', m.bits, 'ok')]);
+    }
+    const got = has ? r.toUpperCase().split('') : undefined;
+    return fCutPic(parts, m.msg, got);
+  }
+  if (t.type === 4) {
+    const chosen = has ? r.split('') : [];
+    return '<table class="codes"><tr><th>№</th><th>Фано?</th><th>почему</th></tr>' +
+      m.sets.map((codes, i) => {
+        const cl = fClash(codes);
+        const okSet = !cl;
+        const wrongPick = has && (chosen.indexOf(String(i + 1)) >= 0) !== okSet;
+        return '<tr><th>' + (i + 1) + '</th><td class="' + (wrongPick ? 'bad' : okSet ? 'ok' : '') + '">' +
+          (okSet ? 'да' : 'нет') + '</td><td style="text-align:left">' + (cl
+          ? '<code>' + codes[cl[0]] + '</code> (' + m.letters[cl[0]] + ') — начало <code>' +
+            codes[cl[1]] + '</code> (' + m.letters[cl[1]] + ')'
+          : 'ни одно слово не начало другого') + '</td></tr>';
+      }).join('') + '</table>' + fRow([fTile('ответ', m.want, 'ok')]);
+  }
+  if (t.type === 5) {
+    const known = Object.keys(m.map).map(l => ({label: l, code: m.map[l], kind: 'known'}));
+    const parts = m.msg.map(l => m.map[l]);
+    const got = has ? r.toUpperCase().split('') : undefined;
+    return fTreeSvg(known) + fCutPic(parts, m.msg, got);
+  }
+  if (t.type === 6) {
+    const abc = fAbcSort(Object.keys(m.map));
+    const rows = abc.map(l => {
+      const c = fCount(m.word, l);
+      return '<tr><th>' + l + '</th><td>' + c + '</td><td>' + m.map[l] + '</td><td>' +
+             c + ' · ' + m.map[l].length + ' = ' + c * m.map[l].length + '</td></tr>';
+    }).join('');
+    const tiles = [fTile('этим кодом', m.total, m.diff ? '' : 'ok')];
+    if (m.diff) {
+      tiles.push(fTile('равномерным', m.word.length + ' · ' + m.ub + ' = ' + m.uni));
+      tiles.push(fTile('короче на', m.uni + ' − ' + m.total + ' = ' + m.want, 'ok'));
+    }
+    if (has && r !== String(m.want)) tiles.push(fTile('в ответе', r, 'bad'));
+    return '<table class="codes"><tr><th>буква</th><th>раз</th><th>код</th><th>знаков</th></tr>' +
+           rows + '</table>' + fRow(tiles);
+  }
+  return '';
+}
+
+/* Отпечатки типичных ошибок: число из ответа -> что, похоже, сделано. */
+const F_TRAP_SAY = {
+  wrong: 'посчитаны неверные утверждения, а спрашивали верные',
+  less: 'взято число на единицу меньше: столько кодов не хватит на всех',
+  nself: 'в ответе само число знаков, а нужна длина кода — степень двойки',
+  over: 'здесь 2<sup>i</sup> ровно равно числу знаков — хватает и без лишнего разряда',
+  twice: 'знаки перемножены с двойкой, а надо возводить 2 в степень',
+  square: 'длина возведена в квадрат, а надо 2 в степени длины',
+  onlyMax: 'посчитаны только самые длинные сигналы — короткие тоже годятся',
+  withZero: 'посчитан и «сигнал» нулевой длины или лишняя длина',
+  noZero: 'не посчитан сигнал, когда не горит ни одна лампочка',
+  letters: 'это число букв в слове, а нужно число двоичных знаков',
+  once: 'каждая буква посчитана один раз, а повторы забыты',
+  uni: 'это длина записи равномерным кодом',
+  total: 'это длина записи этим кодом, а спрашивали разницу с равномерным'
+};
+
+/* ----------------------------------------------------------------- сборка */
+
+const F_MAKERS = [fType0, fType1, fType2, fType3, fType4, fType5, fType6];
+
+function fMake(type, rng) {
+  const t = F_MAKERS[type](rng);
+  t.type = type;
+  /* Отпечаток, совпавший с ответом или с другим отпечатком, ничего не
+     различает — убираем (k*k и 2^k при k = 4 дают одно и то же). */
+  const tr = t.meta.traps;
+  if (tr) {
+    const seen = new Set([String(t.answer)]);
+    for (const k of Object.keys(tr)) {
+      if (seen.has(String(tr[k])) || !(tr[k] > 0)) delete tr[k];
+      else seen.add(String(tr[k]));
+    }
+  }
+  return t;
+}
+
+/* Состав работ.
+   Практикум, часть 1 — тренажёр-разминка в один проход: по задаче на тип
+   (trainer-twelve-tasks, правило Светы 21.09.2026). Отметка за урок — по
+   части 2, продукту «Мой код».
+   Домашняя — те же семь типов по одной задаче. В обеих исправленная
+   задача не в зачёт: засчитывается новая (retry-not-counted, 06.10.2026). */
+const F_WORKS = {
+  practice: {plan: [0, 1, 2, 3, 4, 5, 6], scale: [[7, 5], [6, 4], [5, 3]]},
+  homework: {plan: [0, 1, 2, 3, 4, 5, 6], scale: [[7, 5], [6, 4], [5, 3]]}
+};
+
+function fWork(rng, w) {
+  return (w || F_WORKS.practice).plan.map(type => fMake(type, rng));
+}
+
+function fMark(points, w) {
+  w = w || F_WORKS.practice;
+  for (const [need, m] of w.scale) if (points >= need) return m;
+  return 2;
+}
+
+/* Набор по одной задаче каждого типа — для самопроверки и образцов. */
+function fSet(seed) {
+  const rng = tRng(seed || 1);
+  return [0, 1, 2, 3, 4, 5, 6].map(type => fMake(type, rng));
+}
+
+/* Ответ сверяется знак в знак (answer-format-strict), но ошибка всегда
+   названа: что не так с записью или что, похоже, сделано не так. */
+function fVerdict(task, raw) {
+  const s = String(raw === undefined || raw === null ? '' : raw).trim();
+  if (!s) return {ok: false, why: 'ответ пустой'};
+  const m = task.meta;
+  if (task.form === 'bits') {
+    if (/\s/.test(s)) return {ok: false, why: 'нули и единицы пишутся подряд, без пробелов'};
+    if (!/^[01]+$/.test(s)) return {ok: false, why: 'в коде только нули и единицы'};
+    if (s.length !== task.answer.length)
+      return {ok: false, why: 'в коде сообщения ' + task.answer.length + ' ' +
+        tPl(task.answer.length, 'знак', 'знака', 'знаков') + ', а в ответе ' + s.length};
+    return {ok: s === task.answer, why: ''};
+  }
+  if (task.form === 'word') {
+    const t = s.toUpperCase();
+    if (/[A-Z]/.test(t)) return {ok: false, why: 'буквы набраны латиницей — переключи раскладку'};
+    if (!/^[А-ЯЁ]+$/.test(t)) return {ok: false, why: 'в ответе только буквы, подряд, без пробелов'};
+    if (t.length !== task.answer.length)
+      return {ok: false, why: 'в сообщении ' + task.answer.length + ' ' +
+        tPl(task.answer.length, 'буква', 'буквы', 'букв') + ', а в ответе ' + t.length};
+    return {ok: t === task.answer, why: ''};
+  }
+  if (!/^\d+$/.test(s))
+    return {ok: false, why: task.form === 'digits'
+      ? 'только цифры номеров, подряд, без пробелов и запятых'
+    : 'ответ — целое число, без пояснений'};
+  if (task.form === 'digits') {
+    if (/[05-9]/.test(s)) return {ok: false, why: 'наборов всего четыре: номера от 1 до 4'};
+    if (new Set(s.split('')).size !== s.length) return {ok: false, why: 'номер записан дважды'};
+    if (s.split('').sort().join('') !== s) return {ok: false, why: 'номера не по возрастанию'};
+    return {ok: s === task.answer, why: ''};
+  }
+  if (s !== String(Number(s))) return {ok: false, why: 'число записывается без ведущих нулей'};
+  if (s === task.answer) return {ok: true, why: ''};
+  for (const [k, v] of Object.entries((m && m.traps) || {}))
+    if (String(v) === s) return {ok: false, why: 'похоже, ' + F_TRAP_SAY[k]};
+  return {ok: false, why: ''};
+}
+
+/* =================================================================
+   Часть 2 практикума — продукт «Мой код».
+
+   Ученик берёт слово, считает буквы, считает длину равномерной записи,
+   придумывает свой неравномерный код и записывает им слово. Ключа нет —
+   код у каждого свой; страница проверяет свойства введённого
+   (checking-without-a-key). Пустая заготовка не проходит ни одного пункта.
+   ================================================================= */
+
+/* Слова для продукта: 4–7 разных букв, буквы повторяются, и лучший
+   неравномерный код короче равномерного (иначе выигрыша не показать).
+   gen.py --selftest проверяет каждое слово. */
+const P_WORDS = [
+  'АБРАКАДАБРА', 'БАРАБАН', 'КАРАКАТИЦА', 'ПЕРЕПЕЛКА', 'КОЛОКОЛЬЧИК',
+  'ГОЛОВОЛОМКА', 'ПАРАЛЛЕЛЬ', 'ВЕРЕТЕНО', 'ТАРАНТАС', 'КАРАВАН',
+  'МОЛОКОВОЗ', 'ПАПАРАЦЦИ', 'ОГОРОДНИК', 'ВОДОВОРОТ',
+  'ПЕРЕПОЛОХ', 'САМОВАР', 'ТЕЛЕФОН', 'БАЛАЛАЙКА', 'ХОРОВОД'
+];
+
+/* Слово ученика: только русские буквы, регистр не важен, Ё — как Е. */
+function pNorm(s) {
+  return String(s || '').toUpperCase().replace(/Ё/g, 'Е').replace(/[^А-Я]/g, '');
+}
+
+/* Наименьшая длина записи слова кодом с условием Фано — код Хаффмана:
+   два самых редких сливаются в одного, вес слияния прибавляется к длине. */
+function pBest(word) {
+  const ws = fDistinct(word).map(l => fCount(word, l));
+  if (ws.length < 2) return word.length;
+  let q = ws.slice(), cost = 0;
+  while (q.length > 1) {
+    q.sort((a, b) => a - b);
+    const x = q.shift() + q.shift();
+    cost += x;
+    q.push(x);
+  }
+  return cost;
+}
+
+/* Проверка продукта. inp: {word, counts: {буква: строка}, ub, ut,
+   codes: {буква: строка}, enc}. Возвращает шесть пунктов {name, ok, why}.
+   Пункты 4–6 имеют смысл, только если код записан (пункт 3). */
+function pCheck(inp) {
+  const word = pNorm(inp.word);
+  const abc = fDistinct(word);
+  const n = abc.length;
+  const out = [];
+  /* why — функция: объяснение собирается, только если пункт не пройден. */
+  const say = (name, ok, why) => out.push({name: name, ok: !!ok, why: ok ? '' : why()});
+  const num = v => /^\d+$/.test(String(v || '').trim()) ? Number(String(v).trim()) : NaN;
+
+  /* 1. Частоты. */
+  const wrongCnt = abc.filter(l => num((inp.counts || {})[l]) !== fCount(word, l));
+  say('Сколько раз встречается каждая буква', n > 0 && !wrongCnt.length,
+      () => !n ? 'слова нет' : 'неверно у ' + tPl(wrongCnt.length, 'буквы', 'букв', 'букв') + ' ' +
+      fList(wrongCnt) + ' — пересчитай по слову');
+
+  /* 2. Равномерный код. */
+  const ub = fBitsFor(Math.max(2, n)), ut = word.length * ub;
+  const gu = num(inp.ub), gt = num(inp.ut);
+  say('Равномерный код: знаков на букву и на всё слово', n > 0 && gu === ub && gt === ut,
+      () => gu !== ub ? 'знаков на букву: нужно наименьшее i, при котором 2^i не меньше числа разных букв (' + n + ')'
+      : 'длина слова равномерным кодом — букв в слове (' + word.length + ') × знаков на букву');
+
+  /* 3. Код записан: у каждой буквы непустое слово из 0 и 1, все разные. */
+  const codes = abc.map(l => String((inp.codes || {})[l] || '').trim());
+  const empty = abc.filter((l, i) => !codes[i]);
+  const junk = abc.filter((l, i) => codes[i] && !/^[01]+$/.test(codes[i]));
+  const dup = abc.filter((l, i) => codes[i] && codes.indexOf(codes[i]) !== i);
+  const written = n > 0 && !empty.length && !junk.length && !dup.length;
+  say('У каждой буквы своё кодовое слово из 0 и 1', written,
+      () => empty.length ? 'нет кода у ' + fList(empty)
+      : junk.length ? 'у ' + fList(junk) + ' в коде не только 0 и 1'
+      : 'у ' + fList(dup) + ' такое же слово, как у другой буквы');
+
+  /* 4. Фано. */
+  const cl = written ? fClash(codes) : null;
+  say('Условие Фано', written && !cl,
+      () => !written ? 'сначала запиши код каждой буквы'
+      : 'слово ' + codes[cl[0]] + ' (' + abc[cl[0]] + ') — начало слова ' + codes[cl[1]] +
+        ' (' + abc[cl[1]] + '): сообщение не расшифровать однозначно');
+
+  /* 5. Частым — короткие. */
+  let inv = null;
+  if (written)
+    for (let i = 0; i < n && !inv; i++)
+      for (let j = 0; j < n && !inv; j++)
+        if (fCount(word, abc[i]) > fCount(word, abc[j]) && codes[i].length > codes[j].length)
+          inv = [abc[i], abc[j]];
+  say('Частым буквам — слова не длиннее, чем редким', written && !inv,
+      () => !written ? 'сначала запиши код каждой буквы'
+      : inv[0] + ' встречается чаще, чем ' + inv[1] + ', а слово у неё длиннее');
+
+  /* 6. Запись слова своим кодом и выигрыш. */
+  const enc = String(inp.enc || '').replace(/\s/g, '');
+  const mine = written ? word.split('').map(l => codes[abc.indexOf(l)]).join('') : '';
+  const best = pBest(word);
+  const shorter = best < ut ? mine.length < ut : mine.length <= ut;
+  say('Слово записано своим кодом, и запись короче равномерной',
+      written && !cl && enc === mine && shorter,
+      () => !written ? 'сначала запиши код каждой буквы'
+      : cl ? 'код без условия Фано не расшифровать — короткая запись не в счёт, сначала пункт 4'
+      : !enc ? 'запиши слово своим кодом — нули и единицы подряд'
+      : enc !== mine ? 'запись не совпадает с твоим кодом: проверь букву за буквой'
+      : 'твоя запись ' + mine.length + ' ' + tPl(mine.length, 'знак', 'знака', 'знаков') + ', а равномерная ' + ut + ' — короче не вышло');
+  return out;
+}
+
+/* Отметка за продукт: 6 пунктов — «5», 5 — «4», 4 — «3». */
+const P_SCALE = [[6, 5], [5, 4], [4, 3]];
+
+function pMark(passed) {
+  for (const [need, m] of P_SCALE) if (passed >= need) return m;
+  return null;
+}
+/* ==== /ЗАДАЧИ ==== */
+
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
+                          .replace(/>/g, "&gt;");
+const exRng = tRng((Date.now() ^ (Math.random() * 1e9)) >>> 0);
+
+/* Статические деревья — той же функцией, что в разборах: data-tree =
+   «буква:код[:bad]» через запятую. */
+document.querySelectorAll("[data-tree]").forEach(el => {
+  el.innerHTML = fTreeSvg(el.dataset.tree.split(",").map(x => {
+    const [label, code, kind] = x.split(":");
+    return {label: label, code: code, kind: kind || "known"};
+  }));
+});
+
+// Сверка знак в знак, как в тренажёре: причина ошибки — по отпечатку.
+function xCheck(el){
+  const t = el._task;
+  const box = el.querySelector(".xres");
+  const given = el.querySelector(".xin").value.trim();
+  if (!given){ box.innerHTML = ""; return; }
+  const v = fVerdict(t, given);
+  box.innerHTML = '<div class="xverd ' + (v.ok ? "ok" : "bad") + '">'
+      + (v.ok ? "✓ совпало с эталоном" : "✗ не совпало") + '</div>'
+      + (!v.ok && v.why ? '<div class="xwhy">' + v.why + '</div>' : "")
+      + (v.ok ? "" : fPic(t, given));
+}
+
+function buildExample(el){
+  const t = fMake(+el.dataset.type, exRng);
+  el._task = t;
+  el.innerHTML =
+    `<p class="eyebrow">разбираем вместе</p>
+     <h2>Пример: ${esc(F_TYPES[t.type])}</h2>
+     <div class="exwrap">
+       <div class="task cond">${t.question}
+         <div class="xcheck">
+           <input class="xin" type="text" autocomplete="off" spellcheck="false"
+                  placeholder="ответ класса">
+           <button class="xgo">Сверить</button>
+         </div></div>
+       <div class="steps">
+         <div class="xres"></div>
+         <div class="step" hidden>${t.explain.replace("[[PIC]]", "")}</div>
+         <div class="step" hidden>${fPic(t)}</div>
+       </div>
+     </div>`;
+  const inp = el.querySelector(".xin");
+  // набор ответа не должен листать слайды и менять шрифт
+  inp.addEventListener("keydown", e => {
+    e.stopPropagation();
+    if (e.key === "Enter") xCheck(el);
+  });
+  el.querySelector(".xgo").addEventListener("click", () => xCheck(el));
+  setTimeout(fitExamples, 0);
+}
+
+// Условие выше экрана закреплять нельзя: край уедет при прокрутке шагов.
+function fitExamples(){
+  const stage = document.getElementById("stage");
+  const room = stage.clientHeight - 46;
+  document.querySelectorAll(".exwrap .task").forEach(box => {
+    box.classList.remove("tall");
+    if (box.offsetHeight > room) box.classList.add("tall");
+  });
+}
+window.addEventListener("resize", fitExamples);
+
+/* ------------------------------------------------------------------
+   Управление колодой: стрелки листают слайды, пробел раскрывает
+   очередной шаг разбора и только потом уходит дальше.
+------------------------------------------------------------------ */
+const slides = [...document.querySelectorAll(".slide")];
+let cur = 0, shown = 0;
+
+const isExample = i => slides[i].hasAttribute("data-ex");
+const stepsOf = i => [...slides[i].querySelectorAll(".steps > .step")];
+
+function show(i){
+  slides[cur].classList.remove("on");
+  cur = Math.max(0, Math.min(slides.length - 1, i));
+  slides[cur].classList.add("on");
+  if (isExample(cur) && !slides[cur]._task) buildExample(slides[cur]);
+  shown = stepsOf(cur).filter(el => !el.hidden).length;
+  document.getElementById("stage").scrollTop = 0;
+  sync();
+}
+
+function sync(){
+  const total = stepsOf(cur).length;
+  const ex = isExample(cur);
+  document.getElementById("count").textContent = `${cur + 1} / ${slides.length}`;
+  document.getElementById("prev").disabled = cur === 0;
+  document.getElementById("next").disabled = cur === slides.length - 1;
+  document.getElementById("reroll").hidden = !ex;
+  const b = document.getElementById("step");
+  b.hidden = total === 0;
+  if (total){
+    b.disabled = shown >= total;
+    b.textContent = shown === 0 ? (ex ? "Показать разбор" : "Раскрыть")
+                  : shown >= total ? (ex ? "Разобрано" : "Всё открыто")
+                  : `Дальше (${shown}/${total})`;
+  }
+}
+
+function nextStep(){
+  const steps = stepsOf(cur);
+  if (shown >= steps.length) return false;
+  steps[shown].hidden = false;
+  steps[shown].scrollIntoView({block: "nearest", behavior: "smooth"});
+  shown++;
+  sync();
+  return true;
+}
+
+document.getElementById("prev").addEventListener("click", () => show(cur - 1));
+document.getElementById("next").addEventListener("click", () => show(cur + 1));
+document.getElementById("step").addEventListener("click", nextStep);
+document.getElementById("reroll").addEventListener("click", () => {
+  buildExample(slides[cur]);
+  shown = 0;
+  sync();
+});
+
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowRight" || e.key === "PageDown"){ show(cur + 1); }
+  else if (e.key === "ArrowLeft" || e.key === "PageUp"){ show(cur - 1); }
+  else if (e.key === " " || e.key === "Enter"){
+    if (!nextStep()) show(cur + 1);
+  } else return;
+  e.preventDefault();
+});
+
+show(0);
+
+/* ---- размер шрифта на проекторе ----
+   Zoom только на области слайда: zoom на body растягивает 100vh, и панель
+   уезжает за экран (проверено 17.09.2026). Шаг запоминается в
+   localStorage и общий для всех презентаций. */
+const ZOOM_BASE = 1.2;
+const ZOOM_KEY = "slides-zoom-step";
+let zoomStep = 0;
+try { zoomStep = Math.max(-3, Math.min(6, parseInt(localStorage.getItem(ZOOM_KEY), 10) || 0)); }
+catch (e) {}
+function applyZoom(){
+  const z = Math.round(ZOOM_BASE * Math.pow(1.1, zoomStep) * 100) / 100;
+  document.getElementById("stage").style.zoom = z;
+  document.getElementById("zoomVal").textContent = Math.round(z * 100) + "%";
+  fitExamples();
+}
+function setZoom(d){
+  zoomStep = Math.max(-3, Math.min(6, zoomStep + d));
+  try { localStorage.setItem(ZOOM_KEY, String(zoomStep)); } catch (e) {}
+  applyZoom();
+}
+document.getElementById("zoomIn").addEventListener("click", () => setZoom(1));
+document.getElementById("zoomOut").addEventListener("click", () => setZoom(-1));
+document.addEventListener("keydown", e => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key === "+" || e.key === "=") setZoom(1);
+  else if (e.key === "-" || e.key === "_") setZoom(-1);
+  else return;
+  e.preventDefault();
+});
+applyZoom();
+</script>
+</body>
+</html>
