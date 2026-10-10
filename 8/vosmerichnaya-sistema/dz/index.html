@@ -1462,7 +1462,7 @@ function wireSend(){
   const hint = document.getElementById("famhint");
   let remembered = "";
   if (fam) try {
-    remembered = localStorage.getItem("hw-fam") || "";
+    localStorage.removeItem("hw-fam");  // фамилию не храним: компьютер общий
     fam.value = remembered;
     kls.value = localStorage.getItem("hw-kls") || "";
   } catch (e) {}
@@ -1473,9 +1473,6 @@ function wireSend(){
       box.textContent = CURRENT_CODE || "впиши фамилию — появится код";
       box.classList.toggle("wait", !CURRENT_CODE);
     }
-    if (hint) hint.textContent = remembered && f === remembered
-      ? "Фамилию подставил этот компьютер с прошлого раза — проверь, что она твоя."
-      : "";
   };
   if (fam) fam.addEventListener("input", update);
   update();
@@ -1489,7 +1486,7 @@ function wireSend(){
       return;
     }
     try {
-      localStorage.setItem("hw-fam", fam.value.trim());
+      localStorage.removeItem("hw-fam");
       localStorage.setItem("hw-kls", k);
     } catch (e) {}
     const url = FORM.replace("ФАМИЛИЯ", encodeURIComponent(fam.value.trim()))
@@ -1577,5 +1574,6 @@ renderSteps();
 newRun();
 </script>
 <p class="ai-mark" style="margin:34px auto 0;max-width:860px;padding-top:12px;border-top:1px solid #d9dce6;color:#5c6070;font:13px/1.5 'Segoe UI',system-ui,sans-serif">Материалы подготовлены с использованием технологий искусственного интеллекта.</p>
+<script>/* фамилию не храним: компьютер общий — стираем запомненное прежними версиями */ try { localStorage.removeItem("hw-fam"); } catch (e) {}</script>
 </body>
 </html>

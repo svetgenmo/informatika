@@ -1213,9 +1213,6 @@ function wireCode(){
       box.textContent = CURRENT_CODE || "впиши фамилию — появится код";
       box.classList.toggle("wait", !CURRENT_CODE);
     }
-    if (hint) hint.textContent = REMEMBERED && f === REMEMBERED
-      ? "Фамилию подставил этот компьютер с прошлого раза — проверь, что она твоя."
-      : "";
   };
   if (fam) fam.addEventListener("input", update);
   update();
@@ -1237,7 +1234,7 @@ function wireSendB(){
     }
     const k = document.getElementById("kls").value.trim() || "11";
     try {
-      localStorage.setItem("hw-fam", f);
+      localStorage.removeItem("hw-fam");
       localStorage.setItem("hw-kls", k);
     } catch (e) {}
     const url = FORM.replace("ФАМИЛИЯ", encodeURIComponent(f))
@@ -1261,7 +1258,7 @@ function finish(){
   let fam = famOld ? famOld.value : "";
   let kls = klsOld ? klsOld.value : "11";
   if (!famOld) try {
-    REMEMBERED = localStorage.getItem("hw-fam") || "";
+    localStorage.removeItem("hw-fam");  // фамилию не храним: компьютер общий
     fam = REMEMBERED;
     kls = localStorage.getItem("hw-kls") || kls;
   } catch (e) {}
@@ -1321,5 +1318,6 @@ function finish(){
 })();
 </script>
 <p class="ai-mark">Материалы подготовлены с использованием технологий искусственного интеллекта.</p>
+<script>/* фамилию не храним: компьютер общий — стираем запомненное прежними версиями */ try { localStorage.removeItem("hw-fam"); } catch (e) {}</script>
 </body>
 </html>

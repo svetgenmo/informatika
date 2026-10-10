@@ -1130,10 +1130,21 @@ function freshTest(){
           tasks: Array(T_COUNT).fill(null)};
 }
 
+/* Фамилию браузер не хранит (требование юриста, 10.2026): компьютер в
+   классе общий, и следующий ученик увидел бы чужую. Ход работы храним,
+   а вместо фамилии — её отпечаток (тот же tripHash, что выбирает
+   вариант). Сохранённое откладываем в сторону и возвращаем, только когда
+   ученик впишет фамилию с тем же отпечатком; иначе работа с нуля. */
+let parked = null;   // {fp, shift, ctx} из памяти компьютера
+
+function surnameFp(s){
+  return String(s || "").trim() ? tripHash(s).toString(36) : "";
+}
+
 function save(){
   try {
     localStorage.setItem(STORE, JSON.stringify(
-      {surname: trip.surname, shift: trip.shift, ctx: trip.ctx}));
+      {fp: surnameFp(trip.surname), shift: trip.shift, ctx: trip.ctx}));
   } catch (e) {}
 }
 
@@ -1143,9 +1154,14 @@ function load(){
     if (!raw) return;
     const d = JSON.parse(raw);
     if (d && typeof d === "object") {
-      trip.surname = d.surname || "";
-      trip.shift = d.shift || 0;
-      trip.ctx = d.ctx || {};
+      if ("surname" in d) {
+        // запись прежней версии: фамилию заменяем отпечатком и пересохраняем
+        d.fp = surnameFp(d.surname);
+        delete d.surname;
+        localStorage.setItem(STORE, JSON.stringify(
+          {fp: d.fp, shift: d.shift || 0, ctx: d.ctx || {}}));
+      }
+      if (d.fp) parked = {fp: d.fp, shift: d.shift || 0, ctx: d.ctx || {}};
     }
   } catch (e) {}
 }
@@ -1198,7 +1214,15 @@ function showVariant(){
 function setSurname(){
   const v = document.getElementById("fam").value.trim();
   if (!v) { document.getElementById("fam").focus(); return; }
-  if (v !== trip.surname) { trip.surname = v; trip.shift = 0; trip.ctx = {}; }
+  if (v !== trip.surname) {
+    trip.surname = v; trip.shift = 0; trip.ctx = {};
+    // та же фамилия, что работала здесь раньше, — возвращаем её ход работы
+    // (до совпадения отложенное держим: опечатка в фамилии его не теряет)
+    if (parked && parked.fp === surnameFp(v)) {
+      trip.shift = parked.shift; trip.ctx = parked.ctx;
+      parked = null;
+    }
+  }
   save(); showVariant(); renderSteps(); paint();
 }
 
@@ -1364,6 +1388,7 @@ function openTrip(file){
       trip.surname = d.surname || "";
       trip.shift = d.shift || 0;
       trip.ctx = d.ctx || {};
+      parked = null;
       document.getElementById("fam").value = trip.surname;
       save(); showVariant(); renderSteps(); paint();
     } catch (e) { alert("Файл не читается."); }
@@ -1506,7 +1531,6 @@ function showFinal(){
       esc(trip.surname) + '"></div>' +
       '<div><label for="kls">Класс</label>' +
       '<input type="text" id="kls" autocomplete="off" value="11"></div></div>' +
-    '<p class="stats" id="famhint"></p>' +
     '<div class="row"><button id="send" class="primary">Сдать работу</button>' +
     '<button id="back" class="small">Вернуться и доделать</button></div>' +
     '<p class="stats" id="sendnote"></p></div>';
@@ -1514,19 +1538,15 @@ function showFinal(){
      кода нет, а вписанная подмешивается в код и пересчитывает его на
      каждой букве. У двух учеников с одинаковым результатом коды разные,
      а чужой код к своей фамилии не подходит. Фамилию сюда подставляет
-     вариант; если он взят из памяти компьютера — просим проверить. */
+     вариант — её вписал сам ученик (компьютер фамилию не помнит). */
   const famEl = document.getElementById("fam2");
   const codeBox = document.getElementById("code");
-  const hint = document.getElementById("famhint");
   let current = "";
   const update = function(){
     const f = famEl.value.trim();
     current = surnameKey(f) ? codeNow(f) : "";
     codeBox.textContent = current || "впиши фамилию — появится код";
     codeBox.classList.toggle("wait", !current);
-    hint.textContent = STORED_SURNAME && f === STORED_SURNAME
-      ? "Фамилию подставил этот компьютер с прошлого раза — проверь, что она твоя."
-      : "";
   };
   famEl.addEventListener("input", update);
   update();
@@ -1574,10 +1594,7 @@ document.getElementById("filein").addEventListener("change", function(e){
   e.target.value = "";
 });
 
-load();
-// что компьютер помнил с прошлого раза — для подписи у кода
-const STORED_SURNAME = trip.surname || "";
-if (trip.surname) document.getElementById("fam").value = trip.surname;
+load();   // ход работы откладывается до фамилии — см. parked
 showVariant();
 renderSteps();
 renderTestBox();
