@@ -136,7 +136,7 @@ details.help th{background:#fff;color:var(--muted);font-weight:600}
   <dl>
     <dt>Часть 1 — смета поездки</dt>
     <dd>Пять шагов на живых сервисах. Город у каждого свой — он считается по
-        фамилии. Правильных чисел нет ни у кого: цены и пробки меняются
+        коду ученика. Правильных чисел нет ни у кого: цены и пробки меняются
         каждый час. Страница проверяет не значение, а то,
         <b>сходятся ли твои числа между собой</b>, и объясняет, что именно
         не сходится.</dd>
@@ -156,8 +156,8 @@ details.help th{background:#fff;color:var(--muted);font-weight:600}
 <div class="who">
   <h2 class="plain">Кто работает</h2>
   <div class="fields">
-    <div><label for="fam">Фамилия и имя</label>
-      <input type="text" id="fam" autocomplete="off" placeholder="Иванова Мария"></div>
+    <div><label for="seat">Код ученика</label>
+      <input type="text" id="seat" autocomplete="off" placeholder="например 9А1-07"></div>
   </div>
   <div class="row">
     <button class="primary" id="setfam">Показать мой вариант</button>
@@ -721,7 +721,7 @@ function tripDate(day) {
     : (day - TRIP_MONTH_LEN) + " " + TRIP_MONTH_NEXT;
 }
 
-/* Номер варианта — из фамилии: у соседей города разные, а у одного
+/* Номер варианта — из кода ученика: у соседей города разные, а у одного
    человека он не скачет от нажатия кнопки (см. variant-by-surname). */
 function tripHash(s) {
   let h = 2166136261 >>> 0;
@@ -733,8 +733,8 @@ function tripHash(s) {
   return h >>> 0;
 }
 
-function tripVariant(surname, shift) {
-  const h = (tripHash(surname) + 7919 * (shift || 0)) >>> 0;
+function tripVariant(seat, shift) {
+  const h = (tripHash(seat) + 7919 * (shift || 0)) >>> 0;
   const city = TRIP_CITIES[h % TRIP_CITIES.length];
   const checkin = 24 + (Math.floor(h / 16) % 4);        // 24..27 октября
   const nights = 2 + (Math.floor(h / 128) % 5);         // 2..6 ночей
@@ -1034,7 +1034,7 @@ function tripSummary(ctx, variant) {
 /* ==== /ЛАБОРАТОРИЯ ==== */
 
 /* Форма сдачи — одна на все темы. Ссылку разносит set_form_link.py. */
-const FORM = "https://docs.google.com/forms/d/e/1FAIpQLSfQyhaxcnzn4ZaKSe_ZMsluw7qRQnrw_80H6SfrnYB5EThUIA/viewform?usp=pp_url&entry.853601231=ФАМИЛИЯ&entry.1091635917=КЛАСС&entry.487188307=КОД";
+const FORM = "https://docs.google.com/forms/d/e/1FAIpQLSfQyhaxcnzn4ZaKSe_ZMsluw7qRQnrw_80H6SfrnYB5EThUIA/viewform?usp=pp_url&entry.853601231=УЧЕНИК&entry.487188307=КОД";
 
 const ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
 const EPOCH = Date.UTC(2026, 0, 1);
@@ -1062,17 +1062,57 @@ function checksum(bitstr){
 /* Принимает состояние аргументом и ничего не знает про страницу: этот
    кусок (от const ALPHABET до пометки «состояние») общий движок
    homework.py вырезает и запускает в node, сверяя с разбором на Python. */
-/* Фамилия в коде (Света, 26.09.2026). Фамилию понимаем как первое
-   слово строчными, ё -> е: «Синицына Мария» и «синицына» дают один
-   код. Из неё получаются 40 бит (FNV-1a и xorshift32), которыми код
-   перемешивается. Та же арифметика живёт в homework.py — surname_stream. */
-function surnameKey(s){
-  return String(s || "").toLowerCase().replace(/ё/g, "е")
-    .split(/[^а-яa-z-]+/).find(w => w.replace(/-/g, "")) || "";
+/* Код ученика вместо фамилии (юрист, 10.10.2026: фамилию страница не
+   спрашивает и никуда не отправляет). Код места вида 9А1-07 или 10У-03 —
+   класс, подгруппа, номер места — выдаёт учитель; кто есть кто, знает только он.
+   seatKey приводит набранное к одному виду: латинские двойники букв —
+   в кириллицу, пробелы прочь, любое тире — в «-», место двумя цифрами
+   («9a1 - 7» -> «9А1-07»); дефис обязателен. Не похоже на код — пустая строка, и кода
+   работы нет. Из ключа получаются 40 бит (FNV-1a и xorshift32), которыми
+   код работы перемешивается. Та же арифметика живёт в homework.py. */
+const SEAT_LAT = {A: "А", B: "В", E: "Е", K: "К", M: "М", H: "Н",
+                  O: "О", P: "Р", C: "С", T: "Т", Y: "У", X: "Х"};
+function seatKey(s){
+  const t = [...String(s || "").trim().toUpperCase()
+                .replace(/[ABEKMHOPCTYX]/g, c => SEAT_LAT[c])]
+    .filter(c => c.trim()).join("")
+    .replace(/[‐‑‒–—−]/g, "-");
+  const m = t.match(/^([0-9]{1,2})([А-ЯЁ]{0,2})([0-9]?)-([0-9]{1,2})$/);
+  return m ? m[1] + m[2] + m[3] + "-" + m[4].padStart(2, "0") : "";
 }
 
-function surnameStream(fam){
-  const s = surnameKey(fam);
+/* Поле «Код ученика»: подсказка под ним, мягкое замечание на неверный
+   код и кнопка, которая не нажимается, пока код не похож на код. Код
+   нигде не запоминается: компьютер в классе общий. */
+function seatInit(inp, btn){
+  if (!inp || inp.dataset.seat) return;
+  inp.dataset.seat = "1";
+  inp.placeholder = "например 9А1-07";
+  inp.setAttribute("autocomplete", "off");
+  inp.setAttribute("spellcheck", "false");
+  const bad = document.createElement("div");
+  bad.className = "seat-bad";
+  bad.style.cssText = "color:#b3261e;font-size:14px;margin-top:4px;min-height:0";
+  const note = document.createElement("div");
+  note.className = "seat-note";
+  note.style.cssText = "color:#5c6070;font-size:13px;margin-top:4px;max-width:340px";
+  note.textContent = "Код выдаёт учитель. Фамилию здесь не вписывают — "
+                   + "в работу уходит только код.";
+  inp.insertAdjacentElement("afterend", note);
+  inp.insertAdjacentElement("afterend", bad);
+  const check = () => {
+    const raw = inp.value.trim();
+    const ok = !!seatKey(raw);
+    bad.textContent = raw && !ok
+      ? "Код вида 9А1-07 или 10У-03: класс, подгруппа, номер места" : "";
+    if (btn) btn.disabled = !ok;
+  };
+  inp.addEventListener("input", check);
+  check();
+}
+
+function seatStream(code){
+  const s = seatKey(code);
   if (!s) return "0".repeat(40);
   let h = 0x811C9DC5;
   for (const ch of s){
@@ -1086,7 +1126,7 @@ function surnameStream(fam){
   return (bin(w1, 32) + bin(w2, 32)).slice(0, 40);
 }
 
-function makeCode(st, fam){
+function makeCode(st, code){
   const day = Math.max(0, Math.min(2047, Math.floor(
       (Date.now() - EPOCH) / 86400000)));
   const payload = bin(day, 11) + bin(Math.min(15, st.typesDone), 4) +
@@ -1094,7 +1134,7 @@ function makeCode(st, fam){
                   bin(Math.min(127, st.solved), 7) +
                   bin(Math.min(127, st.wrong), 7);
   const plain = payload + bin(checksum(payload), 7);
-  const key = surnameStream(fam);
+  const key = seatStream(code);
   let bitstr = "";
   for (let i = 0; i < 40; i++) bitstr += plain[i] === key[i] ? "0" : "1";
   let out = "";
@@ -1107,7 +1147,7 @@ function makeCode(st, fam){
 
 const T_COUNT = T_TYPES.length;
 
-let trip = {surname: "", shift: 0, ctx: {}};
+let trip = {seat: "", shift: 0, ctx: {}};
 let test = null;
 let variant = null;
 
@@ -1130,21 +1170,21 @@ function freshTest(){
           tasks: Array(T_COUNT).fill(null)};
 }
 
-/* Фамилию браузер не хранит (требование юриста, 10.2026): компьютер в
-   классе общий, и следующий ученик увидел бы чужую. Ход работы храним,
-   а вместо фамилии — её отпечаток (тот же tripHash, что выбирает
+/* Код ученика браузер не хранит (требование юриста, 10.2026): компьютер в
+   классе общий, и следующий ученик увидел бы чужой. Ход работы храним,
+   а вместо кода ученика — его отпечаток (тот же tripHash, что выбирает
    вариант). Сохранённое откладываем в сторону и возвращаем, только когда
-   ученик впишет фамилию с тем же отпечатком; иначе работа с нуля. */
+   ученик впишет код ученика с тем же отпечатком; иначе работа с нуля. */
 let parked = null;   // {fp, shift, ctx} из памяти компьютера
 
-function surnameFp(s){
+function seatFp(s){
   return String(s || "").trim() ? tripHash(s).toString(36) : "";
 }
 
 function save(){
   try {
     localStorage.setItem(STORE, JSON.stringify(
-      {fp: surnameFp(trip.surname), shift: trip.shift, ctx: trip.ctx}));
+      {fp: seatFp(trip.seat), shift: trip.shift, ctx: trip.ctx}));
   } catch (e) {}
 }
 
@@ -1155,8 +1195,9 @@ function load(){
     const d = JSON.parse(raw);
     if (d && typeof d === "object") {
       if ("surname" in d) {
-        // запись прежней версии: фамилию заменяем отпечатком и пересохраняем
-        d.fp = surnameFp(d.surname);
+        // запись прежней версии (там была фамилия): заменяем отпечатком; с кодом
+        // ученика он не совпадёт, и прежний ход работы просто не вернётся
+        d.fp = seatFp(d.surname);
         delete d.surname;
         localStorage.setItem(STORE, JSON.stringify(
           {fp: d.fp, shift: d.shift || 0, ctx: d.ctx || {}}));
@@ -1200,25 +1241,25 @@ function paint(){
 
 function showVariant(){
   const box = document.getElementById("variant");
-  if (!trip.surname) {
+  if (!trip.seat) {
     variant = null;
-    box.innerHTML = '<span class="stats">Впиши фамилию — по ней считается ' +
+    box.innerHTML = '<span class="stats">Впиши код ученика — по нему считается ' +
       'город поездки. У соседа он будет другой.</span>';
     return;
   }
-  variant = tripVariant(trip.surname, trip.shift);
+  variant = tripVariant(trip.seat, trip.shift);
   box.innerHTML = "Едем в <b>" + esc(variant.city.to) + "</b>. Заезд <b>" +
     variant.inText + "</b>, выезд <b>" + variant.outText + "</b>.";
 }
 
-function setSurname(){
-  const v = document.getElementById("fam").value.trim();
-  if (!v) { document.getElementById("fam").focus(); return; }
-  if (v !== trip.surname) {
-    trip.surname = v; trip.shift = 0; trip.ctx = {};
-    // та же фамилия, что работала здесь раньше, — возвращаем её ход работы
-    // (до совпадения отложенное держим: опечатка в фамилии его не теряет)
-    if (parked && parked.fp === surnameFp(v)) {
+function setSeat(){
+  const v = seatKey(document.getElementById("seat").value);
+  if (!v) { document.getElementById("seat").focus(); return; }
+  if (v !== trip.seat) {
+    trip.seat = v; trip.shift = 0; trip.ctx = {};
+    // тот же код ученика, что работал здесь раньше, — возвращаем его ход работы
+    // (до совпадения отложенное держим: опечатка в коде его не теряет)
+    if (parked && parked.fp === seatFp(v)) {
       trip.shift = parked.shift; trip.ctx = parked.ctx;
       parked = null;
     }
@@ -1258,9 +1299,9 @@ function readFields(st){
 
 function renderSteps(){
   const box = document.getElementById("steps");
-  if (!trip.surname) {
-    box.innerHTML = '<div class="card"><p>Сначала впиши фамилию выше — без ' +
-      'неё не выдать город поездки.</p></div>';
+  if (!trip.seat) {
+    box.innerHTML = '<div class="card"><p>Сначала впиши код ученика выше — без ' +
+      'него не выдать город поездки.</p></div>';
     document.getElementById("summary").innerHTML = "";
     return;
   }
@@ -1338,7 +1379,7 @@ function renderSummary(){
 }
 
 function tripFileName(){
-  return (trip.surname || "smeta").split(/\s+/)[0] + "_смета.html";
+  return (trip.seat || "smeta") + "_смета.html";
 }
 
 function downloadTrip(){
@@ -1346,17 +1387,17 @@ function downloadTrip(){
   const rows = s.rows.map(r =>
     "<tr><td>" + esc(r[0]) + "</td><td>" + esc(r[1]) + '</td><td class="money">' +
     esc(r[2]) + "</td></tr>").join("");
-  const data = JSON.stringify({surname: trip.surname, shift: trip.shift,
+  const data = JSON.stringify({seat: trip.seat, shift: trip.shift,
                                ctx: trip.ctx});
   const html = '<!doctype html><html lang="ru"><head><meta charset="utf-8">' +
-    "<title>Смета поездки — " + esc(trip.surname) + "</title>" +
+    "<title>Смета поездки — " + esc(trip.seat) + "</title>" +
     "<style>body{font:16px/1.5 'Segoe UI',system-ui,sans-serif;margin:30px auto;" +
     "max-width:720px;color:#1b1b1f;padding:0 16px}table{border-collapse:collapse;" +
     "width:100%}td,th{border:1px solid #d9dce6;padding:7px 11px;text-align:left}" +
     "td.money{text-align:right;white-space:nowrap}tr.total td{font-weight:700;" +
     "background:#f6f7fb}p.small{color:#5c6070;font-size:14px}</style></head><body>" +
     "<h1>Смета поездки в " + esc(variant.city.to) + "</h1>" +
-    "<p>" + esc(trip.surname) + ". Заезд " + variant.inText +
+    "<p>" + esc(trip.seat) + ". Заезд " + variant.inText +
     ", выезд " + variant.outText + " (" + variant.nights +
     " ноч.).</p><table><tr><th>Статья</th><th>Что нашлось</th><th>Сколько</th></tr>" +
     rows + (s.money ? '<tr class="total"><td>Итого на одного</td><td></td>' +
@@ -1385,11 +1426,11 @@ function openTrip(file){
     }
     try {
       const d = JSON.parse(m[1]);
-      trip.surname = d.surname || "";
+      trip.seat = seatKey(d.seat || "");
       trip.shift = d.shift || 0;
       trip.ctx = d.ctx || {};
       parked = null;
-      document.getElementById("fam").value = trip.surname;
+      document.getElementById("seat").value = trip.seat;
       save(); showVariant(); renderSteps(); paint();
     } catch (e) { alert("Файл не читается."); }
   };
@@ -1504,10 +1545,10 @@ function renderFinalButton(){
   document.getElementById("getcode").addEventListener("click", showFinal);
 }
 
-function codeNow(fam){
+function codeNow(seat){
   return makeCode({typesDone: totalScore(), cleanTypes: stepsDone(),
                    solved: test ? test.solved : 0,
-                   wrong: test ? test.wrong : 0}, fam);
+                   wrong: test ? test.wrong : 0}, seat);
 }
 
 function showFinal(){
@@ -1521,47 +1562,46 @@ function showFinal(){
       (bonus() ? " (плюс балл)" : "") + ". Отметка <b>" + m + "</b>.</p>" +
     "<p>Код работы — его и надо сдать:</p>" +
     '<div class="code" id="code"></div>' +
-    '<div class="note">Это код твоей работы. Он собран из твоей фамилии и ' +
+    '<div class="note">Это код твоей работы. Он собран из кода ученика и ' +
       "того, сколько и как ты решал: у соседа с тем же результатом код " +
-      "другой. Поменяешь фамилию — поменяется и код. Переписывать код " +
-      "руками не нужно: впиши фамилию и класс, и кнопка откроет форму с " +
+      "другой. Поменяешь код ученика — поменяется и код работы. Переписывать код " +
+      "руками не нужно: впиши код ученика, и кнопка откроет форму с " +
       "уже подставленным кодом.</div>" +
-    '<div class="fields"><div><label for="fam2">Фамилия и имя</label>' +
-      '<input type="text" id="fam2" autocomplete="off" value="' +
-      esc(trip.surname) + '"></div>' +
-      '<div><label for="kls">Класс</label>' +
-      '<input type="text" id="kls" autocomplete="off" value="11"></div></div>' +
+    '<div class="fields"><div><label for="seat2">Код ученика</label>' +
+      '<input type="text" id="seat2" autocomplete="off" value="' +
+      esc(trip.seat) + '"></div>' +
+      '</div>' +
     '<div class="row"><button id="send" class="primary">Сдать работу</button>' +
     '<button id="back" class="small">Вернуться и доделать</button></div>' +
     '<p class="stats" id="sendnote"></p></div>';
-  /* Код привязан к фамилии (Света, 26.09.2026): пока фамилия не вписана,
-     кода нет, а вписанная подмешивается в код и пересчитывает его на
-     каждой букве. У двух учеников с одинаковым результатом коды разные,
-     а чужой код к своей фамилии не подходит. Фамилию сюда подставляет
-     вариант — её вписал сам ученик (компьютер фамилию не помнит). */
-  const famEl = document.getElementById("fam2");
+  /* Код работы привязан к коду ученика (с 10.10.2026 вместо фамилии —
+   решение юриста): пока код ученика не вписан или не похож на код, кода
+   работы нет, а вписанный подмешивается в код. У двух учеников с
+   одинаковым результатом коды разные, а чужой код к своему коду ученика
+   не подходит. Код ученика страница не запоминает: компьютер общий. */
+  const seatEl = document.getElementById("seat2");
   const codeBox = document.getElementById("code");
   let current = "";
   const update = function(){
-    const f = famEl.value.trim();
-    current = surnameKey(f) ? codeNow(f) : "";
-    codeBox.textContent = current || "впиши фамилию — появится код";
+    const f = seatEl.value.trim();
+    current = seatKey(f) ? codeNow(f) : "";
+    codeBox.textContent = current || "впиши код ученика — появится код работы";
     codeBox.classList.toggle("wait", !current);
   };
-  famEl.addEventListener("input", update);
+  seatInit(seatEl, document.getElementById("send"));
+  seatEl.addEventListener("input", update);
   update();
   document.getElementById("send").addEventListener("click", function(){
     const note = document.getElementById("sendnote");
-    const fam = famEl.value.trim();
+    const seat = seatEl.value.trim();
     if (!current) {
-      note.textContent = "Впиши фамилию — без неё кода нет и непонятно, "
+      note.textContent = "Впиши код ученика — без него кода работы нет и непонятно, "
                        + "чья это работа.";
-      famEl.focus();
+      seatEl.focus();
       return;
     }
-    const kls = document.getElementById("kls").value.trim() || "11";
-    const url = FORM.replace("ФАМИЛИЯ", encodeURIComponent(fam))
-                    .replace("КЛАСС", encodeURIComponent(kls))
+    const url = FORM.replace("УЧЕНИК", encodeURIComponent(seatKey(seat)))
+                    .replace("КЛАСС", "")
                     .replace("КОД", encodeURIComponent(current));
     window.open(url, "_blank", "noopener");
     note.innerHTML = "Форма открылась в новой вкладке. Работа сдана, только "
@@ -1577,12 +1617,13 @@ function showFinal(){
 
 /* ------------------------------------------------------------------ старт */
 
-document.getElementById("setfam").addEventListener("click", setSurname);
-document.getElementById("fam").addEventListener("keydown", function(e){
-  if (e.key === "Enter") setSurname();
+document.getElementById("setfam").addEventListener("click", setSeat);
+seatInit(document.getElementById("seat"), document.getElementById("setfam"));
+document.getElementById("seat").addEventListener("keydown", function(e){
+  if (e.key === "Enter") setSeat();
 });
 document.getElementById("othercity").addEventListener("click", function(){
-  if (!trip.surname) return;
+  if (!trip.seat) return;
   trip.shift++; trip.ctx = {};
   save(); showVariant(); renderSteps(); paint();
 });
@@ -1594,7 +1635,7 @@ document.getElementById("filein").addEventListener("change", function(e){
   e.target.value = "";
 });
 
-load();   // ход работы откладывается до фамилии — см. parked
+load();   // ход работы откладывается до кода ученика — см. parked
 showVariant();
 renderSteps();
 renderTestBox();

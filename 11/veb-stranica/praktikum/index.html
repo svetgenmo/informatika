@@ -132,7 +132,7 @@ ol.check code{font-family:Consolas,monospace;background:var(--card);
   <div class="mark"><span>Оценка</span><b id="mark">—</b></div>
   <div class="stats" id="stats"></div>
   <div class="spacer"></div>
-  <input type="text" id="fam" placeholder="Фамилия" autocomplete="off"
+  <input type="text" id="seat" placeholder="код, например 9А1-07" autocomplete="off"
          spellcheck="false">
   <input type="file" id="file" accept=".html,.htm,text/html" hidden>
   <button id="open">Открыть мой файл</button>
@@ -149,7 +149,7 @@ ol.check code{font-family:Consolas,monospace;background:var(--card);
     </h2>
     <div class="hint">Написанное сохраняется само. Продолжаете начатое
       раньше — нажмите <b>«Открыть мой файл»</b> и выберите свой
-      <code>Фамилия.html</code>; его же можно просто перетащить сюда мышью.</div>
+      файл с кодом ученика в имени (<code>9А1-07.html</code>); его же можно просто перетащить сюда мышью.</div>
     <textarea id="code" spellcheck="false" autocomplete="off"
               autocapitalize="off"></textarea>
   </div>
@@ -478,6 +478,55 @@ function analyse(src){
    машины и никуда не уходит — опознания в нём нет и не нужно.
 ------------------------------------------------------------------ */
 
+/* Код ученика вместо фамилии (юрист, 10.10.2026: фамилию страница не
+   спрашивает и никуда не отправляет). Код места вида 9А1-07 или 10У-03 —
+   класс, подгруппа, номер места — выдаёт учитель; кто есть кто, знает только он.
+   seatKey приводит набранное к одному виду: латинские двойники букв —
+   в кириллицу, пробелы прочь, любое тире — в «-», место двумя цифрами
+   («9a1 - 7» -> «9А1-07»); дефис обязателен. Не похоже на код — пустая строка, и кода
+   работы нет. Из ключа получаются 40 бит (FNV-1a и xorshift32), которыми
+   код работы перемешивается. Та же арифметика живёт в homework.py. */
+const SEAT_LAT = {A: "А", B: "В", E: "Е", K: "К", M: "М", H: "Н",
+                  O: "О", P: "Р", C: "С", T: "Т", Y: "У", X: "Х"};
+function seatKey(s){
+  const t = [...String(s || "").trim().toUpperCase()
+                .replace(/[ABEKMHOPCTYX]/g, c => SEAT_LAT[c])]
+    .filter(c => c.trim()).join("")
+    .replace(/[‐‑‒–—−]/g, "-");
+  const m = t.match(/^([0-9]{1,2})([А-ЯЁ]{0,2})([0-9]?)-([0-9]{1,2})$/);
+  return m ? m[1] + m[2] + m[3] + "-" + m[4].padStart(2, "0") : "";
+}
+
+/* Поле «Код ученика»: подсказка под ним, мягкое замечание на неверный
+   код и кнопка, которая не нажимается, пока код не похож на код. Код
+   нигде не запоминается: компьютер в классе общий. */
+function seatInit(inp, btn){
+  if (!inp || inp.dataset.seat) return;
+  inp.dataset.seat = "1";
+  inp.placeholder = "например 9А1-07";
+  inp.setAttribute("autocomplete", "off");
+  inp.setAttribute("spellcheck", "false");
+  const bad = document.createElement("div");
+  bad.className = "seat-bad";
+  bad.style.cssText = "color:#b3261e;font-size:14px;margin-top:4px;min-height:0";
+  const note = document.createElement("div");
+  note.className = "seat-note";
+  note.style.cssText = "color:#5c6070;font-size:13px;margin-top:4px;max-width:340px";
+  note.textContent = "Код выдаёт учитель. Фамилию здесь не вписывают — "
+                   + "в работу уходит только код.";
+  inp.insertAdjacentElement("afterend", note);
+  inp.insertAdjacentElement("afterend", bad);
+  const check = () => {
+    const raw = inp.value.trim();
+    const ok = !!seatKey(raw);
+    bad.textContent = raw && !ok
+      ? "Код вида 9А1-07 или 10У-03: класс, подгруппа, номер места" : "";
+    if (btn) btn.disabled = !ok;
+  };
+  inp.addEventListener("input", check);
+  check();
+}
+
 const KEY = "veb-stranica-11";
 const code = document.getElementById("code");
 const view = document.getElementById("view");
@@ -561,26 +610,27 @@ document.getElementById("toggle").addEventListener("click", e => {
 });
 
 document.getElementById("save").addEventListener("click", () => {
-  const fam = (document.getElementById("fam").value || "").trim();
-  if (!fam){
-    document.getElementById("fam").focus();
-    document.getElementById("fam").placeholder = "сначала фамилию!";
+  const seat = seatKey(document.getElementById("seat").value);
+  if (!seat){
+    document.getElementById("seat").focus();
+    document.getElementById("seat").placeholder = "сначала код ученика!";
     return;
   }
   store();
   const blob = new Blob(["﻿", code.value], {type: "text/html;charset=utf-8"});
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = fam.replace(/[\\/:*?"<>|]/g, "") + ".html";
+  a.download = seat + ".html";
   document.body.appendChild(a);
   a.click();
   setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
 });
 
-document.getElementById("fam").addEventListener("input", store);
+seatInit(document.getElementById("seat"), document.getElementById("save"));
+document.getElementById("seat").addEventListener("input", store);
 
 /* ------------------------------------------------------------------
-   Возврат к работе: открыть свой Фамилия.html обратно в редактор.
+   Возврат к работе: открыть свой 9А1-07.html (код ученика) обратно в редактор.
 
    Скачанный файл — это готовая страница, а не проект: открывается он
    браузером как страница, и продолжать в нём нечего. Чтобы доделать
@@ -609,8 +659,12 @@ function loadFromFile(file){
     // в браузере, но в редакторе стала бы лишним символом перед
     // <!doctype> — и первая строка кода выглядела бы сломанной.
     code.value = String(fr.result).replace(/^﻿/, "");
-    const fam = document.getElementById("fam");
-    if (!fam.value.trim()) fam.value = file.name.replace(/\.html?$/i, "");
+    const seat = document.getElementById("seat");
+    const fromName = seatKey(file.name.replace(/\.html?$/i, ""));
+    if (!seat.value.trim() && fromName){
+      seat.value = fromName;
+      seat.dispatchEvent(new Event("input"));
+    }
     showingSample = false;
     document.getElementById("toggle").textContent = "Показать образец";
     renderCheck();
@@ -668,9 +722,9 @@ refreshView();
    недоделанную работу и не понять, почему в редакторе не пусто. Поэтому
    при старте прямо говорим, чьё это, — рядом кнопка «Начать заново». */
 (function greet(){
-  const fam = (document.getElementById("fam").value || "").trim();
+  const seat = seatKey(document.getElementById("seat").value);
   if (started())
-    say(fam ? "открыта работа: " + fam : "открыта незаконченная работа",
+    say(seat ? "открыта работа: " + seat : "открыта незаконченная работа",
         "#8a4b00", 8000);
 })();
 </script>
