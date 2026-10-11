@@ -147,6 +147,20 @@ ol.todo li{margin:6px 0}
 .mailbox h3{margin:0 0 6px;font-size:17px;color:var(--accent)}
 .mailbox p{margin:6px 0}
 .mailbox a{color:var(--accent);font-weight:600;word-break:break-all}
+/* ---- сдача на kibersvet.ru ---- */
+.send input[type=file]{font:15px/1.3 inherit;width:auto;max-width:100%;
+            padding:8px 10px;border-style:dashed}
+.ksstatus{flex-basis:100%;margin:4px 0 0;font-size:15px;color:var(--muted)}
+.ksstatus:empty{display:none}
+.ksstatus.ok{color:var(--ok);background:#fff;border:2px solid var(--ok-line);
+             border-radius:10px;padding:10px 14px;font-weight:600}
+.ksstatus.ok b.big{display:block;font-size:24px;margin-bottom:2px}
+.ksstatus.warn{color:var(--hi);background:var(--hi-bg);
+               border:1px solid var(--hi-line);border-radius:10px;padding:10px 14px}
+.ksstatus.err{color:var(--err);background:var(--err-bg);
+              border:1px solid var(--err-line);border-radius:10px;padding:10px 14px}
+.oldway{margin:16px 0 0;border-top:2px dashed var(--line);padding-top:12px}
+.oldway .fail{margin:0;font-weight:700;color:var(--err)}
 
 details{margin-top:26px;border:1px solid var(--line);border-radius:12px;
         padding:12px 18px;background:var(--card)}
@@ -191,15 +205,14 @@ th{background:#fff;font-family:inherit;color:var(--muted)}
         сколько решил задач и сколько было ошибок.</dd>
 
     <dt>Как сдать</dt>
-    <dd><b>Два шага, оба кнопками прямо отсюда.</b>
-        <br>1. <b>«Сдать работу»</b> — впишешь код ученика, откроется
-        форма с уже вписанным кодом, останется нажать «Отправить».
-        Переписывать код руками не надо — именно на этом чаще всего и
-        ошибаются.
-        <br>2. <b>«Отправить фотографии»</b> — откроется письмо на
-        <a href="mailto:krevskayas+hw@gmail.com">krevskayas+hw@gmail.com</a>
-        с уже вписанной темой: приложи снимки и отправь. Входить никуда
-        не нужно, письмо можно послать и с телефона.</dd>
+    <dd><b>Один шаг, прямо отсюда.</b> Получишь код работы — впиши
+        <b>код ученика</b> (его выдаёт учитель), выбери фотографии тетради
+        и нажми <b>«Сдать работу»</b>: код и снимки уйдут вместе. Входить
+        никуда не нужно, с телефона тоже работает. Переписывать код руками
+        не надо. Появилось зелёное <b>«Принято»</b> — работа сдана. Сдать
+        можно и ещё раз: засчитается лучшая попытка.
+        <br>Фамилию не пиши ни на работе, ни на снимках, обложку тетради с
+        именем в кадр не бери: работу опознают по коду ученика.</dd>
 
     <dt>Что на фото</dt>
     <dd>Тетрадь с решением: столбики сложения и вычитания, уголок деления. Не ответы — их видно по коду, —
@@ -1085,6 +1098,95 @@ return {TYPES, SCALE, TOPIC: "binary-system"};
 })(NS);
 /* ==== /ГЕНЕРАТОР ==== */
 
+/* Отправка ДЗ на kibersvet.ru: kibersvetSubmit({seat, work, files}).
+   Вставляет сборка из hw-submit.js в корне кабинета — руками не править. */
+/* ==== kibersvet: вставлено из hw-submit.js ==== */
+/* Отправка ДЗ на kibersvet.ru — кусок для страниц teacher.
+ *
+ * Страницы однофайловые, поэтому код вставляется в страницу целиком
+ * (или подключается <script src="/static/hw-submit.js">). В офлайн-
+ * комплекте его нет: там нет кнопки «Сдать работу».
+ *
+ *   const r = await kibersvetSubmit({seat: '9А1-07', work: 'NS-2345-6789',
+ *                                    files: input.files});
+ *   r.ok      — true, если принято
+ *   r.message — текст для ученика («Принято» или что исправить)
+ *
+ * Что делает сам:
+ * - нормализует код ученика так же, как seat_key / seatKey;
+ * - каждое фото перерисовывает на canvas и отправляет заново собранный
+ *   JPEG: EXIF, геометки и модель телефона до сервера не доходят
+ *   (условие lawyer; сервер пересобирает картинку ещё раз — страховка);
+ * - .py и .txt отправляет как есть.
+ */
+(function () {
+  const ENDPOINT = 'https://kibersvet.ru/api/homework';
+  const MAX_SIDE = 2400;
+  const LAT_TO_CYR = {A:'А',B:'В',E:'Е',K:'К',M:'М',H:'Н',O:'О',P:'Р',C:'С',T:'Т',Y:'У',X:'Х'};
+  const SEAT_RE = /^([0-9]{1,2})([А-ЯЁ]{0,2})([0-9]?)-([0-9]{1,2})$/;
+
+  function seatKey(s) {
+    let t = String(s || '').trim().toUpperCase()
+      .replace(/[ABEKMHOPCTYX]/g, ch => LAT_TO_CYR[ch])
+      .replace(/\s+/g, '')
+      .replace(/[‐-―−]/g, '-');
+    const m = SEAT_RE.exec(t);
+    if (!m) return '';
+    return m[1] + m[2] + m[3] + '-' + String(parseInt(m[4], 10)).padStart(2, '0');
+  }
+
+  function cleanImage(file) {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        const k = Math.min(1, MAX_SIDE / Math.max(img.naturalWidth, img.naturalHeight));
+        const c = document.createElement('canvas');
+        c.width = Math.round(img.naturalWidth * k);
+        c.height = Math.round(img.naturalHeight * k);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        c.toBlob(b => b ? resolve(b) : reject(new Error('canvas')), 'image/jpeg', 0.85);
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('image')); };
+      img.src = url;
+    });
+  }
+
+  async function kibersvetSubmit({seat, work, files}) {
+    const key = seatKey(seat);
+    if (!key) return {ok: false, message: 'Код ученика не похож на настоящий. Пример: 9А1-07.'};
+    const fd = new FormData();
+    fd.append('seat', key);
+    fd.append('work', String(work || '').trim());
+    let i = 0;
+    for (const f of Array.from(files || [])) {
+      i += 1;
+      if (/^image\//.test(f.type)) {
+        try {
+          fd.append('files', await cleanImage(f), `photo-${i}.jpg`);
+        } catch (e) {
+          return {ok: false, message: `Фото ${i} не открылось. Сохрани его как JPG и попробуй ещё раз.`};
+        }
+      } else {
+        fd.append('files', f, f.name);
+      }
+    }
+    try {
+      const resp = await fetch(ENDPOINT, {method: 'POST', body: fd});
+      if (resp.status === 429) return {ok: false, message: 'Слишком много отправок. Подожди минуту.'};
+      const data = await resp.json().catch(() => null);
+      return data || {ok: false, message: 'Сервер ответил непонятно. Попробуй ещё раз.'};
+    } catch (e) {
+      return {ok: false, message: 'Нет связи с kibersvet.ru. Проверь интернет и попробуй ещё раз.'};
+    }
+  }
+
+  window.kibersvetSubmit = kibersvetSubmit;
+  window.kibersvetSeatKey = seatKey;
+})();
+/* ==== /kibersvet ==== */
+
 /* ------------------------------------------------------------------
    Одна страница в двух режимах (Света, 01.10.2026: тренажёр и ДЗ
    свести в одно). Режим вписывает сборка: "tr" — тренажёр на уроке,
@@ -1513,7 +1615,7 @@ function wireSend(){
       box.classList.toggle("wait", !CURRENT_CODE);
     }
   };
-  seatInit(seat, document.getElementById("send"));
+  seatInit(seat, document.getElementById("kssend"));
   if (seat) seat.addEventListener("input", update);
   update();
   if (!send) return;
@@ -1535,6 +1637,90 @@ function wireSend(){
       + "когда в форме нажата «Отправить». Вкладка не открылась — "
       + '<a href="' + url + '" target="_blank" rel="noopener">открой форму '
       + "по этой ссылке</a>.";
+  });
+}
+
+/* Сдача одним шагом на kibersvet.ru (пилот 8 класса, 11.10.2026): код
+   ученика + код работы + фото тетради одной кнопкой, без входа. Код
+   ученика сайт приводит к виду 9А1-07 сам (та же арифметика, что seatKey).
+   Ни код, ни снимки страница не запоминает. Сдавать можно несколько раз —
+   засчитывается лучшая попытка.
+   Сайт не ответил (нет связи или ответ не JSON) — открываем старый путь:
+   форму и письмо, ровно как на страницах других классов. Остальные отказы
+   (неверный код, HEIC, слишком часто) — просто текст сайта красным. */
+const KS_OFFLINE = /^(Нет связи с kibersvet\.ru|Сервер ответил непонятно)/;
+const KS_MAX_FILES = 8;
+
+function wireKs(){
+  const btn = document.getElementById("kssend");
+  if (!btn) return;
+  const seat = document.getElementById("seat");
+  const photos = document.getElementById("photos");
+  const note = document.getElementById("ksnote");
+  const old = document.getElementById("oldway");
+  let noPhotoOk = false;     // второе нажатие без фото — отправить и так
+  let busy = false;
+  const say = (cls, html) => { note.className = "ksstatus" + (cls ? " " + cls : "");
+                               note.innerHTML = html; };
+  const count = () => (photos && photos.files ? photos.files.length : 0);
+  if (photos) photos.addEventListener("change", () => {
+    noPhotoOk = false;
+    const n = count();
+    say(n > KS_MAX_FILES ? "warn" : "",
+        n > KS_MAX_FILES ? `Выбрано ${n} — можно не больше ${KS_MAX_FILES}. Выбери заново.`
+          : n ? `Выбрано фотографий: <b>${n}</b>.` : "");
+  });
+  if (seat) seat.addEventListener("input", () => { noPhotoOk = false; });
+
+  btn.addEventListener("click", async () => {
+    if (busy) return;
+    if (!CURRENT_CODE){
+      say("err", "Впиши код ученика — иначе непонятно, чья это работа.");
+      if (seat) seat.focus();
+      return;
+    }
+    const n = count();
+    if (n > KS_MAX_FILES){
+      say("warn", `Выбрано ${n} фотографий — можно не больше ${KS_MAX_FILES}. Выбери заново.`);
+      return;
+    }
+    if (!n && !noPhotoOk){
+      noPhotoOk = true;
+      say("warn", "<b>Фотографий нет.</b> Код без фотографий не засчитывается. "
+        + "Выбери снимки тетради — или нажми «Сдать работу» ещё раз, "
+        + "чтобы отправить только код.");
+      return;
+    }
+    const work = CURRENT_CODE;
+    busy = true;
+    btn.disabled = true;
+    say("", "Отправляю… Не закрывай страницу.");
+    let r;
+    try {
+      r = await window.kibersvetSubmit({seat: seat.value, work,
+                                        files: photos ? photos.files : []});
+    } catch (e) {
+      r = null;
+    }
+    busy = false;
+    btn.disabled = !CURRENT_CODE;
+    noPhotoOk = false;
+    if (r && r.ok){
+      const msg = r.message && r.message !== "Принято"
+        ? `<br>${String(r.message).replace(/</g, "&lt;")}` : "";
+      say("ok", `<b class="big">Принято</b>Код работы <b class="mono">${work}</b>`
+        + (n ? `, фотографий: ${n}` : ", без фотографий") + `.${msg}`
+        + "<br>Можно сдать ещё раз — засчитается лучшая попытка.");
+      if (old) old.hidden = true;
+      return;
+    }
+    const message = r && r.message ? String(r.message)
+                                   : "Нет связи с kibersvet.ru.";
+    say("err", message.replace(/</g, "&lt;"));
+    if (!r || KS_OFFLINE.test(message)){
+      if (old){ old.hidden = false;
+                old.scrollIntoView({block: "nearest", behavior: "smooth"}); }
+    }
   });
 }
 
@@ -1565,30 +1751,42 @@ function renderFinish(){
       <p class="stats">Это код твоей работы. Он собран из кода ученика и
          того, сколько и как ты решал: у соседа с тем же результатом
          код другой. Поменяешь код ученика — поменяется и код работы.</p>
-      ${FORM ? `<div class="send">
+      <div class="send">
         <label>Код ученика
           <input id="seat" autocomplete="off" placeholder="например 9А1-07"></label>
         <p class="stats note" id="seathint"></p>
-        <button id="send" class="primary">Сдать работу</button>
-        <p class="stats note" id="sendnote">Кнопка откроет форму: код ученика и
-           код работы уже будут вписаны — останется нажать
-           «Отправить».</p>
-      </div>` : `<div class="send">
-        <label>Код ученика
-          <input id="seat" autocomplete="off" placeholder="например 9А1-07"></label>
-        <p class="stats note" id="seathint"></p>
+        <label>Фотографии тетради
+          <input id="photos" type="file" accept="image/*" multiple></label>
+        <p class="stats note" id="photonote">На фото — тетрадь с решением:
+           столбики и уголок деления, как ты считал, а не только что получилось. Одной-двух
+           фотографий хватит, можно до восьми. <b>Код без фотографий не
+           засчитывается.</b> Фамилию не пиши ни на работе, ни на снимках,
+           обложку тетради с именем в кадр не бери.</p>
+        <button id="kssend" class="primary">Сдать работу</button>
+        <p class="ksstatus" id="ksnote" role="status" aria-live="polite"></p>
       </div>
-      <ol class="todo">
-        <li>Открой форму сдачи:<br>
-            <a href="https://forms.gle/gKBZNb5rVbcv65Ls5" target="_blank" rel="noopener">https://forms.gle/gKBZNb5rVbcv65Ls5</a></li>
-        <li>Впиши код ученика и этот код работы — <b>ровно как здесь</b>.</li>
-      </ol>`}
-      ${MAILBOX}
+      <div class="oldway" id="oldway" hidden>
+        <p class="fail">Сайт не ответил — сдай по-старому.</p>
+        <p class="stats">Две кнопки ниже: первая откроет форму с уже вписанными
+           кодом ученика и кодом работы, вторая — письмо для фотографий.</p>
+        ${FORM ? `<div class="send">
+          <button id="send" class="primary">Сдать код через форму</button>
+          <p class="stats note" id="sendnote">Кнопка откроет форму: код ученика и
+             код работы уже будут вписаны — останется нажать
+             «Отправить».</p>
+        </div>` : `<ol class="todo">
+          <li>Открой форму сдачи:<br>
+              <a href="https://forms.gle/gKBZNb5rVbcv65Ls5" target="_blank" rel="noopener">https://forms.gle/gKBZNb5rVbcv65Ls5</a></li>
+          <li>Впиши код ученика и этот код работы — <b>ровно как здесь</b>.</li>
+        </ol>`}
+        ${MAILBOX}
+      </div>
       ${more}
     </div>`;
 
   wireSend();
   wireMail();
+  wireKs();
   box.scrollIntoView({block: "start", behavior: "smooth"});
   const back = document.getElementById("back");
   if (back) back.addEventListener("click", () => {
