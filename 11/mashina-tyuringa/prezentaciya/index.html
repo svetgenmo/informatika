@@ -1,0 +1,1581 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Машина Тьюринга — презентация</title>
+<meta name="description" content="Презентация-разбор к двенадцатой паре 11 класса (углублённый): зачем алгоритму строгое определение, устройство машины Тьюринга, программа-таблица, выполнение по тактам, такты на длинном слове, стёртая команда, что делает машина, универсальная машина и тезис Чёрча—Тьюринга, запись своей программы; шесть слайдов-примеров со сверкой ответа класса">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E11%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ink)}
+body{font:20px/1.5 "Segoe UI",system-ui,sans-serif}
+.deck{height:100vh;display:flex;flex-direction:column}
+.stage{flex:1 1 auto;overflow-y:auto;padding:34px 56px 12px}
+.slide{display:none;max-width:1100px;margin:0 auto}
+.slide.on{display:block}
+
+h1{font-size:50px;line-height:1.1;margin:0 0 18px;text-wrap:balance}
+h2{font-size:36px;line-height:1.15;margin:0 0 20px;text-wrap:balance}
+.lead{font-size:24px;color:var(--muted);margin:0 0 26px}
+.eyebrow{font:700 14px/1 "Segoe UI",system-ui,sans-serif;letter-spacing:.1em;
+         text-transform:uppercase;color:var(--accent);margin:0 0 8px}
+p{margin:0 0 14px}
+ul,ol{margin:0 0 14px;padding-left:28px}
+li{margin:8px 0}
+code{font-family:Consolas,"Cascadia Mono",monospace;background:var(--card);
+     border:1px solid var(--line);border-radius:6px;padding:1px 7px;font-size:.92em}
+pre{font-family:Consolas,"Cascadia Mono",monospace;background:#1e2430;color:#e7ecf5;
+    padding:16px 20px;border-radius:12px;font-size:22px;line-height:1.45;
+    overflow-x:auto;margin:10px 0}
+pre code{background:none;border:0;padding:0;color:inherit;font-size:inherit}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+.box{border:1px solid var(--line);border-radius:14px;padding:16px 20px;background:#fff}
+.box h3{margin:0 0 8px;font-size:22px}
+.good{border-color:var(--ok-line);background:var(--ok-bg)}
+.bad{border-color:var(--err-line);background:var(--err-bg)}
+.warn{border-color:var(--hi-line);background:var(--hi-bg)}
+.big{font-size:26px}
+table{border-collapse:collapse;width:100%;font-size:22px;margin:10px 0}
+th,td{border:1px solid var(--line);padding:9px 14px;text-align:left}
+th{background:var(--card)}
+.step[hidden]{display:none}
+.bar{flex:0 0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+     border-top:1px solid var(--line);background:var(--card);padding:12px 24px}
+.bar .spacer{flex:1 1 auto}
+.count{color:var(--muted);font-size:17px;font-variant-numeric:tabular-nums}
+.keys{color:var(--muted);font-size:15px}
+.keys kbd{font:600 13px/1 Consolas,monospace;border:1px solid var(--line);
+          border-bottom-width:2px;border-radius:5px;padding:2px 6px;background:#fff}
+button{font:600 17px/1 inherit;padding:11px 18px;border-radius:10px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);color:var(--muted)}
+
+/* ---- размер шрифта на проекторе: A− / A+ ---- */
+.zoom{display:inline-flex;align-items:center;gap:3px;margin-left:8px}
+.zoom button{padding:8px 10px;font-size:15px;min-width:36px;line-height:1}
+.zoom .z{color:var(--muted);font-size:15px;min-width:46px;text-align:center;
+         font-variant-numeric:tabular-nums}
+
+/* ---- слайд-пример: условие слева на месте, разбор справа ---- */
+.exwrap{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:22px;align-items:start}
+.exwrap .task{position:sticky;top:0;font-size:18px;padding:12px 18px}
+.exwrap .task.tall{position:static}
+.exwrap .task p{margin:6px 0}
+.exwrap .steps{display:flex;flex-direction:column;gap:10px}
+.exwrap .step{border:1px solid var(--line);border-radius:14px;padding:10px 18px;font-size:19px;background:#fff}
+@media (max-width:1000px){ .exwrap{grid-template-columns:1fr} .exwrap .task{position:static} }
+.xcheck{display:flex;gap:10px;margin-top:12px;align-items:flex-start}
+.xcheck .xin{font:700 24px/1 Consolas,monospace;width:240px;padding:8px 12px;
+             border:2px solid var(--line);border-radius:10px}
+.xcheck textarea.xin{font:600 18px/1.4 Consolas,monospace;width:300px;height:150px;resize:vertical}
+.xcheck .xin:focus{outline:none;border-color:var(--accent)}
+.steps .xres:empty{display:none}
+.steps .xres{border:3px dashed var(--accent);border-radius:12px;padding:6px 16px 10px;background:#fff}
+.xres .xverd{font:800 24px/1.2 "Segoe UI",system-ui,sans-serif;margin:4px 0 2px}
+.xres .xverd.ok{color:var(--ok)}
+.xres .xverd.bad{color:var(--err)}
+
+/* ---- условие и разбор: таблицы Поста и Маркова (из tasks.js) ---- */
+.task ol.st{margin:8px 0;padding-left:24px}
+.task ol.st li{margin:5px 0}
+.task ol.op{margin:8px 0;padding-left:24px}
+.task ol.op li{margin:3px 0}
+.task p.rules{font-size:14px;color:var(--muted);margin:4px 0 8px}
+.task i{font-style:normal;font-weight:600}
+table.gm{border-collapse:collapse;width:auto;margin:8px 0;
+         font:17px/1.2 Consolas,"Cascadia Mono",monospace}
+table.gm th,table.gm td{border:1px solid var(--line);min-width:30px;height:30px;
+         text-align:center;padding:0 6px;background:#fff}
+table.gm th{background:var(--card);color:var(--muted);font-weight:600}
+table.gm td.h{background:var(--hi-bg);border:2px solid var(--hi);font-weight:700}
+table.gm td.miss{background:var(--hi-bg);color:var(--hi);font-weight:700}
+table.post td,table.mk td{min-width:110px;text-align:left;padding:0 12px;white-space:nowrap}
+table.tape tr:first-child td{color:var(--muted);font-size:14px;height:22px}
+table.xtr td.cmd{text-align:left;white-space:nowrap;min-width:96px}
+table.xtr tr.fin td,table.xtr tr.fin th{border-bottom:3px solid var(--ok)}
+table.xmk td{text-align:left;white-space:nowrap;padding:0 10px}
+table.xmk s.del{color:var(--err);text-decoration:line-through;font-weight:700}
+table.xmk b.ins{color:var(--ok)}
+table.xop td{text-align:left;padding:4px 10px;font-family:"Segoe UI",system-ui,sans-serif;
+             font-size:16px;white-space:normal}
+table.xop tr.y td{background:var(--ok-bg)}
+table.xop tr.n td{color:var(--muted)}
+.xcap{font-size:17px;color:var(--muted);margin:6px 0}
+.xcap b{color:var(--ink)}
+ol.xst{padding-left:0;list-style:none;margin:0;font-size:17px}
+ol.xst li{border-radius:10px;padding:6px 12px;margin:6px 0}
+ol.xst li.y{background:var(--ok-bg)}
+ol.xst li.n{background:var(--err-bg)}
+ol.xst li b{font-size:20px}
+ol.xst li.y b{color:var(--ok)} ol.xst li.n b{color:var(--err)}
+ol.xst small{color:var(--muted);font-size:15px}
+.xcmp{font-size:20px;border-radius:10px;padding:6px 12px;margin:6px 0}
+.xcmp.y{background:var(--ok-bg);color:var(--ok)}
+.xcmp.n{background:var(--err-bg);color:var(--err)}
+.keyline{font-size:22px}
+.keyline b{display:inline-block;border:2px solid var(--ok-line);background:var(--ok-bg);
+           color:var(--ok);border-radius:10px;padding:2px 14px;font-family:Consolas,monospace}
+
+/* ---- таблицы разбора: программа машины, такты, строка класса ---- */
+table.gm.prog td{min-width:84px;white-space:nowrap}
+.task img.frz-b{zoom:1.25}
+table.gm td.l,table.gm th.l{text-align:left}
+table.seq{border-collapse:collapse;width:auto;margin:0}
+table.gm table.seq td{min-width:30px;height:26px;padding:0 5px;font-size:16px}
+table.seq td{border:1px solid var(--line);min-width:30px;height:26px;text-align:center;
+             padding:0 5px;font:16px/1 Consolas,"Cascadia Mono",monospace;background:#fff}
+table.seq td.ok,table.gm table.seq td.ok{background:var(--ok-bg);border:2px solid var(--ok);font-weight:700}
+table.seq td.h{background:var(--hi-bg);border:2px solid var(--hi);font-weight:700}
+table.seq td.gap,table.gm table.seq td.gap{border:0;background:none;color:var(--muted);min-width:18px}
+table.seq.big td{min-width:42px;height:38px;font-size:20px}
+table.xch tr.n th{color:var(--hi)}
+table.xch tr.y th{color:var(--ok)}
+table.xch>tbody>tr>td{padding:4px 8px}
+table.xbar td{text-align:left;padding:0 10px}
+table.xbar .bar{display:inline-block;height:16px;background:var(--accent);border-radius:4px;vertical-align:middle}
+table.gm tr.sum td{font-weight:700;border-top:3px solid var(--ok);background:var(--ok-bg)}
+table.gm tr.gap td{color:var(--muted)}
+table.xop tr.bad td{background:var(--err-bg);color:var(--err);font-weight:700}
+.xcap.n{color:var(--err)}
+table.gm tr.mine>td,table.gm tr.mine>th{outline:3px solid var(--err);outline-offset:-3px;color:var(--err)}
+</style>
+
+<style>img.frz-b{display:block;max-width:100%;height:auto;border-radius:10px;margin:8px 0}img.frz-i{display:inline-block;vertical-align:-0.32em;max-width:100%;height:auto;border-radius:5px}</style>
+</head>
+<body>
+<div class="deck">
+<div class="stage" id="stage">
+
+<section class="slide on">
+  <h1>Машина Тьюринга</h1>
+  <p class="lead">Строгий ответ на вопрос «что такое алгоритм». 11 класс, углублённый
+  уровень — пара двенадцатая.</p>
+  <p>Уроки 23–24 поурочного плана: «Формализация понятия алгоритма. Машина Тьюринга
+  как универсальная модель вычислений. Тезис Чёрча—Тьюринга» и практическая работа
+  «Составление простой программы для машины Тьюринга».</p>
+</section>
+
+<section class="slide">
+  <h2>Зачем алгоритму строгое определение</h2>
+  <div class="box big">«Понятная последовательность шагов для исполнителя» годится,
+  пока алгоритм нужно <b>написать</b>.</div>
+  <div class="steps">
+    <div class="step" hidden>
+      <p>Но чтобы доказать, что для задачи алгоритма <b>нет вовсе</b>, нужно точно
+      знать, что такое алгоритм: перебрать «все понятные инструкции» нельзя.</p>
+    </div>
+    <div class="step" hidden>
+      <div class="box good">Уточнения появились в 1930-х: <b>машина Тьюринга</b> (1936),
+      машина Поста, рекурсивные функции, позже — нормальные алгорифмы Маркова. Все они
+      оказались <b>равносильны</b>: что вычисляет одна модель, вычисляют и другие.</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Устройство машины</h2>
+  <div class="two">
+    <div>
+      <p><b>Лента</b> — бесконечная в обе стороны, разбита на клетки; в каждой клетке
+      один символ <b>алфавита</b>. Пустая клетка — символ <b>λ</b>: им занята вся лента,
+      кроме конечного числа клеток.</p>
+      <p><b>Головка</b> видит одну клетку.</p>
+    </div>
+    <div class="box">
+      <h3>Один такт</h3>
+      <ol>
+        <li>записать символ в клетку под головкой;</li>
+        <li>сдвинуть головку: <b>L</b> — влево, <b>R</b> — вправо, <b>N</b> — на
+            месте;</li>
+        <li>перейти в новое состояние.</li>
+      </ol>
+    </div>
+  </div>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="box warn"><b>Состояния</b> q1, q2, … — «память» машины. q1 —
+      начальное, <b>q0 — остановка</b>. Машину останавливает только переход в q0, а не
+      пустая клетка и не край слова.</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Программа — таблица</h2>
+  <div class="two">
+    <div>
+      <div data-tm-prog></div>
+      <p>Строка — <b>состояние</b>, столбец — <b>символ под головкой</b>, в клетке —
+      команда: <b>что записать, куда сдвинуть, в какое состояние перейти</b>.</p>
+    </div>
+    <div class="steps">
+      <div class="step" hidden>
+        <p>Клетка «q1, 0» содержит <img class="frz-i" width="74" height="22" alt="код" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAAAtCAIAAADHm9U+AAAEvklEQVR42u2bS0hbWRjHv5ho0NxQNQ4BY7ux2gQ1gUCw1S504ZSAsbOZTDGdMeOjBacLXZhuFKaLRmTsQkUUak1spongq2YEuwmmGB0wgkRRlFEMEx0fEe4VQ0STmFmcKlKnUOONJs75bfLdB+fe/P/3nPudx2UsLf8DmOgkBksQvbDQz03BN1iLKMK17sY1DzebGGweBpuHzcNEUbYZMru7u70mk8Fg2NraAoCXWq1SqQzHjQYCAeGdO5/fPYvF5XJv3rollUpLSkpycnIiWWvatQrdPKfTqdfpBgcH9/f3r0oOv99PkiRJkrMOh16nKy4u1jY2xsfHR5ptYdIqFPOmpqa637wZGxs7Ojq6Ei0kEgmbzQYAr9e7vr5OkiTaPzIy4vF4Xnd1RY5tYdXq3O88vU6nKi21WCzobkQikV6vv2RFWlpa3hmN74zGoffvp+x2o8kklkjQIavVOjk5GSHOhVurc5tXVFQUExMDAAKB4Lfm5mGzOf/+/avVSCaT9fT08Hg8tGmxWCLEvHBrde5mU5CWplAohELhT2VlcXFxESITQRAFhYUD/f0AsOZyhekqKysr5uHh8fHxzc1NkiQJgkhNTZVKpTweb3Zubmtzc9hsvkytQnnnNb96FYG5HEEQnxqTGPr7Pz6fr6mp6XeDIRAInOykKIqiqIWFBbTJ5/MvWSsWXBcW5udRkJGRQXtOW11dbR0bQ5tisVgikSRwOO7t7aWlpfnj60ZfPy9CGB0dtdvtAMBgMBQlJfQW3t7ejpxLSUlpbWuTyWSnj07YbGq1Gpt3PoLB4I7b/bfL9YfZ3Nvbi3aWl5fTW/PcbndnRwcAMJnM111d2dnZn52QfJwoYfO+ioKCgrM7GQxGRWWlRqOh91qDAwN+vx8A5HL5WecgqofHIgEmk/nDo0cqlSozM5P2wm02Gwq+ffAA8MD0xSlTq3959kypVCYlJQFAIBD4c3IyTP2Wk3xEKBRi82jgZ7W6pqbmpVZr/fgRpQ+rq6tVlZVer5f2HsLe3h6K0YOCzaONhISEjo4OJKvT6WxtaaG3/NPjyOHoPv7f5/NuJCZWVFSg2GAwuN1ueh+Ok9jj8WDz6KdUpeJwOABweHhoePuWznSOxbqRmIhi1xdG3aanp7F5ocPlcr8/ntU0mkz0zpll3L79ySS7/ezRmZmZRq0Wm3ch1Go1k8kEgF2K6uvro7Hke3l5KOjr7z84ODh9aG5u7klVlc/nw+ZdCIFAIJfLUazr7j49fHxBFAoFeizW19aeazSoWgeDwaGhoR8fP6YoKjY29qr+NQN9q3CuFdP37t7d2dn5mjOfPH1aV1cHdK9hsVqtgrS0sx2y7x4+RHFrW9uJlxenoaGh12SC47mL9PT0jY2N7e1tND6gbWx8rtEAAJ/Pt01MXI5W123FdFZWVm5uLoq7aF0JUV9fn3fceHo8HofDgZxLTk7u7OzMz8/HzSYNVFZVoWDW4fjP/CI02Gy2Tq//9cULsVjM4XAIghCKRLW1taMfPhQUFtI+MhDeZhNzmsXFRUVx8ZeaTcAfmkBkz0zhZhODzcPmYbB5GGweBq770r+rQiQS/bW8jGseBpuHzcNg8zDhT1jQWBkG1zzMJfEv83HwwppGLXUAAAAASUVORK5CYII=">: видим 0 — пишем 1, шаг вправо,
+        остаёмся в q1.</p>
+      </div>
+      <div class="step" hidden>
+        <div class="box good">Эта машина идёт вправо, меняя 0 на 1 и 1 на 0, и
+        останавливается на первой пустой клетке: <img class="frz-i" width="54" height="22" alt="код" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGwAAAAtCAIAAADEABlTAAAEVklEQVR42u2bX0zaVxTHD39ExT8zsSUqNasWoj4UU5/qMMakmjgtD7I1JjXWpCWzyYghRivMdN1DEcc0a9hDNWsHZk0XRV2nYFIWiyY+TLoXGyKWjEVKcLEFOlH+GEX2cIUBkkX84Vaz+33h3Ps7J+eXT+65v3tvLqSXv60BFjGRMQLioqKfQuZpzOIIstnf4JGIyxlDxBCxMMR3DeLGxsbw0FAVl8tmsdgs1tjY2CEDXywtfXHnzof19RUXLnDOn6+9dOkzieTX58+POy/B2H9a4hxBq6urKqVycnLS5/MlFOj3+/v6+n54/Diy02q1Wq1WtVp9mceTyWRpaWlJz0swNskQDQbDdw8f6vX6vb29RGMDgUBHR4f+2TPUpNPpxcXFHq/X9urV7u4uAGimp/98+/bbBw+oVGoS8xKJTX45q5TKlqtXZ2dn0duUlZWpVKrDhw/dv48IpqSk9IjFvywu/vjkiU6nWzQY2m/eJJFIALCwsDAyMpLEvATfOfkQ6+rqyGQyADCZzK8GBn6amuJWVR0y9s3r18PDw8iWy+UCgSA9PR01s7Ozu7q6ent7UfMbhcLj8SQrL5HYYyln5pkzPB6vtLT0WlsbjUZLKHYiNBlVV1df5vEOOlxraxufmFgxmTwej06na2pqSkpeIrHHNScODA4eLZlWq0VGa2trXAfd06d/rO2fKv0cDZFIXoKxx/h1TlQej+flygoA0Gi0D7jcmKc+n0969+7o6Gi4Z3l5+YSd4vwLMpvNwWAQAIqKimJqymQyiUSi3y2WyE673b65uZmVlYV3LFFQkJGfnx/uDAaDSqXyIz4fEaTT6V/K5ZmZmeipy+XC274obW1thdeGyHA4HDeuX++TSnd2dgCAw+FMTU/z+fz3cnJiQnA5hzYqoU0CNSUFAObn53tu3XI6nQBAJpNvCASdnZ1ogU0hk8MTJYYYpfBOzu12S6XSEZUKTZEMBmNgcLCysjLyI4OM8CoSQ9xXRkYGMub0+nBnbW2trL8/J1S/aJZ0u93IDk+OGOK+ck+dihmYYomkpaUlxm3Nbt/e3gYACoWSl5eHIUappKQk0v763j02m33QzWg0IuP9s2dTU1Px1zl6JObmMhgMZDc0NMQlCAD6uTlkVFRUAD7ZjnsQgIzx8fFAIHDQwel0ajUaZDc2NmKIccTn85Fhs9kUCsVBh89v3/b7/QBQfO5c5PcaQ/xbnPLy+vp6CB0s9stkCBkArK+vC4VCnU6HmhKJhEKhnBSIJHQXJ6EbEJUXLzocjsN4ftLe3t3dDdFHis3NzTabLbx7YbHZfp/PYrGEC/xToVAkEiU3L5FYeNduQJxmML5/9IhTXo6aXq/3xdKS2WxGBGk0Wo9YHJcgXuJEiclkqtVqrUYzMzNjNBpdLhedTi8oKKipqfn4ypXCwkI4aTpKOWPhC034BgSGiCFiYYgYIoaIIWJhiBgihgj/vz8DoT0gFh6J/5n+ArS1+6FwnB9MAAAAAElFTkSuQmCC"> →
+        <img class="frz-i" width="54" height="22" alt="код" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGwAAAAtCAIAAADEABlTAAAEu0lEQVR42u1aX0hbVxz+mWjUqEywDeptsFqtdQ8KskptQXxQEG1A7laFiiu0dhYqEgQbfeiemsSVyoovDtouETud1WVl/oFGbBR8WHyzBK2prrYhjtQkrdH8cSZmD6deQuI6b07u3cPORyC/e8755fv4cs6555x741ZWN4AADwJiAT7i0ZeUOk68iAIW6ybpiWQ4ExOJiQTERI7uztHhxeKiTqczGo02m83v90skkrKyMpqmvzh79ijpW1tbPw8PDw4O2mw2AFCqVA0NDVzzYmo+FHFosc12iePz+VQq1fDQ0KG1F2UytVqdlJT0T+nr6+tajUan03m9XqbwKCbi8GJq/sQSJ5qeGAgE2tvbDc+fo0uxWJyXl+f2eCxv3/r9fgCYGB//8P79g4cP4+PDf39hYeHHR48MBsP+/j6fvDi5nMyJP/T3IzUJCQmKrq7fjcZfnz7V6/XGhYXWGzfi4uIAYH5+fmBgICxRq9E0Xb48MzODHCwqKtJqtTzwYub+O1ZWN1ZWNzzevSN+3ryx5uefoagcisp58kQX2aC//wGqPX368037h9CqV69eS6W5FJVTVnZ+aHjU7fnL491DjSkqRzvwE0e8OLmf/iD3WPfEXw4msoqKiosyWWSDr69cOVNUBABut1uv14dWUSdOyGQyhUKhn56ur69H/z8PvDi5nAznyclJFDQ3Nx/aQP/s2Z8bH0+GpiME3evtbbl+XSQS8cmLqTnGSxy3273y8iUAiESi8xcuhNV6vV7lnTsjIyNMydLSUkwWYji8PGhmZ6LZbA4GgwCQm5sb1puWl5flcvkfa2uhhVardXt7Oy0tDdNEHF4eNLMbzlarFQVZWVlMYTAY1Gg0X9I0UiMWi7+7ezc1NRXVOp1O/J6Iw8uDZnYm7uzsMOssFNjt9mtXr6qUyr29PQAoLi7+bXycpunP0tPDUnCAw8uDZnbD2XewwYhPSACAubk5xa1bDocDAAQCwbWWlo6ODrRYFQoEzKSDbyIOLw+a2ZnI7IpcLpdSqRzQatF0I5FI7vX2lpeXh07YKEhOTsY3EYeXB83sTExJSUHBrMHAFFZVVal7etIPxgKacVwuF4qZiQYHOLw8aGZnYsaxY2EdpKu7u6mpKazZhtW6u7sLAEKhMDMzE99EHF4eNLMzsbCwMDT+/v79goKCyGYmkwkFOSdPJiYm4puIw8uDZnZ354yMDIlEguLa2tpD1QCAYXYWBaWlpTFZbOPw8qCZ9bavuroaBWNjY4FAILKBw+GYnJhAcV1dXaxOj3F4udbM2kSapj+eR1osfX19kQ2+vX3b5/MBQN6pU6H3Pkzg8HKtmbWJxSUlNTU1zCFdj1qN6AHAZrO1tbUxpyDd3d1CoTBWJuLwcq05mscDm+/eNTY2WiwWZieQX1Dg83rX1taYwXKzrU0ul0fmlp87Z7fbj8LyTWtrZ2dnrHhxcjl5A+K4RDL4+HFxSQm69Hg8LxYXzWYzUiMSiRRdXWzVcM3LqeYon/ZRFDU6Ojo5MTE1NWUymZxOp1gszs7Orqys/OrSJalUCtwAh5c7zVE+7SMgLzQBeQOCmEhMJCAmEhOJicREAmIiMZGYCP+v143RHpCA9MT/DH8DJOHUWG1BRKoAAAAASUVORK5CYII=">.</div>
+      </div>
+      <div class="step" hidden>
+        <p>Что делать на такте, решают <b>только</b> состояние и символ под головкой — не
+        вся лента.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Как выполнять вручную: столбиком</h2>
+  <p>Пиши по такту: состояние, что видим, команда — и ленту после такта. Такт — одна
+  выполненная команда; последняя, переводящая в q0, тоже считается.</p>
+  <div class="steps">
+    <div class="step" hidden><div data-tm-trace></div></div>
+  </div>
+</section>
+
+<section class="slide" data-ex data-type="1"></section>
+
+<section class="slide">
+  <h2>Такты на длинном слове</h2>
+  <div class="two">
+    <div>
+      <div data-tm-step-prog></div>
+      <p>На ленте n единиц, головка над самой левой. Сколько тактов при n = 60? По
+      тактам не пройти.</p>
+    </div>
+    <div class="steps">
+      <div class="step" hidden>
+        <p>Прогони на 1, 2, 3 единицах и посмотри на <b>прирост</b>:</p>
+        <div data-tm-step-table></div>
+      </div>
+      <div class="step" hidden>
+        <div class="box good">Каждая новая единица добавляет одно и то же число тактов
+        a — тактов <b>a·n + b</b>. Обычно a — это число проходов по слову.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-ex data-type="2"></section>
+
+<section class="slide">
+  <h2>Стёртая команда: подставь и прогони</h2>
+  <p>Задача: машина должна делать известное, но одна команда в таблице стёрта. Какую
+  поставить?</p>
+  <ol>
+    <li>Подставь вариант на место знака «?».</li>
+    <li>Прогони машину на <b>коротком</b> слове из двух-трёх символов.</li>
+    <li>Сверь ленту после остановки с тем, что должно получиться.</li>
+  </ol>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="box warn">Неверный вариант выдаёт себя: машина <b>встала</b> (на этот
+      случай нет команды), <b>зациклилась</b> или после остановки на ленте <b>не то
+      слово</b>.</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-ex data-type="3"></section>
+
+<section class="slide">
+  <h2>Что делает машина: прогони и сравни</h2>
+  <ol>
+    <li>Возьми короткое слово, на котором <b>все описания дают разное</b>.</li>
+    <li>Прогони машину по тактам.</li>
+    <li>Сравни ленту после остановки с каждым описанием — совпадёт ровно одно.</li>
+  </ol>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="box warn">Слово из одного символа часто не различает варианты:
+      «заменить каждый символ» и «заменить первый» на <img class="frz-i" width="24" height="22" alt="код" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAtCAIAAABnKH+VAAADW0lEQVR42u2YS0gbURSGT16jTpQK2kEtUo0N1k0EqYIVRFBBfGymFRdiBQ1UaAhpFmoWdpWHlUrEjYUKmo1FsKnURDAFo2ClcacEXzRdGMYSNbFE40RMTBfXDiFx49CxLuZu8s89ZyYf9zzunRHs/NiHuzSEcMeGGP3kP7j/31G81OFdXCEeiAf6R1XGbmysr1utVpfL5fP5IpEIQRAVFRUkST4pL2f9TAFqjDct+3A4bDQaP05NXWttbmkxmUypqaksyp7NCkWjUbVa7VxcRJc4jstkstDZmXdvLxKJAIBtbu738fGH8XGxWHwbOfR+bAzRSCSSvv7+7y7X59lZh8PhWlt72dMjEAgAYGVlxWKx3EbIDg8OamtraZoGALPZ3NzSkuBgmZzU6/UAIJVKv62uSqVSbjv1J6sV0VRXVyfTAMCLzs7HJSUAEAqFHA4H5yGz2+1IdHR0XOvgWFj4tX91gvh6c6CbJV0oFNrZ3gYADMOeVlUlWGmaNuj109PTzMzm5ia3QLu7u7FYDAAKCwsxDIs3bW1taTSanx5P/CRFUScnJxkZGVyFjKIoJHJzc5nJWCw2MTHxjCQRDY7jb4eG0tPTkTUQCHCYQ6enp0zvQeLo6Ki7q8toMFxcXACAQqH4MjdHkuS9zMyEWzgJWZimr26TSABgeXm5r7fX7/cDgFAo7FYqtVotaoYioZBJLA6BmN0gGAwaDAbL5CRKKYIg3g0PV1ZWxic4EmlpaRwCMV1uyelkJuvq6kyDg5l/Y4SyKhgMIs0kEydAWdnZCQvWr9O1t7cnuO1T1Pn5OQCIRKKcnBwOgYqLi+O1eWRELpcnu7ndbiQeFhSkpKRwWGVZWVkEQSDd2Nh4LQ0AOJeWkCgrK+N866ivr0diZmYmGo0mO/j9frvNhnRTUxPnQCRJXm3OXu/o6Giyw5uBgXA4DACyoqL4uuMKSFFa2tDQwByMBk0m9PcA4PP5VCoVs8PrdDqRSHQbR9jDg4O2tjav18t07UdyeZimPR4PE8RXKpVGo2FxhGV5pqYoSq1Wb6yvJ5swDHut1SqVSnav0iyBAODy8tJus83Pz7vd7kAggON4Xl5eTU3N89bW/Px81u/27IH4jw08EA/EA/FAPBDcpU96aB/hV+ia8Qe1FWHljElxEAAAAABJRU5ErkJggg=="> дают одно и то же.
+      Бери три-четыре символа.</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-ex data-type="4"></section>
+
+<section class="slide">
+  <h2>Универсальная машина и тезис Чёрча—Тьюринга</h2>
+  <div class="box"><b>Универсальная машина Тьюринга</b> получает на ленте описание
+  другой машины и её входное слово и делает то же, что та. Это прообраз компьютера, где
+  программа хранится в памяти рядом с данными.</div>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="box good big"><b>Тезис Чёрча—Тьюринга:</b> всё, что вычислимо по
+      алгоритму в интуитивном смысле, вычислимо на машине Тьюринга.</div>
+    </div>
+    <div class="step" hidden>
+      <p>Это <b>не теорема</b>: «интуитивный алгоритм» строго не определён, поэтому
+      тезис нельзя доказать — его можно только опровергнуть, а этого не случилось.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Своя программа: как записать</h2>
+  <div class="two">
+    <div>
+      <p class="eyebrow">дописать единицу к ряду</p>
+      <img class="frz-b" width="194" height="90" alt="фрагмент программы — набери его сам" src="data:image/png;base64,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">
+      <p>По одной команде в строке: состояние, что видим, что пишем, сдвиг, новое
+      состояние. Пустая клетка — λ или _. Стрелка и комментарий после # — по
+      желанию.</p>
+    </div>
+    <div class="steps">
+      <div class="step" hidden><div data-tm-inc></div></div>
+      <div class="step" hidden>
+        <div class="box good"><b>Дойти до конца слова</b> — команда, которая
+        переписывает символ сам в себя со сдвигом R в том же состоянии. <b>Запомнить
+        символ</b> — перейти в своё состояние для каждого символа.</div>
+      </div>
+      <div class="step" hidden>
+        <div class="box warn">На каждую пару «состояние, символ», которая встретится,
+        нужна команда, иначе машина встанет. И хоть одна команда должна вести в
+        q0.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-ex data-type="5"></section>
+
+<section class="slide">
+  <h2>Что верно, а что нет</h2>
+  <div class="two">
+    <div class="box good">
+      <h3>Верно</h3>
+      <ul>
+        <li>За такт головка сдвигается не больше чем на клетку.</li>
+        <li>На некоторых словах машина может не остановиться никогда.</li>
+        <li>Пустой символ λ входит в алфавит машины.</li>
+      </ul>
+    </div>
+    <div class="box bad">
+      <h3>Неверно</h3>
+      <ul>
+        <li>«Лента конечна». Бесконечна в обе стороны.</li>
+        <li>«Машина останавливается на пустой клетке». Только в q0.</li>
+        <li>«Тезис Чёрча—Тьюринга — доказанная теорема».</li>
+        <li>«Алфавит — только 0 и 1». Любой конечный набор символов.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-ex data-type="0"></section>
+
+<section class="slide">
+  <h2>Что делаем дальше</h2>
+  <ol>
+    <li><b>Обзорный практикум</b> — шесть задач, все сразу на странице, в любом
+        порядке: понятия, выполнить программу, такты на длинном слове, стёртая
+        команда, что делает машина и своя программа.</li>
+    <li>Такты — <b>столбиком на черновике</b>, как на слайдах.</li>
+    <li>Свою программу страница <b>выполняет</b> на всех коротких словах и
+        показывает, на каком слове машина ошиблась; исправляй и проверяй снова.</li>
+  </ol>
+  <p>Отметка: закрыто 6 из 6 — «5», 5 — «4», 3 или 4 — «3». В первых пяти вопросах
+  ответ — целое число.</p>
+</section>
+
+<section class="slide">
+  <h1>За работу</h1>
+  <p class="lead">Практикум «Машина Тьюринга» — в общей папке и на сайте. Не успел на
+  уроке — пройди дома: вариант будет другой, сдаётся тем же кодом.</p>
+  <p>Карточку в тетрадь можно взять с собой: на ней устройство машины, таблица
+  программы, такты на длинном слове и запись своей программы.</p>
+</section>
+
+</div>
+
+<div class="bar">
+  <button id="prev">← Назад</button>
+  <button id="step" class="primary">Раскрыть</button>
+  <button id="next">Вперёд →</button>
+  <button id="reroll" hidden>Другая задача</button>
+  <span class="count" id="count"></span>
+  <span class="zoom" title="Размер шрифта на экране: клавиши + и −"><button id="zoomOut" title="Мельче (клавиша −)">A−</button><span class="z" id="zoomVal"></span><button id="zoomIn" title="Крупнее (клавиша +)">A+</button></span>
+  <div class="spacer"></div>
+  <span class="ai-mark" style="color:#5c6070;font-size:13px">Материалы подготовлены с использованием технологий искусственного интеллекта.</span>
+  <span class="keys"><kbd>Пробел</kbd> раскрыть и дальше ·
+    <kbd>←</kbd> <kbd>→</kbd> слайды</span>
+</div>
+</div>
+
+<script>
+/* ==== ЗАДАЧИ: вставлено gen.py, руками не править ==== */
+/* Обзорный практикум к двенадцатой паре 11 класса (углублённый уровень).
+   Содержание ФГОС, уроки 23–24 официального плана: «Формализация понятия
+   алгоритма. Машина Тьюринга как универсальная модель вычислений. Тезис
+   Чёрча—Тьюринга» и «Практическая работа по теме "Составление простой
+   программы для машины Тьюринга"». В столбце «Задание ЕГЭ» у этих уроков
+   пусто — экзаменационной линии у темы нет, вопросы сняты с содержания плана.
+
+   Единственный источник задач. В practice.html вписывается скриптом
+   gen.py между маркерами — руками страницу не править.
+
+   Пять вопросов из шести — целое число, сверка знак в знак, как на КЕГЭ.
+   Шестой (практическая работа урока 24) — программа: её не сверяют с ключом,
+   а ВЫПОЛНЯЮТ на всех коротких словах и сравнивают ленту после остановки
+   (правильных программ много, ключа быть не может). */
+
+const T_TYPES = [
+  "понятия: машина Тьюринга",
+  "выполнить программу",
+  "такты на длинном слове",
+  "стёртая команда",
+  "что делает машина",
+  "составить программу"
+];
+
+function tRng(seed) {
+  let s = seed >>> 0;
+  return function () {
+    s ^= s << 13; s >>>= 0;
+    s ^= s >> 17;
+    s ^= s << 5;  s >>>= 0;
+    return s / 4294967296;
+  };
+}
+
+function tRand(rng, a, b) { return a + Math.floor(rng() * (b - a + 1)); }
+function tPick(rng, arr) { return arr[tRand(rng, 0, arr.length - 1)]; }
+
+function tShuffle(rng, arr) {
+  const a = arr.slice();
+  for (let j = a.length - 1; j > 0; j--) {
+    const k = tRand(rng, 0, j);
+    const t = a[j]; a[j] = a[k]; a[k] = t;
+  }
+  return a;
+}
+
+function tPl(n, one, few, many) {
+  const h = n % 100, t = n % 10;
+  if (h >= 11 && h <= 14) return many;
+  if (t === 1) return one;
+  if (t >= 2 && t <= 4) return few;
+  return many;
+}
+
+function tEsc(s) {
+  return String(s).replace(/[&<>]/g, function (c) {
+    return {"&": "&amp;", "<": "&lt;", ">": "&gt;"}[c];
+  });
+}
+
+/* ------------------------------------------------------ машина Тьюринга
+   Пустая клетка внутри программы — «_», на странице — «λ». Состояния q1,
+   q2, …; q1 — начальное, q0 — остановка. Программа — объект
+   {q1: {"1": ["0", "R", "q2"], …}, …}. */
+
+const T_BLANK = "_";
+const T_LIMIT = 2000;
+
+function gS(c) { return c === T_BLANK ? "λ" : c; }
+function gW(w) { return w === "" ? "пусто" : w.replace(/_/g, "λ"); }
+function gCode(w) { return "<code>" + gW(w) + "</code>"; }
+function gCmd(cmd) { return gS(cmd[0]) + " " + cmd[1] + " " + cmd[2]; }
+
+function mProg(rows) {
+  const p = {};
+  for (const r of rows) {
+    if (!p[r[0]]) p[r[0]] = {};
+    p[r[0]][r[1]] = [r[2], r[3], r[4]];
+  }
+  return p;
+}
+
+function mStates(prog) {
+  return Object.keys(prog).sort(function (a, b) {
+    return Number(a.slice(1)) - Number(b.slice(1));
+  });
+}
+
+/* Лента после остановки: от первого непустого символа до последнего,
+   пустые клетки внутри — «_». Пустая лента — "". */
+function mWord(tape) {
+  const keys = Object.keys(tape).map(Number);
+  if (!keys.length) return "";
+  const lo = Math.min.apply(null, keys), hi = Math.max.apply(null, keys);
+  let s = "";
+  for (let i = lo; i <= hi; i++) s += tape[i] === undefined ? T_BLANK : tape[i];
+  return s;
+}
+
+/* start: "L" — над первым символом слова, "R" — над последним, число —
+   над клеткой с этим индексом (слово лежит с индекса 0). */
+function mRun(prog, word, start, limit) {
+  const tape = {};
+  for (let i = 0; i < word.length; i++) if (word[i] !== T_BLANK) tape[i] = word[i];
+  let pos = start === "R" ? word.length - 1 : start === "L" ? 0 : start;
+  let q = "q1", steps = 0, lo = pos, hi = pos;
+  const trace = [], seen = {q1: true};
+  while (q !== "q0") {
+    const c = tape[pos] === undefined ? T_BLANK : tape[pos];
+    if (steps >= limit)
+      return {halted: false, why: "limit", steps: steps, trace: trace, seen: seen};
+    const cmd = prog[q] && prog[q][c];
+    if (!cmd)
+      return {halted: false, why: "nocmd", q: q, c: c, steps: steps, trace: trace, seen: seen};
+    trace.push({q: q, pos: pos, c: c, cmd: cmd});
+    if (cmd[0] === T_BLANK) delete tape[pos]; else tape[pos] = cmd[0];
+    pos += cmd[1] === "R" ? 1 : cmd[1] === "L" ? -1 : 0;
+    q = cmd[2];
+    seen[q] = true;
+    steps++;
+    if (pos < lo) lo = pos;
+    if (pos > hi) hi = pos;
+  }
+  return {halted: true, steps: steps, pos: pos, lo: lo, hi: hi, tape: tape,
+          word: mWord(tape), trace: trace, seen: seen};
+}
+
+/* Все слова над алфавитом длиной от lo до hi. */
+function mWords(alpha, lo, hi) {
+  let out = [], cur = [""];
+  for (let n = 1; n <= hi; n++) {
+    const next = [];
+    for (const w of cur) for (const c of alpha) next.push(w + c);
+    cur = next;
+    if (n >= lo) out = out.concat(cur);
+  }
+  return out;
+}
+
+/* ------------------------------------------------------ библиотека задач
+   У каждой машины: алфавит (без пустой клетки), где головка в начале,
+   описание словами, что должно получиться на ленте, и одна из верных
+   программ. Описание набрано ещё раз в gen.py со своей реализацией —
+   так ловится описание, которому программа не соответствует. */
+
+function fFlip(c) { return c === "0" ? "1" : c === "1" ? "0" : c === "a" ? "b" : "a"; }
+
+const T_FN = {
+  u_inc: {alpha: "1", start: "L", desc: "увеличивает число на 1: приписывает к ряду единиц ещё одну",
+          f: function (w) { return w + "1"; },
+          rows: [["q1", "1", "1", "R", "q1"], ["q1", "_", "1", "N", "q0"]]},
+  u_dec: {alpha: "1", start: "L", desc: "уменьшает число на 1: стирает одну единицу",
+          f: function (w) { return w.slice(1); },
+          rows: [["q1", "1", "1", "R", "q1"], ["q1", "_", "_", "L", "q2"],
+                 ["q2", "1", "_", "N", "q0"]]},
+  u_par: {alpha: "1", start: "L",
+          desc: "оставляет одну единицу, если единиц было чётное число, и пустую ленту — если нечётное",
+          f: function (w) { return w.length % 2 ? "" : "1"; },
+          rows: [["q1", "1", "_", "R", "q2"], ["q1", "_", "1", "N", "q0"],
+                 ["q2", "1", "_", "R", "q1"], ["q2", "_", "_", "N", "q0"]]},
+  u_add: {alpha: "1", start: "L", pair: true,
+          desc: "складывает два числа: из двух рядов единиц через пустую клетку делает один ряд",
+          f: function (w) { return w.replace(/_/g, ""); },
+          rows: [["q1", "1", "1", "R", "q1"], ["q1", "_", "1", "R", "q2"],
+                 ["q2", "1", "1", "R", "q2"], ["q2", "_", "_", "L", "q3"],
+                 ["q3", "1", "_", "N", "q0"]]},
+  inv: {alpha: "01", start: "L", desc: "заменяет каждый 0 на 1, а каждую 1 на 0",
+        f: function (w) { return w.split("").map(fFlip).join(""); },
+        rows: [["q1", "0", "1", "R", "q1"], ["q1", "1", "0", "R", "q1"],
+               ["q1", "_", "_", "N", "q0"]]},
+  app0: {alpha: "01", start: "L", desc: "приписывает 0 в конец слова",
+         f: function (w) { return w + "0"; },
+         rows: [["q1", "0", "0", "R", "q1"], ["q1", "1", "1", "R", "q1"],
+                ["q1", "_", "0", "N", "q0"]]},
+  app1: {alpha: "01", start: "L", desc: "приписывает 1 в конец слова",
+         f: function (w) { return w + "1"; },
+         rows: [["q1", "0", "0", "R", "q1"], ["q1", "1", "1", "R", "q1"],
+                ["q1", "_", "1", "N", "q0"]]},
+  er01: {alpha: "01", start: "L", desc: "стирает всё слово",
+         f: function () { return ""; },
+         rows: [["q1", "0", "_", "R", "q1"], ["q1", "1", "_", "R", "q1"],
+                ["q1", "_", "_", "N", "q0"]]},
+  all1: {alpha: "01", start: "L", desc: "заменяет каждый 0 на 1, единицы не трогает",
+         f: function (w) { return w.replace(/0/g, "1"); },
+         rows: [["q1", "0", "1", "R", "q1"], ["q1", "1", "1", "R", "q1"],
+                ["q1", "_", "_", "N", "q0"]]},
+  all0: {alpha: "01", start: "L", desc: "заменяет каждую 1 на 0, нули не трогает",
+         f: function (w) { return w.replace(/1/g, "0"); },
+         rows: [["q1", "0", "0", "R", "q1"], ["q1", "1", "0", "R", "q1"],
+                ["q1", "_", "_", "N", "q0"]]},
+  flipl: {alpha: "01", start: "L", desc: "меняет последний символ слова на противоположный",
+          f: function (w) { return w.slice(0, -1) + fFlip(w.slice(-1)); },
+          rows: [["q1", "0", "0", "R", "q1"], ["q1", "1", "1", "R", "q1"],
+                 ["q1", "_", "_", "L", "q2"], ["q2", "0", "1", "N", "q0"],
+                 ["q2", "1", "0", "N", "q0"]]},
+  pre1: {alpha: "01", start: "L", desc: "приписывает 1 в начало слова",
+         f: function (w) { return "1" + w; },
+         rows: [["q1", "0", "0", "L", "q2"], ["q1", "1", "1", "L", "q2"],
+                ["q2", "_", "1", "N", "q0"]]},
+  dell: {alpha: "01", start: "L", desc: "стирает последний символ слова",
+         f: function (w) { return w.slice(0, -1); },
+         rows: [["q1", "0", "0", "R", "q1"], ["q1", "1", "1", "R", "q1"],
+                ["q1", "_", "_", "L", "q2"], ["q2", "0", "_", "N", "q0"],
+                ["q2", "1", "_", "N", "q0"]]},
+  copy1: {alpha: "01", start: "L", desc: "приписывает в конец слова копию его первого символа",
+          f: function (w) { return w + w[0]; },
+          rows: [["q1", "0", "0", "R", "q2"], ["q1", "1", "1", "R", "q3"],
+                 ["q2", "0", "0", "R", "q2"], ["q2", "1", "1", "R", "q2"],
+                 ["q2", "_", "0", "N", "q0"],
+                 ["q3", "0", "0", "R", "q3"], ["q3", "1", "1", "R", "q3"],
+                 ["q3", "_", "1", "N", "q0"]]},
+  binc: {alpha: "01", start: "R", desc: "прибавляет 1 к двоичному числу",
+         f: function (w) {
+           const d = w.split("");
+           let i = d.length - 1;
+           while (i >= 0 && d[i] === "1") { d[i] = "0"; i--; }
+           if (i >= 0) d[i] = "1"; else d.unshift("1");
+           return d.join("");
+         },
+         rows: [["q1", "1", "0", "L", "q1"], ["q1", "0", "1", "N", "q0"],
+                ["q1", "_", "1", "N", "q0"]]},
+  swap: {alpha: "ab", start: "L", desc: "заменяет каждую a на b, а каждую b на a",
+         f: function (w) { return w.split("").map(fFlip).join(""); },
+         rows: [["q1", "a", "b", "R", "q1"], ["q1", "b", "a", "R", "q1"],
+                ["q1", "_", "_", "N", "q0"]]},
+  a2b: {alpha: "ab", start: "L", desc: "заменяет каждую a на b, буквы b не трогает",
+        f: function (w) { return w.replace(/a/g, "b"); },
+        rows: [["q1", "a", "b", "R", "q1"], ["q1", "b", "b", "R", "q1"],
+               ["q1", "_", "_", "N", "q0"]]},
+  b2a: {alpha: "ab", start: "L", desc: "заменяет каждую b на a, буквы a не трогает",
+        f: function (w) { return w.replace(/b/g, "a"); },
+        rows: [["q1", "a", "a", "R", "q1"], ["q1", "b", "a", "R", "q1"],
+               ["q1", "_", "_", "N", "q0"]]},
+  dela: {alpha: "ab", start: "L", desc: "заменяет каждую a пустой клеткой, буквы b не трогает",
+         f: function (w) { return w.replace(/a/g, "_").replace(/^_+|_+$/g, ""); },
+         rows: [["q1", "a", "_", "R", "q1"], ["q1", "b", "b", "R", "q1"],
+                ["q1", "_", "_", "N", "q0"]]},
+  appa: {alpha: "ab", start: "L", desc: "приписывает a в конец слова",
+         f: function (w) { return w + "a"; },
+         rows: [["q1", "a", "a", "R", "q1"], ["q1", "b", "b", "R", "q1"],
+                ["q1", "_", "a", "N", "q0"]]},
+  appb: {alpha: "ab", start: "L", desc: "приписывает b в конец слова",
+         f: function (w) { return w + "b"; },
+         rows: [["q1", "a", "a", "R", "q1"], ["q1", "b", "b", "R", "q1"],
+                ["q1", "_", "b", "N", "q0"]]},
+  prea: {alpha: "ab", start: "L", desc: "приписывает a в начало слова",
+         f: function (w) { return "a" + w; },
+         rows: [["q1", "a", "a", "L", "q2"], ["q1", "b", "b", "L", "q2"],
+                ["q2", "_", "a", "N", "q0"]]},
+  erab: {alpha: "ab", start: "L", desc: "стирает всё слово",
+         f: function () { return ""; },
+         rows: [["q1", "a", "_", "R", "q1"], ["q1", "b", "_", "R", "q1"],
+                ["q1", "_", "_", "N", "q0"]]},
+  delab: {alpha: "ab", start: "L", desc: "стирает последний символ слова",
+          f: function (w) { return w.slice(0, -1); },
+          rows: [["q1", "a", "a", "R", "q1"], ["q1", "b", "b", "R", "q1"],
+                 ["q1", "_", "_", "L", "q2"], ["q2", "a", "_", "N", "q0"],
+                 ["q2", "b", "_", "N", "q0"]]}
+};
+
+/* Группы для вопроса «что делает машина»: одинаковый алфавит и начало. */
+const T_DESC_GROUPS = {
+  binary: ["inv", "app0", "app1", "er01", "all1", "all0", "flipl", "pre1", "dell", "copy1"],
+  letters: ["swap", "a2b", "b2a", "dela", "appa", "appb", "prea", "erab", "delab"]
+};
+
+/* Для «стёртой команды» и «составь программу» — машины с содержательной
+   программой (у «стереть всё» и «заменить всё» стирать нечего). */
+const T_EDIT = {
+  unary: ["u_dec", "u_par", "u_add"],
+  binary: ["inv", "flipl", "pre1", "dell", "copy1", "binc"],
+  letters: ["swap", "dela", "appa", "prea", "delab"]
+};
+const T_WRITE = {
+  unary: ["u_inc", "u_dec", "u_par", "u_add"],
+  binary: ["inv", "app0", "flipl", "pre1", "copy1", "binc"],
+  letters: ["swap", "a2b", "dela", "appa", "prea"]
+};
+
+/* Проверочные слова: все короткие слова; у сложения — все пары рядов. */
+function mTests(fn) {
+  if (fn.pair) {
+    const out = [];
+    for (let a = 1; a <= 4; a++)
+      for (let b = 1; b <= 4; b++) out.push("1".repeat(a) + "_" + "1".repeat(b));
+    return out;
+  }
+  if (fn.alpha === "1") return mWords("1", 1, 6);
+  return mWords(fn.alpha, 1, 4);
+}
+
+/* Первое слово, на котором программа не делает того, что нужно; null — всё верно. */
+function mFail(fn, prog) {
+  for (const w of mTests(fn)) {
+    const r = mRun(prog, w, fn.start, T_LIMIT);
+    const want = fn.f(w);
+    if (!r.halted || r.word !== want) return {w: w, r: r, want: want};
+  }
+  return null;
+}
+
+function mFailText(f) {
+  const on = "на слове " + gCode(f.w);
+  if (f.r.why === "nocmd")
+    return on + " машина встала: в состоянии " + f.r.q + " над символом " +
+      gS(f.r.c) + " команды нет";
+  if (f.r.why === "limit")
+    return on + " машина не остановилась за " + T_LIMIT + " тактов — зациклилась";
+  return on + " после остановки на ленте " + gCode(f.r.word) + ", а нужно " +
+    gCode(f.want);
+}
+
+function gAlpha(alpha) {
+  return "{" + alpha.split("").concat(["λ"]).join(", ") + "}";
+}
+
+function gStart(fn) {
+  return fn.start === "R"
+    ? "головка стоит над самым правым символом слова"
+    : "головка стоит над самым левым символом слова";
+}
+
+/* Таблица программы: строки — состояния, столбцы — символы. hole — клетка,
+   которую показать знаком «?». */
+function gProg(prog, alpha, hole) {
+  const syms = alpha.split("").concat([T_BLANK]);
+  let h = '<table class="gm prog"><tr><th></th>';
+  for (const c of syms) h += "<th>" + gS(c) + "</th>";
+  h += "</tr>";
+  for (const q of mStates(prog)) {
+    h += "<tr><th>" + q + "</th>";
+    for (const c of syms) {
+      if (hole && hole[0] === q && hole[1] === c) { h += '<td class="miss">?</td>'; continue; }
+      const cmd = prog[q][c];
+      h += "<td>" + (cmd ? gCmd(cmd) : "") + "</td>";
+    }
+    h += "</tr>";
+  }
+  return h + "</table>";
+}
+
+/* Пример «слово → лента» для условия: слово средней длины. */
+function gExample(rng, fn) {
+  const pool = mTests(fn).filter(function (w) {
+    return fn.pair ? w.length >= 5 : w.length >= 3 && w.length <= 4;
+  });
+  const w = tPick(rng, pool);
+  return {w: w, r: fn.f(w)};
+}
+
+/* ---------------------------------------------------------- понятия */
+
+/* ==== БАНК УТВЕРЖДЕНИЙ (JSON; читает и gen.py) ==== */
+const T_BANK = [
+{"t": "Машина Тьюринга состоит из бесконечной ленты, разбитой на клетки, и головки, которая за один такт работает только с одной клеткой.", "v": true, "w": "верно: лента не ограничена, головка видит одну клетку"},
+{"t": "За один такт машина Тьюринга записывает символ в клетку под головкой, сдвигает головку не больше чем на одну клетку и переходит в новое состояние.", "v": true, "w": "верно, это и есть один такт"},
+{"t": "Программу машины Тьюринга можно записать таблицей: строки — состояния, столбцы — символы алфавита, в клетке — команда.", "v": true, "w": "верно: на каждую пару «состояние, символ» одна команда"},
+{"t": "Что сделает машина Тьюринга на очередном такте, определяют только её текущее состояние и символ под головкой.", "v": true, "w": "верно: остального содержимого ленты машина не видит"},
+{"t": "Пустой символ λ входит в алфавит машины Тьюринга: им заполнены все клетки ленты, кроме конечного их числа.", "v": true, "w": "верно: λ — обычный символ алфавита, просто им занята почти вся лента"},
+{"t": "Тезис Чёрча—Тьюринга утверждает: всё, что можно вычислить по алгоритму в интуитивном смысле, можно вычислить на машине Тьюринга.", "v": true, "w": "верно, это формулировка тезиса"},
+{"t": "Тезис Чёрча—Тьюринга нельзя доказать как теорему: понятие «алгоритм в интуитивном смысле» строго не определено.", "v": true, "w": "верно: доказывать можно только про строго определённое, поэтому это тезис, а не теорема"},
+{"t": "Универсальная машина Тьюринга получает на ленте описание другой машины и её входное слово и делает то же, что сделала бы эта машина.", "v": true, "w": "верно, это определение универсальной машины"},
+{"t": "Универсальная машина Тьюринга — теоретический прообраз компьютера, у которого программа хранится в памяти наравне с данными.", "v": true, "w": "верно: описание машины лежит на той же ленте, что и данные"},
+{"t": "Строгое определение алгоритма понадобилось, чтобы доказывать, что для некоторых задач алгоритма не существует вовсе.", "v": true, "w": "верно: чтобы доказать «алгоритма нет», надо знать точно, что такое алгоритм"},
+{"t": "На некоторых входных словах машина Тьюринга может никогда не остановиться.", "v": true, "w": "верно: зациклиться может и машина Тьюринга"},
+{"t": "Машина Поста, нормальные алгорифмы Маркова и машина Тьюринга равносильны: задачу, решаемую одной из этих моделей, решает и любая другая.", "v": true, "w": "верно: все известные уточнения понятия алгоритма оказались равносильны"},
+{"t": "Лента машины Тьюринга имеет заранее заданную длину, поэтому машина решает только задачи, которые помещаются в это число клеток.", "v": false, "w": "неверно: лента бесконечна, ограничения памяти у машины нет"},
+{"t": "За один такт головка машины Тьюринга может переместиться на любое число клеток.", "v": false, "w": "неверно: не больше чем на одну клетку — влево, вправо или остаться"},
+{"t": "Тезис Чёрча—Тьюринга — теорема, доказанная Тьюрингом в 1936 году.", "v": false, "w": "неверно: это тезис, доказать его нельзя — «алгоритм в интуитивном смысле» не определён строго"},
+{"t": "Машина Тьюринга может за один такт прочитать сразу несколько клеток ленты.", "v": false, "w": "неверно: головка видит ровно одну клетку"},
+{"t": "Универсальной машины Тьюринга не существует: для каждой задачи нужна своя машина.", "v": false, "w": "неверно: универсальная машина существует и выполняет описание любой другой"},
+{"t": "Если машина Тьюринга не остановилась за миллион тактов, значит, она не остановится никогда.", "v": false, "w": "неверно: ей может понадобиться и два миллиона; по числу тактов этого не узнать"},
+{"t": "Машина Тьюринга решает задачи, которые не решит никакой компьютер, даже с неограниченной памятью.", "v": false, "w": "неверно: компьютер с неограниченной памятью и машина Тьюринга умеют одно и то же"},
+{"t": "Машина Тьюринга может записать в клетку любой символ, даже не входящий в её алфавит.", "v": false, "w": "неверно: на ленте бывают только символы алфавита машины"},
+{"t": "Что сделает машина Тьюринга на очередном такте, зависит от всего содержимого ленты.", "v": false, "w": "неверно: только от состояния и одного символа под головкой"},
+{"t": "Алфавит машины Тьюринга всегда состоит только из символов 0 и 1.", "v": false, "w": "неверно: алфавит любой конечный, лишь бы в нём был пустой символ"},
+{"t": "Одна и та же машина Тьюринга, запущенная дважды на одном слове, может дать разные результаты.", "v": false, "w": "неверно: на каждый случай ровно одна команда, ход работы предопределён"},
+{"t": "Машина Тьюринга останавливается, как только головка попадает на пустую клетку.", "v": false, "w": "неверно: останавливает только переход в состояние остановки, пустая клетка — обычный символ"}
+];
+/* ==== /БАНК ==== */
+
+/* ---------------------------------------------------------------- задачи */
+
+function tTask(type, rng) {
+  if (type === 0) return tConcepts(rng);
+  if (type === 1) return tTrace(rng);
+  if (type === 2) return tSteps(rng);
+  if (type === 3) return tHole(rng);
+  if (type === 4) return tWhat(rng);
+  return tWrite(rng);
+}
+
+/* 0. Понятия: сколько из пяти утверждений верны. Верных не 0 и не 5. */
+function tConcepts(rng) {
+  const SHOW = 5;
+  let pick = [];
+  for (let t = 0; t < 400; t++) {
+    pick = tShuffle(rng, T_BANK.map(function (_, i) { return i; })).slice(0, SHOW);
+    const k = pick.filter(function (i) { return T_BANK[i].v; }).length;
+    if (k >= 1 && k <= SHOW - 1) break;
+  }
+  const items = pick.map(function (i) { return "<li>" + T_BANK[i].t + "</li>"; });
+  const right = pick.filter(function (i) { return T_BANK[i].v; }).length;
+  const why = pick.map(function (i, n) { return (n + 1) + ") " + T_BANK[i].w; });
+  return {
+    type: 0, kind: "concepts", answer: String(right),
+    question: "Ниже пять утверждений о машине Тьюринга и понятии алгоритма. " +
+      "Сколько из них верны?<ol class=\"st\">" + items.join("") +
+      "</ol><p>В ответе укажите число.</p>",
+    explain: why.join("; ") + ". Верных — " + right + ".",
+    x: {items: pick.map(function (i) { return T_BANK[i]; })}
+  };
+}
+
+/* 1. Выполнить программу по таблице: случайная машина на 2–3 состояния,
+   алфавит {0, 1, λ}. Отбор: останавливается за 6–16 тактов, побывала во
+   всех состояниях, лента изменилась, головка и записи не выходят за
+   нарисованные клетки. Повороты: единиц после остановки, тактов, номер
+   клетки под головкой. */
+function tTrace(rng) {
+  const kind = tPick(rng, ["ones", "steps", "cell"]);
+  let best = null;
+  for (let t = 0; t < 6000; t++) {
+    const k = tRand(rng, 2, 3);
+    const len = tRand(rng, 3, 5);
+    let word = "";
+    for (let i = 0; i < len; i++) word += tPick(rng, ["0", "1"]);
+    const states = [];
+    for (let i = 1; i <= k; i++) states.push("q" + i);
+    const rows = [];
+    let stops = 0;
+    for (const q of states)
+      for (const c of ["0", "1", T_BLANK]) {
+        const wr = rng() < 0.45 ? c : tPick(rng, ["0", "1", "0", "1", T_BLANK]);
+        const mv = tPick(rng, ["L", "R", "R", "L", "N"]);
+        const nx = rng() < 0.14 ? "q0" : tPick(rng, states);
+        if (nx === "q0") stops++;
+        rows.push([q, c, wr, mv, nx]);
+      }
+    if (!stops) continue;
+    const prog = mProg(rows);
+    const start = tRand(rng, 0, len - 1);
+    const r = mRun(prog, word, start, 40);
+    if (!r.halted) continue;
+    const cand = {prog: prog, word: word, start: start, r: r, k: k};
+    if (!best) best = cand;
+    if (r.steps < 6 || r.steps > 16) continue;
+    if (Object.keys(r.seen).length !== k + 1) continue;
+    if (r.lo < -2 || r.hi > len + 1) continue;
+    const touched = Object.keys(r.tape).map(Number);
+    if (touched.some(function (i) { return i < -2 || i > len + 1; })) continue;
+    if (r.word === word) continue;
+    const ones = r.word.split("").filter(function (c) { return c === "1"; }).length;
+    if (kind === "ones" && ones < 1) continue;
+    best = cand;
+    break;
+  }
+  if (!best) {
+    /* не случается: отбор проходит примерно каждая двадцатая машина */
+    const p = mProg(T_FN.flipl.rows);
+    best = {prog: p, word: "1011", start: 0, r: mRun(p, "1011", 0, 40), k: 2};
+  }
+  const len = best.word.length, W = len + 4;
+  /* клетки ленты нумеруем с 1; слово лежит с клетки 3 */
+  let tape = '<table class="gm tape"><tr><th>клетка</th>';
+  for (let i = 1; i <= W; i++) tape += "<td>" + i + "</td>";
+  tape += "</tr><tr><th>лента</th>";
+  for (let i = 1; i <= W; i++) {
+    const idx = i - 3;
+    const c = idx >= 0 && idx < len ? best.word[idx] : T_BLANK;
+    tape += "<td" + (idx === best.start ? ' class="h"' : "") + ">" + gS(c) + "</td>";
+  }
+  tape += "</tr></table>";
+  const r = best.r;
+  const ones = r.word.split("").filter(function (c) { return c === "1"; }).length;
+  const ask = kind === "ones"
+    ? "Сколько единиц будет на ленте после остановки машины?"
+    : kind === "steps"
+      ? "Сколько тактов сделает машина до остановки? Такт — выполнение одной " +
+        "команды, считая и последнюю, которая переводит машину в q0."
+      : "Над клеткой с каким номером окажется головка после остановки?";
+  const answer = kind === "ones" ? ones : kind === "steps" ? r.steps : r.pos + 3;
+  const steps = r.trace.map(function (s, n) {
+    return (n + 1) + ") " + s.q + ", клетка " + (s.pos + 3) + ", видит " + gS(s.c) +
+      ": " + gCmd(s.cmd);
+  });
+  let fin = "";
+  for (let i = 1; i <= W; i++) {
+    const v = r.tape[i - 3];
+    fin += v === undefined ? "λ" : v;
+  }
+  return {
+    type: 1, kind: kind, answer: String(answer),
+    question: "Машина Тьюринга с алфавитом {0, 1, λ} работает по таблице " +
+      "(в клетке: что записать, куда сдвинуть головку, в какое состояние перейти; " +
+      "q0 — остановка):" + gProg(best.prog, "01") +
+      "<p>Лента перед запуском; головка над выделенной клеткой, состояние q1:</p>" +
+      tape + "<p>" + ask + "</p>",
+    explain: "Такты: " + steps.join("; ") + ". Машина остановилась после " +
+      r.steps + " " + tPl(r.steps, "такта", "тактов", "тактов") +
+      ", головка над клеткой " + (r.pos + 3) + ". Лента в клетках 1–" + W + ": " +
+      fin + " — единиц " + ones + ". Ответ: " + answer + ".",
+    x: {prog: best.prog, alpha: "01", word: best.word, start: best.start, W: W}
+  };
+}
+
+/* 2. Такты на длинном слове: машина на {1, λ}, слово из n единиц. На
+   длинном слове по тактам не пройти — надо увидеть, сколько тактов
+   добавляет каждая единица. Повороты: тактов при данном n; при каком n
+   ровно столько тактов. Число тактов — линейное по n, это проверяет отбор. */
+const T_STEP = [
+  {rows: [["q1", "1", "1", "R", "q1"], ["q1", "_", "1", "N", "q0"]],
+   how: "машина проходит все n единиц и на пустой клетке за ними пишет 1"},
+  {rows: [["q1", "1", "1", "R", "q1"], ["q1", "_", "1", "L", "q2"],
+          ["q2", "1", "1", "L", "q2"], ["q2", "_", "_", "R", "q0"]],
+   how: "проход вправо по n единицам до пустой клетки, там пишется 1, " +
+        "и проход обратно влево по n + 1 единице до пустой клетки"},
+  {rows: [["q1", "1", "1", "R", "q1"], ["q1", "_", "_", "L", "q2"],
+          ["q2", "1", "_", "L", "q2"], ["q2", "_", "_", "N", "q0"]],
+   how: "проход вправо по n единицам до пустой клетки и обратно влево, " +
+        "стирая все n единиц, до пустой клетки"},
+  {rows: [["q1", "1", "1", "R", "q1"], ["q1", "_", "_", "L", "q2"],
+          ["q2", "1", "1", "L", "q2"], ["q2", "_", "_", "R", "q3"],
+          ["q3", "1", "1", "R", "q3"], ["q3", "_", "1", "N", "q0"]],
+   how: "три прохода по слову: вправо, влево и снова вправо, " +
+        "каждый — по n единицам и пустой клетке"},
+  {rows: [["q1", "1", "1", "R", "q1"], ["q1", "_", "1", "R", "q2"],
+          ["q2", "_", "1", "L", "q3"], ["q3", "1", "1", "L", "q3"],
+          ["q3", "_", "_", "R", "q0"]],
+   how: "проход вправо по n единицам, две единицы дописываются за словом, " +
+        "и проход обратно влево по n + 2 единицам"},
+  {rows: [["q1", "1", "_", "R", "q2"], ["q2", "1", "1", "R", "q2"],
+          ["q2", "_", "1", "L", "q3"], ["q3", "1", "1", "L", "q3"],
+          ["q3", "_", "_", "R", "q0"]],
+   how: "первая единица стирается, проход вправо до пустой клетки, там " +
+        "пишется 1 (ряд сдвинулся на клетку вправо), и проход обратно влево"}
+];
+
+function mUnarySteps(prog, n) {
+  const r = mRun(prog, "1".repeat(n), "L", 100000);
+  return r.halted ? r.steps : -1;
+}
+
+function tSteps(rng) {
+  const kind = tPick(rng, ["steps", "length"]);
+  const m = tPick(rng, T_STEP);
+  const prog = mProg(m.rows);
+  const s = [0];
+  for (let n = 1; n <= 6; n++) s.push(mUnarySteps(prog, n));
+  const a = s[2] - s[1], b = s[1] - a;
+  for (let n = 1; n <= 6; n++)
+    if (s[n] !== a * n + b) throw new Error("тактов не линейно: " + s.join(","));
+  const n = tRand(rng, 25, 90);
+  const S = mUnarySteps(prog, n);
+  const gaps = mStates(prog).some(function (q) { return !prog[q]["1"] || !prog[q][T_BLANK]; });
+  const lead = "Машина Тьюринга с алфавитом {1, λ} работает по таблице " +
+    "(q0 — остановка" + (gaps ? "; пустая клетка таблицы — такой случай не встречается" : "") +
+    "):" +
+    gProg(prog, "1") +
+    "<p>На ленте записано n единиц подряд, вокруг пусто; головка над самой " +
+    "левой единицей, состояние q1. Такт — выполнение одной команды, считая и " +
+    "последнюю, которая переводит машину в q0.</p>";
+  const ask = kind === "steps"
+    ? "<p>Сколько тактов сделает машина до остановки при n = " + n + "?</p>"
+    : "<p>При каком n машина сделает до остановки ровно " + S + " " +
+      tPl(S, "такт", "такта", "тактов") + "?</p>";
+  const formula = (a === 1 ? "" : a + "·") + "n + " + b;
+  const small = [1, 2, 3].map(function (k) {
+    return "n = " + k + " — " + s[k] + " " + tPl(s[k], "такт", "такта", "тактов");
+  }).join(", ");
+  const tail = kind === "steps"
+    ? "При n = " + n + ": " + (a === 1 ? "" : a + "·") + n + " + " + b + " = " + S + "."
+    : "Решаем " + formula + " = " + S + ": n = (" + S + " − " + b + ")" +
+      (a === 1 ? "" : " / " + a) + " = " + n + ".";
+  return {
+    type: 2, kind: kind, answer: String(kind === "steps" ? S : n),
+    question: lead + ask,
+    explain: "Прогоним на коротких словах: " + small + ". Каждая новая единица " +
+      "добавляет " + a + " " + tPl(a, "такт", "такта", "тактов") + " — " + m.how +
+      ". Тактов " + formula + ". " + tail,
+    x: {prog: prog, n: n, S: S, how: m.how}
+  };
+}
+
+/* 3. Стёртая команда: машина из библиотеки, одна команда, которая работает
+   на проверочных словах, стёрта; четыре варианта, верен ровно один —
+   остальные портят ленту хотя бы на одном слове или вешают машину. */
+function tHole(rng) {
+  const kind = tPick(rng, ["unary", "binary", "letters"]);
+  const id = tPick(rng, T_EDIT[kind]);
+  const fn = T_FN[id];
+  const prog = mProg(fn.rows);
+  /* какие клетки таблицы на проверочных словах вообще выполняются */
+  const used = {};
+  for (const w of mTests(fn))
+    for (const s of mRun(prog, w, fn.start, T_LIMIT).trace) used[s.q + " " + s.c] = [s.q, s.c];
+  const holes = Object.keys(used).sort().map(function (k) { return used[k]; });
+  const syms = fn.alpha.split("").concat([T_BLANK]);
+  const states = mStates(prog).concat(["q0"]);
+  let hole = null, wrong = [];
+  for (let t = 0; t < 50 && !hole; t++) {
+    const hc = tPick(rng, holes);
+    const right = prog[hc[0]][hc[1]];
+    const muts = [];
+    for (const wr of syms) for (const mv of ["L", "R", "N"]) for (const nx of states) {
+      if (wr === right[0] && mv === right[1] && nx === right[2]) continue;
+      const diff = (wr !== right[0]) + (mv !== right[1]) + (nx !== right[2]);
+      if (diff > 2) continue;
+      const p2 = mProg(fn.rows);
+      p2[hc[0]][hc[1]] = [wr, mv, nx];
+      const f = mFail(fn, p2);
+      if (f) muts.push({cmd: [wr, mv, nx], fail: f});
+    }
+    if (muts.length >= 3) { hole = hc; wrong = tShuffle(rng, muts).slice(0, 3); }
+  }
+  const right = prog[hole[0]][hole[1]];
+  const opts = tShuffle(rng, [{cmd: right, fail: null}].concat(wrong));
+  const ans = opts.findIndex(function (o) { return !o.fail; }) + 1;
+  const ex = gExample(rng, fn);
+  const why = opts.map(function (o, i) {
+    return (i + 1) + ") " + gCmd(o.cmd) + " — " +
+      (o.fail ? mFailText(o.fail) : "подходит");
+  });
+  return {
+    type: 3, kind: kind, answer: String(ans),
+    question: "Машина Тьюринга с алфавитом " + gAlpha(fn.alpha) + " задумана так, " +
+      "что она <i>" + fn.desc + "</i>. Например: " + gCode(ex.w) + " → " + gCode(ex.r) +
+      ". В начале " + gStart(fn) + ", состояние q1; q0 — остановка. " +
+      "В таблице одна команда стёрта (знак ?):" +
+      gProg(prog, fn.alpha, hole) +
+      "<p>Какая команда должна стоять на месте знака вопроса?</p>" +
+      "<ol class=\"op\">" + opts.map(function (o) { return "<li>" + gCmd(o.cmd) + "</li>"; }).join("") +
+      "</ol><p>В ответе укажите номер варианта.</p>",
+    explain: "Подставляем каждый вариант и прогоняем машину: " + why.join("; ") +
+      ". Ответ: " + ans + ".",
+    x: {ex: ex.w, want: ex.r, fn: id, hole: hole, opts: opts.map(function (o) {
+      return {cmd: o.cmd, why: o.fail ? mFailText(o.fail) : ""};
+    })}
+  };
+}
+
+/* 4. Что делает машина: таблица из библиотеки и четыре описания из той же
+   группы (тот же алфавит, то же начало). Слово для разбора подбирается
+   так, чтобы все четыре описания давали на нём разные ленты. */
+function tWhat(rng) {
+  const kind = tPick(rng, ["binary", "letters"]);
+  const group = T_DESC_GROUPS[kind];
+  let pick = null, word = null;
+  for (let t = 0; t < 200 && !word; t++) {
+    pick = tShuffle(rng, group).slice(0, 4);
+    const fns = pick.map(function (id) { return T_FN[id]; });
+    const cands = tShuffle(rng, mTests(fns[0]).filter(function (w) {
+      return w.length >= 3;
+    }));
+    for (const w of cands) {
+      const res = fns.map(function (f) { return f.f(w); });
+      if (new Set(res).size === 4) { word = w; break; }
+    }
+  }
+  const id = pick[0];
+  const fn = T_FN[id];
+  const prog = mProg(fn.rows);
+  const opts = tShuffle(rng, pick);
+  const ans = opts.indexOf(id) + 1;
+  const r = mRun(prog, word, fn.start, T_LIMIT);
+  const why = opts.map(function (o, i) {
+    return (i + 1) + ") " + (o === id ? "даёт " + gCode(T_FN[o].f(word)) + " — совпало"
+                                      : "дало бы " + gCode(T_FN[o].f(word)));
+  });
+  return {
+    type: 4, kind: kind, answer: String(ans),
+    question: "Машина Тьюринга с алфавитом " + gAlpha(fn.alpha) + " работает по таблице " +
+      "(q0 — остановка):" + gProg(prog, fn.alpha) +
+      "<p>В начале на ленте записано непустое слово из символов " +
+      fn.alpha.split("").join(" и ") + ", вокруг пусто; " + gStart(fn) +
+      ", состояние q1. Что делает эта машина?</p>" +
+      "<ol class=\"op\">" + opts.map(function (o) { return "<li>" + T_FN[o].desc + "</li>"; }).join("") +
+      "</ol><p>В ответе укажите номер варианта.</p>",
+    explain: "Прогоним машину на слове " + gCode(word) + ": после остановки на ленте " +
+      gCode(r.word) + ". Варианты: " + why.join("; ") + ". Ответ: " + ans + ".",
+    x: {fn: id, word: word, opts: opts.map(function (o) {
+      return {desc: T_FN[o].desc, res: T_FN[o].f(word), ok: o === id};
+    })}
+  };
+}
+
+/* 5. Составить программу (практическая работа урока 24). Ключа нет:
+   программа выполняется на всех проверочных словах. */
+function tWrite(rng) {
+  const kind = tPick(rng, ["unary", "binary", "letters"]);
+  const id = tPick(rng, T_WRITE[kind]);
+  const fn = T_FN[id];
+  const ex = gExample(rng, fn);
+  const n = mTests(fn).length;
+  const what = fn.pair
+    ? "числа записаны рядами единиц, между рядами одна пустая клетка"
+    : fn.alpha === "1"
+      ? "число n записано на ленте рядом из n единиц"
+      : "на ленте непустое слово из символов " + fn.alpha.split("").join(" и ");
+  const range = fn.pair ? "на всех парах рядов длиной от 1 до 4"
+    : fn.alpha === "1" ? "на рядах из 1–6 единиц"
+    : "на всех словах длиной от 1 до 4";
+  const sample = fn.rows.map(function (r) {
+    return r[0] + " " + gS(r[1]) + " -> " + gS(r[2]) + " " + r[3] + " " + r[4];
+  }).join("\n");
+  return {
+    type: 5, kind: kind, prog: true, fn: id, answer: sample,
+    question: "Составьте программу для машины Тьюринга с алфавитом " + gAlpha(fn.alpha) +
+      ", которая <i>" + fn.desc + "</i>. Например: " + gCode(ex.w) + " → " +
+      gCode(ex.r) + ". В начале " + what + ", вокруг пусто; " + gStart(fn) +
+      ", состояние q1. Остановка — переход в q0; где при этом стоит головка, неважно." +
+      "<p>Пишите по одной команде в строке: <code>q1 1 -&gt; 0 R q2</code> значит " +
+      "«в состоянии q1 видим 1 — пишем 0, сдвиг вправо, переходим в q2». Пустая " +
+      "клетка — λ или _, сдвиг — L, R или N (на месте).</p>" +
+      "<p>Страница выполнит программу " + range + " (" + n + " " +
+      tPl(n, "проверка", "проверки", "проверок") + ") и сравнит ленту после " +
+      "остановки с тем, что должно получиться.</p>",
+    explain: "Программа верна на всех проверочных словах. Один из возможных " +
+      "вариантов (у вашего может быть другой порядок состояний — это не важно):" +
+      gProg(mProg(fn.rows), fn.alpha)
+  };
+}
+
+/* Разбор программы ученика. Пустая клетка — λ, Λ или _; сдвиги L/R/N и
+   русские Л/П/Н. Ошибки называются словами и с номером строки. */
+function mParse(raw, alpha) {
+  const lines = String(raw === undefined || raw === null ? "" : raw).split(/\r?\n/);
+  const okSym = alpha.split("").concat([T_BLANK]);
+  const list = alpha.split("").concat(["λ"]).join(", ");
+  const MV = {L: "L", R: "R", N: "N", l: "L", r: "R", n: "N",
+              "Л": "L", "П": "R", "Н": "N", "л": "L", "п": "R", "н": "N"};
+  const prog = {}, where = {};
+  let count = 0, toStop = false;
+  const sym = function (s, at, role) {
+    if (s === "λ" || s === "Λ" || s === "_") return {v: T_BLANK};
+    if (s === "а" || s === "в" || s === "о")
+      return {err: at + ": буква «" + s + "» набрана по-русски — нужна латинская."};
+    if (okSym.indexOf(s) < 0)
+      return {err: at + ": символа «" + tEsc(s) + "» (" + role + ") в алфавите задачи нет — " +
+                   "есть только " + list + "."};
+    return {v: s};
+  };
+  for (let k = 0; k < lines.length; k++) {
+    const s = lines[k].replace(/\/\/.*$|#.*$/, "").replace(/->|→|=>|[,;:()]/g, " ").trim();
+    if (!s) continue;
+    const at = "Строка " + (k + 1);
+    const p = s.split(/\s+/);
+    if (p.length !== 5)
+      return {err: at + ": нужно пять частей — состояние, что видим, что пишем, " +
+                   "куда сдвиг, новое состояние. Например: q1 1 -> 0 R q2."};
+    const q = p[0].toLowerCase(), nx = p[4].toLowerCase();
+    for (const st of [q, nx])
+      if (!/^q\d+$/.test(st))
+        return {err: at + ": «" + tEsc(st) + "» — не состояние; состояния пишутся q1, q2, …, " +
+                     "остановка — q0 (латинской q)."};
+    if (q === "q0") return {err: at + ": у q0 команд не бывает — это остановка."};
+    const rd = sym(p[1], at, "что видим");
+    if (rd.err) return {err: rd.err};
+    const wr = sym(p[2], at, "что пишем");
+    if (wr.err) return {err: wr.err};
+    const mv = MV[p[3]];
+    if (!mv)
+      return {err: at + ": сдвиг «" + tEsc(p[3]) + "» не понят — пишется L (влево), " +
+                   "R (вправо) или N (на месте)."};
+    if (where[q + " " + rd.v])
+      return {err: at + ": команда для " + q + " и символа " + gS(rd.v) + " уже есть в " +
+                   "строке " + where[q + " " + rd.v] + " — на каждый случай ровно одна команда."};
+    where[q + " " + rd.v] = k + 1;
+    if (!prog[q]) prog[q] = {};
+    prog[q][rd.v] = [wr.v, mv, nx];
+    if (nx === "q0") toStop = true;
+    count++;
+  }
+  if (!count) return {err: "Программа пустая."};
+  if (!prog.q1) return {err: "Нет ни одной команды для q1 — с него машина начинает."};
+  if (!toStop) return {err: "Ни одна команда не ведёт в q0 — машина никогда не остановится."};
+  return {prog: prog};
+}
+
+function tVerdict(task, raw) {
+  const fn = T_FN[task.fn];
+  const p = mParse(raw, fn.alpha);
+  if (p.err) return {ok: false, form: true, msg: p.err};
+  const f = mFail(fn, p.prog);
+  if (f) {
+    const t = mFailText(f);
+    return {ok: false, msg: t.charAt(0).toUpperCase() + t.slice(1) + "."};
+  }
+  return {ok: true, n: mTests(fn).length};
+}
+
+/* ------------------------------------------------------------- сборка */
+
+function tMake(seed) {
+  const rng = tRng(seed || 1);
+  const order = tShuffle(rng, [0, 1, 2, 3, 4, 5]);
+  return order.map(function (type) { return tTask(type, rng); });
+}
+
+/* Сверка знак в знак. Прощаются только пробелы по краям — их не видно.
+   Программу не сверяют, а выполняют. */
+function tCheck(task, raw) {
+  if (task.prog) return tVerdict(task, raw).ok;
+  const s = String(raw === undefined || raw === null ? "" : raw).trim();
+  return s === task.answer;
+}
+
+/* Что не так с ФОРМОЙ ответа. null — форма в порядке, ошибка в сути. */
+function tHint(task, raw) {
+  if (task.prog) {
+    const v = tVerdict(task, raw);
+    return v.form ? v.msg : null;
+  }
+  const s = String(raw === undefined || raw === null ? "" : raw).trim();
+  if (!s) return "Ответ пустой.";
+  if (/^\d+$/.test(s)) return null;
+  if (/[А-Яа-яA-Za-z]/.test(s)) return "Ответ — целое число, без слов и единиц.";
+  if (/\d/.test(s)) return "Только число — без пробелов, запятых и знаков.";
+  return "Ответ — целое число.";
+}
+
+/* ==================================================== разбор рисунком
+   Для слайдов-примеров презентации (правило Светы 26.09.2026: разбор —
+   рисунком, текст — подписью): лента по тактам, такты на коротких словах
+   с приростом, варианты таблицей с итогом. xSolution — сам разбор,
+   xCompare — ответ класса рядом с эталоном. Нужны полю x задачи;
+   gen.py --selftest сверяет итог рисунка с ключом. */
+
+/* Лента после каждого такта. Клетки как в условии: с 1, слово с клетки 3.
+   Ход тот же, что в mRun, только с копией ленты на каждом такте. */
+function xTmRows(x) {
+  const tape = {};
+  for (let i = 0; i < x.word.length; i++) if (x.word[i] !== T_BLANK) tape[i] = x.word[i];
+  let pos = x.start, q = "q1";
+  const rows = [];
+  for (let n = 0; n < 60 && q !== "q0"; n++) {
+    const c = tape[pos] === undefined ? T_BLANK : tape[pos];
+    const cmd = x.prog[q][c];
+    const at = pos;
+    if (cmd[0] === T_BLANK) delete tape[pos]; else tape[pos] = cmd[0];
+    pos += cmd[1] === "R" ? 1 : cmd[1] === "L" ? -1 : 0;
+    rows.push({q: q, at: at, c: c, cmd: cmd, pos: pos, tape: Object.assign({}, tape)});
+    q = cmd[2];
+  }
+  return rows;
+}
+
+function xTmTable(x) {
+  const rows = xTmRows(x);
+  const cell = function (tape, i) { const v = tape[i - 3]; return v === undefined ? "λ" : v; };
+  let h = '<table class="gm tape xtr"><tr><th>такт</th><th>видит</th><th>команда</th>';
+  for (let i = 1; i <= x.W; i++) h += "<th>" + i + "</th>";
+  h += "</tr><tr><th>0</th><td></td><td></td>";
+  const t0 = {};
+  for (let i = 0; i < x.word.length; i++) if (x.word[i] !== T_BLANK) t0[i] = x.word[i];
+  for (let i = 1; i <= x.W; i++)
+    h += "<td" + (i - 3 === x.start ? ' class="h"' : "") + ">" + cell(t0, i) + "</td>";
+  h += "</tr>";
+  rows.forEach(function (r, n) {
+    const last = n === rows.length - 1;
+    h += "<tr" + (last ? ' class="fin"' : "") + "><th>" + (n + 1) + "</th><td class=\"cmd\">" +
+      r.q + ", " + gS(r.c) + "</td><td class=\"cmd\">" + gCmd(r.cmd) + "</td>";
+    for (let i = 1; i <= x.W; i++)
+      h += "<td" + (i - 3 === r.pos ? ' class="h"' : "") + ">" + cell(r.tape, i) + "</td>";
+    h += "</tr>";
+  });
+  const fin = rows[rows.length - 1];
+  let ones = 0;
+  for (const k in fin.tape) if (fin.tape[k] === "1") ones++;
+  return h + "</table><p class=\"xcap\">Жёлтая клетка — под головкой <b>после</b> такта. " +
+    "Тактов: <b>" + rows.length + "</b> (с последним, в q0), единиц после остановки: <b>" + ones +
+    "</b>, головка над клеткой <b>" + (fin.pos + 3) + "</b>.</p>";
+}
+
+/* Такты на коротких словах: прирост на каждую единицу и формула. */
+function xStepRows(x) {
+  const out = [];
+  for (let n = 1; n <= 4; n++) out.push([n, mUnarySteps(x.prog, n)]);
+  return out;
+}
+
+function xSteps(t) {
+  const x = t.x, rows = xStepRows(x);
+  const a = rows[1][1] - rows[0][1], b = rows[0][1] - a;
+  let h = '<table class="gm xop"><tr><th>n</th><th>тактов</th><th>прирост</th></tr>';
+  rows.forEach(function (r, i) {
+    h += "<tr><td>" + r[0] + "</td><td>" + r[1] + "</td><td>" + (i ? "+" + (r[1] - rows[i - 1][1]) : "") + "</td></tr>";
+  });
+  const f = (a === 1 ? "" : a + "·") + "n + " + b;
+  h += '<tr class="gap"><td>…</td><td>…</td><td>+' + a + " на каждую единицу</td></tr>";
+  const ask = t.kind === "steps"
+    ? (a === 1 ? "" : a + "·") + x.n + " + " + b + " = <b>" + x.S + "</b>"
+    : f + " = " + x.S + " → n = (" + x.S + " − " + b + ")" + (a === 1 ? "" : " / " + a) + " = <b>" + x.n + "</b>";
+  h += '<tr class="y"><td>' + x.n + "</td><td>" + x.S + "</td><td>" + ask + "</td></tr></table>";
+  return h + '<p class="xcap">Тактов <b>' + f + "</b>: " + x.how + ".</p>";
+}
+
+/* Стёртая команда: каждый вариант на месте «?» и что из этого выходит. */
+function xHole(t) {
+  const x = t.x;
+  return '<p class="xcap">Должно быть: ' + gCode(x.ex) + " → " + gCode(x.want) + "</p>" +
+    '<table class="gm xop"><tr><th>№</th><th>на месте ?</th><th>что выходит</th></tr>' +
+    x.opts.map(function (o, i) {
+      return '<tr class="' + (o.why ? "n" : "y") + '"><th>' + (i + 1) + "</th><td>" + gCmd(o.cmd) +
+        "</td><td>" + (o.why ? "✗ " + o.why : "✓ подходит на всех проверочных словах") + "</td></tr>";
+    }).join("") + "</table>";
+}
+
+/* Что делает машина: прогон на слове, где все описания дают разное. */
+function xWhat(t) {
+  const x = t.x, fn = T_FN[x.fn];
+  const r = mRun(mProg(fn.rows), x.word, fn.start, T_LIMIT);
+  return '<p class="xcap">Прогоним машину на ' + gCode(x.word) + ": после остановки " +
+    gCode(r.word) + " (тактов " + r.steps + ").</p>" +
+    '<table class="gm xop"><tr><th>№</th><th>описание</th><th>дало бы на ' + gCode(x.word) + "</th></tr>" +
+    x.opts.map(function (o, i) {
+      return '<tr class="' + (o.ok ? "y" : "n") + '"><th>' + (i + 1) + "</th><td>" + o.desc +
+        "</td><td>" + gCode(o.res) + " " + (o.ok ? "✓" : "✗") + "</td></tr>";
+    }).join("") + "</table>";
+}
+
+/* Своя программа: одна из верных и её работа на нескольких словах. */
+function xWrite(t) {
+  const fn = T_FN[t.fn], prog = mProg(fn.rows);
+  const words = mTests(fn).filter(function (w) { return w.length >= 2; }).slice(0, 4);
+  return '<p class="xcap">Одна из возможных программ (правильных много):</p>' + gProg(prog, fn.alpha) +
+    '<table class="gm xop"><tr><th>слово</th><th>после остановки</th><th>нужно</th></tr>' +
+    words.map(function (w) {
+      const r = mRun(prog, w, fn.start, T_LIMIT);
+      return '<tr class="y"><td>' + gCode(w) + "</td><td>" + gCode(r.word) + "</td><td>" +
+        gCode(fn.f(w)) + " ✓</td></tr>";
+    }).join("") + "</table>";
+}
+
+function xSolution(t) {
+  const x = t.x || {};
+  if (t.type === 0) {
+    return '<ol class="xst">' + x.items.map(function (it) {
+      return '<li class="' + (it.v ? "y" : "n") + '"><b>' + (it.v ? "✓" : "✗") + "</b> " +
+        it.t + '<br><small>' + it.w + "</small></li>";
+    }).join("") + "</ol>";
+  }
+  if (t.type === 1) return xTmTable(x);
+  if (t.type === 2) return xSteps(t);
+  if (t.type === 3) return xHole(t);
+  if (t.type === 4) return xWhat(t);
+  return xWrite(t);
+}
+
+/* Ответ класса рядом с эталоном. Для программы — её выполнение. */
+function xCompare(t, given) {
+  const g = String(given === undefined || given === null ? "" : given).trim();
+  if (t.prog) {
+    const v = tVerdict(t, g);
+    if (v.ok) return '<p class="xcmp y">Программа класса верна на всех ' + v.n + " проверочных словах.</p>";
+    return '<p class="xcmp n">' + v.msg + "</p>";
+  }
+  const ok = g === t.answer;
+  let h = '<p class="xcmp ' + (ok ? "y" : "n") + '">класс: <b>' + tEsc(g || "—") + "</b>" +
+    (ok ? "" : " · эталон: <b>" + tEsc(t.answer) + "</b>") + "</p>";
+  const x = t.x || {};
+  const k = Number(g);
+  if (!ok && (t.type === 3 || t.type === 4) && x.opts && x.opts[k - 1]) {
+    const o = x.opts[k - 1];
+    h += '<p class="xcap n">Вариант ' + k + ": " + (t.type === 3 ? gCmd(o.cmd) + " — " + o.why
+      : o.desc + " — на " + gCode(x.word) + " дало бы " + gCode(o.res) + ", а машина даёт другое") + ".</p>";
+  }
+  return h;
+}
+/* ==== /ЗАДАЧИ ==== */
+
+/* ------------------------------------------------------------------
+   Слайды-примеры собирает генератор практикума: задача каждый раз новая,
+   разбор — рисунком (xSolution из tasks.js: лента по тактам, такты на
+   коротких словах с приростом, варианты таблицей), сверка ответа класса —
+   xCompare (правила Светы 26.09.2026). Примеры теории рисует тот же код
+   из данных, что стоят рядом.
+------------------------------------------------------------------ */
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
+                          .replace(/>/g, "&gt;");
+const exRng = tRng((Date.now() ^ (Math.random() * 1e9)) >>> 0);
+
+/* Примеры теории: инверсия слова 1011 (как на карточке), машина «туда и
+   обратно» из задачи о тактах, дописать единицу к ряду. */
+const DEMO_TM = {prog: mProg(T_FN.inv.rows), alpha: "01", word: "1011", start: 0, W: 8};
+const DEMO_STEP = {prog: mProg(T_STEP[1].rows), n: 60, S: mUnarySteps(mProg(T_STEP[1].rows), 60),
+                   how: T_STEP[1].how};
+const DEMO_INC = {prog: mProg(T_FN.u_inc.rows), alpha: "1", word: "111", start: 0, W: 8};
+document.querySelectorAll("[data-tm-prog]").forEach(el => { el.innerHTML = gProg(DEMO_TM.prog, "01"); });
+document.querySelectorAll("[data-tm-trace]").forEach(el => { el.innerHTML = xTmTable(DEMO_TM); });
+document.querySelectorAll("[data-tm-step-prog]").forEach(el => { el.innerHTML = gProg(DEMO_STEP.prog, "1"); });
+document.querySelectorAll("[data-tm-step-table]").forEach(el => {
+  el.innerHTML = xSteps({kind: "steps", x: DEMO_STEP});
+});
+document.querySelectorAll("[data-tm-inc]").forEach(el => { el.innerHTML = xTmTable(DEMO_INC); });
+
+// Сверка знак в знак, как на экзамене; у своей программы — выполнение.
+function xCheck(el){
+  const t = el._task;
+  const box = el.querySelector(".xres");
+  const given = el.querySelector(".xin").value;
+  if (!given.trim()){ box.innerHTML = ""; return; }
+  const ok = tCheck(t, given);
+  const hint = ok ? null : tHint(t, given);
+  box.innerHTML = '<div class="xverd ' + (ok ? "ok" : "bad") + '">'
+      + (ok ? "✓ совпало с эталоном" : "✗ не совпало") + '</div>'
+      + (hint ? '<div class="xcap">' + hint + '</div>' : "")
+      + xCompare(t, given);
+  // Неверный номер варианта — красным в той строке таблицы, где он стоит.
+  el.querySelectorAll(".steps tr.mine").forEach(tr => tr.classList.remove("mine"));
+  if (!ok && !t.prog) el.querySelectorAll(".steps table.xop > tbody > tr").forEach(tr => {
+    const c = tr.firstElementChild;
+    if (c && c.tagName === "TH" && c.textContent.trim() === given.trim()) tr.classList.add("mine");
+  });
+}
+
+function buildExample(el){
+  const t = tTask(+el.dataset.type, exRng);
+  el._task = t;
+  const input = t.prog
+    ? '<textarea class="xin" spellcheck="false" placeholder="программа класса"></textarea>'
+    : '<input class="xin" type="text" autocomplete="off" spellcheck="false" placeholder="ответ класса">';
+  el.innerHTML =
+    `<p class="eyebrow">разбираем вместе</p>
+     <h2>Пример: ${esc(T_TYPES[t.type])}</h2>
+     <div class="exwrap">
+       <div class="task box">
+         <div>${t.question}</div>
+         <div class="xcheck">${input}<button class="xgo">Сверить</button></div></div>
+       <div class="steps">
+         <div class="xres"></div>
+         <div class="step" hidden>${xSolution(t)}</div>
+         <div class="step" hidden><p class="keyline">${t.prog
+            ? "Программа верна, если страница приняла её на всех проверочных словах."
+            : "Ответ: <b>" + esc(t.answer) + "</b>"}</p></div>
+       </div>
+     </div>`;
+  const inp = el.querySelector(".xin");
+  // набор ответа не должен листать слайды и менять шрифт
+  inp.addEventListener("keydown", e => {
+    e.stopPropagation();
+    if (e.key === "Enter" && !t.prog){ e.preventDefault(); xCheck(el); }
+  });
+  el.querySelector(".xgo").addEventListener("click", () => xCheck(el));
+  setTimeout(fitExamples, 0);
+}
+
+// Условие выше экрана закреплять нельзя: край уедет при прокрутке шагов.
+function fitExamples(){
+  const stage = document.getElementById("stage");
+  const room = stage.clientHeight - 46;
+  document.querySelectorAll(".exwrap .task").forEach(box => {
+    box.classList.remove("tall");
+    if (box.offsetHeight > room) box.classList.add("tall");
+  });
+}
+window.addEventListener("resize", fitExamples);
+
+/* ------------------------------------------------------------------
+   Управление колодой: стрелки листают слайды, пробел раскрывает
+   очередной шаг разбора и только потом уходит дальше.
+------------------------------------------------------------------ */
+const slides = [...document.querySelectorAll(".slide")];
+let cur = 0, shown = 0;
+
+const isExample = i => slides[i].hasAttribute("data-ex");
+const stepsOf = i => [...slides[i].querySelectorAll(".steps > .step")];
+
+function show(i){
+  slides[cur].classList.remove("on");
+  cur = Math.max(0, Math.min(slides.length - 1, i));
+  slides[cur].classList.add("on");
+  if (isExample(cur) && !slides[cur]._task) buildExample(slides[cur]);
+  shown = stepsOf(cur).filter(el => !el.hidden).length;
+  document.getElementById("stage").scrollTop = 0;
+  sync();
+}
+
+function sync(){
+  const total = stepsOf(cur).length;
+  const ex = isExample(cur);
+  document.getElementById("count").textContent = `${cur + 1} / ${slides.length}`;
+  document.getElementById("prev").disabled = cur === 0;
+  document.getElementById("next").disabled = cur === slides.length - 1;
+  document.getElementById("reroll").hidden = !ex;
+  const b = document.getElementById("step");
+  b.hidden = total === 0;
+  if (total){
+    b.disabled = shown >= total;
+    b.textContent = shown === 0 ? (ex ? "Показать разбор" : "Раскрыть")
+                  : shown >= total ? (ex ? "Разобрано" : "Всё открыто")
+                  : `Дальше (${shown}/${total})`;
+  }
+}
+
+function nextStep(){
+  const steps = stepsOf(cur);
+  if (shown >= steps.length) return false;
+  steps[shown].hidden = false;
+  steps[shown].scrollIntoView({block: "nearest", behavior: "smooth"});
+  shown++;
+  sync();
+  return true;
+}
+
+document.getElementById("prev").addEventListener("click", () => show(cur - 1));
+document.getElementById("next").addEventListener("click", () => show(cur + 1));
+document.getElementById("step").addEventListener("click", nextStep);
+document.getElementById("reroll").addEventListener("click", () => {
+  buildExample(slides[cur]);
+  shown = 0;
+  sync();
+});
+
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowRight" || e.key === "PageDown"){ show(cur + 1); }
+  else if (e.key === "ArrowLeft" || e.key === "PageUp"){ show(cur - 1); }
+  else if (e.key === " " || e.key === "Enter"){
+    if (!nextStep()) show(cur + 1);
+  } else return;
+  e.preventDefault();
+});
+
+show(0);
+
+/* ---- размер шрифта на проекторе ----
+   Zoom только на области слайда: zoom на body растягивает 100vh, и панель
+   уезжает за экран (проверено 17.09.2026). Шаг запоминается в
+   localStorage и общий для всех презентаций. ZOOM_BASE — стартовый
+   масштаб колоды с базовым кеглем 20px. */
+const ZOOM_BASE = 1.2;
+const ZOOM_KEY = "slides-zoom-step";
+let zoomStep = 0;
+try { zoomStep = Math.max(-3, Math.min(6, parseInt(localStorage.getItem(ZOOM_KEY), 10) || 0)); }
+catch (e) {}
+function applyZoom(){
+  const z = Math.round(ZOOM_BASE * Math.pow(1.1, zoomStep) * 100) / 100;
+  document.getElementById("stage").style.zoom = z;
+  document.getElementById("zoomVal").textContent = Math.round(z * 100) + "%";
+  fitExamples();
+}
+function setZoom(d){
+  zoomStep = Math.max(-3, Math.min(6, zoomStep + d));
+  try { localStorage.setItem(ZOOM_KEY, String(zoomStep)); } catch (e) {}
+  applyZoom();
+}
+document.getElementById("zoomIn").addEventListener("click", () => setZoom(1));
+document.getElementById("zoomOut").addEventListener("click", () => setZoom(-1));
+document.addEventListener("keydown", e => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key === "+" || e.key === "=") setZoom(1);
+  else if (e.key === "-" || e.key === "_") setZoom(-1);
+  else return;
+  e.preventDefault();
+});
+applyZoom();
+</script>
+</body>
+</html>

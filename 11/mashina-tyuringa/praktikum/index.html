@@ -650,7 +650,8 @@ function tConcepts(rng) {
     question: "Ниже пять утверждений о машине Тьюринга и понятии алгоритма. " +
       "Сколько из них верны?<ol class=\"st\">" + items.join("") +
       "</ol><p>В ответе укажите число.</p>",
-    explain: why.join("; ") + ". Верных — " + right + "."
+    explain: why.join("; ") + ". Верных — " + right + ".",
+    x: {items: pick.map(function (i) { return T_BANK[i]; })}
   };
 }
 
@@ -741,7 +742,8 @@ function tTrace(rng) {
     explain: "Такты: " + steps.join("; ") + ". Машина остановилась после " +
       r.steps + " " + tPl(r.steps, "такта", "тактов", "тактов") +
       ", головка над клеткой " + (r.pos + 3) + ". Лента в клетках 1–" + W + ": " +
-      fin + " — единиц " + ones + ". Ответ: " + answer + "."
+      fin + " — единиц " + ones + ". Ответ: " + answer + ".",
+    x: {prog: best.prog, alpha: "01", word: best.word, start: best.start, W: W}
   };
 }
 
@@ -818,7 +820,8 @@ function tSteps(rng) {
     question: lead + ask,
     explain: "Прогоним на коротких словах: " + small + ". Каждая новая единица " +
       "добавляет " + a + " " + tPl(a, "такт", "такта", "тактов") + " — " + m.how +
-      ". Тактов " + formula + ". " + tail
+      ". Тактов " + formula + ". " + tail,
+    x: {prog: prog, n: n, S: S, how: m.how}
   };
 }
 
@@ -872,7 +875,10 @@ function tHole(rng) {
       "<ol class=\"op\">" + opts.map(function (o) { return "<li>" + gCmd(o.cmd) + "</li>"; }).join("") +
       "</ol><p>В ответе укажите номер варианта.</p>",
     explain: "Подставляем каждый вариант и прогоняем машину: " + why.join("; ") +
-      ". Ответ: " + ans + "."
+      ". Ответ: " + ans + ".",
+    x: {ex: ex.w, want: ex.r, fn: id, hole: hole, opts: opts.map(function (o) {
+      return {cmd: o.cmd, why: o.fail ? mFailText(o.fail) : ""};
+    })}
   };
 }
 
@@ -914,7 +920,10 @@ function tWhat(rng) {
       "<ol class=\"op\">" + opts.map(function (o) { return "<li>" + T_FN[o].desc + "</li>"; }).join("") +
       "</ol><p>В ответе укажите номер варианта.</p>",
     explain: "Прогоним машину на слове " + gCode(word) + ": после остановки на ленте " +
-      gCode(r.word) + ". Варианты: " + why.join("; ") + ". Ответ: " + ans + "."
+      gCode(r.word) + ". Варианты: " + why.join("; ") + ". Ответ: " + ans + ".",
+    x: {fn: id, word: word, opts: opts.map(function (o) {
+      return {desc: T_FN[o].desc, res: T_FN[o].f(word), ok: o === id};
+    })}
   };
 }
 
@@ -1051,6 +1060,155 @@ function tHint(task, raw) {
   if (/[А-Яа-яA-Za-z]/.test(s)) return "Ответ — целое число, без слов и единиц.";
   if (/\d/.test(s)) return "Только число — без пробелов, запятых и знаков.";
   return "Ответ — целое число.";
+}
+
+/* ==================================================== разбор рисунком
+   Для слайдов-примеров презентации (правило Светы 26.09.2026: разбор —
+   рисунком, текст — подписью): лента по тактам, такты на коротких словах
+   с приростом, варианты таблицей с итогом. xSolution — сам разбор,
+   xCompare — ответ класса рядом с эталоном. Нужны полю x задачи;
+   gen.py --selftest сверяет итог рисунка с ключом. */
+
+/* Лента после каждого такта. Клетки как в условии: с 1, слово с клетки 3.
+   Ход тот же, что в mRun, только с копией ленты на каждом такте. */
+function xTmRows(x) {
+  const tape = {};
+  for (let i = 0; i < x.word.length; i++) if (x.word[i] !== T_BLANK) tape[i] = x.word[i];
+  let pos = x.start, q = "q1";
+  const rows = [];
+  for (let n = 0; n < 60 && q !== "q0"; n++) {
+    const c = tape[pos] === undefined ? T_BLANK : tape[pos];
+    const cmd = x.prog[q][c];
+    const at = pos;
+    if (cmd[0] === T_BLANK) delete tape[pos]; else tape[pos] = cmd[0];
+    pos += cmd[1] === "R" ? 1 : cmd[1] === "L" ? -1 : 0;
+    rows.push({q: q, at: at, c: c, cmd: cmd, pos: pos, tape: Object.assign({}, tape)});
+    q = cmd[2];
+  }
+  return rows;
+}
+
+function xTmTable(x) {
+  const rows = xTmRows(x);
+  const cell = function (tape, i) { const v = tape[i - 3]; return v === undefined ? "λ" : v; };
+  let h = '<table class="gm tape xtr"><tr><th>такт</th><th>видит</th><th>команда</th>';
+  for (let i = 1; i <= x.W; i++) h += "<th>" + i + "</th>";
+  h += "</tr><tr><th>0</th><td></td><td></td>";
+  const t0 = {};
+  for (let i = 0; i < x.word.length; i++) if (x.word[i] !== T_BLANK) t0[i] = x.word[i];
+  for (let i = 1; i <= x.W; i++)
+    h += "<td" + (i - 3 === x.start ? ' class="h"' : "") + ">" + cell(t0, i) + "</td>";
+  h += "</tr>";
+  rows.forEach(function (r, n) {
+    const last = n === rows.length - 1;
+    h += "<tr" + (last ? ' class="fin"' : "") + "><th>" + (n + 1) + "</th><td class=\"cmd\">" +
+      r.q + ", " + gS(r.c) + "</td><td class=\"cmd\">" + gCmd(r.cmd) + "</td>";
+    for (let i = 1; i <= x.W; i++)
+      h += "<td" + (i - 3 === r.pos ? ' class="h"' : "") + ">" + cell(r.tape, i) + "</td>";
+    h += "</tr>";
+  });
+  const fin = rows[rows.length - 1];
+  let ones = 0;
+  for (const k in fin.tape) if (fin.tape[k] === "1") ones++;
+  return h + "</table><p class=\"xcap\">Жёлтая клетка — под головкой <b>после</b> такта. " +
+    "Тактов: <b>" + rows.length + "</b> (с последним, в q0), единиц после остановки: <b>" + ones +
+    "</b>, головка над клеткой <b>" + (fin.pos + 3) + "</b>.</p>";
+}
+
+/* Такты на коротких словах: прирост на каждую единицу и формула. */
+function xStepRows(x) {
+  const out = [];
+  for (let n = 1; n <= 4; n++) out.push([n, mUnarySteps(x.prog, n)]);
+  return out;
+}
+
+function xSteps(t) {
+  const x = t.x, rows = xStepRows(x);
+  const a = rows[1][1] - rows[0][1], b = rows[0][1] - a;
+  let h = '<table class="gm xop"><tr><th>n</th><th>тактов</th><th>прирост</th></tr>';
+  rows.forEach(function (r, i) {
+    h += "<tr><td>" + r[0] + "</td><td>" + r[1] + "</td><td>" + (i ? "+" + (r[1] - rows[i - 1][1]) : "") + "</td></tr>";
+  });
+  const f = (a === 1 ? "" : a + "·") + "n + " + b;
+  h += '<tr class="gap"><td>…</td><td>…</td><td>+' + a + " на каждую единицу</td></tr>";
+  const ask = t.kind === "steps"
+    ? (a === 1 ? "" : a + "·") + x.n + " + " + b + " = <b>" + x.S + "</b>"
+    : f + " = " + x.S + " → n = (" + x.S + " − " + b + ")" + (a === 1 ? "" : " / " + a) + " = <b>" + x.n + "</b>";
+  h += '<tr class="y"><td>' + x.n + "</td><td>" + x.S + "</td><td>" + ask + "</td></tr></table>";
+  return h + '<p class="xcap">Тактов <b>' + f + "</b>: " + x.how + ".</p>";
+}
+
+/* Стёртая команда: каждый вариант на месте «?» и что из этого выходит. */
+function xHole(t) {
+  const x = t.x;
+  return '<p class="xcap">Должно быть: ' + gCode(x.ex) + " → " + gCode(x.want) + "</p>" +
+    '<table class="gm xop"><tr><th>№</th><th>на месте ?</th><th>что выходит</th></tr>' +
+    x.opts.map(function (o, i) {
+      return '<tr class="' + (o.why ? "n" : "y") + '"><th>' + (i + 1) + "</th><td>" + gCmd(o.cmd) +
+        "</td><td>" + (o.why ? "✗ " + o.why : "✓ подходит на всех проверочных словах") + "</td></tr>";
+    }).join("") + "</table>";
+}
+
+/* Что делает машина: прогон на слове, где все описания дают разное. */
+function xWhat(t) {
+  const x = t.x, fn = T_FN[x.fn];
+  const r = mRun(mProg(fn.rows), x.word, fn.start, T_LIMIT);
+  return '<p class="xcap">Прогоним машину на ' + gCode(x.word) + ": после остановки " +
+    gCode(r.word) + " (тактов " + r.steps + ").</p>" +
+    '<table class="gm xop"><tr><th>№</th><th>описание</th><th>дало бы на ' + gCode(x.word) + "</th></tr>" +
+    x.opts.map(function (o, i) {
+      return '<tr class="' + (o.ok ? "y" : "n") + '"><th>' + (i + 1) + "</th><td>" + o.desc +
+        "</td><td>" + gCode(o.res) + " " + (o.ok ? "✓" : "✗") + "</td></tr>";
+    }).join("") + "</table>";
+}
+
+/* Своя программа: одна из верных и её работа на нескольких словах. */
+function xWrite(t) {
+  const fn = T_FN[t.fn], prog = mProg(fn.rows);
+  const words = mTests(fn).filter(function (w) { return w.length >= 2; }).slice(0, 4);
+  return '<p class="xcap">Одна из возможных программ (правильных много):</p>' + gProg(prog, fn.alpha) +
+    '<table class="gm xop"><tr><th>слово</th><th>после остановки</th><th>нужно</th></tr>' +
+    words.map(function (w) {
+      const r = mRun(prog, w, fn.start, T_LIMIT);
+      return '<tr class="y"><td>' + gCode(w) + "</td><td>" + gCode(r.word) + "</td><td>" +
+        gCode(fn.f(w)) + " ✓</td></tr>";
+    }).join("") + "</table>";
+}
+
+function xSolution(t) {
+  const x = t.x || {};
+  if (t.type === 0) {
+    return '<ol class="xst">' + x.items.map(function (it) {
+      return '<li class="' + (it.v ? "y" : "n") + '"><b>' + (it.v ? "✓" : "✗") + "</b> " +
+        it.t + '<br><small>' + it.w + "</small></li>";
+    }).join("") + "</ol>";
+  }
+  if (t.type === 1) return xTmTable(x);
+  if (t.type === 2) return xSteps(t);
+  if (t.type === 3) return xHole(t);
+  if (t.type === 4) return xWhat(t);
+  return xWrite(t);
+}
+
+/* Ответ класса рядом с эталоном. Для программы — её выполнение. */
+function xCompare(t, given) {
+  const g = String(given === undefined || given === null ? "" : given).trim();
+  if (t.prog) {
+    const v = tVerdict(t, g);
+    if (v.ok) return '<p class="xcmp y">Программа класса верна на всех ' + v.n + " проверочных словах.</p>";
+    return '<p class="xcmp n">' + v.msg + "</p>";
+  }
+  const ok = g === t.answer;
+  let h = '<p class="xcmp ' + (ok ? "y" : "n") + '">класс: <b>' + tEsc(g || "—") + "</b>" +
+    (ok ? "" : " · эталон: <b>" + tEsc(t.answer) + "</b>") + "</p>";
+  const x = t.x || {};
+  const k = Number(g);
+  if (!ok && (t.type === 3 || t.type === 4) && x.opts && x.opts[k - 1]) {
+    const o = x.opts[k - 1];
+    h += '<p class="xcap n">Вариант ' + k + ": " + (t.type === 3 ? gCmd(o.cmd) + " — " + o.why
+      : o.desc + " — на " + gCode(x.word) + " дало бы " + gCode(o.res) + ", а машина даёт другое") + ".</p>";
+  }
+  return h;
 }
 /* ==== /ЗАДАЧИ ==== */
 
