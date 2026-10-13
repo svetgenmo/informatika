@@ -246,7 +246,16 @@ for w in product('АЕКНТЦ', repeat=5):
 <section class="slide">
   <span class="tag">инструмент</span>
   <h2>То же самое в Python</h2>
-<pre><code>from itertools import *
+  <div class="two" style="grid-template-columns:1fr 1.9fr">
+    <div class="cond">
+      <p>Все <b>пятибуквенные</b> слова из букв <b>А, К, Ц, Е, Н, Т</b>
+         записаны в алфавитном порядке и пронумерованы.</p>
+      <p>Под каким номером стоит <b>первое</b> слово <b>с чётным номером</b>,
+         которое не начинается с букв А, Е или К и содержит хотя бы одну
+         букву Т?</p>
+    </div>
+    <div>
+<pre style="font-size:17px"><code>from itertools import *
 n = 0                                  <span class="c"># номер слова в списке</span>
 for w in product('АЕКНТЦ', repeat=5):  <span class="c"># буквы ПО АЛФАВИТУ</span>
     w = ''.join(w)
@@ -257,8 +266,10 @@ for w in product('АЕКНТЦ', repeat=5):  <span class="c"># буквы ПО �
         print(n)                       <span class="c"># первое — и сразу стоп</span>
         break
 <span class="out">3914</span></code></pre>
-  <p class="fnote">Длинное условие удобно разбить по строкам в скобках — по
-     условию на строку, с комментарием.</p>
+      <p class="fnote">Длинное условие удобно разбить по строкам в скобках — по
+         условию на строку, с комментарием.</p>
+    </div>
+  </div>
 </section>
 
 <section class="slide">
@@ -399,29 +410,55 @@ print(k)
 
 <section class="slide">
   <span class="tag">слова</span>
-  <h2>Почему не permutations</h2>
+  <h2>Что выдаёт permutations</h2>
   <div class="two">
     <div>
-<pre><code>n = 0
-for w in product('ИКЛОСТ', repeat=6):
-    w = ''.join(w)
-    n += 1
-    if (n % 2 == 1 and
-            w[0] == 'С' and
-            len(set(w)) == len(w)):
-        print(n)
-        break
-<span class="out">31461</span></code></pre>
+      <p><code>product('ИКЛОСТ', repeat=6)</code> — <b>все</b> слова из 6 букв:
+         6<sup>6</sup> = 46 656. Буквы в слове могут повторяться:
+         ИИИИИИ, ИИИИИК, СИКОТС…</p>
+      <p><code>permutations('ИКЛОСТ')</code> — только <b>перестановки</b>: слова,
+         где каждая из шести букв стоит <b>ровно один раз</b>, ни одна буква
+         в слове не повторяется: ИКЛОСТ, ИКЛОТС, ИКЛСОТ… Таких
+         6! = 720.</p>
     </div>
     <div>
-      <div class="box bad"><h3>permutations нумерует по-своему</h3>
-        <p><code>permutations('ИКЛОСТ')</code> выдаёт только 720 слов без
-           повторов, и номер там свой — <b>481</b>. А в списке из условия
-           между ними стоят слова с повторами (ИИИИИИ, ИИИИИК…).</p></div>
-      <div class="box good" style="margin-top:14px"><h3>Правило</h3>
-        <p>Спрашивают <b>номер</b> — перебираем <b>весь</b> список через
-           <code>product</code> и отбираем условием. Спрашивают только
-           <b>сколько</b> — можно и <code>permutations</code>.</p></div>
+      <div class="box bad"><h3>Номера у них разные</h3>
+        <p>Слово <b>СИКЛОТ</b> в полном списке из условия стоит под номером
+           <b>31 416</b>, а у <code>permutations</code> — под номером
+           <b>481</b>: перед ним нет слов с повторами. Даже чётность
+           номера другая.</p></div>
+      <div class="box good" style="margin-top:14px"><h3>Поэтому номер — только через product</h3>
+        <p>Перебираем весь список и оставляем слова без повторов условием
+           <code>len(set(w)) == len(w)</code> — как на прошлом слайде.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">слова</span>
+  <h2>Когда permutations можно</h2>
+  <div class="two">
+    <div class="cond">
+      <p>Сколько существует шестибуквенных слов из букв <b>Л, И, С, Т, О,
+         К</b>, которые начинаются с С и в которых <b>каждая буква встречается
+         ровно один раз</b>?</p>
+      <p class="fnote">Номера в вопросе нет — нужно только количество.</p>
+      <div class="box warn" style="margin-top:14px"><h3>Правило</h3>
+        <p>В вопросе есть <b>номер</b> (первое, последнее, чётный номер) —
+           только <code>product</code>. Номера нет, спрашивают «сколько», и
+           буквы не повторяются — годится и <code>permutations</code>.</p></div>
+    </div>
+    <div>
+<pre><code>k = 0
+for w in permutations('ИКЛОСТ'):
+    w = ''.join(w)
+    if w[0] == 'С':
+        k += 1
+print(k)
+<span class="out">120</span></code></pre>
+      <p><code>permutations</code> выдаёт каждое слово без повторов ровно
+         один раз — их можно просто посчитать. <code>product</code> с
+         условием <code>len(set(w)) == len(w)</code> даст те же 120.</p>
     </div>
   </div>
 </section>
