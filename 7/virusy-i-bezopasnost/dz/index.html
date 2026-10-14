@@ -493,8 +493,10 @@ function fileName(danger){
   const form = rInt(0, 2);
   if (danger) return form === 0 ? {n: `${base}.${d}`, real: d, w: "расширение программы"}
                                 : {n: `${base}.${s}.${d}`, real: d, w: `двойное расширение: последнее — ${d}, это программа`};
-  return form === 0 ? {n: `${base}.${s}`, real: s, w: "не программа: файл открывается, а не запускается"}
-                    : {n: `${base}.${d}.${s}`, real: s, w: `последнее расширение — ${s}: это не программа`};
+  // «перевёрнутое» двойное расширение (отчёт.exe.pdf) — редкая ловушка:
+  // одна на задачу, остальные безопасные файлы обычные
+  return RND() < 0.75 ? {n: `${base}.${s}`, real: s, w: "не программа: файл открывается, а не запускается"}
+                      : {n: `${base}.${d}.${s}`, real: s, w: `последнее расширение — ${s}: это не программа`};
 }
 
 function makeFiles(){
@@ -509,7 +511,7 @@ function makeFiles(){
     if (new Set(bases).size !== all.length) continue;           // имена разные
     const doubles = all.filter(f => f.n.split(".").length === 3);
     if (!doubles.some(f => DANGER_EXT.includes(f.real)) ||
-        !doubles.some(f => !DANGER_EXT.includes(f.real))) continue;  // оба вида ловушек
+        doubles.filter(f => !DANGER_EXT.includes(f.real)).length !== 1) continue;  // оба вида ловушек
     const t = listTask(1, "Выпишите номера файлов, которые являются программами — их запускают, а не открывают. " + ASK,
                        right.map(f => ({text: f.n, ok: true, w: f.w})),
                        wrong.map(f => ({text: f.n, ok: false, w: f.w})), 6);
