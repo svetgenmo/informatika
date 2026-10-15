@@ -1,0 +1,1331 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Дискретизация: длины и площади — домашнее задание</title>
+<meta name="description" content="Домашнее задание 10 класса (углублённый) по дискретизации: площадь прямоугольниками, площадь трапециями, длина ломаной, площадь по клеткам, данные, на которых врёт программа, и вопросы про дискретизацию; код работы и кнопка «Сдать»">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E10%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{margin:0;padding:20px 16px 60px;font:17px/1.55 "Segoe UI",system-ui,sans-serif}
+.wrap{max-width:820px;margin:0 auto}
+h1{font-size:23px;margin:0 0 4px}
+h2{font-size:18px;margin:0 0 10px}
+.sub{color:var(--muted);font-size:15px;margin:0 0 18px}
+code,pre{font-family:Consolas,"Cascadia Mono",monospace}
+pre{background:#1e2430;color:#e7ecf5;padding:13px 16px;border-radius:10px;
+    overflow-x:auto;font-size:15px;line-height:1.5;margin:10px 0}
+code{background:var(--card);border:1px solid var(--line);border-radius:5px;
+     padding:1px 5px;font-size:15px}
+pre code{background:none;border:0;padding:0;color:inherit;font-size:inherit}
+.intro{border:1px solid var(--line);border-radius:12px;background:var(--card);
+       padding:14px 18px;margin-bottom:18px}
+.intro dl{margin:0}
+.intro dt{font-weight:700;margin-top:10px}
+.intro dt:first-child{margin-top:0}
+.intro dd{margin:2px 0 0}
+.progress{border:2px solid var(--accent);border-radius:12px;padding:12px 16px;
+          background:#fff;margin-bottom:18px}
+.ptop{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.ptop h2{margin:0}
+.sp{flex:1 1 auto}
+.score{display:flex;align-items:baseline;gap:10px;color:var(--muted);font-size:15px}
+.score b{font:700 34px/1 "Segoe UI",system-ui,sans-serif;color:var(--ink);
+         min-width:40px;text-align:center;border:2px solid var(--line);
+         border-radius:8px;padding:2px 8px}
+.m5 b{color:var(--ok);border-color:var(--ok-line)}
+.m4 b{color:var(--accent);border-color:#a9c6e8}
+.m3 b{color:#8a5a00;border-color:var(--hi-line)}
+.ladder{display:flex;gap:10px;flex:1 1 100%;margin-top:4px}
+.seg{min-width:0}
+.cells{display:flex;gap:3px}
+.cells i{flex:1 1 0;height:14px;border-radius:4px;background:#e4e7ef}
+.cells i.f{background:var(--accent)}
+.seg.got .cells i{background:var(--ok)}
+.seg .lab{font-size:13px;color:var(--muted);text-align:center;margin-top:2px}
+.seg.got .lab{color:var(--ok)}
+.seg.capped .cells i{background:repeating-linear-gradient(45deg,
+  #f3d3d0 0 4px,#fdecea 4px 8px)}
+.seg.capped .lab{color:var(--err)}
+.types{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);border-radius:20px;padding:4px 12px;
+      font-size:14px;color:var(--muted);background:var(--card)}
+.chip.done{border-color:var(--ok-line);background:var(--ok-bg);color:var(--ok);
+           font-weight:600}
+.chip.cur{border-color:var(--accent);color:var(--accent);font-weight:600}
+.card{border:1px solid var(--line);border-radius:12px;padding:16px 18px;
+      background:#fff;margin-bottom:14px}
+.card.ok{border-color:var(--ok-line);background:var(--ok-bg)}
+.card.err{border-color:var(--err-line);background:var(--err-bg)}
+.tag{font-size:13px;color:var(--muted);margin:0 0 6px}
+.inp{font-size:15px;color:var(--muted);margin:4px 0}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px}
+input[type=text]{font:16px/1 Consolas,monospace;padding:10px 12px;border-radius:8px;
+                 border:1px solid var(--line);width:100%;max-width:340px}
+button{font:600 15px/1 inherit;padding:11px 16px;border-radius:9px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);color:var(--muted)}
+.verdict{margin-top:10px;font-size:15.5px}
+.verdict.ok{color:var(--ok)}
+.verdict.err{color:var(--err)}
+.note{border:1px solid var(--hi-line);background:var(--hi-bg);border-radius:10px;
+      padding:11px 15px;margin:12px 0;font-size:15.5px}
+.code.wait{font-size:18px;letter-spacing:0;color:#888}
+.code{font:700 26px/1.2 Consolas,monospace;letter-spacing:.06em;
+      background:var(--card);border:2px dashed var(--accent);border-radius:12px;
+      padding:16px;text-align:center;margin:12px 0;user-select:all}
+.stats{color:var(--muted);font-size:14px}
+label{display:block;font-size:14px;color:var(--muted);margin-bottom:3px}
+.fields{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0}
+.fields div{flex:1 1 180px}
+.fields input{max-width:none}
+details{margin-top:10px;border:1px dashed var(--line);border-radius:9px;padding:8px 12px}
+summary{cursor:pointer;color:var(--accent);font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Домашнее задание — дискретизация: длины и площади</h1>
+<p class="sub">10 класс, углублённый уровень. Читаем программы, которые считают
+по частям: что насчитают прямоугольники и трапеции под графиком, какой длины ломаная,
+сколько клеток окажется внутри фигуры; ищем данные, на которых врёт программа подсчёта
+площади; отвечаем на вопросы про дискретизацию. Python не нужен.</p>
+
+<div class="intro">
+  <dl>
+    <dt>Что нужно сделать</dt>
+    <dd>Закрыть шесть типов задач — по одной верно решённой на каждый. Ошибся —
+        тип не закрыт, и следующей придёт новая задача того же типа: разбор только
+        что показан, примени его. Новых задач сколько угодно.</dd>
+    <dt>Отметка</dt>
+    <dd>Четыре закрытых типа — «3», пять — «4», шесть — «5», сколько бы ошибок
+        ни было по дороге: исправленная задача тип не закрывает, но вместо неё
+        приходит новая — добирать можно до пятёрки. Меньше четырёх типов — кода
+        не будет: сдавать нечего.</dd>
+    <dt>Главный приём — таблица шагов на бумаге</dt>
+    <dd>Выпиши столбиком, что происходит на каждом шаге цикла: x, f(x) и
+        площадь полоски — для прямоугольников и трапеций, Δx, Δy и длину звена — для
+        ломаной, какие y подходят при каждом x — для клеток. Шаг
+        <code>h = (b - a) / n</code> — деление <code>/</code>, оно всегда даёт
+        вещественное число, и Python печатает его с точкой: <code>2.0</code>, а не
+        <code>2</code>; дробная часть — через точку, не через запятую. Ответ — всё
+        напечатанное через пробел. Считать в уме и на бумаге: на проверочной Python
+        тоже не будет.</dd>
+    <dt>Как сдать</dt>
+    <dd>В конце появится кнопка <b>«Сдать работу»</b>: впишешь код ученика,
+         кнопка сама откроет форму с уже вписанным кодом. Переписывать
+        код руками не надо — именно на этом чаще всего и ошибаются.</dd>
+  </dl>
+</div>
+
+<div class="progress">
+  <div class="ptop">
+    <h2>Что осталось закрыть</h2>
+    <span class="sp"></span>
+    <div class="score" id="scorebox">
+      <span>наработано на</span><b id="mark">—</b>
+    </div>
+    <div class="ladder" id="ladder"></div>
+  </div>
+  <div class="types" id="types"></div>
+  <p class="stats" id="stats"></p>
+</div>
+
+<div id="area"></div>
+
+</div>
+
+<script>
+/* ==== ТИПЫ: вставлено gen.py, руками не править ==== */
+/* Дискретизация — источник правды для тренажёра практикума, ДЗ,
+   проверочной и слайдов-примеров. Вставляется скриптом gen.py --sync между
+   маркерами. Руками в html не править.
+
+   Шесть типов задач — уроки 29–30 плана («Использование дискретизации в
+   вычислительных задачах» и практическая работа «Приближённое вычисление
+   длин кривых и площадей фигур»):
+     0 «точки разбиения»        — h = (b - a) / n, какие x напечатает цикл:
+                                  левые концы, правые концы или середины
+     1 «площадь прямоугольниками» — s += f(x) * h: левые, правые, средние
+     2 «площадь трапециями»     — s += (f(x) + f(x + h)) / 2 * h
+     3 «длина ломаной»          — таблица точек, без кода: сумма длин звеньев
+                                  (звенья подобраны египетскими треугольниками)
+     4 «площадь по клеткам»     — два вложенных цикла: сколько клеток (узлов
+                                  или центров) внутри круга или под графиком
+     5 «сколько частей»         — n удваивается или растёт на 1, пока шаг
+                                  (b - a) / n больше E
+
+   Ответ каждой задачи страница считает сама, а gen.py --selftest кладёт
+   программу (meta.files) во временную папку и ЗАПУСКАЕТ её настоящим Python:
+   напечатанное обязано совпасть с ответом и с печатью на рисунке разбора.
+   Тип 3 без программы: Python пересчитывает длину по точкам таблицы.
+
+   Вещественные числа в задачах только «двоично точные» (половины, четверти,
+   восьмые) — поэтому JavaScript и Python считают одинаково, а ответ решается
+   на бумаге.
+
+   Разбор — рисунком (правило Светы 26.09.2026): таблица шагов, где строка с
+   найденным выделена зелёным, и напечатанное плитками.
+
+   Списков в коде задач нет: класс их не проходил. */
+
+const T_TYPES = [
+  'точки разбиения',
+  'площадь прямоугольниками',
+  'площадь трапециями',
+  'длина ломаной',
+  'площадь по клеткам',
+  'сколько частей'
+];
+const T_PER_TYPE = 1;      /* задач каждого типа в наборе: один проход, правило Светы 21.09.2026 */
+
+/* Одна строка-подпись к разбору: приём, а не пересказ решения. */
+const T_HINTS = [
+  'Шаг h = (b − a) / n — вещественное число. Левые концы: a, a + h, …; правые — на h дальше; середины — на h / 2 дальше левых. Печать с точкой: 1.0, а не 1.',
+  'Выпиши столбиком x, f(x) и f(x) · h для каждой части и сложи. Какую точку части брать — левую, правую или середину — написано в строке x = …',
+  'Площадь трапеции — полусумма оснований на высоту: (f(x) + f(x + h)) / 2 · h. Выпиши каждую часть и сложи.',
+  'Длина звена — гипотенуза: √(Δx² + Δy²). Здесь Δx и Δy подобраны так, что длины звеньев целые: 3 и 4 дают 5, 6 и 8 — 10, 5 и 12 — 13.',
+  'Перебери x по строкам: для каждого x сосчитай, сколько y подходят под условие, и сложи строки. Граница решает знак: < её не считает, <= — считает.',
+  'Выпиши n и шаг (b − a) / n столбиком. Цикл идёт, пока шаг больше E, и останавливается на первом n, где уже нет.'
+];
+
+function tRng(seed) {
+  let s = seed >>> 0;
+  const rng = function () {
+    s = (s * 1664525 + 1013904223) >>> 0;
+    return s / 4294967296;
+  };
+  rng.seed = seed;
+  return rng;
+}
+/* Циклы подбора не бесконечные: если для зерна задачи нет, лучше громкая
+   ошибка с номером зерна, чем node, крутящийся всю ночь (письмо health 01.10). */
+const T_TRIES = 10000;
+function tGiveUp(k, rng, where) {
+  if (k >= T_TRIES)
+    throw new Error(where + ': за ' + T_TRIES + ' попыток задача не подобралась, зерно ' + rng.seed);
+}
+function tRand(rng, a, b) { return a + Math.floor(rng() * (b - a + 1)); }
+function tPick(rng, arr) { return arr[tRand(rng, 0, arr.length - 1)]; }
+function tShuffle(rng, arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = tRand(rng, 0, i);
+    const tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+  }
+  return a;
+}
+
+const T_MAIN = 'main.py';
+
+/* Листинг для задач из нескольких файлов (контрпримеры ДЗ). Здесь у задачи
+   тренажёра файл один, и листинг — сам код. */
+function tListing(files, run) {
+  const parts = [];
+  for (const name of Object.keys(files)) {
+    if (name === run) continue;
+    parts.push('# ═══ файл ' + name + ' ═══\n' + files[name]);
+  }
+  if (!parts.length) return files[run];
+  parts.push('# ═══ файл ' + run + ' — его запускают ═══\n' + files[run]);
+  return parts.join('\n\n');
+}
+
+/* Как Python печатает число: целое — как есть, вещественное — с точкой
+   (2.0, а не 2). isFloat — переменная уже вещественная. Задачи подобраны
+   так, что кратчайшая запись JavaScript и repr Python совпадают. */
+function tPy(v, isFloat) {
+  if (!isFloat) return String(v);
+  return Number.isInteger(v) ? v.toFixed(1) : String(v);
+}
+/* число в таблице разбора: как есть, без хвоста .0 у целых */
+const tN = v => String(v);
+
+/* Функции f для задач площади: текст для кода и вычисление. На отрезках
+   задач f не меньше нуля — площадь под графиком без минусов. */
+function tAreaFunc(rng) {
+  const kind = tPick(rng, ['sq', 'sq', 'sqc', 'lin', 'linc']);
+  const K = tRand(rng, 2, 3), C = tRand(rng, 1, 4);
+  if (kind === 'sq')   return { text: 'x * x', f: x => x * x };
+  if (kind === 'sqc')  return { text: 'x * x + ' + C, f: x => x * x + C };
+  if (kind === 'lin')  return { text: K + ' * x', f: x => K * x };
+  return { text: K + ' * x + ' + C, f: x => K * x + C };
+}
+
+/* Отрезок и число частей с двоично точным шагом. hs — допустимые шаги. */
+function tSplit(rng, hs, nmax) {
+  let k = 0;
+  for (;;) {
+    tGiveUp(++k, rng, 'tSplit');
+    const h = tPick(rng, hs);
+    const n = tRand(rng, 2, nmax);
+    const L = h * n;
+    if (!Number.isInteger(L) || L > 6) continue;
+    const a = tRand(rng, 0, 3);
+    return { a, b: a + L, n, h };
+  }
+}
+
+/* x-точка части i: левая, правая или середина — и текст строки кода */
+const T_POINT = {
+  left:  { code: 'x = a + i * h',         at: (a, i, h) => a + i * h,         word: 'левые концы' },
+  right: { code: 'x = a + (i + 1) * h',   at: (a, i, h) => a + (i + 1) * h,   word: 'правые концы' },
+  mid:   { code: 'x = a + i * h + h / 2', at: (a, i, h) => a + i * h + h / 2, word: 'середины' }
+};
+
+/* --------------------------------------------- тип 0: точки разбиения */
+function m0(rng) {
+  const where = tPick(rng, ['left', 'right', 'mid', 'mid']);
+  const sp = tSplit(rng, where === 'mid' ? [0.5, 1, 2] : [0.25, 0.5, 1, 1.5, 2], 4);
+  const P = T_POINT[where];
+  const xs = [];
+  for (let i = 0; i < sp.n; i++) xs.push(P.at(sp.a, i, sp.h));
+  const out = xs.map(v => tPy(v, true));
+  const src = ['a = ' + sp.a, 'b = ' + sp.b, 'n = ' + sp.n, 'h = (b - a) / n',
+               'for i in range(n):', '    ' + P.code, '    print(x)'].join('\n');
+  const rows = xs.map((v, i) => [String(i), '[' + tN(sp.a + i * sp.h) + '; ' + tN(sp.a + (i + 1) * sp.h) + ']',
+                                 tPy(v, true)]);
+  const files = {}; files[T_MAIN] = src;
+  return {
+    code: src, src,
+    meta: { files, run: T_MAIN, check: 'print', prints: out,
+            table: { head: ['i', 'часть', 'x'], rows, marks: rows.map(() => 'ok'),
+                     note: 'h = (' + sp.b + ' − ' + sp.a + ') / ' + sp.n + ' = ' + tPy(sp.h, true) } },
+    question: 'Что напечатает программа? Все числа — через пробел.',
+    answer: out.join(' '),
+    explain: 'Отрезок [' + sp.a + '; ' + sp.b + '] разбит на ' + sp.n + ' части по h = ' + tPy(sp.h, true)
+           + '. Строка ' + P.code + ' даёт ' + P.word + ' частей. h вещественное — и x печатается с точкой.'
+  };
+}
+
+/* ------------------------------------- тип 1: площадь прямоугольниками */
+function m1(rng) {
+  const F = tAreaFunc(rng);
+  const where = tPick(rng, ['left', 'right', 'mid', 'mid']);
+  const sp = tSplit(rng, where === 'mid' ? [1, 2] : [0.5, 1, 2], 4);
+  const P = T_POINT[where];
+  let s = 0;
+  const rows = [];
+  for (let i = 0; i < sp.n; i++) {
+    const x = P.at(sp.a, i, sp.h);
+    s += F.f(x) * sp.h;
+    rows.push([String(i), tN(x), tN(F.f(x)), tN(F.f(x) * sp.h), tPy(s, true)]);
+  }
+  const ans = tPy(s, true);
+  const src = ['def f(x):', '    return ' + F.text, '', 'a = ' + sp.a, 'b = ' + sp.b, 'n = ' + sp.n,
+               'h = (b - a) / n', 's = 0', 'for i in range(n):', '    ' + P.code,
+               '    s += f(x) * h', 'print(s)'].join('\n');
+  const files = {}; files[T_MAIN] = src;
+  return {
+    code: src, src,
+    meta: { files, run: T_MAIN, check: 'print', prints: [ans],
+            table: { head: ['i', 'x', 'f(x)', 'f(x) · h', 's'], rows,
+                     marks: rows.map((r, i) => (i === rows.length - 1 ? 'ok' : '')),
+                     note: 'h = ' + tPy(sp.h, true) + '; x — ' + P.word + ' частей' } },
+    question: 'Что напечатает программа?',
+    answer: ans,
+    explain: 'Площадь под графиком заменена суммой ' + sp.n + ' прямоугольников шириной h = ' + tPy(sp.h, true)
+           + ', высота каждого — f в точке x (' + P.word + '). h вещественное, поэтому и s печатается с точкой.'
+  };
+}
+
+/* ------------------------------------------ тип 2: площадь трапециями */
+function m2(rng) {
+  const F = tAreaFunc(rng);
+  const sp = tSplit(rng, [0.5, 1, 2], 4);
+  let s = 0;
+  const rows = [];
+  for (let i = 0; i < sp.n; i++) {
+    const x = sp.a + i * sp.h;
+    const part = (F.f(x) + F.f(x + sp.h)) / 2 * sp.h;
+    s += part;
+    rows.push([tN(x), tN(F.f(x)), tN(F.f(x + sp.h)), tN(part), tPy(s, true)]);
+  }
+  const ans = tPy(s, true);
+  const src = ['def f(x):', '    return ' + F.text, '', 'a = ' + sp.a, 'b = ' + sp.b, 'n = ' + sp.n,
+               'h = (b - a) / n', 's = 0', 'for i in range(n):', '    x = a + i * h',
+               '    s += (f(x) + f(x + h)) / 2 * h', 'print(s)'].join('\n');
+  const files = {}; files[T_MAIN] = src;
+  return {
+    code: src, src,
+    meta: { files, run: T_MAIN, check: 'print', prints: [ans],
+            table: { head: ['x', 'f(x)', 'f(x + h)', 'трапеция', 's'], rows,
+                     marks: rows.map((r, i) => (i === rows.length - 1 ? 'ok' : '')),
+                     note: 'h = ' + tPy(sp.h, true) } },
+    question: 'Что напечатает программа?',
+    answer: ans,
+    explain: 'Каждая часть — трапеция с основаниями f(x) и f(x + h) и высотой h: площадь — полусумма '
+           + 'оснований на высоту. ' + (F.text.indexOf('x * x') < 0
+              ? 'График здесь — прямая, и трапеции дают площадь точно.'
+              : 'Хорда над параболой лежит выше графика, поэтому сумма чуть больше настоящей площади.')
+  };
+}
+
+/* ------------------------------------------------ тип 3: длина ломаной */
+const T_LEGS = [[3, 4, 5], [4, 3, 5], [6, 8, 10], [8, 6, 10], [5, 12, 13], [12, 5, 13], [3, 0, 3], [4, 0, 4], [5, 0, 5]];
+function m3(rng) {
+  const segs = tRand(rng, 3, 4);
+  const pts = [[0, tRand(rng, 0, 12)]];
+  let len = 0;
+  const rows = [], marks = [];
+  for (let i = 0; i < segs; i++) {
+    const leg = tPick(rng, T_LEGS);
+    const [x0, y0] = pts[pts.length - 1];
+    const dy = leg[1] === 0 ? 0 : (rng() < 0.5 ? leg[1] : -leg[1]);
+    pts.push([x0 + leg[0], y0 + dy]);
+    len += leg[2];
+    rows.push([String(i + 1), tN(leg[0]), tN(Math.abs(dy)), '√(' + leg[0] + '² + ' + Math.abs(dy) + '²) = ' + leg[2],
+               String(len)]);
+    marks.push(i === segs - 1 ? 'ok' : '');
+  }
+  const cell = 'padding:4px 10px;border:1px solid #c9cedb;text-align:center';
+  const head = '<table style="border-collapse:collapse;margin:6px 0;font:600 16px/1.3 Consolas,monospace">'
+    + '<tr><th style="' + cell + ';background:#eef1f7">x</th>'
+    + pts.map(p => '<td style="' + cell + '">' + p[0] + '</td>').join('')
+    + '</tr><tr><th style="' + cell + ';background:#eef1f7">y</th>'
+    + pts.map(p => '<td style="' + cell + '">' + p[1] + '</td>').join('')
+    + '</tr></table>';
+  const out = [String(len)];
+  return {
+    code: '', src: '',
+    meta: { files: null, run: null, check: 'table', prints: out, pts,
+            table: { head: ['звено', 'Δx', 'Δy', 'длина', 'всего'], rows, marks } },
+    question: 'Кривую заменили ломаной через точки таблицы — соединили их по порядку:' + head
+            + 'Найди длину ломаной. Ответ — целое число.',
+    answer: out.join(' '),
+    explain: 'Длина кривой ≈ сумма длин звеньев. Каждое звено — гипотенуза прямоугольного треугольника '
+           + 'с катетами Δx и Δy: √(Δx² + Δy²). Знак Δy не важен — он возводится в квадрат.'
+  };
+}
+
+/* ------------------------------------------- тип 4: площадь по клеткам */
+function m4(rng) {
+  let N, form, R2, cmp, k = 0;
+  for (;;) {
+    tGiveUp(++k, rng, 'm4');
+    N = tRand(rng, 3, 5);
+    form = tPick(rng, ['node', 'node', 'center', 'under']);
+    cmp = tPick(rng, ['<', '<=']);
+    R2 = form === 'under' ? 0 : tRand(rng, 4, (N - 1) * (N - 1) + 4);
+    if (form === 'node' && R2 === N * N) continue;
+    break;
+  }
+  const C = form === 'under' ? tRand(rng, 0, 2) : 0;
+  const cond = form === 'node' ? 'x * x + y * y ' + cmp + ' ' + R2
+             : form === 'center' ? '(x + 0.5) ** 2 + (y + 0.5) ** 2 ' + cmp + ' ' + R2
+             : 'y ' + cmp + ' x * x' + (C ? ' - ' + C : '');
+  const test = (x, y) => {
+    const l = form === 'node' ? x * x + y * y : form === 'center' ? (x + 0.5) ** 2 + (y + 0.5) ** 2 : y;
+    const r = form === 'under' ? x * x - C : R2;
+    return cmp === '<' ? l < r : l <= r;
+  };
+  let cnt = 0;
+  const rows = [], marks = [];
+  for (let x = 0; x < N; x++) {
+    const ys = [];
+    for (let y = 0; y < N; y++) if (test(x, y)) ys.push(y);
+    cnt += ys.length;
+    rows.push([String(x), ys.length ? ys.join(', ') : '—', String(ys.length), String(cnt)]);
+    marks.push(x === N - 1 ? 'ok' : '');
+  }
+  const src = ['k = 0', 'for x in range(' + N + '):', '    for y in range(' + N + '):',
+               '        if ' + cond + ':', '            k += 1', 'print(k)'].join('\n');
+  const files = {}; files[T_MAIN] = src;
+  const what = form === 'node' ? 'узлы сетки (x; y) внутри четверти круга радиуса √' + R2
+             : form === 'center' ? 'клетки, чей центр (x + 0.5; y + 0.5) внутри четверти круга радиуса √' + R2
+             : 'узлы сетки под параболой y = x²' + (C ? ' − ' + C : '');
+  return {
+    code: src, src,
+    meta: { files, run: T_MAIN, check: 'print', prints: ['' + cnt],
+            table: { head: ['x', 'подходят y', 'сколько', 'всего'], rows, marks } },
+    question: 'Что напечатает программа?',
+    answer: '' + cnt,
+    explain: 'Программа считает ' + what + ': x и y пробегают 0 … ' + (N - 1) + '. Такой счёт клеток — '
+           + 'дискретизация плоскости: площадь фигуры ≈ число клеток × площадь клетки. '
+           + (form === 'center' ? 'Центр клетки никогда не ложится на окружность ровно — < и <= здесь дают одно и то же.'
+              : 'Точка ровно на границе решает знак: ' + (cmp === '<' ? '< её не считает.' : '<= её считает.'))
+  };
+}
+
+/* ---------------------------------------------- тип 5: сколько частей */
+function m5(rng) {
+  let L, E, dbl, n, rows, k = 0;
+  for (;;) {
+    tGiveUp(++k, rng, 'm5');
+    dbl = rng() < 0.6;
+    L = tRand(rng, 1, 10);
+    E = dbl ? tPick(rng, [0.1, 0.01, 0.05, 0.25, 0.5, 0.125, 0.2]) : tPick(rng, [0.5, 1, 1.5, 2, 0.25]);
+    n = 1;
+    rows = [];
+    let guard = 0;
+    while (L / n > E) {
+      rows.push([String(n), tN(L / n), 'больше ' + E + ' — дальше']);
+      n = dbl ? n * 2 : n + 1;
+      if (++guard > 40) break;
+    }
+    rows.push([String(n), tN(L / n), 'не больше ' + E + ' — стоп']);
+    if (guard > 40 || rows.length < 3 || n > 1100) continue;
+    if (!dbl && rows.length > 12) continue;
+    break;
+  }
+  const a = tRand(rng, -3, 3);
+  const tail = rows.slice(-6);
+  const src = ['a = ' + a, 'b = ' + (a + L), 'n = 1', 'while (b - a) / n > ' + E + ':',
+               '    n ' + (dbl ? '*= 2' : '+= 1'), 'print(n)'].join('\n');
+  const files = {}; files[T_MAIN] = src;
+  return {
+    code: src, src,
+    meta: { files, run: T_MAIN, check: 'print', prints: ['' + n],
+            table: { head: ['n', 'шаг (b − a) / n', 'условие цикла'], rows: tail,
+                     marks: tail.map((r, i) => (i === tail.length - 1 ? 'ok' : '')),
+                     note: rows.length > tail.length ? 'последние шаги цикла' : '' } },
+    question: 'Что напечатает программа?',
+    answer: '' + n,
+    explain: 'Длина отрезка ' + L + ', шаг разбиения — ' + L + ' / n. Цикл ' + (dbl ? 'удваивает' : 'увеличивает на 1')
+           + ' n, пока шаг больше ' + E + ', и останавливается на n = ' + n + ': шаг ' + tN(L / n)
+           + ' уже не больше. Чем мельче шаг, тем точнее приближение — и тем больше частей считать.'
+  };
+}
+
+const T_MAKERS = [m0, m1, m2, m3, m4, m5];
+
+/* --------------------------------------------------------------- задачи */
+function tTask(type, rng) {
+  const m = T_MAKERS[type](rng);
+  const t = { type, code: m.code, src: m.src, answer: m.answer, explain: m.explain,
+              question: m.question || 'Что напечатает программа?' };
+  if (m.meta !== undefined) t.meta = m.meta;
+  return t;
+}
+
+/* Сверка ответа. Пробелы схлопываем, «;» и запятую С ПРОБЕЛОМ между числами
+   прощаем: «-3, 2» и «-3 2» — одно и то же. Запятая внутри числа — не точка:
+   Python печатает 2.75, и «2,75» не принимается (ответ сверяется знак в знак).
+   Минус можно набрать и длинным «−». */
+function tNorm(s) {
+  return String(s).replace(/−/g, '-').replace(/;/g, ' ').replace(/,(?=\s)/g, ' ')
+      .replace(/["'«»]/g, '').replace(/\s+/g, ' ').trim();
+}
+/* В ответе без дробей запятая — разделитель: «3,0» — это два числа. */
+function tLoose(task, raw) {
+  const s = tNorm(raw);
+  return /\./.test(task.answer) ? s : tNorm(s.replace(/,/g, ' '));
+}
+function tCheck(task, raw) {
+  return tLoose(task, raw) === tNorm(task.answer);
+}
+
+/* ================================================= разбор рисунком
+   Всё на инлайновых стилях: одна и та же картинка встаёт в практикум, ДЗ,
+   проверочную и на слайд, а стили у страниц разные. */
+const T_CAP = s => '<div style="font:700 12px/1.2 Segoe UI,system-ui,sans-serif;'
+    + 'letter-spacing:.08em;text-transform:uppercase;color:#5c6070;margin:10px 0 4px">'
+    + s + '</div>';
+const tEsc = s => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+
+/* плитка: значение в рамке; ok — зелёная, bad — красная, иначе нейтральная */
+function tTile(txt, how) {
+  const col = how === 'ok' ? ['#e6f5ec', '#137a41'] : how === 'bad' ? ['#fdecea', '#b3261e']
+            : how === 'muted' ? ['#f6f7fb', '#9aa0b0'] : how === 'hi' ? ['#fff4e2', '#8a4b00']
+            : ['#eaf1fa', '#1f5fa8'];
+  return '<span style="display:inline-block;min-width:34px;text-align:center;padding:4px 10px;'
+       + 'margin:2px 4px 2px 0;border:2px solid ' + col[1] + ';border-radius:8px;background:'
+       + col[0] + ';color:' + col[1] + ';font:700 18px/1.2 Consolas,monospace">' + tEsc(txt) + '</span>';
+}
+function tTiles(tokens, marks) {
+  return '<div>' + tokens.map((x, i) => tTile(x, marks ? marks[i] : '')).join('') + '</div>';
+}
+
+/* Таблица шагов: строка с найденным — зелёная, строка остановки — красная. */
+function tTable(tb) {
+  const cell = 'padding:4px 10px;border:1px solid #c9cedb;text-align:center;';
+  let h = '<table style="border-collapse:collapse;margin:4px 0;font:600 15px/1.3 Consolas,monospace">'
+        + '<tr>' + tb.head.map(x => '<th style="' + cell + 'background:#eef1f7;font-family:Segoe UI,system-ui,sans-serif">'
+                                   + tEsc(x) + '</th>').join('') + '</tr>';
+  tb.rows.forEach((r, i) => {
+    const m = tb.marks[i];
+    const bg = m === 'ok' ? 'background:#e6f5ec;color:#137a41;' : m === 'bad' ? 'background:#fdecea;color:#b3261e;' : '';
+    h += '<tr>' + r.map(x => '<td style="' + cell + bg + '">' + tEsc(x) + '</td>').join('') + '</tr>';
+  });
+  return h + '</table>' + (tb.note ? '<div style="color:#9aa0b0;font-size:13px">' + tEsc(tb.note) + '</div>' : '');
+}
+
+/* noKey — без эталона: на слайде эталон раскрывается отдельным шагом. */
+function tSolution(t, noKey) {
+  const m = t.meta;
+  const pic = T_CAP(t.type === 3 ? 'звенья ломаной' : 'шаги программы')
+            + tTable(m.table)
+            + (m.check === 'print'
+               ? '<div style="margin-top:6px"><span style="color:#137a41;font:700 12px Segoe UI,system-ui,sans-serif;'
+                 + 'letter-spacing:.06em">ПЕЧАТЬ</span> ' + m.prints.map(v => tTile(v, 'ok')).join('') + '</div>'
+               : '');
+  return pic + '<div style="margin:6px 0 0;color:#5c6070;font-size:15px">' + tEsc(t.explain) + '</div>'
+       + (noKey ? '' : tKey(t));
+}
+function tKey(t) { return T_CAP('эталон') + tTiles(tNorm(t.answer).split(' ')); }
+
+/* Чужой ответ против эталона: по местам, зелёное совпало, красное — нет.
+   Лишнее — красным, недостающее — пустой красной плиткой. */
+function tCompare(t, given) {
+  const want = tNorm(t.answer).split(' ');
+  const got = tLoose(t, given).split(' ').filter(x => x !== '');
+  if (!got.length) return '';
+  const n = Math.max(want.length, got.length);
+  const toks = [], marks = [];
+  for (let i = 0; i < n; i++) {
+    toks.push(i < got.length ? got[i] : '?');
+    marks.push(i < got.length && got[i] === want[i] ? 'ok' : 'bad');
+  }
+  return T_CAP('твой ответ') + tTiles(toks, marks);
+}
+
+/* Набор для практикума: T_PER_TYPE кругов по всем типам, внутри круга типы
+   перемешаны — одинаковые не идут подряд. Круг один: тренажёр в части 1 —
+   разминка, время пары уходит на три программы. Второй круг — одной цифрой. */
+function tMake(seed) {
+  const rng = tRng(seed);
+  const out = [];
+  for (let round = 0; round < T_PER_TYPE; round++) {
+    const order = tShuffle(rng, [0, 1, 2, 3, 4, 5]);
+    for (let i = 0; i < order.length; i++) out.push(tTask(order[i], rng));
+  }
+  return out;
+}
+/* ==== /ТИПЫ ==== */
+
+/* ==== ЗАДАЧИ ДЗ: вставлено gen.py, руками не править ==== */
+/* Домашнее задание: что сдают после пары «Дискретизация: длины и площади».
+   Источник правды. Вставляется gen.py --sync в homework.html и test.html.
+
+   Четыре типа берутся из types.js (площадь прямоугольниками, площадь
+   трапециями, длина ломаной, площадь по клеткам), дальше два своих:
+     4 «найди контрпример» — программа считает площадь или число точек и
+                             ошибается на особых данных: шаг через //, площадь
+                             без модуля, граница круга через <. Ключа нет:
+                             считаем верно и кривым способом и смотрим,
+                             разошлись ли.
+     5 «как это работает»  — вопрос с тремя вариантами: дискретизация, шаг,
+                             прямоугольники и трапеции, ломаная, клетки.
+*/
+
+const HW_TYPES = [
+  'площадь прямоугольниками',
+  'площадь трапециями',
+  'длина ломаной',
+  'площадь по клеткам',
+  'найди контрпример',
+  'как это работает'
+];
+/* тип ДЗ -> тип задачи из types.js */
+const HW_FROM_TRAINER = { 0: 1, 1: 2, 2: 3, 3: 4 };
+
+/* --------------------------------------------- тип 4: найди контрпример */
+
+const HW_BUGS = {
+  inth: {
+    spec: 'Программа читает три целых числа a, b и n (0 ≤ a < b ≤ 10, 1 ≤ n ≤ 10, по одному в строке) и '
+        + 'должна напечатать площадь под прямой y = x на отрезке [a; b], посчитанную трапециями из n частей.',
+    files: { 'main.py': 'a = int(input())\nb = int(input())\nn = int(input())\nh = (b - a) // n\ns = 0\n'
+                      + 'for i in range(n):\n    x = a + i * h\n    s += (x + x + h) / 2 * h\nprint(s)' },
+    fields: 'три числа: a, b и n',
+    shape: [[0, 10], [0, 10], [1, 10]],
+    names: ['a', 'b', 'n'],
+    hint: 'Чем отличается // от /? Когда (b − a) // n и (b − a) / n — одно и то же число?',
+    why: 'h = (b − a) // n — целое деление: остаток теряется, и части не доходят до b. Когда b − a делится '
+       + 'на n нацело, ошибки не видно; например, a = 0, b = 5, n = 2: h должно быть 2.5, а вышло 2, '
+       + 'и трапеции покрывают только [0; 4]. Шаг — всегда «/».'
+  },
+  sign: {
+    spec: 'Программа читает два целых числа a и b (−5 ≤ a < b ≤ 5, по одному в строке) и должна '
+        + 'напечатать площадь фигуры между прямой y = x и осью Ox на отрезке [a; b]. Площадь не бывает '
+        + 'отрицательной.',
+    files: { 'main.py': 'a = int(input())\nb = int(input())\nh = 0.5\ns = 0\nx = a + h / 2\n'
+                      + 'while x < b:\n    s += x * h\n    x += h\nprint(s)' },
+    fields: 'два числа: a и b',
+    shape: [[-5, 5], [-5, 5]],
+    names: ['a', 'b'],
+    hint: 'Где прямая y = x лежит ниже оси Ox? Каким будет f(x) · h там?',
+    why: 'Левее нуля y = x отрицательна, и s += x * h вычитает площадь, а не прибавляет. Если отрезок '
+       + 'целиком правее нуля, ошибки не видно; при a < 0 — например, a = −2, b = 2 — программа печатает 0.0 '
+       + 'вместо 4.0. Высота прямоугольника — abs(f(x)).'
+  },
+  strict: {
+    spec: 'Программа читает натуральное R (1 ≤ R ≤ 20) и должна напечатать, сколько точек (x; y) с целыми '
+        + 'координатами от 1 до R лежат в круге x² + y² ≤ R² — точки на окружности тоже считаются.',
+    files: { 'main.py': 'r = int(input())\nk = 0\nfor x in range(1, r + 1):\n    for y in range(1, r + 1):\n'
+                      + '        if x * x + y * y < r * r:\n            k += 1\nprint(k)' },
+    fields: 'одно число: R',
+    shape: [[1, 20]],
+    names: ['R'],
+    hint: 'Знак < не считает точки ровно на окружности. Бывают ли целые x и y от 1 до R, у которых x² + y² = R² ровно?',
+    why: 'Со знаком < теряются точки ровно на окружности. Для большинства R таких точек с x, y ≥ 1 нет, но '
+       + 'R может быть гипотенузой египетского треугольника: 3² + 4² = 5². Для R = 5, 10, 13, 15, 17, 20 '
+       + 'программа недосчитывает. Нужно <=.'
+  }
+};
+const HW_BUG_NAMES = ['inth', 'sign', 'strict'];
+
+function hwCounter(rng) {
+  const bug = tPick(rng, HW_BUG_NAMES);
+  const b = HW_BUGS[bug];
+  return {
+    kind: 'counter', bug,
+    code: tListing(b.files, 'main.py'),
+    question: '<b>Что программа должна делать.</b> ' + b.spec
+            + '<br><b>Задание.</b> Программа врёт не всегда, а на особых данных. Назови такие данные ('
+            + b.fields + ') — на которых она печатает неверное число.',
+    hint: b.hint,
+    explain: b.why
+  };
+}
+
+/* Что напечатает программа: верная (good = true) и с ошибкой. Те же действия
+   над теми же числами, что у Python, — поэтому и печать та же. */
+function hwRun(bug, xs, good) {
+  if (bug === 'inth') {
+    const [a, b, n] = xs;
+    const h = good ? (b - a) / n : Math.floor((b - a) / n);
+    let s = 0;
+    for (let i = 0; i < n; i++) { const x = a + i * h; s += (x + x + h) / 2 * h; }
+    return tPy(s, true);
+  }
+  if (bug === 'sign') {
+    const [a, b] = xs;
+    const h = 0.5;
+    let s = 0, x = a + h / 2;
+    while (x < b) { s += (good ? Math.abs(x) : x) * h; x += h; }
+    return tPy(s, true);
+  }
+  const r = xs[0];
+  let k = 0;
+  for (let x = 1; x <= r; x++)
+    for (let y = 1; y <= r; y++)
+      if (good ? x * x + y * y <= r * r : x * x + y * y < r * r) k++;
+  return String(k);
+}
+function hwTrueFalse(bug, xs) {
+  return [hwRun(bug, xs, true), hwRun(bug, xs, false)];
+}
+const HW_ORDERED = { inth: true, sign: true, strict: false };
+
+function hwCheckCounter(task, raw) {
+  const parts = String(raw).trim().split(/[\s,;]+/).filter(function (s) { return s; });
+  const B = HW_BUGS[task.bug];
+  const sh = B.shape;
+  if (parts.length !== sh.length || !parts.every(p => /^[-−]?\d+$/.test(p)))
+    return { ok: false, why: 'нужно ' + B.fields };
+  const xs = parts.map(p => Number(p.replace('−', '-')));
+  for (let i = 0; i < sh.length; i++)
+    if (xs[i] < sh[i][0] || xs[i] > sh[i][1])
+      return { ok: false, why: B.names[i] + ' — от ' + sh[i][0] + ' до ' + sh[i][1] };
+  if (HW_ORDERED[task.bug] && xs[0] >= xs[1])
+    return { ok: false, why: 'нужно a < b' };
+  const tf = hwTrueFalse(task.bug, xs);
+  if (Math.abs(Number(tf[0]) - Number(tf[1])) < 1e-9)
+    return { ok: false, why: 'на этих данных программа печатает верное «' + tf[0]
+                           + '» — ошибка прячется в других' };
+  return { ok: true, why: 'верно: должно быть «' + tf[0] + '», а программа печатает «'
+                        + tf[1] + '»' };
+}
+
+/* Разбор контрпримера рисунком: что должно выйти и что вышло у программы. */
+function hwCounterPic(task, raw) {
+  const v = hwCheckCounter(task, raw);
+  const parts = String(raw).trim().split(/[\s,;]+/).filter(function (s) { return s; });
+  if (!/^верно|печатает верное/.test(v.why)) return '';
+  const xs = parts.map(p => Number(p.replace('−', '-')));
+  const tf = hwTrueFalse(task.bug, xs);
+  return T_CAP('на твоих данных ' + tEsc(parts.join(' ')))
+       + '<div>должно быть ' + tTile(tf[0], 'ok') + ' программа печатает '
+       + tTile(tf[1], v.ok ? 'bad' : 'ok') + '</div>';
+}
+
+/* --------------------------------------------- тип 5: как это работает */
+const HW_THEORY = [
+  {
+    q: 'Что такое дискретизация в вычислительной задаче?',
+    opts: ['Замена непрерывного — отрезка, кривой, фигуры — конечным набором точек или частей',
+           'Округление ответа до целого числа',
+           'Запись числа в двоичной системе'],
+    right: 0,
+    why: 'Компьютер не может перебрать все точки отрезка — их бесконечно много. Отрезок режут на n частей, '
+       + 'кривую — на звенья, фигуру — на клетки, и считают по ним.'
+  },
+  {
+    q: 'Отрезок [a; b] разбили на n равных частей. Чему равен шаг h?',
+    opts: ['(b − a) / n', '(b − a) · n', 'n / (b − a)'],
+    right: 0,
+    why: 'Длина отрезка b − a делится на n равных частей. В Python — деление «/»: «//» потеряет остаток, '
+       + 'и части не дойдут до b.'
+  },
+  {
+    q: 'Как метод прямоугольников приближает площадь под графиком f на [a; b]?',
+    opts: ['Суммой площадей n прямоугольников шириной h и высотой f(x) в точке каждой части',
+           'Площадью одного прямоугольника со сторонами b − a и f(b)',
+           'Числом клеток под графиком'],
+    right: 0,
+    why: 'Фигуру под графиком режут на узкие полоски; каждую заменяют прямоугольником высотой f(x), где x — '
+       + 'левый конец, правый или середина части. Площадь ≈ сумма f(x) · h.'
+  },
+  {
+    q: 'Функция f возрастает на [a; b]. Площадь под графиком считают левыми прямоугольниками. Что получится?',
+    opts: ['Меньше настоящей площади', 'Больше настоящей площади', 'Ровно настоящая площадь'],
+    right: 0,
+    why: 'У возрастающей функции значение на левом конце части — самое маленькое на этой части: каждый '
+       + 'прямоугольник ниже графика. Правые прямоугольники, наоборот, дают больше.'
+  },
+  {
+    q: 'Для какой функции метод трапеций даёт площадь под графиком точно, при любом n?',
+    opts: ['Для линейной: y = k·x + c', 'Для y = x²', 'Ни для какой — метод всегда приближённый'],
+    right: 0,
+    why: 'Верхняя сторона трапеции — отрезок прямой. Если график сам прямая, трапеция совпадает с полоской '
+       + 'под ним, и погрешности нет.'
+  },
+  {
+    q: 'Число частей n увеличили в 10 раз. Что будет с ответом метода прямоугольников?',
+    opts: ['Ответ станет точнее, но вычислений будет в 10 раз больше',
+           'Ответ станет ровно настоящей площадью',
+           'Ничего не изменится'],
+    right: 0,
+    why: 'Чем мельче части, тем меньше полоски отличаются от прямоугольников. Но каждая часть — ещё одно '
+       + 'вычисление f: точность покупается временем.'
+  },
+  {
+    q: 'Длину кривой y = f(x) считают ломаной из n звеньев с вершинами на графике. Какой будет ответ?',
+    opts: ['Не больше настоящей длины; с ростом n он растёт и приближается к ней',
+           'Всегда больше настоящей длины',
+           'Ровно настоящая длина при любом n'],
+    right: 0,
+    why: 'Отрезок — кратчайший путь между двумя точками, поэтому каждое звено не длиннее куска кривой '
+       + 'над ним. Чем больше звеньев, тем плотнее ломаная прилегает к кривой.'
+  },
+  {
+    q: 'Как найти длину звена ломаной от точки (x₁; y₁) до точки (x₂; y₂)?',
+    opts: ['√((x₂ − x₁)² + (y₂ − y₁)²)', '(x₂ − x₁) + (y₂ − y₁)', '|y₂ − y₁|'],
+    right: 0,
+    why: 'Звено — гипотенуза прямоугольного треугольника с катетами Δx и Δy: теорема Пифагора. В Python — '
+       + 'math.sqrt(dx * dx + dy * dy) или (dx * dx + dy * dy) ** 0.5.'
+  },
+  {
+    q: 'Фигуру накрыли сеткой клеток со стороной h; внутри фигуры оказалось k клеток. Чему примерно равна её площадь?',
+    opts: ['k · h²', 'k · h', 'k'],
+    right: 0,
+    why: 'Площадь одной клетки — h · h. При h = 1 площадь и число клеток совпадают, а при h = 0.1 каждая '
+       + 'клетка — только сотая доля единичного квадрата.'
+  },
+  {
+    q: 'Почему в программе x части считают как a + i * h, а не прибавляют h к x n раз подряд?',
+    opts: ['Ошибки округления при сложении накапливаются, а a + i * h считается заново каждый раз',
+           'Так короче записывается',
+           'Прибавлять вещественное число к переменной в Python нельзя'],
+    right: 0,
+    why: 'h = 0.1 хранится приближённо, и десять сложений дают 0.9999999999999999, а не 1. Цикл while x < b '
+       + 'может сделать лишний шаг. С for i in range(n) частей ровно n, сколько бы ни округлялось.'
+  }
+];
+
+function hwTheory(rng) {
+  const item = tPick(rng, HW_THEORY);
+  const idx = tShuffle(rng, [0, 1, 2]);
+  const letters = ['A', 'Б', 'В'];
+  const opts = idx.map(function (k, pos) {
+    return letters[pos] + ') ' + tEsc(item.opts[k]);
+  });
+  const right = letters[idx.indexOf(item.right)];
+  return {
+    kind: 'theory', qid: HW_THEORY.indexOf(item),
+    code: '',
+    question: tEsc(item.q) + '<br><br>' + opts.join('<br>')
+            + '<br><br>Ответ — одна буква.',
+    answer: right,
+    explain: 'Верно: ' + right + ') ' + tEsc(item.opts[item.right]) + '. ' + tEsc(item.why)
+  };
+}
+
+/* ------------------------------------------------------------ сборка */
+function hwMake(type, rng) {
+  let t;
+  if (type in HW_FROM_TRAINER) {
+    t = tTask(HW_FROM_TRAINER[type], rng);
+    t.kind = 'trainer';
+  } else if (type === 4) {
+    t = hwCounter(rng);
+  } else {
+    t = hwTheory(rng);
+  }
+  t.hwType = type;
+  return t;
+}
+
+function hwVerdict(task, raw) {
+  if (!String(raw).trim()) return { ok: false, why: '' };
+  if (task.kind === 'counter') return hwCheckCounter(task, raw);
+  if (task.kind === 'theory') {
+    const map = { 'A': 'A', 'А': 'A', 'a': 'A', 'а': 'A',
+                  'Б': 'Б', 'б': 'Б', 'B': 'Б',
+                  'В': 'В', 'в': 'В', 'C': 'В', 'c': 'В' };
+    const got = map[String(raw).trim().charAt(0)] || '';
+    return { ok: got === task.answer, why: '' };
+  }
+  return { ok: tCheck(task, raw), why: '' };
+}
+
+/* Разбор после ответа — одна функция на ДЗ и проверочную. Задачи тренажёра —
+   рисунком (tCompare + tSolution), контрпример — плитками «должно / вышло»,
+   теория — словами: у неё рисовать нечего. */
+function hwExplain(task, raw, ok) {
+  if (task.kind === 'trainer')
+    return (ok ? '' : tCompare(task, raw)) + tSolution(task);
+  if (task.kind === 'counter')
+    return hwCounterPic(task, raw) + '<div style="margin-top:6px">' + task.explain + '</div>';
+  return '<div>' + task.explain + '</div>';
+}
+/* ==== /ЗАДАЧИ ДЗ ==== */
+
+/* Форма сдачи ДЗ — одна на все темы. Ссылку разносит set_form_link.py. */
+const FORM = "https://docs.google.com/forms/d/e/1FAIpQLSfQyhaxcnzn4ZaKSe_ZMsluw7qRQnrw_80H6SfrnYB5EThUIA/viewform?usp=pp_url&entry.853601231=УЧЕНИК&entry.487188307=КОД";
+const ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+const EPOCH = Date.UTC(2026, 0, 1);
+const PREFIX = "DK";
+const NEED_STREAK = 1;     // тип закрывает один верный ответ
+const MIN_TYPES = 4;       // ниже этого код не выдаётся
+const SCALE = [[6, 5], [5, 4], [4, 3]];
+const TOTAL = SCALE[0][0];
+
+// Тройку можно добрать, четвёрку и пятёрку — только заработать (Света,
+// 06.10.2026, общее правило тренажёра и ДЗ). Ошибочная задача тип не
+// закрывает, вместо неё приходит новая того же типа — без ограничений, до
+// тройки дойдёт любой, кто не бросит. Но ошибки ставят потолок: их можно
+// столько, сколько допускает та же отметка на проверочной (на «5» —
+// 6 − 6 = 0, на «4» — 6 − 5 = 1). Больше — потолок тройка; хочешь выше —
+// «Начать заново».
+const LOWEST = SCALE[SCALE.length - 1];
+// ПОТОЛОК СНЯТ (Света, 06.10.2026, после урока: «слишком жёстко — в
+// тренажёре новый материал, сразу чисто не выходит»). Добирать можно до
+// «5». Функция оставлена ради разметки вокруг неё, но всегда отдаёт верхнюю
+// отметку: ветки «выше N не получить» не срабатывают, отрезки лесенки не
+// штрихуются, countedFor отдаёт число как есть.
+const ceilingFor = () => SCALE[0][1];
+
+// Формат кода прежний. В поле «закрыто типов» уходит число, уже упёртое в
+// потолок: разборщик (check_homework.py) ставит отметку по нему и ничего не
+// знает о потолке, а отметка выходит та же, что на странице.
+function countedFor(n, errs){
+  const higher = SCALE.find(s => s[1] === ceilingFor(errs) + 1);
+  return higher ? Math.min(n, higher[0] - 1) : n;
+}
+
+// Лесенка вместо одной цифры (Света, 06.10.2026): до тройки — не «двойка»,
+// а заполняющийся отрезок «на 3». Отрезки из SCALE: 4 клетки на тройку,
+// ещё 1 на четвёрку, ещё 1 на пятёрку. Отрезок выше потолка заштрихован.
+function ladderHtml(n, cap){
+  let from = 0;
+  return SCALE.slice().reverse().map(([need, m]) => {
+    const size = need - from;
+    const got = Math.max(0, Math.min(size, n - from));
+    const capped = m > cap, reached = n >= need && !capped;
+    from = need;
+    const cells = Array.from({length: size},
+        (_, k) => '<i class="' + (k < got ? "f" : "") + '"></i>').join("");
+    return '<div class="seg' + (reached ? " got" : "") + (capped ? " capped" : "")
+         + '" style="flex:' + size + ' 1 0"><div class="cells">' + cells + '</div>'
+         + '<div class="lab">' + (capped ? "на " + m + " — потолок"
+                                         : (reached ? "✓ " : "") + "на " + m) + '</div></div>';
+  }).join("");
+}
+
+const bin = (v, w) => v.toString(2).padStart(w, "0");
+// Семибитными частями строки: в нагрузке 33 бита, а побитовые операции в JS
+// 32-битные — старший бит молча потерялся бы.
+function checksum(bitstr){
+  let cs = 0x5B;
+  for (let i = 0; i < bitstr.length; i += 7)
+    cs ^= parseInt(bitstr.substr(i, 7).padEnd(7, "0"), 2);
+  return cs & 0x7F;
+}
+/* Код ученика вместо фамилии (юрист, 10.10.2026: фамилию страница не
+   спрашивает и никуда не отправляет). Код места вида 9А1-07 или 10У-03 —
+   класс, подгруппа, номер места — выдаёт учитель; кто есть кто, знает только он.
+   seatKey приводит набранное к одному виду: латинские двойники букв —
+   в кириллицу, пробелы прочь, любое тире — в «-», место двумя цифрами
+   («9a1 - 7» -> «9А1-07»); дефис обязателен. Не похоже на код — пустая строка, и кода
+   работы нет. Из ключа получаются 40 бит (FNV-1a и xorshift32), которыми
+   код работы перемешивается. Та же арифметика живёт в homework.py. */
+const SEAT_LAT = {A: "А", B: "В", E: "Е", K: "К", M: "М", H: "Н",
+                  O: "О", P: "Р", C: "С", T: "Т", Y: "У", X: "Х"};
+function seatKey(s){
+  const t = [...String(s || "").trim().toUpperCase()
+                .replace(/[ABEKMHOPCTYX]/g, c => SEAT_LAT[c])]
+    .filter(c => c.trim()).join("")
+    .replace(/[‐‑‒–—−]/g, "-");
+  const m = t.match(/^([0-9]{1,2})([А-ЯЁ]{0,2})([0-9]?)-([0-9]{1,2})$/);
+  return m ? m[1] + m[2] + m[3] + "-" + m[4].padStart(2, "0") : "";
+}
+
+/* Поле «Код ученика»: подсказка под ним, мягкое замечание на неверный
+   код и кнопка, которая не нажимается, пока код не похож на код. Код
+   нигде не запоминается: компьютер в классе общий. */
+function seatInit(inp, btn){
+  if (!inp || inp.dataset.seat) return;
+  inp.dataset.seat = "1";
+  inp.placeholder = "например 9А1-07";
+  inp.setAttribute("autocomplete", "off");
+  inp.setAttribute("spellcheck", "false");
+  const bad = document.createElement("div");
+  bad.className = "seat-bad";
+  bad.style.cssText = "color:#b3261e;font-size:14px;margin-top:4px;min-height:0";
+  const note = document.createElement("div");
+  note.className = "seat-note";
+  note.style.cssText = "color:#5c6070;font-size:13px;margin-top:4px;max-width:340px";
+  note.textContent = "Код выдаёт учитель. Фамилию здесь не вписывают — "
+                   + "в работу уходит только код.";
+  inp.insertAdjacentElement("afterend", note);
+  inp.insertAdjacentElement("afterend", bad);
+  const check = () => {
+    const raw = inp.value.trim();
+    const ok = !!seatKey(raw);
+    bad.textContent = raw && !ok
+      ? "Код вида 9А1-07 или 10У-03: класс, подгруппа, номер места" : "";
+    if (btn) btn.disabled = !ok;
+  };
+  inp.addEventListener("input", check);
+  check();
+}
+
+function seatStream(code){
+  const s = seatKey(code);
+  if (!s) return "0".repeat(40);
+  let h = 0x811C9DC5;
+  for (const ch of s){
+    h ^= ch.charCodeAt(0);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  const step = x => { x ^= x << 13; x ^= x >>> 17; x ^= x << 5; return x >>> 0; };
+  let x = h || 0x9E3779B9;
+  for (let i = 0; i < 4; i++) x = step(x);
+  const w1 = x = step(x), w2 = step(x);
+  return (bin(w1, 32) + bin(w2, 32)).slice(0, 40);
+}
+
+function makeCode(st, code){
+  const day = Math.max(0, Math.min(2047, Math.floor(
+      (Date.now() - EPOCH) / 86400000)));
+  const payload = bin(day, 11) + bin(Math.min(15, st.typesDone), 4) +
+                  bin(Math.min(15, st.cleanTypes), 4) +
+                  bin(Math.min(127, st.solved), 7) +
+                  bin(Math.min(127, st.wrong), 7);
+  const plain = payload + bin(checksum(payload), 7);
+  const key = seatStream(code);
+  let bitstr = "";
+  for (let i = 0; i < 40; i++) bitstr += plain[i] === key[i] ? "0" : "1";
+  let out = "";
+  for (let i = 0; i < 40; i += 5)
+    out += ALPHABET[parseInt(bitstr.substr(i, 5), 2)];
+  return PREFIX + "-" + out.slice(0, 4) + "-" + out.slice(4);
+}
+
+/* ---------------------------------------------------------- состояние */
+const N = HW_TYPES.length;
+const rng = tRng((Date.now() ^ (Math.random() * 1e9)) >>> 0);
+const st = {
+  streak: Array(N).fill(0),
+  done: Array(N).fill(false),
+  clean: Array(N).fill(true),
+  solved: 0, wrong: 0,
+  cur: null, answered: false, retry: null
+};
+// закрыто на самом деле
+Object.defineProperty(st, "closed",
+  {get(){ return st.done.filter(Boolean).length; }});
+// закрыто «для отметки и кода» — упёрто в потолок по ошибкам
+Object.defineProperty(st, "typesDone",
+  {get(){ return countedFor(st.closed, st.wrong); }});
+Object.defineProperty(st, "cleanTypes",
+  {get(){ return st.done.filter((d, i) => d && st.clean[i]).length; }});
+
+function markFor(n){
+  for (const [need, m] of SCALE) if (n >= need) return m;
+  return null;
+}
+/* После ошибки — тот же тип: разбор только что показан, применить его надо по
+   горячему. Иначе — любой незакрытый. */
+function pickType(){
+  if (st.retry !== null && !st.done[st.retry]) return st.retry;
+  const open = [];
+  for (let i = 0; i < N; i++) if (!st.done[i]) open.push(i);
+  if (!open.length) return null;
+  return open[tRand(rng, 0, open.length - 1)];
+}
+/* ==== FRZ: вставлено freeze.py, руками не править ==== */
+/* Код задачи — картинкой, прямо в браузере.
+   Вставляется freeze.py --sync между маркерами FRZ. Руками в html не править.
+
+   Тренажёр, ДЗ и проверочная рисуют код каждой задачи сами при открытии, и
+   заморозить его при выкладке нельзя — его ещё нет. Поэтому страница
+   рисует код на canvas и вставляет <img>: скопировать мышкой и запустить в
+   IDLE не выйдет — задача снова про чтение (Света, 14.09.2026).
+
+   Стиль тот же, что у блоков <pre>: Consolas 15px, тёмный фон, комментарий
+   после # серо-голубой. Рисуем в двойном размере — чётко на любом экране. */
+function frz(code) {
+  var S = 2, SIZE = 15, LEAD = 22, PX = 14, PY = 12;
+  var lines = String(code).replace(/\r/g, '').split('\n');
+  var c = document.createElement('canvas'), g = c.getContext('2d');
+  var font = (SIZE * S) + 'px Consolas, "Cascadia Mono", "Courier New", monospace';
+  g.font = font;
+  var w = 0;
+  for (var i = 0; i < lines.length; i++) w = Math.max(w, g.measureText(lines[i]).width);
+  c.width = Math.ceil(w) + 2 * PX * S;
+  c.height = lines.length * LEAD * S + 2 * PY * S;
+  g.fillStyle = '#1e2430';
+  g.fillRect(0, 0, c.width, c.height);
+  g.font = font;                       /* смена размера сбрасывает шрифт */
+  g.textBaseline = 'middle';
+  for (var k = 0; k < lines.length; k++) {
+    var y = PY * S + k * LEAD * S + LEAD * S / 2;
+    var line = lines[k], at = line.indexOf('#');
+    var head = at < 0 ? line : line.slice(0, at), tail = at < 0 ? '' : line.slice(at);
+    g.fillStyle = '#e7ecf5';
+    g.fillText(head, PX * S, y);
+    if (tail) {
+      g.fillStyle = '#8fa6c4';
+      g.fillText(tail, PX * S + g.measureText(head).width, y);
+    }
+  }
+  if (!document.getElementById('frz-css')) {
+    var st = document.createElement('style');
+    st.id = 'frz-css';
+    st.textContent = 'img.frz-b{display:block;max-width:100%;height:auto;'
+                   + 'border-radius:10px;margin:8px 0}';
+    document.head.appendChild(st);
+  }
+  return '<img class="frz-b" width="' + (c.width / S) + '" height="' + (c.height / S)
+       + '" alt="код задачи — читай с экрана" src="' + c.toDataURL('image/png') + '">';
+}
+/* ==== /FRZ ==== */
+
+function esc(s){ return String(s).replace(/[&<>]/g, c =>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+/* ------------------------------------------------------------- экран */
+function paintProgress(){
+  const box = document.getElementById("types");
+  box.innerHTML = "";
+  HW_TYPES.forEach((name, i) => {
+    const c = document.createElement("span");
+    c.className = "chip" + (st.done[i] ? " done"
+                          : (st.cur && st.cur.hwType === i ? " cur" : ""));
+    c.textContent = name + (st.done[i] ? " ✓" : "");
+    box.appendChild(c);
+  });
+  const cap = ceilingFor(st.wrong);
+  document.getElementById("ladder").innerHTML = ladderHtml(st.closed, cap);
+  // «2» по ходу не показываем: до тройки — прочерк и лесенка
+  const m = st.closed >= MIN_TYPES ? markFor(st.typesDone) : null;
+  const sb = document.getElementById("scorebox");
+  sb.className = "score" + (m ? " m" + m : "");
+  document.getElementById("mark").textContent = m || "—";
+  document.getElementById("stats").textContent =
+    "закрыто типов: " + st.closed + " из " + N + " · ошибок: " + st.wrong +
+    (st.closed < MIN_TYPES
+      ? " · до тройки осталось закрыть " + (MIN_TYPES - st.closed) : "") +
+    (cap < SCALE[0][1]
+      ? " · выше «" + cap + "» в этом заходе не получить"
+      : (st.wrong ? "" : " · без ошибок пока — пятёрка открыта"));
+}
+
+/* «Начать заново»: всё с нуля, задачи новые. Принудительного сброса нет —
+   это выбор того, кто хочет выше потолка. */
+function restart(){
+  if (!confirm("Начать заново? Закрытое в этом заходе пропадёт, задачи будут новые.")) return;
+  st.streak.fill(0); st.done.fill(false); st.clean.fill(true);
+  st.solved = 0; st.wrong = 0; st.retry = null;
+  nextTask();
+}
+
+function nextTask(){
+  const type = pickType();
+  if (type === null) { finish(); return; }
+  st.cur = hwMake(type, rng);
+  st.answered = false;
+  const t = st.cur;
+  const hint = t.hint
+    ? '<details><summary>Подсказка</summary><p>' + t.hint + '</p></details>' : "";
+  document.getElementById("area").innerHTML =
+    '<div class="card" id="task">' +
+      '<p class="tag">' + HW_TYPES[type] +
+        (st.retry === type ? ' · ещё раз, тот же тип' : '') + '</p>' +
+      (t.code ? frz(t.code) : '') +
+      (t.input !== undefined
+        ? '<p class="inp">Вход: <code>' + esc(t.input).replace(/\n/g, '</code>, затем <code>') + '</code></p>'
+        : '') +
+      '<p>' + (t.question || "Что напечатает программа?") + '</p>' +
+      '<div class="row">' +
+        '<input type="text" id="ans" autocomplete="off" spellcheck="false">' +
+        '<button class="primary" id="go">Проверить</button>' +
+      '</div>' +
+      hint +
+      '<div class="verdict" id="v"></div>' +
+    '</div>';
+  document.getElementById("go").addEventListener("click", judge);
+  document.getElementById("ans").addEventListener("keydown", e => {
+    if (e.key === "Enter") judge();
+  });
+  document.getElementById("ans").focus();
+  paintProgress();
+}
+
+function judge(){
+  if (st.answered) { nextTask(); return; }
+  const raw = document.getElementById("ans").value;
+  if (!raw.trim()) return;
+  const t = st.cur, type = t.hwType;
+  const res = hwVerdict(t, raw);
+  const card = document.getElementById("task");
+  const v = document.getElementById("v");
+  st.answered = true;
+  document.getElementById("go").textContent = "Дальше";
+  document.getElementById("ans").disabled = true;
+  if (res.ok){
+    st.solved++;
+    st.streak[type]++;
+    st.retry = null;
+    card.className = "card ok";
+    v.className = "verdict ok";
+    let text = res.why ? res.why.charAt(0).toUpperCase() + res.why.slice(1) + "." : "Верно.";
+    if (st.streak[type] >= NEED_STREAK){
+      st.done[type] = true;
+      text += " Тип закрыт.";
+    }
+    v.innerHTML = text + hwExplain(t, raw, true);
+  } else {
+    st.wrong++;
+    st.streak[type] = 0;
+    st.clean[type] = false;
+    st.retry = type;
+    card.className = "card err";
+    v.className = "verdict err";
+    /* разбор рисунком (Света, 26.09.2026): свой ответ зелёным и красным,
+       вызовы и что они вернули, эталон */
+    const cap = ceilingFor(st.wrong);
+    v.innerHTML = "Пока нет" + (res.why ? " — " + res.why : "") +
+      ". Следующая задача — того же типа." +
+      (cap < SCALE[0][1] ? " Ошибок: " + st.wrong + " — выше «" + cap +
+        "» в этом заходе не получить." : "") + hwExplain(t, raw, false);
+  }
+  paintProgress();
+}
+
+function finish(){
+  const m = markFor(st.typesDone);
+  const cap = ceilingFor(st.wrong);
+  const hasCode = st.closed >= MIN_TYPES;
+  const more = st.closed < N
+    ? '<button id="more">Закрыть ещё типы</button>' : "";
+  const again = cap < SCALE[0][1]
+    ? '<button id="restart">Начать заново — ради «' + (cap + 1) + '» и выше</button>' : "";
+  document.getElementById("area").innerHTML =
+    '<div class="card">' +
+      '<h2>Работа окончена</h2>' +
+      '<p>Закрыто типов: <b>' + st.closed + '</b> из ' + N +
+        '. Решено задач: ' + st.solved + ', ошибок: ' + st.wrong + '.' +
+        (hasCode ? ' Наработано на <b>' + m + '</b>.' : '') +
+        (hasCode && cap < SCALE[0][1] ? ' Выше «' + cap + '» с таким числом ошибок не выйдет.' : '') +
+      '</p>' +
+      (hasCode
+        ? '<p>Твой код работы:</p><div class="code" id="code"></div>' +
+          '<p class="stats">Он собран из кода ученика и того, сколько и как ' +
+            'ты решал: у соседа с тем же результатом код другой. Поменяешь ' +
+            'код ученика — поменяется и код работы.</p>' +
+          '<div class="fields">' +
+            '<div><label for="seat">Код ученика</label>' +
+              '<input type="text" id="seat" autocomplete="off"></div>' +
+          '</div>' +
+          '<p class="stats" id="seathint"></p>' +
+          '<div class="row"><button id="send" class="primary">Сдать работу</button></div>' +
+          '<p class="stats" id="sendnote">Кнопка откроет форму: код ученика и код работы уже ' +
+            'будут вписаны — останется нажать «Отправить».</p>'
+        : '<div class="note">Закрыто меньше ' + MIN_TYPES +
+          ' типов — кода работы нет. Закрой ещё хотя бы ' +
+          (MIN_TYPES - st.closed) + ', и он появится.</div>') +
+      '<div class="row">' + more + again + '</div>' +
+    '</div>';
+  const b = document.getElementById("more");
+  if (b) b.addEventListener("click", nextTask);
+  const r = document.getElementById("restart");
+  if (r) r.addEventListener("click", restart);
+  wireSend();
+}
+
+/* Кнопка «Сдать». Код работы привязан к коду ученика (с 10.10.2026
+   вместо фамилии — решение юриста): пока код ученика не вписан или не
+   похож на код, кода работы нет, а вписанный подмешивается в код. У двух
+   учеников с одинаковым результатом коды работы разные, а чужой код
+   к своему коду ученика не подходит. Код ученика страница не запоминает:
+   компьютер в классе общий. Код в форму уходит сам: переписывание руками
+   и было источником «код не разобрался». */
+let CURRENT_CODE = "";
+function wireSend(){
+  const seat = document.getElementById("seat");
+  const box = document.getElementById("code");
+  const send = document.getElementById("send");
+  const note = document.getElementById("sendnote");
+  const hint = document.getElementById("seathint");
+  if (seat) try {
+    localStorage.removeItem("fam");  // фамилию не храним: компьютер общий
+    localStorage.removeItem("kls");  // класс внутри кода ученика — не храним
+  } catch (e) {}
+  const update = () => {
+    const f = seat ? seat.value.trim() : "";
+    CURRENT_CODE = seatKey(f) ? makeCode(st, f) : "";
+    if (box){
+      box.textContent = CURRENT_CODE || "впиши код ученика — появится код работы";
+      box.classList.toggle("wait", !CURRENT_CODE);
+    }
+  };
+  seatInit(seat, document.getElementById("send"));
+  if (seat) seat.addEventListener("input", update);
+  update();
+  if (!send) return;
+  send.addEventListener("click", () => {
+    if (!CURRENT_CODE){
+      note.textContent = "Впиши код ученика — иначе непонятно, "
+                       + "чья это работа.";
+      seat.focus();
+      return;
+    }
+    try {
+      localStorage.removeItem("fam");
+    } catch (e) {}
+    const url = FORM.replace("УЧЕНИК", encodeURIComponent(seatKey(seat.value.trim())))
+                    .replace("КЛАСС", "")
+                    .replace("КОД", encodeURIComponent(CURRENT_CODE));
+    window.open(url, "_blank", "noopener");
+    note.innerHTML = "Форма открылась в новой вкладке. Работа сдана, только "
+      + "когда в форме нажата «Отправить». Вкладка не открылась — "
+      + '<a href="' + url + '" target="_blank" rel="noopener">открой форму '
+      + "по этой ссылке</a>.";
+  });
+}
+
+paintProgress();
+nextTask();
+</script>
+<p class="ai-mark" style="margin:34px auto 0;max-width:860px;padding-top:12px;border-top:1px solid #d9dce6;color:#5c6070;font:13px/1.5 "Segoe UI",system-ui,sans-serif">Материалы подготовлены с использованием технологий искусственного интеллекта.</p>
+<script>/* фамилию не храним: компьютер общий — стираем запомненное прежними версиями */ try { localStorage.removeItem("fam"); localStorage.removeItem("kls"); } catch (e) {}</script>
+</body>
+</html>
