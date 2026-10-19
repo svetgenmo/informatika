@@ -1,0 +1,1392 @@
+<!doctype html>
+<html lang="ru">
+<head><meta name="robots" content="noindex">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Измерение информации — домашняя работа</title>
+<meta name="description" content="Домашняя работа 10 класса (базовый уровень): подходы к измерению информации. Семь типов по одной задаче, все сразу на странице: два подхода, вес символа, объём сообщения, единицы измерения, обратная задача, вероятностный подход, сравнение объёмов. Ошибка — тот же тип с новыми числами; в конце код работы.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E10%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{margin:0;padding:20px 16px 60px;font:17px/1.55 "Segoe UI",system-ui,sans-serif}
+.wrap{max-width:860px;margin:0 auto}
+h1{font-size:23px;margin:0 0 4px}
+h2{font-size:18px;margin:0 0 10px}
+h3{font-size:16px;margin:18px 0 6px}
+.sub{color:var(--muted);font-size:15px;margin:0 0 18px}
+code{font-family:Consolas,"Cascadia Mono",monospace;background:var(--card);
+     border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:15px}
+.intro{border:1px solid var(--line);border-radius:12px;background:var(--card);
+       padding:14px 18px;margin-bottom:18px}
+.intro dl{margin:0}
+.intro dt{font-weight:700;margin-top:10px}
+.intro dt:first-child{margin-top:0}
+.intro dd{margin:2px 0 0}
+details{margin-top:12px}
+summary{cursor:pointer;font-weight:600;color:var(--accent)}
+.progress{position:sticky;top:0;z-index:5;border:2px solid var(--accent);border-radius:12px;padding:10px 16px;
+          background:#fff;margin-bottom:18px}
+.ptop{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.ptop h2{margin:0}
+.sp{flex:1 1 auto}
+.score{display:flex;align-items:baseline;gap:10px;color:var(--muted);font-size:15px}
+.score b{font:700 34px/1 "Segoe UI",system-ui,sans-serif;color:var(--ink);
+         min-width:40px;text-align:center;border:2px solid var(--line);
+         border-radius:8px;padding:2px 8px}
+.m5 b{color:var(--ok);border-color:var(--ok-line)}
+.m4 b{color:var(--accent);border-color:#a9c6e8}
+.m3 b{color:#8a5a00;border-color:var(--hi-line)}
+.ladder{display:flex;gap:10px;flex:1 1 100%;margin-top:4px}
+.seg{min-width:0}
+.cells{display:flex;gap:3px}
+.cells i{flex:1 1 0;height:14px;border-radius:4px;background:#e4e7ef}
+.cells i.f{background:var(--accent)}
+.seg.got .cells i{background:var(--ok)}
+.seg .lab{font-size:13px;color:var(--muted);text-align:center;margin-top:2px}
+.seg.got .lab{color:var(--ok)}
+.seg.capped .cells i{background:repeating-linear-gradient(45deg,
+  #f3d3d0 0 4px,#fdecea 4px 8px)}
+.seg.capped .lab{color:var(--err)}
+.q p{margin:0 0 8px}
+.q .ask{font-weight:600}
+.types{display:flex;flex-wrap:wrap;gap:8px}
+.chip{cursor:pointer;border:1px solid var(--line);border-radius:20px;padding:4px 12px;
+      font-size:14px;color:var(--muted);background:var(--card)}
+.chip.done{border-color:var(--ok-line);background:var(--ok-bg);color:var(--ok);
+           font-weight:600}
+.card{border:1px solid var(--line);border-radius:12px;padding:16px 18px;
+      background:#fff;margin-bottom:14px}
+.card.ok{border-color:var(--ok-line);background:var(--ok-bg)}
+.card.err{border-color:var(--err-line);background:var(--err-bg)}
+.tag{font-size:13px;color:var(--muted);margin:0 0 6px}
+.q{font-size:17px}
+.fnote{font-size:14px;color:var(--muted);margin:10px 0 0}
+.bits{font:700 17px/1.4 Consolas,monospace;letter-spacing:.06em;word-break:break-all}
+pre.alg{font-family:Consolas,"Cascadia Mono",monospace;background:var(--card);
+        border:1px solid var(--line);border-radius:10px;padding:10px 14px;
+        font-size:15.5px;line-height:1.5;white-space:pre-wrap;margin:10px 0}
+svg.fpic{display:block;width:100%;max-width:460px;height:auto;margin:10px 0;
+         background:#fff;border:1px solid var(--line);border-radius:10px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+input[type=text]{font:16px/1 Consolas,monospace;padding:10px 12px;border-radius:8px;
+                 border:1px solid var(--line);width:100%;max-width:300px}
+button{font:600 15px/1 inherit;padding:11px 16px;border-radius:9px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);color:var(--muted)}
+.verdict{margin-top:10px;font-size:15.5px;font-weight:600}
+.verdict.ok{color:var(--ok)}
+.verdict.err{color:var(--err)}
+.why{margin-top:8px;font-size:15.5px;font-weight:400}
+.verdict details.why{margin-top:6px;font-weight:400}
+.verdict details.why summary{font-size:15px}
+.note{border:1px solid var(--hi-line);background:var(--hi-bg);border-radius:10px;
+      padding:11px 15px;margin:12px 0;font-size:15.5px}
+.stats{color:var(--muted);font-size:14px}
+.code.wait{font-size:18px;letter-spacing:0;color:#888}
+.code{font:700 26px/1.2 Consolas,monospace;letter-spacing:.06em;
+      background:var(--card);border:2px solid var(--accent);border-radius:10px;
+      padding:12px 16px;margin:10px 0;text-align:center;color:var(--accent)}
+.fields{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px}
+.fields label{display:block;font-size:14px;color:var(--muted);margin-bottom:4px}
+.mailbox{border-top:1px solid var(--line);margin-top:18px;padding-top:12px}
+.sample{font:15px/1.5 Consolas,monospace;background:#fff;border:1px dashed var(--line);
+        border-radius:8px;padding:8px 12px;margin:8px 0}
+.ai-mark{margin:34px auto 0;max-width:860px;padding-top:12px;
+         border-top:1px solid var(--line);color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Домашняя работа: измерение информации</h1>
+<p class="sub">10 класс, базовый уровень. Алфавитный и содержательный подходы,
+единицы измерения: семь типов задач, решаются в уме или в тетради.</p>
+
+<div class="intro">
+  <dl>
+    <dt>Как устроено</dt>
+    <dd>Семь типов задач — <b>все на экране сразу</b>, решай в любом
+        порядке. Тип закрывает <b>один верный ответ</b>. Ошибся — на экране
+        появится разбор этой задачи, а кнопка «Новые числа» даст задачу того
+        же типа: применить разбор надо по горячему. Задачи не кончаются.</dd>
+    <dt>Отметка</dt>
+    <dd>Исправленная задача тип не закрывает — засчитается новая по кнопке
+        «Новые числа». Закрыть типы можно всегда, хоть до пятёрки:
+        7 типов — «5», 6 — «4», 5 — «3».</dd>
+    <dt>Ответ</dt>
+    <dd>Целое число — без единиц, пробелов и пояснений: <code>24576</code>.
+        Порядок величин — номера подряд, от меньшей к большей:
+        <code>3142</code>.</dd>
+    <dt>Как сдать</dt>
+    <dd>Закроешь хотя бы пять типов — появится <b>код работы</b> и кнопка
+        «Сдать работу»: впишешь код ученика, форма откроется с уже
+        подставленным кодом.</dd>
+  </dl>
+  <details>
+    <summary>Напоминание: главное по теме</summary>
+    <ol>
+      <li>Алфавитный подход: мощность алфавита <i>N</i> и вес символа
+          <i>i</i> связаны формулой <b><i>N</i> = 2<sup><i>i</i></sup></b>;
+          если <i>N</i> не степень двойки — наименьшее <i>i</i>, при котором
+          2<sup><i>i</i></sup> ≥ <i>N</i>.</li>
+      <li>Объём сообщения из <i>K</i> символов: <b><i>I</i> = <i>K</i> · <i>i</i></b> бит.</li>
+      <li>1 байт = 8 бит; 1 Кбайт = 1024 байт; 1 Мбайт = 1024 Кбайт;
+          1 Гбайт = 1024 Мбайт. К мелкой единице — умножаем, к крупной — делим.</li>
+      <li>Содержательный подход: сообщение об одном из <i>N</i> равновероятных
+          событий несёт <i>i</i> бит, <i>N</i> = 2<sup><i>i</i></sup>. 1 бит
+          уменьшает неопределённость вдвое.</li>
+    </ol>
+    <p>Полная подсказка — на странице практикума.</p>
+  </details>
+</div>
+
+<div class="progress" id="panel">
+  <div class="ptop">
+    <h2>Типы задач</h2>
+    <span class="sp"></span>
+    <div class="score" id="scorebox">
+      <span>наработано на</span><b id="mark">—</b>
+    </div>
+    <div class="ladder" id="ladder"></div>
+  </div>
+  <div class="types" id="types"></div>
+  <p class="stats" id="stats"></p>
+</div>
+
+<div id="area"></div>
+
+<div class="row" style="margin:6px 0 22px">
+  <button class="primary" id="total">Закончить и получить код</button>
+</div>
+<div id="result"></div>
+
+</div>
+
+<script>
+/* ==== ЗАДАЧИ: вставлено gen.py, руками не править ==== */
+/* Урок 8 10 класса (база): подходы к измерению информации.
+
+   ЕДИНСТВЕННЫЙ ИСТОЧНИК ЗАДАЧ для тренажёра (часть 1 практикума),
+   домашней работы, примеров на слайдах и проверки продукта «Сколько весит
+   сообщение» (часть 2 практикума). В html вписывается скриптом gen.py --sync
+   между маркерами — руками страницы не править.
+
+   Содержание — строка 8 поурочного плана (planning/plan10b_map.py):
+   «Подходы к измерению информации. Сущность объёмного (алфавитного)
+   подхода, определение бита с точки зрения алфавитного подхода, связь
+   между размером алфавита и информационным весом символа (в предположении
+   о равновероятности появления символов), связь между единицами измерения
+   информации: бит, байт, Кбайт, Мбайт, Гбайт. Сущность содержательного
+   (вероятностного) подхода, определение бита с позиции содержания
+   сообщения». Оболочка — урок 7 того же потока (07-dvoichnoe-kodirovanie).
+
+   Семь типов:
+     0 «два подхода»          сколько из пяти утверждений верны
+     1 «вес символа»          N символов -> i бит, или i бит -> наибольшее N
+     2 «объём сообщения»      K символов алфавита из N -> биты, байты, Кбайт
+     3 «единицы измерения»    перевод между бит, байт, Кбайт, Мбайт, Гбайт
+     4 «обратная задача»      по объёму — мощность алфавита или число символов
+     5 «вероятностный подход» равновероятные исходы, сужение выбора, вопросы
+     6 «сравнение объёмов»    расставить четыре величины по возрастанию
+
+   Машинные поля лежат в task.meta: по ним gen.py --selftest пересчитывает
+   ответ своим способом на Python. Разбор — рисунком (fPic): при ошибке на
+   нём же красным то, что, судя по ответу, сломано (pictures-over-words).
+   Биты до самого ответа, деление обычное: где ответ целый, он целый по
+   построению задачи, а не округлением (count-in-bits-round-by-eye). */
+
+const F_TYPES = [
+  'два подхода',
+  'вес символа',
+  'объём сообщения',
+  'единицы измерения',
+  'обратная задача',
+  'вероятностный подход',
+  'сравнение объёмов'
+];
+
+/* ----------------------------------------------------------- случайность */
+
+function tRng(seed) {
+  let s = (seed >>> 0) || 1;
+  return function () {
+    s ^= s << 13; s >>>= 0;
+    s ^= s >> 17;
+    s ^= s << 5;  s >>>= 0;
+    return s / 4294967296;
+  };
+}
+
+function tRand(rng, a, b) { return a + Math.floor(rng() * (b - a + 1)); }
+function tPick(rng, arr) { return arr[tRand(rng, 0, arr.length - 1)]; }
+
+function tPl(n, one, few, many) {
+  const h = n % 100, t = n % 10;
+  if (h >= 11 && h <= 14) return many;
+  if (t === 1) return one;
+  if (t >= 2 && t <= 4) return few;
+  return many;
+}
+
+function tShuffle(rng, arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = tRand(rng, 0, i);
+    const t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+/* Наименьшее i, при котором 2^i >= n. Подбором степени, без log2. */
+function fBitsFor(n) {
+  let i = 1;
+  while (2 ** i < n) i++;
+  return i;
+}
+
+/* Показатель степени двойки или -1, если n не степень двойки. */
+function fLog2(n) {
+  for (let i = 0; i <= 40; i++) if (2 ** i === n) return i;
+  return -1;
+}
+
+/* ---------------------------------------------------------- единицы */
+
+const F_UNITS = [
+  {n: 'бит',   f: 1,          dec: 1},
+  {n: 'байт',  f: 8,          dec: 8},
+  {n: 'Кбайт', f: 8192,       dec: 8000},
+  {n: 'Мбайт', f: 8388608,    dec: 8000000},
+  {n: 'Гбайт', f: 8589934592, dec: 8000000000}
+];
+
+/* «5 Кбайт» — число и единица неразрывно. */
+function fQty(v, u) { return v + '&nbsp;' + F_UNITS[u].n; }
+
+/* ------------------------------------------------------------- разборы */
+
+function fTile(lab, val, cls) {
+  return '<div class="xt' + (cls ? ' ' + cls : '') + '"><div class="xl">' + lab +
+         '</div><div class="xv">' + val + '</div></div>';
+}
+
+function fRow(tiles) { return '<div class="xrow">' + tiles.join('') + '</div>'; }
+
+const F_CSS =
+  '.xrow{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0;align-items:stretch}' +
+  '.xt{border:1px solid #d9dce6;border-radius:10px;padding:6px 12px;background:#fff;min-width:90px}' +
+  '.xt .xl{font-size:13px;color:#5c6070}' +
+  '.xt .xv{font:700 18px/1.3 Consolas,monospace}' +
+  '.xt.ok{border-color:#9dd4b4;background:#e6f5ec}.xt.ok .xv{color:#137a41}' +
+  '.xt.bad{border-color:#f0b3ae;background:#fdecea}.xt.bad .xv{color:#b3261e}' +
+  '.xarr{align-self:center;font:700 20px/1 "Segoe UI",sans-serif;color:#8c93a6}' +
+  'table.codes{border-collapse:collapse;margin:8px 0;font:16px Consolas,monospace}' +
+  'table.codes th,table.codes td{border:1px solid #d9dce6;padding:4px 10px;text-align:center}' +
+  'table.codes th{background:#f6f7fb;font-family:"Segoe UI",sans-serif}' +
+  'table.codes td.bad{background:#fdecea;color:#b3261e;font-weight:700}' +
+  'table.codes td.ok{background:#e6f5ec;color:#137a41;font-weight:700}' +
+  'ul.xst{list-style:none;padding-left:0;margin:6px 0}' +
+  'ul.xst li{margin:4px 0;padding:4px 10px;border-radius:8px}' +
+  'ul.xst li.t{background:#e6f5ec}ul.xst li.f{background:#fdecea}' +
+  'ul.xst li .w{display:block;color:#5c6070;font-size:14px}' +
+  '.xhalf{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0}' +
+  '.xhalf span{border:1px solid #d9dce6;border-radius:8px;padding:3px 10px;font:700 16px Consolas,monospace;background:#fff}' +
+  '.xhalf i{color:#8c93a6;font-style:normal;font-size:13px}';
+
+function fCss() {
+  if (typeof document === 'undefined' || document.getElementById('f-css')) return;
+  const st = document.createElement('style');
+  st.id = 'f-css';
+  st.textContent = F_CSS;
+  document.head.appendChild(st);
+}
+
+function fArr() { return '<div class="xarr">→</div>'; }
+
+/* «3 бита», «5 бит». */
+function fBit(n) { return n + ' ' + tPl(n, 'бит', 'бита', 'бит'); }
+
+/* ---------------------------------------- тип 0: два подхода, утверждения */
+
+/* Банк утверждений. Признак верности — для генератора; независимая разметка
+   тех же утверждений лежит в gen.py (BANK_TRUTH) и сверяется самотестом
+   (conceptual-topics-as-counts). why — объяснение для разбора. */
+const F_BANK = [
+  {s: 'При алфавитном подходе объём сообщения зависит только от числа символов и мощности алфавита, а не от смысла.', ok: true,
+   why: 'Верно: алфавитный подход смысла не касается — считает символы и их вес.'},
+  {s: 'Мощность алфавита — это число символов в нём.', ok: true,
+   why: 'Верно: так и определяется мощность алфавита.'},
+  {s: 'Если мощность алфавита N = 2<sup>i</sup>, то каждый символ несёт i бит информации.', ok: true,
+   why: 'Верно: это главная формула алфавитного подхода.'},
+  {s: 'Один бит — информационный вес символа двоичного алфавита.', ok: true,
+   why: 'Верно: в алфавите из двух символов N = 2 = 2<sup>1</sup>, вес символа — 1 бит.'},
+  {s: '1 байт = 8 бит.', ok: true,
+   why: 'Верно: байт — восемь двоичных разрядов.'},
+  {s: '1 Кбайт = 1024 байта.', ok: true,
+   why: 'Верно: в информатике приставка «кило» у байта означает 2<sup>10</sup> = 1024.'},
+  {s: 'При содержательном подходе сообщение, которое вдвое уменьшает неопределённость, несёт 1 бит информации.', ok: true,
+   why: 'Верно: так бит определяется с позиции содержания сообщения.'},
+  {s: 'Сообщение о том, что произошло одно из 8 равновероятных событий, несёт 3 бита информации.', ok: true,
+   why: 'Верно: 8 = 2<sup>3</sup> — три раза поделить выбор пополам.'},
+  {s: 'Если человек уже знал содержание сообщения, то с точки зрения содержательного подхода оно не несёт ему информации.', ok: true,
+   why: 'Верно: неопределённость не уменьшилась — информации ноль.'},
+  {s: 'При алфавитном подходе предполагается, что все символы алфавита появляются в тексте одинаково часто.', ok: true,
+   why: 'Верно: формула N = 2<sup>i</sup> выведена в предположении о равновероятности символов.'},
+  {s: 'При алфавитном подходе сообщение «Завтра контрольная» несёт больше информации, чем столь же длинный набор случайных букв того же алфавита.', ok: false,
+   why: 'Неверно: алфавитный подход смысла не учитывает — при равной длине объём одинаковый.'},
+  {s: '1 Кбайт = 1000 байт.', ok: false,
+   why: 'Неверно: 1 Кбайт = 1024 байта, а 1000 — это приставка «кило» в физике.'},
+  {s: '1 байт = 10 бит.', ok: false,
+   why: 'Неверно: 1 байт = 8 бит.'},
+  {s: 'Чем больше символов в алфавите, тем меньше информации несёт один символ.', ok: false,
+   why: 'Неверно, наоборот: N = 2<sup>i</sup> — больше символов, больше вес каждого.'},
+  {s: 'Символ алфавита из 64 символов несёт 64 бита информации.', ok: false,
+   why: 'Неверно: 64 = 2<sup>6</sup>, вес символа — 6 бит.'},
+  {s: 'Сообщение о том, что выпал «орёл» у монеты, несёт 2 бита информации.', ok: false,
+   why: 'Неверно: исходов два, равновероятных, — 1 бит.'},
+  {s: 'При содержательном подходе количество информации зависит от длины сообщения в символах.', ok: false,
+   why: 'Неверно: от длины зависит алфавитный подход, а содержательный — от того, во сколько раз уменьшилась неопределённость.'},
+  {s: '1 Мбайт = 1024 бита.', ok: false,
+   why: 'Неверно: 1 Мбайт = 1024 Кбайт = 1024 · 1024 байт, а бит ещё в 8 раз больше.'},
+  {s: 'Один бит — это объём одного символа русского алфавита.', ok: false,
+   why: 'Неверно: в русском алфавите 33 буквы, символу нужно 6 бит (2<sup>5</sup> = 32 мало).'},
+  {s: 'Если из 16 равновероятных вариантов осталось 4, сообщение несёт 4 бита информации.', ok: false,
+   why: 'Неверно: выбор сузился в 4 раза, 4 = 2<sup>2</sup> — 2 бита.'}
+];
+
+function fType0(rng) {
+  for (let tries = 0; tries < 200; tries++) {
+    const pick = tShuffle(rng, F_BANK.map((_, i) => i)).slice(0, 5);
+    const good = pick.filter(i => F_BANK[i].ok).length;
+    if (good < 1 || good > 4) continue;
+    const items = pick.map((i, k) => '<li>' + (k + 1) + ') ' + F_BANK[i].s + '</li>').join('');
+    return {
+      form: 'num',
+      question: '<p>Прочитайте утверждения.</p><ul class="plain">' + items + '</ul>' +
+        '<p class="ask">Сколько из них верны? В ответе — одно число.</p>',
+      answer: String(good),
+      explain: 'Разберём каждое утверждение: [[PIC]]',
+      meta: {ids: pick, want: good, traps: {wrong: pick.length - good}}
+    };
+  }
+}
+
+/* ----------------------------------------------------- тип 1: вес символа */
+
+const F_ABC_PLOTS = [
+  n => 'Алфавит выдуманного языка состоит из ' + n + ' ' + tPl(n, 'символа', 'символов', 'символов') + '.',
+  n => 'Для записи паролей разрешено ' + n + ' ' + tPl(n, 'символ', 'символа', 'символов') + '.',
+  n => 'Прибор показывает на табло одно из ' + n + ' ' + tPl(n, 'обозначения', 'обозначений', 'обозначений') +
+       ', и каждое обозначение — символ его алфавита.',
+  n => 'Шифр использует алфавит из ' + n + ' ' + tPl(n, 'знака', 'знаков', 'знаков') + '.'
+];
+
+function fType1(rng) {
+  if (rng() < 0.35) {
+    const i = tRand(rng, 2, 9);
+    return {
+      form: 'num', kind: 'power',
+      question: '<p>Каждый символ некоторого алфавита несёт ' + i + ' ' + tPl(i, 'бит', 'бита', 'бит') +
+        ' информации (алфавитный подход, символы равновероятны).</p>' +
+        '<p class="ask">Какова мощность этого алфавита — сколько в нём символов?</p>',
+      answer: String(2 ** i),
+      explain: 'Мощность и вес символа связаны формулой <b>N = 2<sup>i</sup></b>. [[PIC]]',
+      meta: {kind: 'power', i: i, want: 2 ** i, traps: {twice: 2 * i, square: i * i, minus: 2 ** i - 1}}
+    };
+  }
+  for (let tries = 0; tries < 200; tries++) {
+    const exact = rng() < 0.35;
+    const n = exact ? 2 ** tRand(rng, 3, 8) : tRand(rng, 5, 300);
+    const i = fBitsFor(n);
+    if (!exact && 2 ** i === n) continue;
+    if (n === i || n === i - 1 || n === i + 1) continue;
+    const traps = {less: i - 1, nself: n};
+    if (exact) traps.over = i + 1;
+    return {
+      form: 'num', kind: 'weight',
+      question: '<p>' + tPick(rng, F_ABC_PLOTS)(n) + ' Каждый символ кодируют одинаковым, ' +
+        'наименьшим возможным числом бит.</p><p class="ask">Каков информационный вес одного символа ' +
+        'в битах?</p>',
+      answer: String(i),
+      explain: 'Ищем наименьшее <i>i</i>, при котором 2<sup><i>i</i></sup> ≥ ' + n +
+        ': столько бит нужно, чтобы у каждого символа был свой код. [[PIC]]',
+      meta: {kind: 'weight', n: n, want: i, traps: traps}
+    };
+  }
+}
+
+/* ------------------------------------------------- тип 2: объём сообщения */
+
+const F_MSG_PLOTS = [
+  (k, n) => 'Текст на выдуманном языке записан алфавитом из ' + n + ' ' + tPl(n, 'символа', 'символов', 'символов') +
+            ' и содержит ' + k + ' ' + tPl(k, 'символ', 'символа', 'символов') + '.',
+  (k, n) => 'Сообщение длиной ' + k + ' ' + tPl(k, 'символ', 'символа', 'символов') + ' записано символами ' +
+            'алфавита мощностью ' + n + '.',
+  (k, n) => 'Телеграмма из ' + k + ' ' + tPl(k, 'знака', 'знаков', 'знаков') + ' передана кодом, в котором ' +
+            n + ' ' + tPl(n, 'разный знак', 'разных знака', 'разных знаков') + '.'
+];
+
+const F_KIND2 = {bits: 'битах', bytes: 'байтах', kbytes: 'килобайтах'};
+
+function fType2(rng) {
+  for (let tries = 0; tries < 300; tries++) {
+    const kind = tPick(rng, ['bits', 'bits', 'bytes', 'kbytes']);
+    const n = rng() < 0.5 ? 2 ** tRand(rng, 2, 8) : tRand(rng, 3, 250);
+    const i = fBitsFor(n);
+    let k;
+    if (kind === 'bits') k = tRand(rng, 12, 400);
+    else if (kind === 'bytes') k = 8 * tRand(rng, 3, 120);
+    else {
+      const r = tRand(rng, 1, 24);
+      if ((r * 8192) % i) continue;
+      k = r * 8192 / i;
+    }
+    const bits = k * i;
+    const div = kind === 'bits' ? 1 : kind === 'bytes' ? 8 : 8192;
+    const want = bits / div;
+    if (!Number.isInteger(want)) continue;
+    const traps = {kn: k * n / div, letters: k};
+    if (kind !== 'bits') traps.inbits = bits;
+    if (kind === 'kbytes') { traps.inbytes = bits / 8; traps.dec = bits / 8000; }
+    if (fLog2(n) < 0) traps.lower = k * (i - 1) / div;
+    return {
+      form: 'num', kind: kind,
+      question: '<p>' + tPick(rng, F_MSG_PLOTS)(k, n) + ' Каждый символ кодируется одинаковым, ' +
+        'наименьшим возможным числом бит.</p><p class="ask">Каков информационный объём сообщения в ' +
+        F_KIND2[kind] + '?</p>',
+      answer: String(want),
+      explain: 'Сначала вес символа <i>i</i> (2<sup><i>i</i></sup> ≥ ' + n + '), потом объём ' +
+        '<b>I = K · i</b>' + (kind === 'bits' ? '' : ', и только в конце перевод из бит') + '. [[PIC]]',
+      meta: {kind: kind, k: k, n: n, i: i, bits: bits, want: want, traps: traps}
+    };
+  }
+}
+
+/* ----------------------------------------------- тип 3: единицы измерения */
+
+/* Пары единиц: соседние, и через одну там, где числа ещё читаемы. */
+const F_PAIRS = [[0, 1], [1, 2], [2, 3], [3, 4], [0, 2], [1, 3], [2, 4]];
+
+function fType3(rng) {
+  for (let tries = 0; tries < 300; tries++) {
+    const [lo, hi] = tPick(rng, F_PAIRS);
+    const down = rng() < 0.55;
+    const ratio = F_UNITS[hi].f / F_UNITS[lo].f;
+    const ratioDec = F_UNITS[hi].dec / F_UNITS[lo].dec;
+    let v, want, from, to;
+    /* Через ступень числа растут в миллион раз — множитель там помельче. */
+    const top = hi - lo === 2 && hi >= 3 ? 16 : 64;
+    if (down) {
+      v = tRand(rng, 2, top); want = v * ratio; from = hi; to = lo;
+    } else {
+      want = tRand(rng, 2, top); v = want * ratio; from = lo; to = hi;
+    }
+    if (want > 1e9 || v > 1e9) continue;
+    const traps = {};
+    if (ratioDec !== ratio) traps.dec = down ? v * ratioDec : v / ratioDec;
+    /* Забытая восьмёрка: переход бит — байт сделан как будто его нет. */
+    if (lo === 0 && hi >= 2) traps.no8 = down ? v * ratio / 8 : v / (ratio / 8);
+    traps.inv = down ? v / ratio : v * ratio;
+    return {
+      form: 'num', kind: down ? 'down' : 'up',
+      question: '<p class="ask">Сколько ' + (to === 0 ? 'бит' : to === 1 ? 'байт' : F_UNITS[to].n) +
+        ' в ' + fQty(v, from) + '?</p>',
+      answer: String(want),
+      explain: (down ? 'От крупной единицы к мелкой — <b>умножаем</b>' : 'От мелкой единицы к крупной — <b>делим</b>') +
+        ': 1 байт = 8 бит, а каждая следующая ступень — в 1024 раза. Идём по лестнице ступень за ступенью. [[PIC]]',
+      meta: {from: from, to: to, v: v, want: want, traps: traps}
+    };
+  }
+}
+
+/* ------------------------------------------------- тип 4: обратная задача */
+
+function fType4(rng) {
+  for (let tries = 0; tries < 300; tries++) {
+    if (rng() < 0.5) {
+      /* Мощность алфавита по объёму и длине. */
+      const i = tRand(rng, 2, 8);
+      const inBytes = rng() < 0.6;
+      const k = inBytes ? 8 * tRand(rng, 4, 128) : tRand(rng, 10, 300);
+      const bits = k * i;
+      const v = inBytes ? bits / 8 : bits;
+      const traps = {weight: i, minus: 2 ** i - 1};
+      if (inBytes && Number.isInteger(v / k)) traps.vk = 2 ** (v / k);
+      return {
+        form: 'num', kind: 'alphabet',
+        question: '<p>Сообщение из ' + k + ' ' + tPl(k, 'символа', 'символов', 'символов') + ' имеет ' +
+          'информационный объём ' + fQty(v, inBytes ? 1 : 0) + '. Все символы кодируются одинаковым ' +
+          'числом бит.</p><p class="ask">Какова наибольшая возможная мощность алфавита, которым ' +
+          'записано сообщение?</p>',
+        answer: String(2 ** i),
+        explain: 'Объём — в биты, делим на число символов: получаем вес символа <i>i</i>, а мощность ' +
+          '<b>N = 2<sup><i>i</i></sup></b>. [[PIC]]',
+        meta: {kind: 'alphabet', k: k, v: v, unit: inBytes ? 1 : 0, i: i, want: 2 ** i, traps: traps}
+      };
+    }
+    /* Число символов по объёму и мощности. */
+    const n = rng() < 0.5 ? 2 ** tRand(rng, 2, 8) : tRand(rng, 3, 250);
+    const i = fBitsFor(n);
+    const r = tRand(rng, 1, 16);
+    const bits = r * 8192;
+    if (bits % i) continue;
+    const want = bits / i;
+    const traps = {dec: r * 8000 / i, no8: r * 1024 / i, useN: bits / n};
+    return {
+      form: 'num', kind: 'count',
+      question: '<p>Сообщение занимает ' + fQty(r, 2) + '. Оно записано алфавитом из ' + n + ' ' +
+        tPl(n, 'символа', 'символов', 'символов') + ', каждый символ кодируется одинаковым, наименьшим ' +
+        'возможным числом бит.</p><p class="ask">Сколько символов в сообщении?</p>',
+      answer: String(want),
+      explain: 'Объём — в биты, вес символа <i>i</i> — по мощности алфавита, и <b>K = I : i</b>. [[PIC]]',
+      meta: {kind: 'count', r: r, n: n, i: i, bits: bits, want: want, traps: traps}
+    };
+  }
+}
+
+/* ---------------------------------------------- тип 5: вероятностный подход */
+
+const F_EVENT_PLOTS = [
+  n => 'В коробке ' + n + ' шаров с разными номерами. Не глядя, вынули один шар.',
+  n => 'В доме ' + n + ' ' + tPl(n, 'квартира', 'квартиры', 'квартир') + '. Почтальону сообщили номер квартиры адресата.',
+  n => 'Из колоды в ' + n + ' ' + tPl(n, 'карту', 'карты', 'карт') + ' наугад вытянули одну.',
+  n => 'Игровой кубик-многогранник имеет ' + n + ' одинаковых граней с разными числами. Кубик бросили.',
+  n => 'На стоянке ' + n + ' ' + tPl(n, 'место', 'места', 'мест') + '. Водителю сообщили, на каком месте его машина.'
+];
+
+function fType5(rng) {
+  const kind = tPick(rng, ['outcomes', 'reverse', 'narrow', 'questions']);
+  if (kind === 'outcomes') {
+    const i = tRand(rng, 2, 8), n = 2 ** i;
+    return {
+      form: 'num', kind: kind,
+      question: '<p>' + tPick(rng, F_EVENT_PLOTS)(n) + ' Все исходы равновероятны.</p>' +
+        '<p class="ask">Сколько бит информации несёт сообщение о том, какой исход случился?</p>',
+      answer: String(i),
+      explain: 'Равновероятных исходов <i>N</i>, информации <i>i</i> бит, и снова <b>N = 2<sup><i>i</i></sup></b>: ' +
+        'каждый бит делит выбор пополам. [[PIC]]',
+      meta: {kind: kind, n: n, want: i, traps: {nself: n, half: n / 2}}
+    };
+  }
+  if (kind === 'reverse') {
+    const i = tRand(rng, 2, 8);
+    return {
+      form: 'num', kind: kind,
+      question: '<p>Сообщение о том, что случилось одно из нескольких равновероятных событий, несёт ' +
+        i + ' ' + tPl(i, 'бит', 'бита', 'бит') + ' информации.</p><p class="ask">Сколько было ' +
+        'возможных событий?</p>',
+      answer: String(2 ** i),
+      explain: 'Каждый бит вдвое уменьшает неопределённость: событий было <b>2<sup><i>i</i></sup></b>. [[PIC]]',
+      meta: {kind: kind, i: i, want: 2 ** i, traps: {twice: 2 * i, square: i * i}}
+    };
+  }
+  if (kind === 'narrow') {
+    for (let tries = 0; tries < 100; tries++) {
+      const a = tRand(rng, 3, 8), b = tRand(rng, 1, a - 1);
+      const n = 2 ** a, m = 2 ** b;
+      if (a - b === m || a - b === n / m || a - b === a) continue;
+      const plot = tPick(rng, [
+        'Задумано одно из ' + n + ' чисел. После подсказки осталось ' + m + ' возможных.',
+        'Ключ лежит в одной из ' + n + ' ячеек. Сообщили, в каком он ряду, — и осталось ' + m + ' ' +
+          tPl(m, 'ячейка', 'ячейки', 'ячеек') + '.',
+        'Победитель — один из ' + n + ' участников. Объявили, из какой он команды, — в ней ' + m + ' ' +
+          tPl(m, 'участник', 'участника', 'участников') + '.'
+      ]);
+      return {
+        form: 'num', kind: kind,
+        question: '<p>' + plot + ' Все варианты равновероятны.</p><p class="ask">Сколько бит ' +
+          'информации несло это сообщение?</p>',
+        answer: String(a - b),
+        explain: 'Неопределённость уменьшилась в ' + n + ' : ' + m + ' = ' + (n / m) + ' раз, а каждый бит ' +
+          'уменьшает её вдвое. [[PIC]]',
+        meta: {kind: kind, n: n, m: m, want: a - b, traps: {ratio: n / m, logn: a, logm: b}}
+      };
+    }
+  }
+  for (let tries = 0; tries < 100; tries++) {
+    const n = tRand(rng, 10, 200);
+    const i = fBitsFor(n);
+    if (2 ** i === n) continue;
+    return {
+      form: 'num', kind: 'questions',
+      question: '<p>Ведущий задумал целое число от 1 до ' + n + '. Отвечает только «да» или «нет».</p>' +
+        '<p class="ask">За какое наименьшее число вопросов можно наверняка угадать число?</p>',
+      answer: String(i),
+      explain: 'Лучший вопрос делит оставшиеся числа пополам («больше ли …?») — так один ответ даёт ' +
+        '1 бит. Делим, пока не останется одно число. [[PIC]]',
+      meta: {kind: 'questions', n: n, want: i, traps: {less: i - 1, nself: n, half: Math.floor(n / 2)}}
+    };
+  }
+}
+
+/* ---------------------------------------------- тип 6: сравнение объёмов */
+
+function fItemBits(it) { return it.v * F_UNITS[it.u].f; }
+
+function fType6(rng) {
+  for (let tries = 0; tries < 300; tries++) {
+    const U = tPick(rng, [2, 3]);
+    const k = tRand(rng, 1, 6);
+    const base = k * F_UNITS[U].f;
+    const items = [{v: k, u: U}];
+    /* «Тысячная» ловушка: k·1000 в единице ниже меньше, чем k в крупной. */
+    if (rng() < 0.7) items.push({v: k * 1000, u: U - 1});
+    let guard = 0;
+    while (items.length < 4 && guard++ < 50) {
+      const u = tPick(rng, [U, U - 1, U - 1, U - 2]);
+      const mult = tPick(rng, [0.75, 0.9, 0.95, 1, 1.05, 1.1, 1.25, 1.5, 2]);
+      let v = Math.round(base * mult / F_UNITS[u].f);
+      if (u === U) v = k + tPick(rng, [-1, 1, 2]);
+      if (u === U - 2 && v % 8 === 0 && rng() < 0.5) v += tPick(rng, [-8, 8]) * tRand(rng, 1, 30);
+      if (v < 1) continue;
+      const it = {v: v, u: u};
+      if (items.some(x => fItemBits(x) === fItemBits(it))) continue;
+      items.push(it);
+    }
+    if (items.length < 4) continue;
+    if (new Set(items.map(x => x.u)).size < 2) continue;
+    const shown = tShuffle(rng, items);
+    const order = shown.map((x, i) => i).sort((a, b) => fItemBits(shown[a]) - fItemBits(shown[b]));
+    const answer = order.map(i => String(i + 1)).join('');
+    const byNum = shown.map((x, i) => i).sort((a, b) => shown[a].v - shown[b].v || a - b)
+      .map(i => String(i + 1)).join('');
+    const traps = {rev: answer.split('').reverse().join('')};
+    if (byNum !== answer && new Set(shown.map(x => x.v)).size === 4) traps.bynum = byNum;
+    return {
+      form: 'order',
+      question: '<p>Четыре величины:</p><ul class="plain">' +
+        shown.map((x, i) => '<li>' + (i + 1) + ') ' + fQty(x.v, x.u) + '</li>').join('') + '</ul>' +
+        '<p class="ask">Расставьте их <b>по возрастанию</b>: запишите номера подряд, от меньшей ' +
+        'величины к большей, без пробелов и запятых.</p>',
+      answer: answer,
+      explain: 'Числа в разных единицах сравнивать нельзя — переводим всё в одну единицу, удобнее всего ' +
+        'в биты, и только потом сравниваем. [[PIC]]',
+      meta: {items: shown, want: answer, traps: traps}
+    };
+  }
+}
+
+/* --------------------------------------------------------------- рисунки */
+
+/* Лестница единиц от a к b: плитка на каждую ступень. */
+function fLadder(v, from, to) {
+  const tiles = [fTile(F_UNITS[from].n, v)];
+  let cur = v;
+  const step = from > to ? -1 : 1;
+  for (let u = from; u !== to; u += step) {
+    const nxt = u + step;
+    const k = Math.max(F_UNITS[u].f, F_UNITS[nxt].f) / Math.min(F_UNITS[u].f, F_UNITS[nxt].f);
+    cur = step < 0 ? cur * k : cur / k;
+    tiles.push(fArr());
+    tiles.push(fTile((step < 0 ? '× ' : ': ') + k + ' → ' + F_UNITS[nxt].n, cur, nxt === to ? 'ok' : ''));
+  }
+  return tiles;
+}
+
+function fBad(has, r, want) {
+  return has && r !== String(want) ? [fTile('в ответе', r, 'bad')] : [];
+}
+
+/* Рисунок решения. raw — ответ ученика: на рисунке красным то, что,
+   судя по ответу, сломано. Без raw — чистый эталон. */
+function fPic(t, raw) {
+  fCss();
+  const m = t.meta;
+  const has = raw !== undefined && raw !== null && String(raw).trim() !== '';
+  const r = has ? String(raw).trim() : '';
+  if (t.type === 0) {
+    return '<ul class="xst">' + m.ids.map((id, k) => {
+      const e = F_BANK[id];
+      return '<li class="' + (e.ok ? 't' : 'f') + '">' + (e.ok ? '✓ ' : '✗ ') + (k + 1) + ') ' +
+             e.s + '<span class="w">' + e.why + '</span></li>';
+    }).join('') + '</ul>' + fRow([fTile('верных', m.want, 'ok')].concat(fBad(has, r, m.want)));
+  }
+  if (t.type === 1) {
+    if (m.kind === 'power')
+      return fRow([fTile('вес символа', fBit(m.i)), fArr(),
+                   fTile('N = 2<sup>' + m.i + '</sup>', m.want, 'ok')].concat(fBad(has, r, m.want)));
+    const i = m.want, tiles = [];
+    if (i > 1) tiles.push(fTile('2<sup>' + (i - 1) + '</sup>', 2 ** (i - 1) + ' &lt; ' + m.n, 'bad'));
+    tiles.push(fTile('2<sup>' + i + '</sup>', 2 ** i + ' ≥ ' + m.n, 'ok'));
+    tiles.push(fTile('вес символа', fBit(i), 'ok'));
+    let note = '';
+    if (has && /^\d+$/.test(r) && r !== String(i)) {
+      const k = Number(r);
+      note = k > 0 && k < 31
+        ? fRow([fTile('в ответе ' + k + ': 2<sup>' + k + '</sup>', 2 ** k + (2 ** k < m.n
+            ? ' &lt; ' + m.n + ' — не хватит кодов' : ' — хватит, но ' + i + ' меньше'), 'bad')])
+        : fRow([fTile('в ответе', k, 'bad')]);
+    }
+    return fRow(tiles) + note;
+  }
+  if (t.type === 2) {
+    const tiles = [fTile('N = ' + m.n, 'i = ' + m.i), fArr(),
+                   fTile('I = ' + m.k + ' · ' + m.i, fBit(m.bits), m.kind === 'bits' ? 'ok' : '')];
+    if (m.kind === 'bytes') tiles.push(fArr(), fTile(': 8', m.want + ' байт', 'ok'));
+    if (m.kind === 'kbytes') tiles.push(fArr(), fTile(': 8', m.bits / 8 + ' байт'), fArr(),
+                                        fTile(': 1024', m.want + ' Кбайт', 'ok'));
+    return fRow(tiles) + (has && r !== String(m.want) ? fRow([fTile('в ответе', r, 'bad')]) : '');
+  }
+  if (t.type === 3) {
+    return fRow(fLadder(m.v, m.from, m.to)) +
+      (has && r !== String(m.want) ? fRow([fTile('в ответе', r, 'bad')]) : '');
+  }
+  if (t.type === 4) {
+    if (m.kind === 'alphabet') {
+      const tiles = [];
+      if (m.unit === 1) tiles.push(fTile('объём', m.v + ' байт · 8 = ' + fBit(m.k * m.i)), fArr());
+      else tiles.push(fTile('объём', fBit(m.v)), fArr());
+      tiles.push(fTile('i = ' + m.k * m.i + ' : ' + m.k, fBit(m.i)), fArr(),
+                 fTile('N = 2<sup>' + m.i + '</sup>', m.want, 'ok'));
+      return fRow(tiles) + (has && r !== String(m.want) ? fRow([fTile('в ответе', r, 'bad')]) : '');
+    }
+    return fRow([fTile('объём', m.r + ' · 8192 = ' + fBit(m.bits)), fArr(),
+                 fTile('N = ' + m.n, 'i = ' + fBit(m.i)), fArr(),
+                 fTile('K = ' + m.bits + ' : ' + m.i, m.want, 'ok')]) +
+      (has && r !== String(m.want) ? fRow([fTile('в ответе', r, 'bad')]) : '');
+  }
+  if (t.type === 5) {
+    if (m.kind === 'reverse')
+      return fRow([fTile('информации', fBit(m.i)), fArr(),
+                   fTile('2<sup>' + m.i + '</sup>', m.want + ' ' + tPl(m.want, 'событие', 'события', 'событий'), 'ok')].concat(fBad(has, r, m.want)));
+    if (m.kind === 'narrow')
+      return fRow([fTile('было', m.n), fArr(), fTile('стало', m.m), fArr(),
+                   fTile('в ' + m.n / m.m + ' раз = 2<sup>' + m.want + '</sup>', fBit(m.want), 'ok')]
+                  .concat(fBad(has, r, m.want)));
+    /* Деление пополам: outcomes и questions. */
+    const seq = [];
+    let left = m.n;
+    while (left > 1) { seq.push(left); left = Math.ceil(left / 2); }
+    seq.push(1);
+    const chain = '<div class="xhalf">' + seq.map((x, i) =>
+      (i ? '<i>' + (i) + '-й ' + (m.kind === 'questions' ? 'вопрос' : 'бит') + ' →</i>' : '') +
+      '<span>' + x + '</span>').join('') + '</div>';
+    return chain + fRow([fTile(m.kind === 'questions' ? 'вопросов' : 'бит', m.want, 'ok')]
+      .concat(fBad(has, r, m.want)));
+  }
+  if (t.type === 6) {
+    const pos = {};
+    m.want.split('').forEach((d, k) => { pos[d] = k + 1; });
+    const got = has ? r.split('') : [];
+    return '<table class="codes"><tr><th>№</th><th>величина</th><th>в битах</th><th>место</th></tr>' +
+      m.items.map((x, i) => {
+        const d = String(i + 1);
+        const wrong = has && got.indexOf(d) + 1 !== pos[d];
+        return '<tr><th>' + d + '</th><td>' + fQty(x.v, x.u) + '</td><td>' + fItemBits(x) +
+               '</td><td class="' + (has ? (wrong ? 'bad' : 'ok') : '') + '">' + pos[d] + '</td></tr>';
+      }).join('') + '</table>' + fRow([fTile('по возрастанию', m.want, 'ok')].concat(fBad(has, r, m.want)));
+  }
+  return '';
+}
+
+/* Отпечатки типичных ошибок: число из ответа -> что, похоже, сделано. */
+const F_TRAP_SAY = {
+  wrong: 'посчитаны неверные утверждения, а спрашивали верные',
+  less: 'взято число на единицу меньше: 2<sup>i</sup> тогда меньше нужного, кодов не хватит',
+  nself: 'в ответе само число вариантов, а нужен показатель степени двойки',
+  over: 'здесь 2<sup>i</sup> ровно равно числу символов — лишний бит не нужен',
+  twice: 'вес умножен на 2, а надо 2 возводить в степень',
+  square: 'вес возведён в квадрат, а надо 2 в степени веса',
+  minus: 'вычтена единица — это наибольший номер кода, если считать с нуля, а символов столько, сколько кодов',
+  kn: 'умножено на мощность алфавита, а надо на вес символа в битах',
+  letters: 'это число символов, а нужен объём',
+  inbits: 'это объём в битах, а спрашивали в другой единице',
+  inbytes: 'это объём в байтах — осталось разделить на 1024',
+  dec: 'взято 1000 вместо 1024',
+  lower: 'вес символа взят на бит меньше: столько бит на все символы алфавита не хватит',
+  no8: 'потерялся переход между битами и байтами — множитель 8',
+  inv: 'перепутано, умножать или делить: к мелкой единице число растёт, к крупной — уменьшается',
+  weight: 'это вес символа i, а спрашивали мощность алфавита N = 2<sup>i</sup>',
+  vk: 'байты не переведены в биты перед делением',
+  useN: 'объём разделён на мощность алфавита, а надо на вес символа',
+  half: 'исходов стало вдвое меньше — это один шаг, а шагов нужно до одного варианта',
+  ratio: 'это во сколько раз сузился выбор, а информация — показатель степени двойки',
+  logn: 'посчитана информация о точном варианте из всех, а сообщение оставило несколько',
+  logm: 'посчитано, сколько бит ещё не хватает, а спрашивали, сколько принесло сообщение',
+  rev: 'это порядок по убыванию, а нужен по возрастанию',
+  bynum: 'сравнены голые числа без единиц — сначала переведи всё в одну единицу'
+};
+
+/* ----------------------------------------------------------------- сборка */
+
+const F_MAKERS = [fType0, fType1, fType2, fType3, fType4, fType5, fType6];
+
+function fMake(type, rng) {
+  const t = F_MAKERS[type](rng);
+  t.type = type;
+  /* Отпечаток, совпавший с ответом или с другим отпечатком, ничего не
+     различает — убираем; дробный или неположительный тоже. */
+  const tr = t.meta.traps;
+  if (tr) {
+    const seen = new Set([String(t.answer)]);
+    for (const k of Object.keys(tr)) {
+      const v = tr[k];
+      const okNum = t.form === 'order' ? true : (Number.isInteger(v) && v > 0);
+      if (!okNum || seen.has(String(v))) delete tr[k];
+      else seen.add(String(v));
+    }
+  }
+  return t;
+}
+
+/* Состав работ.
+   Практикум, часть 1 — тренажёр-разминка в один проход: по задаче на тип
+   (trainer-twelve-tasks, правило Светы 21.09.2026). Отметка за урок — по
+   части 2, продукту «Сколько весит сообщение».
+   Домашняя — те же семь типов по одной задаче. В обеих исправленная
+   задача не в зачёт: засчитывается новая (retry-not-counted, 06.10.2026). */
+const F_WORKS = {
+  practice: {plan: [0, 1, 2, 3, 4, 5, 6], scale: [[7, 5], [6, 4], [5, 3]]},
+  homework: {plan: [0, 1, 2, 3, 4, 5, 6], scale: [[7, 5], [6, 4], [5, 3]]}
+};
+
+function fWork(rng, w) {
+  return (w || F_WORKS.practice).plan.map(type => fMake(type, rng));
+}
+
+function fMark(points, w) {
+  w = w || F_WORKS.practice;
+  for (const [need, m] of w.scale) if (points >= need) return m;
+  return 2;
+}
+
+/* Набор по одной задаче каждого типа — для самопроверки и образцов. */
+function fSet(seed) {
+  const rng = tRng(seed || 1);
+  return [0, 1, 2, 3, 4, 5, 6].map(type => fMake(type, rng));
+}
+
+/* Ответ сверяется знак в знак (answer-format-strict), но ошибка всегда
+   названа: что не так с записью или что, похоже, сделано не так. */
+function fVerdict(task, raw) {
+  const s = String(raw === undefined || raw === null ? '' : raw).trim();
+  if (!s) return {ok: false, why: 'ответ пустой'};
+  const m = task.meta;
+  if (task.form === 'order') {
+    if (!/^\d+$/.test(s)) return {ok: false, why: 'только цифры номеров, подряд, без пробелов и запятых'};
+    if (/[05-9]/.test(s)) return {ok: false, why: 'величин всего четыре: номера от 1 до 4'};
+    if (new Set(s.split('')).size !== s.length) return {ok: false, why: 'номер записан дважды'};
+    if (s.length !== 4) return {ok: false, why: 'нужны все четыре номера'};
+    if (s === task.answer) return {ok: true, why: ''};
+    for (const [k, v] of Object.entries((m && m.traps) || {}))
+      if (String(v) === s) return {ok: false, why: 'похоже, ' + F_TRAP_SAY[k]};
+    return {ok: false, why: ''};
+  }
+  if (/\s/.test(s)) return {ok: false, why: 'число записывается без пробелов'};
+  if (!/^\d+$/.test(s)) return {ok: false, why: 'ответ — целое число, без единиц и пояснений'};
+  if (s !== String(Number(s))) return {ok: false, why: 'число записывается без ведущих нулей'};
+  if (s === task.answer) return {ok: true, why: ''};
+  for (const [k, v] of Object.entries((m && m.traps) || {}))
+    if (String(v) === s) return {ok: false, why: 'похоже, ' + F_TRAP_SAY[k]};
+  return {ok: false, why: ''};
+}
+
+/* =================================================================
+   Часть 2 практикума — продукт «Сколько весит сообщение».
+
+   Ученик выбирает алфавит (готовый или свой), пишет им своё сообщение и
+   считает его объём алфавитным подходом; потом придумывает своё событие
+   с равновероятными исходами и считает информацию содержательным
+   подходом. Ключа нет — сообщение и событие у каждого свои; страница
+   проверяет свойства введённого (checking-without-a-key). Пустая
+   заготовка не проходит ни одного пункта.
+   ================================================================= */
+
+const P_ALPHABETS = [
+  {name: 'русские заглавные буквы', abc: 'АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ'},
+  {name: 'латинские заглавные буквы', abc: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'},
+  {name: 'цифры', abc: '0123456789'},
+  {name: 'шестнадцатеричные цифры', abc: '0123456789ABCDEF'},
+  {name: 'буквы ДНК', abc: 'ACGT'},
+  {name: 'двоичные цифры', abc: '01'}
+];
+
+/* Алфавит — различные символы строки, пробелы не в счёт. */
+function pAbc(s) {
+  return Array.from(new Set(Array.from(String(s || '')).filter(c => c.trim())));
+}
+
+const P_MIN_MSG = 12;
+const P_MAX_ABC = 64;
+
+function pName(c) { return c === ' ' ? 'пробел' : '«' + c + '»'; }
+
+/* Проверка продукта. inp: {abc, msg, k, n, i, bits, save, ev, en, ei} —
+   всё строками, как в полях. Возвращает шесть пунктов {name, ok, why}. */
+function pCheck(inp) {
+  const out = [];
+  const say = (name, ok, why) => out.push({name: name, ok: !!ok, why: ok ? '' : why()});
+  const num = v => /^\d+$/.test(String(v || '').trim()) ? Number(String(v).trim()) : NaN;
+  const abc = pAbc(inp.abc);
+  const N = abc.length;
+  const abcOk = N >= 2 && N <= P_MAX_ABC;
+  const msg = String(inp.msg || '');
+  const chars = Array.from(msg);
+  const foreign = Array.from(new Set(chars.filter(c => abc.indexOf(c) < 0)));
+  const K = chars.length;
+  const msgOk = abcOk && K >= P_MIN_MSG && !foreign.length;
+  const i = abcOk ? fBitsFor(N) : 0;
+
+  /* 1. Сообщение и его длина. */
+  say('Сообщение записано своим алфавитом, и длина K посчитана', msgOk && num(inp.k) === K,
+      () => !abcOk ? 'сначала выбери алфавит'
+      : !K ? 'напиши сообщение'
+      : foreign.length ? 'в алфавите нет ' + tPl(foreign.length, 'символа', 'символов', 'символов') + ' ' +
+          foreign.slice(0, 3).map(pName).join(', ') + (foreign.length > 3 ? ' и других' : '') +
+          ' — пиши только символами выбранного алфавита'
+      : K < P_MIN_MSG ? 'сообщение короче ' + P_MIN_MSG + ' символов — допиши'
+      : 'в сообщении ' + K + ' ' + tPl(K, 'символ', 'символа', 'символов') + ' — пересчитай K');
+
+  /* 2. Мощность алфавита. */
+  say('Мощность алфавита N', abcOk && num(inp.n) === N,
+      () => N < 2 ? 'в алфавите нужно хотя бы два разных символа'
+      : N > P_MAX_ABC ? 'в своём алфавите не больше ' + P_MAX_ABC + ' символов'
+      : 'N — сколько разных символов в алфавите; пересчитай строку алфавита');
+
+  /* 3. Вес символа. */
+  say('Информационный вес символа i', abcOk && num(inp.i) === i,
+      () => !abcOk ? 'сначала алфавит'
+      : 'нужно наименьшее i, при котором 2^i не меньше N');
+
+  /* 4. Объём сообщения. */
+  say('Объём сообщения I = K · i в битах', msgOk && num(inp.bits) === K * i,
+      () => !msgOk ? 'сначала пункт 1: сообщение своим алфавитом'
+      : 'I = K · i: символов в сообщении × вес символа (пункты 1 и 3)');
+
+  /* 5. Сравнение с байтом на символ. */
+  say('Экономия против «байт на символ»', msgOk && num(inp.save) === K * 8 - K * i,
+      () => !msgOk ? 'сначала пункт 1: сообщение своим алфавитом'
+      : 'по байту на символ было бы K · 8 бит; из этого вычти свой объём I');
+
+  /* 6. Своё событие, содержательный подход. */
+  const ev = String(inp.ev || '').trim();
+  const en = num(inp.en), ei = num(inp.ei);
+  const lg = Number.isInteger(en) ? fLog2(en) : -1;
+  const evOk = (ev.match(/[А-Яа-яЁёA-Za-z]/g) || []).length >= 10;
+  say('Своё событие: N равновероятных исходов и i бит', evOk && lg >= 1 && en <= 1024 && ei === lg,
+      () => !evOk ? 'опиши своё событие словами — что случилось и из скольких вариантов'
+      : !Number.isInteger(en) ? 'впиши, сколько равновероятных исходов у события'
+      : lg < 1 || en > 1024 ? 'число исходов должно быть степенью двойки от 2 до 1024 (2, 4, 8, …) — ' +
+          'тогда информация выйдет целым числом бит'
+      : 'исходов ' + en + ' = 2^' + lg + ' — сколько это бит?');
+  return out;
+}
+
+/* Отметка за продукт: 6 пунктов — «5», 5 — «4», 4 — «3». */
+const P_SCALE = [[6, 5], [5, 4], [4, 3]];
+
+function pMark(passed) {
+  for (const [need, m] of P_SCALE) if (passed >= need) return m;
+  return null;
+}
+/* ==== /ЗАДАЧИ ==== */
+
+/* Форма сдачи ДЗ — одна на все темы. Ссылку разносит set_form_link.py. */
+const FORM = "https://docs.google.com/forms/d/e/1FAIpQLSfQyhaxcnzn4ZaKSe_ZMsluw7qRQnrw_80H6SfrnYB5EThUIA/viewform?usp=pp_url&entry.853601231=УЧЕНИК&entry.487188307=КОД";
+
+const ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+const EPOCH = Date.UTC(2026, 0, 1);
+const PREFIX = "IM";
+/* Один верный ответ закрывает тип: семь задач на всю работу
+   (trainer-twelve-tasks — в домашней по одной на тип). Меняешь число —
+   поправь и тексты наверху: «Как устроено» написано словами. Шкала обязана
+   совпадать с scale в check_homework.py. */
+const NEED_STREAK = 1;
+const MIN_TYPES = 5;       // ниже этого код не выдаётся
+const SCALE = [[7, 5], [6, 4], [5, 3]];   // = F_WORKS.homework.scale в tasks.js
+const TOTAL = SCALE[0][0];
+
+/* Тройку можно добрать, четвёрку и пятёрку — только заработать (Света,
+   06.10.2026, общее правило тренажёра и ДЗ). Ошибочная задача тип не
+   закрывает, вместо неё «Новые числа» дают задачу того же типа — без
+   ограничений, до тройки дойдёт любой, кто не бросит. Но ошибки ставят
+   потолок: их можно столько, сколько допускает та же отметка на
+   проверочной (на «5» — 6 − 6 = 0, на «4» — 6 − 5 = 1). Больше — потолок
+   тройка. */
+const LOWEST = SCALE[SCALE.length - 1];
+// ПОТОЛОК СНЯТ (Света, 06.10.2026, после урока: «слишком жёстко — в
+// тренажёре новый материал, сразу чисто не выходит»). Добирать можно до
+// «5». Функция оставлена ради разметки вокруг неё, но всегда отдаёт верхнюю
+// отметку: ветки «выше N не получить» не срабатывают, отрезки лесенки не
+// штрихуются, countedFor отдаёт число как есть.
+const ceilingFor = () => SCALE[0][1];
+
+/* Формат кода прежний. В поле «закрыто типов» уходит число, уже упёртое в
+   потолок: разборщик (check_homework.py) ставит отметку по нему и ничего не
+   знает о потолке, а отметка выходит та же, что на странице. */
+function countedFor(n, errs){
+  const higher = SCALE.find(s => s[1] === ceilingFor(errs) + 1);
+  return higher ? Math.min(n, higher[0] - 1) : n;
+}
+
+/* Лесенка вместо одной цифры (Света, 06.10.2026): до тройки — не «двойка»,
+   а заполняющийся отрезок «на 3». Отрезок выше потолка заштрихован. */
+function ladderHtml(n, cap){
+  let from = 0;
+  return SCALE.slice().reverse().map(([need, m]) => {
+    const size = need - from;
+    const got = Math.max(0, Math.min(size, n - from));
+    const capped = m > cap, reached = n >= need && !capped;
+    from = need;
+    const cells = Array.from({length: size},
+        (_, k) => '<i class="' + (k < got ? "f" : "") + '"></i>').join("");
+    return '<div class="seg' + (reached ? " got" : "") + (capped ? " capped" : "")
+         + '" style="flex:' + size + ' 1 0"><div class="cells">' + cells + '</div>'
+         + '<div class="lab">' + (capped ? "на " + m + " — потолок"
+                                         : (reached ? "✓ " : "") + "на " + m) + '</div></div>';
+  }).join("");
+}
+
+const bin = (v, w) => v.toString(2).padStart(w, "0");
+
+/* Семибитными частями строки: в нагрузке 33 бита, а побитовые операции в JS
+   32-битные — старший бит молча потерялся бы. */
+function checksum(bitstr){
+  let cs = 0x5B;
+  for (let i = 0; i < bitstr.length; i += 7)
+    cs ^= parseInt(bitstr.substr(i, 7).padEnd(7, "0"), 2);
+  return cs & 0x7F;
+}
+
+/* Код ученика вместо фамилии (юрист, 10.10.2026: фамилию страница не
+   спрашивает и никуда не отправляет). Код места вида 9А1-07 или 10У-03 —
+   класс, подгруппа, номер места — выдаёт учитель; кто есть кто, знает только он.
+   seatKey приводит набранное к одному виду: латинские двойники букв —
+   в кириллицу, пробелы прочь, любое тире — в «-», место двумя цифрами
+   («9a1 - 7» -> «9А1-07»); дефис обязателен. Не похоже на код — пустая строка, и кода
+   работы нет. Из ключа получаются 40 бит (FNV-1a и xorshift32), которыми
+   код работы перемешивается. Та же арифметика живёт в homework.py. */
+const SEAT_LAT = {A: "А", B: "В", E: "Е", K: "К", M: "М", H: "Н",
+                  O: "О", P: "Р", C: "С", T: "Т", Y: "У", X: "Х"};
+function seatKey(s){
+  const t = [...String(s || "").trim().toUpperCase()
+                .replace(/[ABEKMHOPCTYX]/g, c => SEAT_LAT[c])]
+    .filter(c => c.trim()).join("")
+    .replace(/[‐‑‒–—−]/g, "-");
+  const m = t.match(/^([0-9]{1,2})([А-ЯЁ]{0,2})([0-9]?)-([0-9]{1,2})$/);
+  return m ? m[1] + m[2] + m[3] + "-" + m[4].padStart(2, "0") : "";
+}
+
+/* Поле «Код ученика»: подсказка под ним, мягкое замечание на неверный
+   код и кнопка, которая не нажимается, пока код не похож на код. Код
+   нигде не запоминается: компьютер в классе общий. */
+function seatInit(inp, btn){
+  if (!inp || inp.dataset.seat) return;
+  inp.dataset.seat = "1";
+  inp.placeholder = "например 9А1-07";
+  inp.setAttribute("autocomplete", "off");
+  inp.setAttribute("spellcheck", "false");
+  const bad = document.createElement("div");
+  bad.className = "seat-bad";
+  bad.style.cssText = "color:#b3261e;font-size:14px;margin-top:4px;min-height:0";
+  const note = document.createElement("div");
+  note.className = "seat-note";
+  note.style.cssText = "color:#5c6070;font-size:13px;margin-top:4px;max-width:340px";
+  note.textContent = "Код выдаёт учитель. Фамилию здесь не вписывают — "
+                   + "в работу уходит только код.";
+  inp.insertAdjacentElement("afterend", note);
+  inp.insertAdjacentElement("afterend", bad);
+  const check = () => {
+    const raw = inp.value.trim();
+    const ok = !!seatKey(raw);
+    bad.textContent = raw && !ok
+      ? "Код вида 9А1-07 или 10У-03: класс, подгруппа, номер места" : "";
+    if (btn) btn.disabled = !ok;
+  };
+  inp.addEventListener("input", check);
+  check();
+}
+
+function seatStream(code){
+  const s = seatKey(code);
+  if (!s) return "0".repeat(40);
+  let h = 0x811C9DC5;
+  for (const ch of s){
+    h ^= ch.charCodeAt(0);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  const step = x => { x ^= x << 13; x ^= x >>> 17; x ^= x << 5; return x >>> 0; };
+  let x = h || 0x9E3779B9;
+  for (let i = 0; i < 4; i++) x = step(x);
+  const w1 = x = step(x), w2 = step(x);
+  return (bin(w1, 32) + bin(w2, 32)).slice(0, 40);
+}
+
+function makeCode(st, code){
+  const day = Math.max(0, Math.min(2047, Math.floor(
+      (Date.now() - EPOCH) / 86400000)));
+  const payload = bin(day, 11) + bin(Math.min(15, st.typesDone), 4) +
+                  bin(Math.min(15, st.cleanTypes), 4) +
+                  bin(Math.min(127, st.solved), 7) +
+                  bin(Math.min(127, st.wrong), 7);
+  const plain = payload + bin(checksum(payload), 7);
+  const key = seatStream(code);
+  let bitstr = "";
+  for (let i = 0; i < 40; i++) bitstr += plain[i] === key[i] ? "0" : "1";
+  let out = "";
+  for (let i = 0; i < 40; i += 5)
+    out += ALPHABET[parseInt(bitstr.substr(i, 5), 2)];
+  return PREFIX + "-" + out.slice(0, 4) + "-" + out.slice(4);
+}
+
+/* ---------------------------------------------------------- состояние */
+const N = F_TYPES.length;
+const rng = tRng((Date.now() ^ (Math.random() * 1e9)) >>> 0);
+const st = {
+  tasks: [], done: Array(N).fill(false), clean: Array(N).fill(true),
+  tries: Array(N).fill(1), answered: Array(N).fill(false),
+  solved: 0, wrong: 0
+};
+// закрыто на самом деле
+Object.defineProperty(st, "closed",
+  {get(){ return st.done.filter(Boolean).length; }});
+// закрыто «для отметки и кода» — упёрто в потолок по ошибкам
+Object.defineProperty(st, "typesDone",
+  {get(){ return countedFor(st.closed, st.wrong); }});
+Object.defineProperty(st, "cleanTypes",
+  {get(){ return st.done.filter((d, i) => d && st.clean[i]).length; }});
+
+function markFor(n){
+  for (const [need, m] of SCALE) if (n >= need) return m;
+  return null;
+}
+
+
+
+/* Разбор — рисунком (pictures-over-words): [[PIC]] из tasks.js, при
+   ошибке на нём же красным то, что, судя по ответу, сломано. */
+function why(t, raw){ return t.explain.replace('[[PIC]]', fPic(t, raw)); }
+
+function esc(s){ return String(s).replace(/[&<>]/g, c =>
+  ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+
+function placeholder(t){
+  return t.form === "order" ? "номера подряд" : "число";
+}
+
+function paint(){
+  const box = document.getElementById("types");
+  box.innerHTML = "";
+  F_TYPES.forEach(function(name, i){
+    const c = document.createElement("span");
+    c.className = "chip" + (st.done[i] ? " done" : "");
+    c.textContent = (i + 1) + " " + name + (st.done[i] ? " ✓" : "");
+    c.title = "перейти к задаче " + (i + 1);
+    c.addEventListener("click", function(){
+      document.getElementById("t" + i).scrollIntoView({behavior: "smooth", block: "start"});
+    });
+    box.appendChild(c);
+  });
+  const cap = ceilingFor(st.wrong);
+  document.getElementById("ladder").innerHTML = ladderHtml(st.closed, cap);
+  // «2» по ходу не показываем: до тройки — прочерк и лесенка
+  const m = st.closed >= MIN_TYPES ? markFor(st.typesDone) : null;
+  const sb = document.getElementById("scorebox");
+  sb.className = "score" + (m ? " m" + m : "");
+  document.getElementById("mark").textContent = m || "—";
+  document.getElementById("stats").textContent =
+    "закрыто типов: " + st.closed + " из " + N + " · ошибок: " + st.wrong +
+    (st.closed < MIN_TYPES
+      ? " · до тройки и кода работы осталось закрыть " + (MIN_TYPES - st.closed) : "") +
+    (cap < SCALE[0][1]
+      ? " · выше «" + cap + "» в этом заходе не получить"
+      : (st.wrong ? "" : " · без ошибок пока — пятёрка открыта"));
+}
+
+function renderTask(i){
+  const t = st.tasks[i];
+  const card = document.getElementById("t" + i);
+  card.className = "card";
+  card.innerHTML =
+    '<p class="tag">Задача ' + (i + 1) + ' — ' + F_TYPES[t.type] +
+      (st.tries[i] > 1 ? ' · попытка ' + st.tries[i] : '') + '</p>' +
+    '<div class="q">' + t.question + '</div>' +
+    '<div class="row">' +
+      '<input type="text" id="a' + i + '" autocomplete="off" spellcheck="false" ' +
+             'placeholder="' + placeholder(t) + '">' +
+      '<button class="primary" id="go' + i + '">Проверить</button>' +
+    '</div>' +
+    '<div class="verdict" id="v' + i + '"></div>';
+  document.getElementById("a" + i).addEventListener("keydown", function(e){
+    if (e.key === "Enter") judge(i);
+  });
+  document.getElementById("go" + i).addEventListener("click", function(){ judge(i); });
+}
+
+function judge(i){
+  if (st.answered[i]) return;
+  const raw = document.getElementById("a" + i).value;
+  if (!raw.trim()) return;
+  const t = st.tasks[i];
+  const res = fVerdict(t, raw);
+  st.answered[i] = true;
+  const card = document.getElementById("t" + i);
+  const go = document.getElementById("go" + i);
+  const v = document.getElementById("v" + i);
+  document.getElementById("a" + i).disabled = true;
+  if (res.ok){
+    st.solved++;
+    st.done[i] = true;
+    card.className = "card ok";
+    go.disabled = true;
+    v.className = "verdict ok";
+    v.innerHTML = "Верно. Тип закрыт." +
+      '<details class="why"><summary>как это решалось</summary>' + why(t) + '</details>';
+  } else {
+    st.wrong++;
+    st.clean[i] = false;
+    card.className = "card err";
+    v.className = "verdict err";
+    const cap = ceilingFor(st.wrong);
+    v.innerHTML = "Пока нет" + (res.why ? " — " + res.why : "") +
+      ". Верный ответ: <code>" + esc(t.answer) + "</code>." +
+      (cap < SCALE[0][1] ? " Ошибок: " + st.wrong + " — выше «" + cap +
+        "» в этом заходе не получить." : "") +
+      '<div class="why">' + why(t, raw) + '</div>';
+    go.textContent = "Новые числа";
+    go.onclick = function(){
+      st.tasks[i] = fMake(t.type, rng);
+      st.tries[i]++;
+      st.answered[i] = false;
+      renderTask(i);
+      document.getElementById("a" + i).focus();
+      paint();
+    };
+  }
+  paint();
+}
+
+/* Код работы привязан к коду ученика (с 10.10.2026 вместо фамилии —
+   решение юриста): пока код ученика не вписан или не похож на код, кода
+   работы нет, а вписанный подмешивается в код. У двух учеников с
+   одинаковым результатом коды разные, а чужой код к своему коду ученика
+   не подходит. Код ученика страница не запоминает: компьютер общий. */
+let CURRENT_CODE = "";
+// Ни код ученика, ни класс страница не помнит: компьютер в классе общий,
+// а класс и так внутри кода ученика. REMEMBERED — пустая строка, след прежних версий.
+let REMEMBERED = "";
+function wireCode(){
+  const seat = document.getElementById("seat");
+  const box = document.getElementById("code");
+  const hint = document.getElementById("seathint");
+  const update = () => {
+    const f = seat ? seat.value.trim() : "";
+    CURRENT_CODE = box && seatKey(f) ? makeCode(st, f) : "";
+    if (box){
+      box.textContent = CURRENT_CODE || "впиши код ученика — появится код работы";
+      box.classList.toggle("wait", !CURRENT_CODE);
+    }
+  };
+  seatInit(seat, document.getElementById("send"));
+  if (seat) seat.addEventListener("input", update);
+  update();
+}
+
+// Кнопка «Сдать» берёт код, посчитанный по вписанному коду ученика.
+function wireSendB(){
+  const send = document.getElementById("send");
+  if (!send) return;
+  send.addEventListener("click", function(){
+    const seatEl = document.getElementById("seat");
+    const note = document.getElementById("sendnote");
+    const f = seatEl.value.trim();
+    if (!CURRENT_CODE){
+      note.textContent = "Впиши код ученика — без него кода работы нет и непонятно, "
+                       + "чья это работа.";
+      seatEl.focus();
+      return;
+    }
+    try {
+      localStorage.removeItem("hw-fam");
+    } catch (e) {}
+    const url = FORM.replace("УЧЕНИК", encodeURIComponent(seatKey(f)))
+                    .replace("КЛАСС", "")
+                    .replace("КОД", encodeURIComponent(CURRENT_CODE));
+    window.open(url, "_blank", "noopener");
+    note.innerHTML = "Форма открылась в новой вкладке. Работа сдана, только "
+      + "когда в форме нажата «Отправить». Вкладка не открылась — "
+      + '<a href="' + url + '" target="_blank" rel="noopener">открой форму '
+      + "по этой ссылке</a>.";
+  });
+}
+
+/* Итог рисуется внизу, задачи остаются на экране: закрыл ещё тип — нажми
+   «Закончить» снова, код пересчитается. Код ученика не теряем. */
+function finish(){
+  const m = markFor(st.typesDone);
+  const cap = ceilingFor(st.wrong);
+  const ready = st.closed >= MIN_TYPES;
+  const seatOld = document.getElementById("seat");
+  let seat = seatOld ? seatOld.value : "";
+  if (!seatOld) try {
+    localStorage.removeItem("hw-fam");  // фамилию не храним: компьютер общий
+    seat = REMEMBERED;
+    localStorage.removeItem("hw-kls");
+  } catch (e) {}
+  const box = document.getElementById("result");
+  box.innerHTML =
+    '<div class="card">' +
+      '<h2>Итог</h2>' +
+      '<p>Закрыто типов: <b>' + st.closed + '</b> из ' + N +
+        '. Решено задач: ' + st.solved + ', ошибок: ' + st.wrong + '.' +
+        (ready ? ' Наработано на <b>' + m + '</b>.' : '') +
+        (ready && cap < SCALE[0][1] ? ' Выше «' + cap + '» с таким числом ошибок не выйдет.' : '') +
+      '</p>' +
+      (ready
+        ? '<p>Твой код работы:</p><div class="code" id="code"></div>' +
+          '<div class="note">Это код твоей работы. Он собран из кода ученика ' +
+            'и того, сколько и как ты решал: у соседа с тем же результатом ' +
+            'код другой. Поменяешь код ученика — поменяется и код работы. ' +
+            'Впиши код ученика — кнопка откроет форму с уже ' +
+            'подставленным кодом.' +
+            (st.closed < N ? ' Закроешь ещё тип — нажми «Закончить» снова, ' +
+              'код обновится.' : '') + '</div>' +
+          '<div class="fields">' +
+            '<div><label for="seat">Код ученика</label>' +
+              '<input type="text" id="seat" autocomplete="off"></div>' +
+          '</div>' +
+          '<p class="stats" id="seathint"></p>' +
+          '<div class="row"><button id="send" class="primary">Сдать работу</button></div>' +
+          '<p class="stats" id="sendnote"></p>'
+        : '<div class="note">Закрыто меньше ' + MIN_TYPES +
+          ' типов — кода работы нет. Закрой ещё хотя бы ' +
+          (MIN_TYPES - st.closed) + ' выше, и нажми «Закончить» снова.</div>') +
+    '</div>';
+  const seatEl = document.getElementById("seat");
+  if (seatEl){ seatEl.value = seat; }
+  wireCode();
+  wireSendB();
+  box.scrollIntoView({behavior: "smooth", block: "start"});
+  paint();
+}
+
+/* Старт: по задаче каждого типа, все сразу. */
+(function start(){
+  const area = document.getElementById("area");
+  for (let i = 0; i < N; i++){
+    st.tasks.push(fMake(i, rng));
+    const d = document.createElement("div");
+    d.className = "card";
+    d.id = "t" + i;
+    area.appendChild(d);
+    renderTask(i);
+  }
+  document.getElementById("total").addEventListener("click", finish);
+  paint();
+})();
+</script>
+<p class="ai-mark">Материалы подготовлены с использованием технологий искусственного интеллекта.</p>
+<script>/* фамилию не храним: компьютер общий — стираем запомненное прежними версиями */ try { localStorage.removeItem("hw-fam"); localStorage.removeItem("hw-kls"); } catch (e) {}</script>
+</body>
+</html>
