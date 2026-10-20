@@ -1,0 +1,1813 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Задание 12 ЕГЭ: исполнитель МТ — презентация</title>
+<meta name="description" content="Презентация к разбору задания 12 ЕГЭ в 11 классе (углублённый): исполнитель МТ (машина Тьюринга) — как читать таблицу команд, лента по шагам, приём «подпиши каждое состояние», что бывает с числом, автомат с состояниями по кругу, обратная задача, «сколько нулей могло быть», программа на Python как второй способ, слайды-примеры на все десять форм со сверкой ответа класса, пять ловушек.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E11%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ink)}
+body{font:20px/1.5 "Segoe UI",system-ui,sans-serif}
+.deck{height:100vh;display:flex;flex-direction:column}
+.stage{flex:1 1 auto;overflow-y:auto;padding:34px 56px 12px}
+.slide{display:none;max-width:1100px;margin:0 auto}
+.slide.on{display:block}
+
+h1{font-size:48px;line-height:1.1;margin:0 0 18px;text-wrap:balance}
+h2{font-size:34px;line-height:1.15;margin:0 0 18px;text-wrap:balance}
+.lead{font-size:23px;color:var(--muted);margin:0 0 24px}
+.eyebrow{font:700 14px/1 "Segoe UI",system-ui,sans-serif;letter-spacing:.1em;
+         text-transform:uppercase;color:var(--accent);margin:0 0 8px}
+p{margin:0 0 14px}
+ul{margin:0 0 14px;padding-left:28px}
+li{margin:8px 0}
+code{font-family:Consolas,"Cascadia Mono",monospace;background:var(--card);
+     border:1px solid var(--line);border-radius:6px;padding:1px 7px;font-size:.92em}
+pre{font-family:Consolas,"Cascadia Mono",monospace;background:#1e2430;color:#e7ecf5;
+    padding:16px 20px;border-radius:12px;font-size:20px;line-height:1.45;
+    overflow-x:auto;margin:10px 0}
+pre code{background:none;border:0;padding:0;color:inherit;font-size:inherit}
+pre .c{color:#8fa6c4}
+pre .out{color:#9dd4b4}
+pre .hl{color:#ffd479}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;align-items:start}
+.box{border:1px solid var(--line);border-radius:14px;padding:16px 20px;background:#fff}
+.box h3{margin:0 0 8px;font-size:22px}
+.good{border-color:var(--ok-line);background:var(--ok-bg)}
+.bad{border-color:var(--err-line);background:var(--err-bg)}
+.warn{border-color:var(--hi-line);background:var(--hi-bg)}
+.big{font-size:25px}
+table{border-collapse:collapse;font-size:19px;margin:10px 0}
+th,td{border:1px solid var(--line);padding:7px 14px;text-align:left}
+th{background:var(--card)}
+table.mini th,table.mini td{padding:6px 12px}
+table.num td{text-align:right;font-family:Consolas,monospace}
+tr.yes td{background:var(--ok-bg);font-weight:700}
+tr.no td{background:var(--err-bg)}
+.key{color:var(--accent);font-weight:700}
+.step[hidden]{display:none}
+.tag{display:inline-block;background:var(--accent);color:#fff;border-radius:20px;
+     padding:3px 14px;font-size:16px;font-weight:700;margin-bottom:12px}
+.tag.gray{background:var(--muted)}
+.bar{flex:0 0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+     border-top:1px solid var(--line);background:var(--card);padding:12px 24px}
+.bar .spacer{flex:1 1 auto}
+.count{color:var(--muted);font-size:17px;font-variant-numeric:tabular-nums}
+.keys{color:var(--muted);font-size:15px}
+.keys kbd{font:600 13px/1 Consolas,monospace;border:1px solid var(--line);
+          border-bottom-width:2px;border-radius:5px;padding:2px 6px;background:#fff}
+button{font:600 17px/1 inherit;padding:11px 18px;border-radius:10px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);color:var(--muted)}
+
+/* ---- размер шрифта на проекторе: A− / A+ ---- */
+.zoom{display:inline-flex;align-items:center;gap:3px;margin-left:8px}
+.zoom button{padding:8px 10px;font-size:15px;min-width:36px;line-height:1}
+.zoom .z{color:var(--muted);font-size:15px;min-width:46px;text-align:center;
+         font-variant-numeric:tabular-nums}
+
+/* ---- условие задачи на слайде: слева от разбора, на своём месте ---- */
+.cond{border:1px solid var(--line);border-radius:14px;padding:16px 20px;
+      background:var(--card);font-size:19px}
+.cond p:last-child{margin-bottom:0}
+.fnote{color:var(--muted);font-size:17px}
+ol{margin:0 0 14px;padding-left:28px}
+
+/* ---- цепочка плиток на статичных слайдах (та же, что рисует fPic) ---- */
+.chain{display:flex;flex-wrap:wrap;gap:10px 6px;align-items:stretch;margin:14px 0}
+.chain .s{border:1px solid var(--line);border-radius:12px;padding:10px 16px;background:#fff;
+          font:22px/1.35 Consolas,monospace}
+.chain .s small{display:block;font:15px/1.3 "Segoe UI",sans-serif;color:var(--muted)}
+.chain .s.k{border:2px solid var(--ok);background:var(--ok-bg);font-weight:700}
+.chain .s.b{border:2px solid var(--err);background:var(--err-bg)}
+.chain .ar{align-self:center;color:#8a8fa0;font:600 26px/1 "Segoe UI",sans-serif}
+
+/* ---- слайд-пример: условие слева на месте, разбор справа ---- */
+.exwrap{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:22px;align-items:start}
+.exwrap .task{position:sticky;top:0;font-size:18px;padding:12px 18px}
+.exwrap .task.tall{position:static}
+.exwrap .task p{margin:6px 0}
+.exwrap .task .ask{font-weight:700}
+.exwrap .steps{display:flex;flex-direction:column;gap:10px}
+.exwrap .step{border:1px solid var(--line);border-radius:14px;padding:10px 18px;font-size:19px;background:#fff}
+.exwrap .step .fx .s{font-size:17px}
+.exwrap .step table.fb{font-size:16px}
+@media (max-width:1000px){ .exwrap{grid-template-columns:1fr} .exwrap .task{position:static} }
+.xcheck{display:flex;gap:10px;margin-top:12px}
+.xcheck .xin{font:700 24px/1 Consolas,monospace;width:240px;padding:8px 12px;
+             border:2px solid var(--line);border-radius:10px}
+.xcheck .xin:focus{outline:none;border-color:var(--accent)}
+.steps .xres:empty{display:none}
+.steps .xres{border:3px dashed var(--accent);border-radius:12px;padding:6px 16px 10px;background:#fff}
+.xres .xverd{font:800 24px/1.2 "Segoe UI",system-ui,sans-serif;margin:4px 0 2px}
+.xres .xverd.ok{color:var(--ok)}
+.xres .xverd.bad{color:var(--err)}
+.xres .xwhy{color:var(--muted);font-size:16px}
+</style>
+
+<style>img.frz-b{display:block;max-width:100%;height:auto;border-radius:10px;margin:8px 0}img.frz-i{display:inline-block;vertical-align:-0.32em;max-width:100%;height:auto;border-radius:5px}</style>
+</head>
+<body>
+<div class="deck">
+<div class="stage" id="stage">
+
+<section class="slide on">
+  <h1>Задание 12:<br>исполнитель МТ</h1>
+  <p class="lead">Машина Тьюринга: лента из клеток, головка, таблица команд.<br>
+  Решаем <b>разбором таблицы</b>: подписываем, что делает каждое состояние,
+  прогоняем ленту на коротком числе — и видим правило.</p>
+  <p>Базовый уровень, один балл. Ответ — одно целое число в десятичной записи.</p>
+</section>
+
+<section class="slide">
+  <span class="tag">условие</span>
+  <h2>Как это выглядит на экзамене</h2>
+  <div class="two">
+    <div class="cond">
+      <p>На ленте в соседних ячейках записано двоичное представление числа
+         <b>1000</b> без ведущих нулей, вокруг — пустые ячейки «λ». Головка
+         стоит в ближайшей ячейке <b>справа</b> от числа.</p>
+      <table class="mtt">
+        <tr><th></th><th>λ</th><th>0</th><th>1</th></tr>
+        <tr><th>q<sub>0</sub></th><td>λ, L, q<sub>1</sub></td><td></td><td></td></tr>
+        <tr><th>q<sub>1</sub></th><td>1, L, q<sub>2</sub></td><td>0, L, q<sub>1</sub></td><td>1, L, q<sub>1</sub></td></tr>
+        <tr><th>q<sub>2</sub></th><td>λ, S, q<sub>2</sub></td><td></td><td></td></tr>
+      </table>
+      <p>Определите результат. Ответ — в десятичной системе.</p>
+      <p class="fnote">По форме демоверсии 2027, числа свои.</p>
+    </div>
+    <div>
+      <div class="box"><h3>Что дано</h3>
+        <p>Строка таблицы — <b>состояние</b> головки, столбец — <b>символ под
+           ней</b>. В клетке — команда: что записать, куда сдвинуться, в какое
+           состояние перейти.</p></div>
+      <div class="box warn" style="margin-top:14px"><h3>Где теряют балл</h3>
+        <p>Перепутали столбцы 0 и 1 (их порядок в шапке бывает разный), начали
+           не с той стороны, сдали двоичную запись вместо десятичной.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">таблица</span>
+  <h2>Как читать команду</h2>
+  <div class="two">
+    <div>
+      <p class="big"><img class="frz-i" width="94" height="22" alt="код" src="data:image/png;base64,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"></p>
+      <ol>
+        <li><b>1</b> — записать в текущую клетку 1 (может совпасть с тем, что
+            там было);</li>
+        <li><b>L</b> — шаг влево, <b>R</b> — вправо, <b>S</b> — остановка после
+            записи;</li>
+        <li><b>q<sub>2</sub></b> — новое состояние.</li>
+      </ol>
+      <p>Работа начинается в <b>q<sub>0</sub></b>. Пустая клетка «λ» — тоже
+         символ: команда в её столбце срабатывает за краем числа.</p>
+    </div>
+    <div class="box warn"><h3>Порядок столбцов</h3>
+      <p>Бывает <b>λ, 0, 1</b>, бывает <b>λ, 1, 0</b> — в задачах экзаменов
+         встречаются оба. Каждый раз смотри в шапку.</p>
+      <p>Пустая клетка в таблице — пара «состояние — символ», которая не
+         встречается.</p></div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">прогон</span>
+  <h2>Лента по шагам: прибавить 1</h2>
+  <div class="two">
+    <div>
+      <table class="mtt">
+        <tr><th></th><th>λ</th><th>0</th><th>1</th></tr>
+        <tr><th>q<sub>0</sub></th><td>λ, L, q<sub>1</sub></td><td></td><td></td></tr>
+        <tr><th>q<sub>1</sub></th><td>1, R, q<sub>2</sub></td><td>1, R, q<sub>2</sub></td><td>0, L, q<sub>1</sub></td></tr>
+        <tr><th>q<sub>2</sub></th><td>λ, S, q<sub>2</sub></td><td>0, R, q<sub>2</sub></td><td>1, R, q<sub>2</sub></td></tr>
+      </table>
+      <p>Число 11 = 1011<sub>2</sub>, головка справа. Рамка — головка, жёлтым —
+         изменённые клетки.</p>
+    </div>
+    <div class="mtw"><table class="tape">
+      <tr><td class="lab">начало, q0</td><td class="e">λ</td><td>1</td><td>0</td><td>1</td><td>1</td><td class="e hd">λ</td></tr>
+      <tr><td class="lab">q1</td><td class="e">λ</td><td>1</td><td>0</td><td>1</td><td class="hd">1</td><td class="e">λ</td></tr>
+      <tr><td class="lab">q1</td><td class="e">λ</td><td>1</td><td>0</td><td class="hd">1</td><td class="ch">0</td><td class="e">λ</td></tr>
+      <tr><td class="lab">q1</td><td class="e">λ</td><td>1</td><td class="hd">0</td><td class="ch">0</td><td class="ch">0</td><td class="e">λ</td></tr>
+      <tr><td class="lab">q2</td><td class="e">λ</td><td>1</td><td class="ch">1</td><td class="ch hd">0</td><td class="ch">0</td><td class="e">λ</td></tr>
+      <tr class="fin"><td class="lab">стоп</td><td class="e">λ</td><td>1</td><td class="ch">1</td><td class="ch">0</td><td class="ch">0</td><td class="e hd">λ</td></tr>
+    </table>
+    <p>1011 → 1100: <b>11 → 12</b>. Состояние q<sub>1</sub> единицы справа
+       делает нулями, первый 0 — единицей. Это и есть «+1».</p></div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">приём</span>
+  <h2>Подпиши каждое состояние</h2>
+  <table>
+    <tr><th>В строке</th><th>Что делает состояние</th></tr>
+    <tr><td><img class="frz-i" width="94" height="22" alt="код" src="data:image/png;base64,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"> и <img class="frz-i" width="94" height="22" alt="код" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALwAAAAtCAIAAACbEZYaAAADs0lEQVR42u2bTUhiURTHry/1JfSxKQleQy4UdRstKt8mppggWiXVFGRBTuPMEEwa0wc0zcIgTJoasqavZ7OaPqGgRYE49IFRYO1SEAqGZqMgRfAKy2bxQGaRWo0vP975bXxXHr57zvl7z73n3ctze/4gAHgMGLgAeCx85uMFkQu+AKLy+8wLIw0A6QkA0QAgGgBEA4Bonsb5+fn3iQlSpZJJpTKpdGFhIbX9lUT2lhQXM53c2tpiZcn9BE5PT60UtbKyQtM0F/5eXLM3xqLZ39+fnZmx2+3BYJALPuKavbFPT1aKamxosNlsjAeVSqXVak1hB3HNXlZEU1FRgWEYQoggCNPQ0OramookU9hBXLOXlfRE5OdXV1crFIomjUYoFMbdAK/XazAYBgcH8/Ly2Pj9RLM3Wec0Q2ZzgvQ+EAh8eP/e6XTW19VZ5+YkEgkbT0kce6FOEwOur69xHEcInZ2dva6vd7lcEFEQTRQyMjJmKaq2thYh5PP5GhsaDg8PIaggmmj5lc83Dgx86urCMOzi4kLT1LS7swNxBdFEp7W1dcxiEYlENE1rtdrNjQ0IbWJNhJ8ZvV6/troaSfgYhuN4enp6aHbc3t5uNBpr1GoIMIw09xMMBmma9vv9oQL/7e1tT0+P2+2GAHN0pIkufAzDcZzJTYxu0tLSjEajXC6HAHNUNGaz2fyASsnmxobBYEAICQSC4eHhV5WVEF0YaSIxNTlpMpnu7u5EIpFlfJzkfKUfRBOJm5ubz319zL6WrKysqenpwsJCiCuIJiyXl5fvdDqHw4EQysnJoShKoVQmcoedTufR0ZFMJiNJksfjgWjiAI7jV1dXCCGCINh79xQrlhYXu7u7meuqqqqvIyOw5I4DAoFgzGIpLS39OT+f4IpBCP27N3R9fX17eztJ3c5jznI/6oRlSXGxz+d7yJ1v2to6OzuTPYXHyl6tVvvLbg81m1taent7n6Hbcrk8Ozs73G0fOzqKiorQY05YpsjqKSnQd3Ts7uwEAgGm+UAh/j+Ri5x+vx+OsCQuCqXyrU4XamZmZnJoIuzY2+NUsGNob1lZ2bfRUeZaqVAkS7dhpIknHo8nNIV/WV4OqycgCjab7Ut/P3Ot0WjEYjHUaYD7+TE353a7Dw4OTk5OmG9UJKk3GBBUhIFwLC4tuY6PQ1lJ09ys1+v5fD6IBgiLUCjMFYslBQUqlapGrWbpqA2IJqVYXl5GsHMPQLDdEwBANACIBgDRACmyemJeeQMAjDQAK/wFEBxezbJE36YAAAAASUVORK5CYII=">, само в себя</td><td>идёт влево до края числа, ничего не меняя</td></tr>
+    <tr><td><img class="frz-i" width="64" height="22" alt="код" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAAAtCAIAAADp3vSsAAAFY0lEQVR42u1ab0xTVxQ/vP6j0DgSsRErGeIII5mQkEkEDPGDZEZsQqqCgwgRyzChIUTAFpnu0ysOaDAsgijaEkRAHFP+JdRoMcFl8IVgCGAzFrApo6XgKJTXpi3dhzsaAmabumfh7f6+9Nz7zuu77/d79557Tq7fq19nAMN3IDAFvgUb/YSKdmEuPjIMxjk8A/AShAXAFGABsAAYPt8FvR9ejox0dHQMDg6aTCaXyyUUCuPi4iQSyZcHDzKVr8XFxdaWlqamJpPJBACkUpmWluYDAex2u1KpbLl/f33n9PT09PR0e3v7CbG4vLzc39+fSdRPTU1p1OqOjg6Konw8A9xud0FBge7ZM9QMCAgIDw+3rawYXr92uVwA0N3V9cebN7cbGthsNgOoHxoaunvnjk6nW11d3RIx4GZdHWKfw+HIFYpfBgd/evRIq9UODg3lXbjg5+cHAAMDA42NjQxgX6NWZ2ZkPH36FLEfFRWl0Wh8KcCc2VxfX4/siooKqVTK5/NRc8eOHcXFxWVlZaj5Q02NzWbb7gIkJycTBAEAIpGosqrqcWdn4uHDvhTgx7VFMCkp6YRYvNkhKzv786goALDZbFqtlm6C5ubmsrOzZ2dnafp/0d69YrFYLpdrnzxJTU1F89uXAvT09CDj7Nmzb3XQ9vX9PvNXhfUJzQI4nU5Zfv7PL16cSU+fmpqi6SlVKpU0N5fL5fo+D7DZbK8mJgCAy+UmJCZuuEpR1LdlZTKZbHFxEfWMjY3RKoDD4eDxeABgNBq/PnNmYmKC4YmYXq/3eDwAsG/fvg1fxPj4eGpqaltb2/pOo9G4tLRE3+gFAsFdtRrtxC0WS2ZGxvDwMJMFMBqNyAgJCfF2ejwetVp9UiL5bXIS7Uq/r6gQCATo6sLCAr2ZJJtNKpVyhYIgCKvVmp2V9WJggLECLC8ve/f+yLBYLOdzcpQk6XQ6ASA6Orqzq0sikXwSFLThFlohlUpv1Nby+XyKonJzc7V9fcwsRdjXkkA2hwMAz58/l1+6ND8/DwAEQZyXSi9evIiSLxZBeAPDBw6xqKio8/Hjv/uICILH43kTb6fTWVBQQJLkyVOnmCaA9yWtVitJko0aDQoJQqGwSqWKj49fH5CR4c0S6MPq6ipFUeuVdrvdly9f/uLAgcjISEYJEBgYiIx+nc7befTo0fJr14LW1hwUFaxWqzdO0r6MEgSPx0PrD5KBxWKRJLn12X9nAXYGB2+YEIrS0szMzA1uM0ajw+FAROzevfsDh6hSqVQq1T+6afv6iouLUYGkurr6q2PHGBgD1n9TkZGR1devR0REbHYbHR1FxqdhYWifTjdu37pVWVnp8Xj4fH5tXd3h/7RasJVmwM6dQqHQbDYDwPHjx9/KPgDo+vuRERsbS/cLuFyu765effDgASpG3W5o+AgP9WUpIjk5GRkPHz50u92bHebn53u6u5GdkpJC6+iXl5dzzp1D7AcHBzc3N28v9t9HAIlEggyDwVBTU7PZ4eqVK3a7HQDC9+9fvy+iAzweDz1LJBK1tLaiIiDDBYiOiTm2Ft9u1tVdKy9HFACAyWSSyWTeCmhpaSmLxaJ19BwO50ZtbUJCQmtbW1hYGGxD+KGzoe90Mm7ObE5PTzcYDN6s+LOICDtFTU5OehelfJmssLAQGIH4Q4csFsu/8fwmL6+kpAToPhm3SyhsuncvOiYGNVdWVl6OjOj1esQ+l8uVKxSMYX+LnooQiUTt7e093d29vb2jo6MLCwsBAQF79uw5cuTIqdOnQ0NDMbM0LkEYgA/nAj4Zh4EFwAJgYAGwABhYACwABhYAC4CBBYDtW4xDdQkMPAP+d/gTZs8f0tzAX/4AAAAASUVORK5CYII="> и <img class="frz-i" width="64" height="22" alt="код" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAAAtCAIAAADp3vSsAAAFZ0lEQVR42u1ba0yTVxh+6ZUicSZgg1YyxJGOZEJCphEkxB+SEbVJUy84CBKxTBOahnCxRab79RUHNBgWwQvaEkRAXKfcEmqwmsAy+GMwBJCMpdiUWSg4KuVr05buxxlNA2YO6GW05/nT9zvf2/e07/Od8156GvLm92nA8B8o2AX+BQ29RHN2Yl/4GDr9LF4BeAvCBGAXYAIwARh+z4I2jIWFhdaWlqamJoPBAACETHbmzJlAddbr4WGVSjU4OGgwGOx2O5vNPnjwoEAg+PrAAT8QoNVqlQqFSqUiSTLgn1OLxSKTyVoePnQfnJqampqaam9vP8HjVVRUhIaG+oiAoaGh+/fuaTSa5eXlYNglHA6HWCzWPH+OLsPCwmJjY81LS7q3b+12OwB0dXb+9f793YYGGo3m9RigVCiys7L6+vqQ9+Pj45VKZWATcKu+HnmfTqdLpNLfBgd/efJErVYPDg1dvHQpJCQEAPr7+xsbG30RhNPT0ykUCgBwOJyq6uqnHR2HU1MD2PuzMzO3b99GcmVlpVAoZLFY6HL79u0lJSXl5eXo8qfaWrPZ7HUCOHv28Hg8iUSifvaMz+cj/v3poNnZ3Nzcd+/eecn+zytBLi0t7QSPt1bhXG7ul/HxAGA2m9VqtS/S0Gq5XJifz2Aw/P542mw2UUHBrwMDZzMztVqtN6bo7u5GQk5OzkcV1L29f07/01F+5hsC/j+wWq1MJhMA9Hr9t2fPjo+Pe9a+2Wx+Mz4OAAwGI+Xw4VV3SZL8vrxcJBItLCygkdHR0eAiIDw8/L5CgSoPo9GYnZX16tUrD9qfmJhwOp0AsHfv3lUrfmxsjM/nt7W1uQ/q9foPHz4EVyVMo9EImUwilVIoFJPJlHvu3EB/v6eM6/V6JOzatcs16HQ6FQrFSYHgj8lJlJX+WFkZHh6O7s7PzwdjK0IoFN6sq2OxWCRJ5ufnq3t7PWJ2cXHRlfsjwWg0XsjLkxGEzWYDgISEhI7OToFA8NmOHave4qNWhA9QXFzc8fTpvz1EFAqTyXQVojabTSwWEwRx8tSpzRbAK0U+jU4HgJcvX0ouX56bm0OTXhAKi4qKUPFFpVBcgSHQCPgklpeXSZJ0/+YOh+PKlStf7d/P5XI3Y9lFqslkIgiiUalEIYHNZlfL5cnJye4BGQmuKiGICEArAO0/yBFUKpUgiE16HwC2bduGhBcajWvw6NGjFdev71jZc1BUMJlMrrwg0AiQy+VyufyTaure3pKSEtQwqKmp+SYjY/NTR0RGrloQ0rKy7OzsVWrTer3VakXER0VFBd0KAIC7d+5UVVU5nU4Wi1VXX5/qoe6I+xricrk1N27ExcWtVRsZGUHC5zExqC4JIgLsdvsP1649evQINWfuNjQkJSV5ynhERASbzZ6ZmQGAY8eOfdT7AKB58QIJG5h6a6ehi4uLeefPI+9HRkY2Nzd70Puw0nxEwuPHjx0Ox1qFubm57q4uJB8/fjy4CGAymRaLBQA4HE5LaytqinkWAoEACTqdrra2dq3CtatX0WeI3bfPPS8KCgLodPrNurqUlJTWtraYmBhvTJGQmJixEs9v1ddfr6hA7gYAg8EgEolcHdCysjIqlbpe+yHobOi6TsYlHzpkNBr/i+Z3Fy+WlpbC1v9JIDMzU6fTuariL+LiLCQ5OTnp2pQKRKLCwkLAJ+O8gZ1sdtODBwmJiehyaWnp9fDwxMQE8j6DwZBIpev1fqClod4Gh8Npb2/v7urq6ekZGRmZn58PCwvbvXv3kSNHTp0+HR0dvWHLG9mCMAAfzgV8Mg4DE4AJwMAEYAIwMAGYAAxMACYAAxMAW/cvSqgvgYFXQNDhb446H9JmigitAAAAAElFTkSuQmCC">, само в себя</td><td>инверсия: каждая цифра меняется на противоположную</td></tr>
+    <tr><td><img class="frz-i" width="94" height="22" alt="код" src="data:image/png;base64,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"> в себя · <img class="frz-i" width="94" height="22" alt="код" src="data:image/png;base64,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"> дальше</td><td>прибавляет 1</td></tr>
+    <tr><td><img class="frz-i" width="94" height="22" alt="код" src="data:image/png;base64,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"> в себя · <img class="frz-i" width="94" height="22" alt="код" src="data:image/png;base64,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"> дальше</td><td>вычитает 1</td></tr>
+    <tr><td><img class="frz-i" width="94" height="22" alt="код" src="data:image/png;base64,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"></td><td>дописывает 1 за краем числа</td></tr>
+    <tr><td><img class="frz-i" width="94" height="22" alt="код" src="data:image/png;base64,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"></td><td>стирает цифру</td></tr>
+  </table>
+  <p>Подписал все строки — <b>прогони на коротком числе</b> (пять-шесть цифр):
+     правило станет видно. Потом примени его к числу из условия.</p>
+</section>
+
+<section class="slide" data-ex data-type="1"></section>
+
+<section class="slide">
+  <span class="tag">формулы</span>
+  <h2>Что бывает с числом</h2>
+  <p>x — исходное число, n — сколько у него двоичных цифр.</p>
+  <table class="mini">
+    <tr><th>Программа</th><th>Результат</th><th>Пример: x = 1000, n = 10</th></tr>
+    <tr><td>дописала справа <img class="frz-i" width="34" height="22" alt="код" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEQAAAAtCAIAAACYilp3AAABEklEQVR42u3asQqCUBQG4KuEb9B0bTPQNyh0dfQFDGqrJ/Ap0r2G8s4OQu7i7hsEDULUkouTmzS4R5neyv6zuPijH/dclYPC8XQlfSmR9KgG9WFEhz/NOF9ufVsZYIABhi+mKIrtZmPo+lhRxooSBAGf7KNHc4PKsoz5fhiGZVnyzLaMSdN0v9slSVJVFc9s+23GfH9m23Ec13ejaRpjjEO2E4xpmqIoEkIopWvXPUSRbhgcsp20GZVly7JUVZ0vFpIkcct2tWdcz2t8vXeyeM8AAwwwwAADDDDAAPOZEupZ80sTzelkkuf5M2cuVyvHcdrKEkw0/6nNCAbnaDNggAEGGGCAAYZ0+FND/W2DlfmiugM8gX8IMvNjmQAAAABJRU5ErkJggg=="> (k цифр s)</td><td>x · 4 + 3 (x · 2<sup>k</sup> + s)</td><td>4003</td></tr>
+    <tr><td>дописала слева <img class="frz-i" width="24" height="22" alt="код" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAtCAIAAABnKH+VAAAA9klEQVR42mO8eecZw2ACTAyDDLBAKFlp0QF3yuOnrwdjCI06aNRBA+2gjx8/zpwxw8baWlVFRVVFZdWqVdTJ9mSABw8eLJg/f926dd+/f6d+OUQSOHXq1Ly5c/fv3//v37+Bj7IF8+dHR0Xt3bsX4hpNTc0FCxYMpINcXV2ZmJgYGBikpaW7e3o2btpkbWMzkFEmLSPj6+uroaERFx/PxsZGq7qMJNDT2ztaDo06aNRBow4addCog0YdNGQcxAjp25PUc7W0sHjz5g0xKtPS00tLS0d7rgPeQDt+4sRoLht10KiDRh006qBRBw22ugxS9Y+GEBYAAGTWRjdim3n+AAAAAElFTkSuQmCC"></td><td>x + 2<sup>n</sup></td><td>1000 + 1024 = 2024</td></tr>
+    <tr><td>дописала слева <img class="frz-i" width="34" height="22" alt="код" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEQAAAAtCAIAAACYilp3AAAEFklEQVR42u2ZX0xaVxzHf/wRFf/MxPZGpWbVljheNDGrqbMxPkhitCR6t2pS45q0pDaZMcRogZjuqYBjmjXsoTNrB8amzuBYp2BSjEUTHwZvNkRbUhYpwYUW6EQvYATZw6l3BPsAJtI7c38vfM85v3PDh3t+v/M7B8bLV5twUowJJ8jY6KOcd/p/jeH2vD1pb4aGoWFomCNlsyPb1tbWr1NTk5OTXq8XABRKZWdnZyoTn6+uGgwGq9Xq9Xqj0SiGYXV1dTiOf37hwkeA2djY0Gm1BoMhHA6nNTESiSiVyqnHjxM7XS6Xy+XS6/WXRSKVSpWTk5MhGJvN9svDhxaLZX9/P925sVisv7/f8uwZanK53MrKSiIUcr9+HY1GAcA4N/fPu3c/P3jAZrOPPWZ0Wm331auLi4uIRCAQ6HS61Kf/dP8+IsnKypLKZH9arb8/eWI2m602W++tWwwGAwBWVlYmJiYykQCEQiGTyQQAHo/3/ejoH7OzDZcupTj37Zs34+PjSKvVarFYnJubi5qFhYWDg4PDw8Oo+aNGQxDEscPwzpwRiURSqdS8sNDe3o5+yxTtt4MAa2xsvCwSHXb4+tq1zwQCACAIwmw2ZyJmRsfGjpYzTCYTEj09PR90MD99+vfm+yp+wWzu6OjIaGpO3QiCePniBQBwOJwvGhqSRsPhsOLu3enpabJnbW0t0/tM6uZwOOLxOABUVFRwOJzEofX1dYlE8pfTmdjp8Xi2t7cLCgqoWAF4PB4kSktLyc54PK7Var/EcUTC5XK/U6vz8/PRaCAQoGg5s7OzQ+4tSPh8vhvXrysVir29PQCorq6enZvDcfyToqKkKZRbZpGDQoGdlQUAy8vL0tu3/X4/ADCZzBti8cDAANooWUwmGUgUhSErlGAwqFAoJnQ6FEIYho2OjdXX1ycmAyTIXYhyMHl5eUgsWSxkZ3Nzs2pkpOhgXaEoCgaDSJPBQzmY4lOnkl6UTC7v7u5Octv0eHZ3dwGAxWKVlJRQFKaqqipR/3DvHp/PP+xmt9uR+PTs2ezsbIpms+LiYgzDkG5tbf0gCQBYlpaQqK2tpfRJUygUIjEzMxOLxQ47+P1+k9GIdFtbG6VhcBx/f83ldms0msMO3965E4lEAKDy3LnE/EZFmOqampaWFvJgM6JSoa8OAF6vt6+vj6yU5XI5i8VK9/kMdNec1o1m/cWLPp8vFc+bvb1DQ0NJR5quri63201WA+f5/Eg47HQ6yYX3TV+fRCIB6t9onsawyUePqmtqUDMUCj1fXXU4HIiEw+FIZbJ0ST5Cav7veMfj6fV6k9E4Pz9vt9sDgQCXyy0rK2tqavrqypXy8vIjP/koywzoi3OgbzRpGBqGhqFhaBgahoaB4/sbENU29JuhkP0Lk8+WuU/30ZMAAAAASUVORK5CYII="></td><td>x + 2<sup>n+1</sup></td><td>1000 + 2048 = 3048</td></tr>
+    <tr><td>+1, потом дописала 1</td><td>(x + 1) · 2 + 1</td><td>2003</td></tr>
+    <tr><td>инверсия всех цифр</td><td>2<sup>n</sup> − 1 − x</td><td>1023 − 1000 = 23</td></tr>
+    <tr><td>стёрла последнюю цифру</td><td>x // 2</td><td>500</td></tr>
+  </table>
+  <p class="fnote">Формула — для проверки: правило читается из таблицы, а прогон
+     ленты работает и там, где формулы нет.</p>
+</section>
+
+<section class="slide" data-ex data-type="0"></section>
+
+<section class="slide" data-ex data-type="2"></section>
+
+<section class="slide">
+  <span class="tag">стереть и поправить</span>
+  <h2>Стирание и правка внутри числа</h2>
+  <div class="two">
+    <div class="box"><h3>Стереть справа</h3>
+      <p>Головка доходит до последней цифры и пишет <b>λ</b> — клетка
+         становится пустой. Бывает с условием: стёрла последнюю, следующую
+         стирает, только если там 0.</p>
+      <p class="fnote">1097 = 10001001001 → стёрта 1 → последний 0 тоже
+         стёрт → 100010010 = 274.</p></div>
+    <div class="box"><h3>Правка в начале</h3>
+      <p>Головка уходит к началу числа, делает шаг вправо — на первую цифру —
+         и меняет одну цифру: первую 1 на «10», вторую слева 1 на 0, первый 0
+         на 1.</p>
+      <p class="fnote">800 = 1100100000, вторая 1 → 0: 1000100000 = 544.</p></div>
+  </div>
+</section>
+
+<section class="slide" data-ex data-type="3"></section>
+
+<section class="slide" data-ex data-type="4"></section>
+
+<section class="slide" data-ex data-type="5"></section>
+
+<section class="slide">
+  <span class="tag">автомат</span>
+  <h2>Состояния по кругу</h2>
+  <p>Бывает программа, где 2–3 состояния по очереди переписывают каждую
+     клетку и идут в одну сторону. Тогда — <b>таблица хода</b>: клетка, что
+     было, в каком состоянии головка, что стало.</p>
+  <div class="mtw"><table class="walk">
+    <tr><th>клетка</th><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>…</td></tr>
+    <tr><th>было</th><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>…</td></tr>
+    <tr><th>состояние</th><td>q1</td><td class="blk">q2</td><td>q3</td><td class="blk">q2</td><td>q3</td><td class="blk">q2</td><td>q3</td><td>…</td></tr>
+    <tr><th>стало</th><td>1</td><td class="ch">0</td><td>1</td><td class="ch">0</td><td>1</td><td class="ch">0</td><td>1</td><td>…</td></tr>
+  </table></div>
+  <p>После первой клетки повторяется блок из двух клеток «01». На ряду из 57
+     единиц: 1 клетка + 28 блоков. Нулей: 28 · 1 = <b>28</b>.</p>
+  <p class="fnote">Ряд из двух частей (сначала нули, потом единицы) считаем по
+     частям: вторая часть начинается в том состоянии, где кончилась первая.</p>
+</section>
+
+<section class="slide" data-ex data-type="6"></section>
+
+<section class="slide" data-ex data-type="7"></section>
+
+<section class="slide">
+  <span class="tag">обратная задача</span>
+  <h2>Какое число было</h2>
+  <div class="two">
+    <div>
+      <p>Дан результат — найти исходное. Пойми правило и <b>сними действия в
+         обратном порядке</b>: убрать дописанные цифры, отменить инверсию или
+         «+1».</p>
+      <p class="fnote">Программа дописала 1 слева и 111 справа; результат
+         3655 = 1<b>11001000</b>111. Снимаем: 11001000 = 200.</p>
+    </div>
+    <div class="box warn"><h3>Инверсия теряет длину</h3>
+      <p>1001 и 01001 после инверсии дают одно и то же число: впереди нули не
+         видны. Исходных чисел много — с 4, 5, 6 … цифрами. Поэтому
+         спрашивают <b>наименьшее</b> или <b>наибольшее, меньшее N</b>.</p></div>
+  </div>
+</section>
+
+<section class="slide" data-ex data-type="8"></section>
+
+<section class="slide">
+  <span class="tag">демо 2026</span>
+  <h2>Сколько нулей могло быть</h2>
+  <p>Лента из L цифр, неизвестных. Программа «−1» идёт справа: нули хвоста
+     становятся единицами, ближайшая 1 — нулём, стоп.</p>
+  <table>
+    <tr><th>было</th><td><img class="frz-i" width="84" height="22" alt="код" src="data:image/png;base64,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"></td><td>хвост — t нулей, A не меняется</td></tr>
+    <tr><th>стало</th><td><img class="frz-i" width="84" height="22" alt="код" src="data:image/png;base64,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"></td><td></td></tr>
+  </table>
+  <p>Пусть в A ровно z нулей. Нулей было <b>z + t</b>, стало <b>z + 1</b>.
+     Если стало ровно 343, то z = 342, а нулей было 342 + t — чем длиннее хвост,
+     тем больше. Хвост ограничен длиной: в A должно поместиться 342 нуля.</p>
+  <p class="fnote">Перебрать ленты программой нельзя — их 2<sup>L</sup>. Только
+     рассуждением.</p>
+</section>
+
+<section class="slide" data-ex data-type="9"></section>
+
+<section class="slide">
+  <span class="tag">второй способ</span>
+  <h2>Программой: выполнить таблицу</h2>
+  <div class="two">
+    <div>
+<pre style="font-size:15px;line-height:1.3"><img class="frz-i" width="5604" height="22" alt="код" src="data:image/png;base64,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"></pre>
+    </div>
+    <div>
+      <div class="box"><h3>Как устроена</h3>
+        <p>Лента — строка с запасом пустых клеток, состояние — число. Одна
+           строка <img class="frz-i" width="34" height="22" alt="код" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEQAAAAtCAIAAACYilp3AAACK0lEQVR42mO8eecZw3ABTAzDCLBAKFlp0SHtjcdPXw+3mBmOyYwScOzo0eXLl3Nxc6enpSkpKw9hz9y4fj0pKenv378MDAyHDh7cvWcPDw8PSSb8////6NGjmzZuvHTp0qtXr759+8bNzS0oKKikrBwXF2djY0M/zxw+fBjiEwYGhjdv3ly5csXCwoJ47R8/fiwsKDh8+DCy4KdPnz59+vTw4UNjIyO6ekZVTQ3OZmVlVVBQIClOcrKzT5w4AeGysbEpKStzcXJ++vTp9Zs3Hz98oHcyc3BwyM7JWbJkCRcnZ1lZmYSEBPF69+7dC/dJRkZGRmYmNzc3XPbVq1f///8nyTGMkBbAgNQzxcXFmzZuZGBg8PLymjhp0tCuZ65fuwZh+Pj6Dvl65sPHjxCGuJjYgBXNq1atqq6qwhQXEBA4feYM8eb8/vULmtaZmEZbANSIGTFRUTMzMzj3+/fvly9fJqhr3rx5e/fsQRb5/PkzhFFbU4NcjkEAFzf37Nmzae4ZB0dHB0dHOPfWrVveXl4Edd2/f//UqVNYpa5evYopyMvLO5rM6AKam5ubm5uRRUxNTD58+MDAwLBu/XpdXd3RAmDUM6OeGfXMqGdGPTPqmUHdAkhISIC33iENTXjDMToqClllZ1eXjIzMoPbM6VOnfiF5Bg7+/v2L1pT89u3baDIjEwzkgAbD6MD5aNE86plRz4x6ZtQzo54Z9cyoZ7C1miFtm9GYGUQAAKpGy4Kd43rjAAAAAElFTkSuQmCC"> — одна клетка таблицы. Головка слева —
+           <img class="frz-i" width="84" height="22" alt="код" src="data:image/png;base64,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">.</p></div>
+      <div class="box good" style="margin-top:12px"><h3>Когда полезна</h3>
+        <p>Проверить себя; обратная задача — обернуть в <img class="frz-i" width="124" height="22" alt="код" src="data:image/png;base64,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">
+           и перебрать <img class="frz-i" width="24" height="22" alt="код" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAtCAIAAABnKH+VAAAClklEQVR42u2YMUwaURjHP44bMEjqgoNQTQmwkNDYRBJWpwuxMWcHqmvFBTDUYBNrQUAdKJg7ExO7WLvfAJYmxjLYQdlwcCCUXGJMsYk5MZBoLlzOs8Or1EQmLAfDfcv93/e+vPzy3Xvv+/JUP9nf0E2GQZcZjj5PDfqOo/w647oxQwqQAqQAKUAK0KOATk9Pn9vtFrPZYja/mpi4ublpGub1elHMi+HhcrncRqChoaFINIr08fHxp83NhzHfMpnve3tIr6yuGo3G9v4ykiTHx8eR3tjYKBQK92cvLi6id8Rut9vlcsmxh6Kx2ODgIACIojgfDAqC0JgKh0LVahUALBbLh1BIpk2t1WopmsZxHABKpRJFUcj/dWcnm80CgEajodfXNRqNfKfMbrfPzc0h/XlrK5/PcxwXW15GnsXFRavV+qgGrQWb9ngOc7nDgwNJkt7Nz5tMplq1CgAEQbyenGx5WRXqqVvrGDmOezk2VqlUGh6D0ZjJZHQ6XWc6Rr1e/zGRUKlUaKhWq2mabo3mv93UV1dXt7e3DSC00zsGdHJy8n5hoTEUBMHn89Vqtc4A1ev1Wb//+voaAJxO58DAAACclcvBYLCRM1mBopFIsVgEgCd9fcm1tUQyiWEYAPzY399sVlLaC5ROpxmG+VuwVlb6+/sdDodnZgZ51mk6l8vJB8SybPiuLJAkSRAE0oFAwGazAYAkSW8DgfPzczmAeJ73+3w8zwOAwWAILy39u2RxnKKonp4eALi8vJz1+0VRbDvQUjjMsiwAYBiWSCZ7e3vvzz4zmRbuzt3R0VE8Hm8vEMMwqVQK6TfT0yMjIw9jJqemRkdHkf6yvb27uytf6VAeGxQgBUgBUoAUIOiah3NUR5QMNbE/QXHsohEIuKYAAAAASUVORK5CYII=">. На экзамене таблица маленькая, и разбор
+           руками быстрее: программа — по желанию.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <span class="tag">ловушки</span>
+  <h2>Пять ловушек</h2>
+  <ol>
+    <li><b>Шапка таблицы.</b> Столбцы 0 и 1 стоят в разном порядке.</li>
+    <li><b>Где головка.</b> Слева или справа от числа — с этого края она и
+        начнёт.</li>
+    <li><b>Пустая клетка — символ.</b> Команды в столбце λ работают за краем
+        числа: там дописывают.</li>
+    <li><b>Ответ в десятичной.</b> Двоичную запись с ленты переведи.</li>
+    <li><b>Ведущие нули.</b> После инверсии или «−1» число может начинаться с
+        нуля — на значение это не влияет.</li>
+  </ol>
+  <p class="fnote">Страница практикума узнаёт эти ошибки по ответу и
+     называет, где именно сломалось.</p>
+</section>
+
+<section class="slide">
+  <span class="tag gray">практикум</span>
+  <h2>Что дальше</h2>
+  <p>Десять задач — по одной на каждую форму, все на экране сразу, порядок
+     свой. Ошибся — появится разбор: что делает каждое состояние и лента по
+     шагам, а кнопка «Новые числа» даст такую же задачу с другими числами.</p>
+  <table>
+    <tr><th>Что станет с числом</th><td>дописать справа · дописать слева · ±1 · инверсия · стереть справа · правка в начале · автомат</td></tr>
+    <tr><th>Посчитать цифры</th><td>сколько нулей или единиц после программы</td></tr>
+    <tr><th>Назад</th><td>какое число было · сколько нулей могло быть</td></tr>
+  </table>
+  <p class="fnote"><b>Исправленное не в зачёт:</b> задача, решённая после разбора,
+     закрыта, но в отметку идёт новая — по кнопке «Новые числа». Добрать можно
+     хоть до пятёрки: 10 — «5», 9 — «4», 8 — «3».</p>
+</section>
+
+<section class="slide">
+  <span class="tag">дома</span>
+  <h2>Домашняя работа</h2>
+  <p>Те же десять форм, по одной задаче на каждую. Тип закрывается чистым
+     верным ответом; ошибся — придёт такая же задача с другими числами.</p>
+  <div class="two">
+    <div>
+      <div class="box"><h3>Как сдать</h3>
+        <p>От восьми закрытых типов появится <b>код работы</b> вида
+           <img class="frz-i" width="134" height="22" alt="код" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQwAAAAtCAIAAADUacLjAAAFHklEQVR42u2cXUhbZxjHH50xkKAz0WHwC7UudA4LrlqViFgNfixrg73thFV0disOXHthIknszE3nx/SiMc4WpUPjnXZkFx1eiHSi1l0k4oWZjco4kbQTdItGYz52cbpDZpvU6NF6Tp4fAV887/8Ef/HJe3jf95yIpWUbIAgSmEhUgCDBiSJ/pCZ/gC4Q5AB/Ei9xJEEQvNxCECwSBMEiQRAsEgRhU5Ho7t//MCsrpNfU1JT/Gfr1+sOkVCoVXX/h59evk+cslkh2dnYCdVtdXf04O5vs2dfXx9wsuqLdFftHkvb2dg6HAwB2u723pydQN41G43K5AEAsFjc0NDA3i65od/Ve0ze3AeD9WP5hehM229bmZvL/2d7e3t3dBYDklJSPzp8/cFRaXp4oElFn+H1+fnp6GgCEQmFOTk5yAD65eDE3N5eWIhEIBG6PZ25uDgDMZnNFZWV8fPyBPkaj8cHAAABERkb26fVJSUnMzaIrGl39/c8OAESQ21KOs5j41c2bExMTANDc3Pz1rVvBO/fr9Z2dnQAgk8l6entPZzBxuVyfyWQrKysAkJefPzIyEhERQR11OBwVFRUvX7wAgNraWrVGw/QsuqLLVRgtJkZHR3/X3k625589Gxsb8z/6Q3c3aVAkEt2+c4cFWXRFr6twmd0qLCysqakh29/fu7e1tUW2FxcXh4eHX122trXx+Xx2ZNEVja7CaApYoVTGxcUBwMbGRnd3NwB4vV61Wu3xeACgsqpKKpWyKYuu6HIVRkUiEAhaWlrI9qjBsLCwMGowmE0mAIiJidGo1SzLoiu6XIU2u/VGfjEarVYrABQVFeVfuhS8MzW7JRaLq6qrT7lOsrOz52ZnCYLw+Xwms/nXJ0/29vYAQKVSFRQWsi+Lro7p6h3PbgmFwqysrEDdtFptRmbmSXz2K1arTCbb39+nfpOXlzdiMPjPh7Api66O44qc3XpnI4nT6SQCU3PtWmJi4gldSFDT6gDA4XAePHwoFArZmkVXx3FFjiThuHdLIpFQbR6fH5JBJmbRFdByZ+Lpc7TFxN+ePtXpdEE6dHR2Bl9PdbvdbX7LSVubm1qttqur6zDvzqwsugo1e+aK5Gj8tbFBjaRvZNfpDH6GPp1uaWkJAHg8Hrkf7ufHj+VyeUlJyVvfnVlZdBVqFqeAAQAsFgu1A1Sr1ZZevky21SqV823/MUzMoitaXDGsSORy+R/Ly0FemefOBcp6PB6FQkHOexQUFFy5elWtVnO5XAAgCCL4iMzELLo6fBZHklcMDg6SS0tRUVFtd+8CQGpqamNjI3n0p0ePTCYTm7Loii5X4VIka2tr1M0GX9y4QS3RfNnYmJaWBgBer1epULjdbnZk0RWNrsKiSHw+X6tSSd70IhKJmpqaqENcLlf134YFi8XSr9ezIIuu6HUVFkUyajDMzs6SbWVrK4/H8z9aWlpKbX3T6XTW58+ZnkVX9Lo6o9tSyqXSuro6Wj719fX1T6urHQ4HAEiKi4eGhl7vQxBEVWUl+VXkv4uBiVl0RaOrM70tJSUlpaysjJYi+ba52WKxAACHw/lxYEAgELzeJzY2Fny+mZkZALDZbAkJCTkXLjA0i65odBUW21LGx8cnJyfJdn19fUZGRqCe9Q0N6enpZLujo8NutzMxi65OwhUNl1sIAvjAbAQBfDgdgiBYJAiCRYIgWCQIgkWCIFgkCIJFgiBYJAiCRYIgCBYJgsARnpZC7lFBEARHEgQJmX8BIUEtuledyJ8AAAAASUVORK5CYII="> и кнопка «Сдать работу».</p>
+        <p>Вторая кнопка открывает письмо: к коду прикладываются <b>снимки
+           черновика</b> — подписанные состояния и лента до и после.</p></div>
+    </div>
+    <div>
+      <div class="box good"><h3>Зачем снимок</h3>
+        <p>Число можно получить и не разобравшись. Черновик показывает, что
+           приём ваш, — поэтому он и просится вместе с ответом.</p>
+        <p class="fnote">В начале следующей пары — проверочная из пяти
+           задач.</p></div>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<div class="bar">
+  <button id="prev">← Назад</button>
+  <button id="step" class="primary">Раскрыть</button>
+  <button id="next">Вперёд →</button>
+  <button id="reroll" hidden>Другие числа</button>
+  <span class="count" id="count"></span>
+  <span class="zoom" title="Размер шрифта на экране: клавиши + и −"><button id="zoomOut" title="Мельче (клавиша −)">A−</button><span class="z" id="zoomVal"></span><button id="zoomIn" title="Крупнее (клавиша +)">A+</button></span>
+  <div class="spacer"></div>
+  <span class="ai-mark" style="color:#5c6070;font-size:13px">Материалы подготовлены с использованием технологий искусственного интеллекта.</span>
+  <span class="keys"><kbd>Пробел</kbd> раскрыть и дальше ·
+    <kbd>←</kbd> <kbd>→</kbd> слайды</span>
+</div>
+</div>
+
+<script>
+/* ==== ЗАДАЧИ: вставлено gen.py, руками не править ==== */
+/* Задание 12 ЕГЭ (2027): исполнитель МТ (машина Тьюринга). Метод — разбор
+   программы по состояниям: что делает каждая строка таблицы, что станет с
+   лентой, перевод в десятичную (Света, ege-queue, пара 16: «решаем
+   аналитически, желательно понятный визуал»). Второй способ — программа на
+   Python, которая выполняет таблицу команду за командой (её предложение:
+   «можешь предложить программный метод»).
+
+   ЕДИНСТВЕННЫЙ ИСТОЧНИК ЗАДАЧ для практикума, домашней работы, проверочной
+   и примеров на слайдах. В html вписывается скриптом gen.py --sync между
+   маркерами — руками страницы не править (generator-single-source).
+
+   Замер — 26 задач из списка Светы (ege-queue, пара 16): демоверсии 2027 и
+   2026, пересдача 08.07.26, резерв 22.06.26, основные волны 18.06 и 19.06.26,
+   апробация 14.05.26, ЕГКР 18.04.26 и 13.12.25 и задачи без даты. Все 26
+   ключей пересчитаны (gen.py --measure). Формы вопроса и семейства программ:
+
+     0 дописать справа        цифры за числом (ЕГКР 18.04.26, 13.12.25)      2
+     1 дописать слева         цифры перед числом, в т. ч. через пропуск
+                              (демо 2027, основная 19.06.26)                 2
+     2 прибавить / вычесть 1  и дописать цифру (пересдача, резерв)           2
+     3 инверсия               0↔1, иногда с дописанными цифрами              1
+     4 стереть справа         последние цифры, с условием (апробация 14.05)  1
+     5 правка в начале числа  первая 1 → «10», вторая 1 → 0 (основная
+                              18.06.26, апробация 04.03.26)                  2
+     6 автомат: число         2–3 состояния по очереди меняют цифры          3
+     7 сколько нулей/единиц   ряд из N одинаковых или два ряда подряд        6
+     8 обратная задача        какое число было: точно, наименьшее,
+                              наибольшее меньше N                            6
+     9 сколько могло быть     демо 2026: L цифр, после программы ровно K
+                              нулей — наибольшее число нулей до              1
+
+   Порядок столбцов в шапке таблицы бывает «λ, 0, 1» и «λ, 1, 0» (в замере
+   оба) — ловушка чтения, генератор ставит оба. Ответ всюду — натуральное
+   число в десятичной записи (answer-format-strict: сверка знак в знак). */
+
+const F_TYPES = [
+  'дописать справа',
+  'дописать слева',
+  'прибавить или вычесть 1',
+  'инверсия',
+  'стереть справа',
+  'правка в начале числа',
+  'автомат: число в число',
+  'сколько нулей или единиц',
+  'обратная задача',
+  'сколько могло быть'
+];
+
+/* ----------------------------------------------------------- случайность */
+
+function tRng(seed) {
+  let s = (seed >>> 0) || 1;
+  return function () {
+    s ^= s << 13; s >>>= 0;
+    s ^= s >> 17;
+    s ^= s << 5;  s >>>= 0;
+    return s / 4294967296;
+  };
+}
+
+function tRand(rng, a, b) { return a + Math.floor(rng() * (b - a + 1)); }
+function tPick(rng, arr) { return arr[tRand(rng, 0, arr.length - 1)]; }
+
+function tShuffle(rng, arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = tRand(rng, 0, i);
+    const t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+function tPl(n, one, few, many) {
+  const a = Math.abs(n) % 100, b = a % 10;
+  if (a > 10 && a < 20) return many;
+  if (b === 1) return one;
+  if (b >= 2 && b <= 4) return few;
+  return many;
+}
+
+/* ------------------------------------------------------------- машина
+   Программа — массив состояний; состояние — {'λ': cmd, '0': cmd, '1': cmd},
+   команда — [что записать, куда сдвиг (L, R, S), новое состояние]. Лента —
+   массив с запасом пустых клеток; клетка с номером 0 — первая цифра. */
+
+const M_OFF = 8;         // запас пустых клеток по краям — в браузере
+const M_PAD = 5;         // запас 'λ' * 5 в программе на Python: шире не ходить
+
+function mPut(pr, q, c, w, d, nq) {
+  while (pr.length <= q) pr.push({});
+  pr[q][c] = [w, d, nq];
+}
+
+function mScan(pr, q, d) { mPut(pr, q, '0', '0', d, q); mPut(pr, q, '1', '1', d, q); }
+
+function mBin(x) { return x.toString(2); }
+
+function mRun(pr, tape, start, keep) {
+  const n = tape.length;
+  const a = new Array(n + 2 * M_OFF).fill('λ');
+  for (let i = 0; i < n; i++) a[M_OFF + i] = tape[i];
+  let pos = start === 'R' ? n : -1, q = 0, steps = 0, lo = pos, hi = pos;
+  const visited = new Set([0]);
+  const frames = keep ? [] : null;
+  const snap = (stop) => frames && frames.push({pos: pos, q: q, a: a.slice(), stop: !!stop});
+  snap(false);
+  while (steps < 400000) {
+    const i = M_OFF + pos;
+    if (i < 0 || i >= a.length) return {ok: false, why: 'edge'};
+    const c = a[i];
+    const cmd = pr[q] && pr[q][c];
+    if (!cmd) return {ok: false, why: 'empty'};
+    a[i] = cmd[0];
+    steps++;
+    const old = q;
+    q = cmd[2];
+    visited.add(q);
+    if (cmd[1] === 'S') {
+      snap(true);
+      return {ok: true, a: a, n: n, pos: pos, q: q, steps: steps, lo: lo, hi: hi, frames: frames, visited: visited};
+    }
+    pos += cmd[1] === 'L' ? -1 : cmd[1] === 'R' ? 1 : 0;
+    lo = Math.min(lo, pos); hi = Math.max(hi, pos);
+    if (q !== old) snap(false);
+  }
+  return {ok: false, why: 'loop'};
+}
+
+/* Слово на ленте после остановки: от первой непустой клетки до последней. */
+function mWord(a) {
+  let i = 0, j = a.length - 1;
+  while (i <= j && a[i] === 'λ') i++;
+  while (j >= i && a[j] === 'λ') j--;
+  return a.slice(i, j + 1).join('');
+}
+
+/* Годится ли прогон для задачи: остановился, не вышел за запас программы на
+   Python, на ленте одно слово без дыр. */
+function mGood(r) {
+  if (!r || !r.ok) return false;
+  if (r.lo < -M_PAD || r.hi > r.n + M_PAD - 1) return false;
+  const w = mWord(r.a);
+  return w.length > 0 && w.indexOf('λ') < 0;
+}
+
+function mVal(r) { return parseInt(mWord(r.a), 2); }
+
+function mSwapCols(pr) {
+  return pr.map(st => {
+    const o = {};
+    if (st['λ']) o['λ'] = st['λ'];
+    if (st['1']) o['0'] = st['1'];
+    if (st['0']) o['1'] = st['0'];
+    return o;
+  });
+}
+
+/* ------------------------------------------------------- условие задачи */
+
+function fQ(q) { return 'q<sub>' + q + '</sub>'; }
+function fCmd(cmd) { return cmd ? cmd[0] + ', ' + cmd[1] + ', ' + fQ(cmd[2]) : ''; }
+
+function fTable(p) {
+  let s = '<div class="mtw"><table class="mtt"><tr><th></th>' +
+          p.cols.map(c => '<th>' + c + '</th>').join('') + '</tr>';
+  p.pr.forEach((st, q) => {
+    s += '<tr><th>' + fQ(q) + '</th>' + p.cols.map(c => '<td>' + fCmd(st[c]) + '</td>').join('') + '</tr>';
+  });
+  return s + '</table></div>';
+}
+
+const F_RULE = '<p class="mtnote">Команда «0, L, q<sub>3</sub>»: записать в текущую ячейку 0, ' +
+  'сдвинуться в соседнюю ячейку слева и перейти в состояние q<sub>3</sub>; R — сдвиг вправо, ' +
+  'S — остановка после записи. Работа начинается в состоянии q<sub>0</sub>.</p>';
+
+function fSide(start) { return start === 'R' ? 'справа' : 'слева'; }
+
+function fTapeWords(p) {
+  if (p.runs.length === 1) {
+    const [c, m] = p.runs[0];
+    return 'последовательность из <b>' + m + '</b> ' + (c === '1' ? tPl(m, 'единицы', 'единиц', 'единиц')
+                                                                   : tPl(m, 'нуля', 'нулей', 'нулей'));
+  }
+  const w = ([c, m]) => '<b>' + m + '</b> ' + (c === '1' ? tPl(m, 'единицы', 'единиц', 'единиц')
+                                                         : tPl(m, 'нуля', 'нулей', 'нулей'));
+  return 'последовательность из ' + w(p.runs[0]) + ' и ' + w(p.runs[1]) + ' в указанном порядке';
+}
+
+function fSym(c, n) {
+  return c === '1' ? tPl(n, 'единица', 'единицы', 'единиц') : tPl(n, 'ноль', 'нуля', 'нулей');
+}
+
+function fCondHtml(p) {
+  fCss();
+  const head = '<p>На ленте исполнителя МТ в соседних ячейках записан';
+  const blank = ' Ячейки справа и слева от последовательности заполнены пустым символом «λ». В начальный момент ' +
+    'времени головка находится в ближайшей ячейке <b>' + fSide(p.start) + '</b> от последовательности.</p>';
+  const prog = '<p>Программа работы исполнителя:</p>' + fTable(p) + F_RULE;
+  let s;
+  if (p.type <= 6) {
+    s = head + 'о двоичное представление числа <b>' + p.x + '</b> без ведущих нулей.' + blank + prog +
+        '<p class="ask">Определите результат выполнения программы. В ответе запишите получившееся на ' +
+        'ленте число в десятичной системе счисления.</p>';
+  } else if (p.type === 7) {
+    s = head + 'а ' + fTapeWords(p) + '.' + blank + prog +
+        '<p class="ask">Определите, сколько ' + (p.ask === '1' ? 'единиц' : 'нулей') +
+        ' окажется на ленте после выполнения программы.</p>';
+  } else if (p.type === 8) {
+    const what = p.ask === 'exact' ? 'Определите, какое число было записано на ленте до начала работы программы.'
+      : p.ask === 'min' ? 'Определите наименьшее число, которое могло быть записано на ленте до начала работы программы.'
+      : 'Определите наибольшее число, меньшее ' + p.limit + ', которое могло быть записано на ленте до начала работы программы.';
+    s = head + 'о двоичное представление некоторого натурального числа без ведущих нулей.' + blank + prog +
+        '<p>После выполнения программы на ленте оказалась двоичная запись числа <b>' + p.res + '</b>.</p>' +
+        '<p class="ask">' + what + ' В ответе запишите это число в десятичной системе счисления.</p>';
+  } else {
+    s = head + 'а последовательность из <b>' + p.L + '</b> символов, каждый из которых — 0 или 1.' + blank + prog +
+        '<p>После выполнения программы на ленте оказалось ровно <b>' + p.K + '</b> ' + fSym(p.after, p.K) + '.</p>' +
+        '<p class="ask">Определите ' + (p.ext === 'max' ? 'наибольшее' : 'наименьшее') + ' возможное количество ' +
+        (p.before === '1' ? 'единиц' : 'нулей') + ' в исходной последовательности.</p>';
+  }
+  return s;
+}
+
+/* ------------------------------------------------------------ решение */
+
+function fTape(p) {
+  if (p.type === 7) return p.runs.map(([c, m]) => c.repeat(m)).join('');
+  return mBin(p.x);
+}
+
+function fRunP(p, keep) { return mRun(p.pr, fTape(p), p.start, keep); }
+
+/* Все x из 1..lim, у которых программа даёт res. Перебор на десятки тысяч
+   чисел — поэтому свой быстрый исполнитель: программа в числовых массивах,
+   лента — Uint8Array (0 — λ, 1 — '0', 2 — '1'). Результат кешируется в p. */
+function fPre(p, lim) {
+  const key = p.res + ':' + lim;
+  if (p._pre && p._pre.key === key) return p._pre.xs;
+  const Q = p.pr.length, SY = {'λ': 0, '0': 1, '1': 2};
+  const W = new Int8Array(Q * 3).fill(-1), D = new Int8Array(Q * 3), N = new Int16Array(Q * 3);
+  p.pr.forEach((st, q) => Object.keys(st).forEach(c => {
+    const cmd = st[c], i = q * 3 + SY[c];
+    W[i] = SY[cmd[0]]; D[i] = cmd[1] === 'L' ? -1 : cmd[1] === 'R' ? 1 : cmd[1] === 'S' ? 2 : 0; N[i] = cmd[2];
+  }));
+  const OFF = 8, a = new Uint8Array(40 + 2 * OFF), out = [];
+  for (let x = 1; x < lim; x++) {
+    a.fill(0);
+    let n = 0;
+    for (let v = x; v > 0; v >>= 1) n++;
+    for (let k = 0; k < n; k++) a[OFF + k] = ((x >> (n - 1 - k)) & 1) + 1;
+    let pos = OFF + (p.start === 'R' ? n : -1), q = 0, ok = false;
+    for (let step = 0; step < 2000; step++) {
+      if (pos < 0 || pos >= a.length) break;
+      const i = q * 3 + a[pos];
+      if (W[i] < 0) break;
+      a[pos] = W[i]; q = N[i];
+      if (D[i] === 2) { ok = true; break; }
+      pos += D[i];
+    }
+    if (!ok) continue;
+    let lo = 0, hi = a.length - 1;
+    while (lo <= hi && a[lo] === 0) lo++;
+    while (hi >= lo && a[hi] === 0) hi--;
+    if (lo > hi) continue;
+    let v = 0, bad = false;
+    for (let k = lo; k <= hi; k++) { if (a[k] === 0) { bad = true; break; } v = v * 2 + (a[k] - 1); }
+    if (!bad && v === p.res) out.push(x);
+  }
+  p._pre = {key: key, xs: out};
+  return out;
+}
+
+/* Демо 2026. Программа идёт от правого края влево.
+   «−1»: хвост из t нулей становится единицами, ближайшая 1 — нулём, стоп:
+          A 1 0…0  →  A 0 1…1   (или 0…0 → 1…1: единицы нет, дошла до края).
+   «+1»: хвост из t единиц становится нулями, ближайший 0 — единицей:
+          A 0 1…1  →  A 1 0…0   (или 1…1 → 1 0…0: перед числом пишется 1).
+   A — неизменная левая часть длины P = L − 1 − t, в ней z нулей. */
+function f9Best(p) {
+  let best = null;
+  const L = p.L;
+  const take = c => {
+    const after = p.after === '1' ? c.a1 : c.a0;
+    if (after !== p.K) return;
+    const v = p.before === '1' ? c.b1 : c.b0;
+    if (best === null || (p.ext === 'max' ? v > best.v : v < best.v)) best = Object.assign({v: v}, c);
+  };
+  /* z из условия «после ровно K»: счёт линеен по z, решаем, а не перебираем */
+  for (let t = 0; t <= L - 1; t++) {
+    const P = L - 1 - t;
+    const at = z => {
+      if (p.op === '-') return {t: t, z: z, P: P, b0: z + t, a0: z + 1, b1: P - z + 1, a1: P - z + t};
+      return {t: t, z: z, P: P, b0: z + 1, a0: z + t, b1: P - z + t, a1: P - z + 1};
+    };
+    const c0 = at(0), c1 = at(1);
+    const f0 = p.after === '1' ? c0.a1 : c0.a0, f1 = p.after === '1' ? c1.a1 : c1.a0;
+    const z = (p.K - f0) / (f1 - f0);
+    if (Number.isInteger(z) && z >= 0 && z <= P) take(at(z));
+  }
+  take(p.op === '-' ? {all: true, b0: L, a0: 0, b1: 0, a1: L} : {all: true, b0: 0, a0: L, b1: L, a1: 1});
+  return best;
+}
+
+function fSolve(p) {
+  if (p.type <= 6) { const r = fRunP(p); return mGood(r) ? mVal(r) : NaN; }
+  if (p.type === 7) {
+    const r = fRunP(p);
+    if (!mGood(r)) return NaN;
+    return mWord(r.a).split('').filter(c => c === p.ask).length;
+  }
+  if (p.type === 8) {
+    const xs = fPre(p, p.ask === 'max' ? p.limit : p.lim);
+    if (!xs.length) return NaN;
+    if (p.ask === 'exact') return xs.length === 1 ? xs[0] : NaN;
+    return p.ask === 'min' ? xs[0] : xs[xs.length - 1];
+  }
+  const b = f9Best(p);
+  return b ? b.v : NaN;
+}
+
+/* ------------------------------------------------------------- ловушки */
+
+function fTraps(p, want) {
+  const tr = {};
+  const add = (k, v) => {
+    if (v === undefined || v === null || Number.isNaN(v) || v <= 0 || v === want) return;
+    if (Object.values(tr).some(u => u === v)) return;
+    tr[k] = v;
+  };
+  if (p.type <= 6) {
+    const s = mRun(mSwapCols(p.pr), mBin(p.x), p.start);
+    if (mGood(s)) add('cols', mVal(s));
+    const o = mRun(p.pr, mBin(p.x), p.start === 'R' ? 'L' : 'R');
+    if (mGood(o)) add('side', mVal(o));
+    add('orig', p.x);
+    if (p.type === 0 || (p.type === 1 && p.suf)) {
+      const suf = p.suf, rev = suf.split('').reverse().join('');
+      if (rev !== suf) add('rev', want - parseInt(suf, 2) + parseInt(rev, 2));
+    }
+    if (p.type === 1 && p.pre) add('end', parseInt(mBin(p.x) + p.pre, 2));
+    if (p.type === 2) {
+      add('noInc', parseInt(mBin(p.x) + p.d, 2));
+      const y = p.op === '+' ? p.x - 1 : p.x + 1;
+      if (y > 0) add('opp', parseInt(mBin(y) + p.d, 2));
+    }
+    if (p.type === 3) {
+      const b = mBin(p.x);
+      add('noInv', parseInt((p.pre || '') + b + (p.suf || ''), 2));
+    }
+  } else if (p.type === 7) {
+    const r = fRunP(p);
+    if (mGood(r)) {
+      const w = mWord(r.a);
+      add('other', w.split('').filter(c => c !== p.ask).length);
+    }
+    add('before', fTape(p).split('').filter(c => c === p.ask).length);
+    const s = mRun(mSwapCols(p.pr), fTape(p), p.start);
+    if (mGood(s)) add('cols', mWord(s.a).split('').filter(c => c === p.ask).length);
+  } else if (p.type === 8) {
+    add('result', p.res);
+    if (p.ask !== 'exact') {
+      const xs = fPre(p, p.ask === 'max' ? p.limit : p.lim);
+      add('otherEnd', p.ask === 'min' ? xs[xs.length - 1] : xs[0]);
+    }
+    add('bin', parseInt(String(p.res), 2) || undefined);
+  } else {
+    add('same', p.K);
+    const q = Object.assign({}, p, {ext: p.ext === 'max' ? 'min' : 'max'});
+    const b = f9Best(q);
+    if (b) add('otherEnd', b.v);
+    add('total', p.L - p.K);
+  }
+  return tr;
+}
+
+const F_TRAP_SAY = {
+  cols: 'так выходит, если перепутать столбцы 0 и 1 — посмотри, в каком порядке они стоят в шапке таблицы',
+  side: 'так выходит, если начать не с той стороны: головка стоит ',
+  orig: 'это исходное число — программа его меняет',
+  rev: 'дописанные цифры записаны в обратном порядке: головка пишет их по очереди, двигаясь вправо',
+  end: 'цифры дописаны не с той стороны числа',
+  noInc: 'пропущено прибавление (вычитание) единицы — первая часть программы',
+  opp: 'перепутаны «прибавить 1» и «вычесть 1»: посмотри, во что превращаются нули справа',
+  noInv: 'пропущена инверсия: цифры числа программа меняет на противоположные',
+  other: 'посчитаны не те цифры: спрашивают ',
+  before: 'это количество до выполнения программы',
+  result: 'это число после программы, а спрашивают, что было до',
+  otherEnd: 'это другой край: спрашивают ',
+  bin: 'это результат программы, прочитанный как двоичный — а спрашивают исходное число',
+  same: 'это количество после программы, а спрашивают, сколько было до',
+  total: 'это количество других цифр после программы'
+};
+
+function fTrapOf(task, raw) {
+  const tr = task.meta.traps || {};
+  for (const k of Object.keys(tr)) if (String(tr[k]) === String(raw)) return k;
+  return '';
+}
+
+function fTrapSay(task, k) {
+  const p = task.meta.p;
+  if (k === 'side') return F_TRAP_SAY.side + fSide(p.start) + ' от последовательности';
+  if (k === 'other') return F_TRAP_SAY.other + (p.ask === '1' ? 'единицы' : 'нули');
+  if (k === 'otherEnd') {
+    if (p.type === 9) return F_TRAP_SAY.otherEnd + (p.ext === 'max' ? 'наибольшее' : 'наименьшее');
+    return F_TRAP_SAY.otherEnd + (p.ask === 'min' ? 'наименьшее' : 'наибольшее') + ' подходящее число';
+  }
+  return F_TRAP_SAY[k] || '';
+}
+
+/* ------------------------------------------------------ код на Python
+   Второй способ — программа, которая выполняет таблицу команду за командой.
+   Лента — строка с пятью пустыми клетками по краям, состояние — номер,
+   каждая клетка таблицы — одна строка if/elif (без словарей: same-trick-
+   across-tasks). Собирается строками и в самопроверке ИСПОЛНЯЕТСЯ: ученик
+   видит её картинкой и может набрать у себя, значит последняя напечатанная
+   строка обязана совпасть с ключом. */
+
+function fCode(rows) {
+  let w = 0;
+  rows.forEach(r => { if (r[1]) w = Math.max(w, r[0].length); });
+  return rows.map(r => r[1] ? r[0] + ' '.repeat(w - r[0].length + 2) + '# ' + r[1] : r[0]).join('\n');
+}
+
+function fIfs(p, ind) {
+  const rows = [];
+  let first = true;
+  p.pr.forEach((st, q) => {
+    p.cols.forEach(c => {
+      const cmd = st[c];
+      if (!cmd) return;
+      rows.push([ind + (first ? 'if' : 'elif') + ' q == ' + q + " and c == '" + c + "': w, d, q = '" +
+                 cmd[0] + "', '" + cmd[1] + "', " + cmd[2], '']);
+      first = false;
+    });
+  });
+  return rows;
+}
+
+function fLoop(p, ind) {
+  return [[ind + 'q = 0', 'начальное состояние q0'],
+          [ind + 'while True:', ''],
+          [ind + '    c = lenta[pos]', 'что под головкой']]
+    .concat(fIfs(p, ind + '    '))
+    .concat([[ind + '    lenta = lenta[:pos] + w + lenta[pos + 1:]', 'записать'],
+             [ind + "    if d == 'S':", ''],
+             [ind + '        break', 'стоп'],
+             [ind + "    if d == 'L':", ''],
+             [ind + '        pos -= 1', ''],
+             [ind + "    if d == 'R':", ''],
+             [ind + '        pos += 1', '']]);
+}
+
+function fPosRow(p, ind) {
+  return p.start === 'R'
+    ? [ind + 'pos = len(lenta) - 5', 'клетка справа от последовательности']
+    : [ind + 'pos = 4', 'клетка слева от последовательности'];
+}
+
+function fProgram(p) {
+  if (p.type === 9) return '';
+  const rows = [];
+  if (p.type <= 6) {
+    rows.push(["lenta = 'λ' * 5 + f'{" + p.x + ":b}' + 'λ' * 5", 'число в двоичной записи']);
+    rows.push(fPosRow(p, ''));
+    fLoop(p, '').forEach(r => rows.push(r));
+    rows.push(["print(int(lenta.strip('λ'), 2))", 'в десятичную']);
+  } else if (p.type === 7) {
+    rows.push(["lenta = 'λ' * 5 + " + p.runs.map(([c, m]) => "'" + c + "' * " + m).join(' + ') + " + 'λ' * 5", '']);
+    rows.push(fPosRow(p, ''));
+    fLoop(p, '').forEach(r => rows.push(r));
+    rows.push(["print(lenta.count('" + p.ask + "'))", p.ask === '1' ? 'единиц' : 'нулей']);
+  } else {
+    rows.push(['def run(x):', 'что программа делает с числом x']);
+    rows.push(["    lenta = 'λ' * 5 + f'{x:b}' + 'λ' * 5", '']);
+    rows.push(fPosRow(p, '    '));
+    fLoop(p, '    ').forEach(r => rows.push(r));
+    rows.push(["    return int(lenta.strip('λ'), 2)", '']);
+    rows.push(['', '']);
+    const lim = p.ask === 'max' ? p.limit : p.lim;
+    if (p.ask === 'max') rows.push(['last = 0', '']);
+    rows.push(['for x in range(1, ' + lim + '):', 'перебираем исходные числа']);
+    rows.push(['    if run(x) == ' + p.res + ':', '']);
+    if (p.ask === 'max') { rows.push(['        last = x', 'запоминаем']); rows.push(['print(last)', 'наибольшее']); }
+    else { rows.push(['        print(x)', p.ask === 'min' ? 'первое — наименьшее' : 'подходит']);
+           rows.push(['        break', '']); }
+  }
+  return fCode(rows);
+}
+
+/* ------------------------------------------------- разбор рисунком
+   (pictures-over-words) Разбор — это сама лента: строка на каждый момент,
+   когда меняется состояние; головка — рамкой, изменённые клетки — жёлтым.
+   Слева — что делает каждое состояние. У автомата (типы 6–7) — таблица
+   «клетка за клеткой» и счёт блоками. Ответ ученика — красным. */
+
+const F_CSS =
+  '.mtw{overflow-x:auto;margin:8px 0}' +
+  'table.mtt{border-collapse:collapse;font:15px/1.3 Consolas,"Cascadia Mono",monospace}' +
+  'table.mtt th,table.mtt td{border:1px solid #9aa0b4;padding:4px 12px;background:#fff;text-align:center;white-space:nowrap}' +
+  'table.mtt th{background:#f6f7fb;font-weight:700}' +
+  '.mtnote{font-size:14.5px;color:#5c6070;margin:6px 0}' +
+  'table.mtr{border-collapse:collapse;font:14.5px/1.35 "Segoe UI",sans-serif;margin:6px 0}' +
+  'table.mtr td{border:1px solid #d9dce6;padding:4px 10px;background:#fff;text-align:left}' +
+  'table.mtr td:first-child{font:700 14.5px Consolas,monospace;text-align:center;background:#f6f7fb}' +
+  'table.tape{border-collapse:separate;border-spacing:2px;font:15px/1 Consolas,"Cascadia Mono",monospace}' +
+  'table.tape td{width:26px;height:28px;text-align:center;border:1px solid #d9dce6;background:#fff;border-radius:4px;padding:0}' +
+  'table.tape td.lab{width:auto;border:0;background:none;padding:0 8px 0 0;color:#5c6070;font:600 13px "Segoe UI",sans-serif;text-align:right;white-space:nowrap}' +
+  'table.tape td.e{color:#b8bccb}' +
+  'table.tape td.ch{background:#fff4e2;color:#8a4b00;font-weight:700;border-color:#e6c98a}' +
+  'table.tape td.hd{outline:3px solid #1f5fa8;outline-offset:-1px}' +
+  'table.tape tr.fin td.lab{color:#137a41}' +
+  'table.walk{border-collapse:collapse;font:14.5px/1.3 Consolas,"Cascadia Mono",monospace;margin:6px 0}' +
+  'table.walk th,table.walk td{border:1px solid #d9dce6;padding:3px 7px;text-align:center;background:#fff}' +
+  'table.walk th{background:#f6f7fb;font:600 12.5px "Segoe UI",sans-serif;color:#5c6070;text-align:left}' +
+  'table.walk td.ch{background:#fff4e2;color:#8a4b00;font-weight:700}' +
+  'table.walk td.blk{border-left:3px solid #1f5fa8}' +
+  '.mtres{font-size:15.5px;margin:6px 0}' +
+  '.mtres b.key{color:#137a41}' +
+  '.mtres b.bad{color:#b3261e}';
+
+function fCss() {
+  if (typeof document === 'undefined' || document.getElementById('mt-css')) return;
+  const st = document.createElement('style');
+  st.id = 'mt-css';
+  st.textContent = F_CSS;
+  document.head.appendChild(st);
+}
+
+function fRoles(p) {
+  let s = '<table class="mtr">';
+  p.roles.forEach((r, q) => { s += '<tr><td>q' + q + '</td><td>' + r + '</td></tr>'; });
+  return s + '</table>';
+}
+
+/* Кадры ленты: начало, каждая смена состояния, остановка. */
+function fFrames(p, x) {
+  const tape = x === undefined ? fTape(p) : mBin(x);
+  const r = mRun(p.pr, tape, p.start, true);
+  if (!r.ok) return '';
+  const n = tape.length;
+  const lo = Math.min(-1, r.lo) - 1 + M_OFF, hi = Math.max(n, r.hi) + 1 + M_OFF;
+  const init = r.frames[0].a;
+  let s = '<div class="mtw"><table class="tape">';
+  let fr = r.frames;
+  if (fr.length > 9) fr = fr.slice(0, 4).concat(fr.slice(fr.length - 4));
+  fr.forEach((f, k) => {
+    const lab = k === 0 ? 'начало, q' + f.q : f.stop ? 'стоп' : 'q' + f.q;
+    s += '<tr' + (f.stop ? ' class="fin"' : '') + '><td class="lab">' + lab + '</td>';
+    for (let i = lo; i <= hi; i++) {
+      const c = f.a[i];
+      const cls = [];
+      if (c === 'λ') cls.push('e');
+      if (c !== init[i]) cls.push('ch');
+      if (i === M_OFF + f.pos) cls.push('hd');
+      s += '<td' + (cls.length ? ' class="' + cls.join(' ') + '"' : '') + '>' + c + '</td>';
+    }
+    s += '</tr>';
+  });
+  return s + '</table></div>';
+}
+
+/* Ход по клеткам для автомата: для каждой клетки — что было, в каком
+   состоянии головка, что записала. */
+function fWalkCells(p) {
+  const tape = fTape(p);
+  const r = mRun(p.pr, tape, p.start, false);
+  const n = tape.length;
+  const order = [];
+  for (let k = 0; k < n; k++) order.push(p.start === 'R' ? n - 1 - k : k);
+  let q = p.pr[0]['λ'][2];
+  const out = [];
+  order.forEach(i => {
+    const c = tape[i], cmd = p.pr[q][c];
+    out.push({i: i, was: c, q: q, w: cmd[0]});
+    q = cmd[2];
+  });
+  void r;
+  return out;
+}
+
+function fWalkTable(cells, upto, marks) {
+  const head = [['клетка', c => c.k], ['было', c => c.was], ['состояние', c => 'q' + c.q], ['стало', c => c.w]];
+  let s = '<div class="mtw"><table class="walk">';
+  head.forEach(([lab, f], row) => {
+    s += '<tr><th>' + lab + '</th>';
+    cells.slice(0, upto).forEach((c, k) => {
+      const cls = [];
+      if (row === 3 && c.w !== c.was) cls.push('ch');
+      if (marks && marks.has(k)) cls.push('blk');
+      s += '<td' + (cls.length ? ' class="' + cls.join(' ') + '"' : '') + '>' + f(Object.assign({k: k + 1}, c)) + '</td>';
+    });
+    if (cells.length > upto) s += '<td>…</td>';
+    s += '</tr>';
+  });
+  return s + '</table></div>';
+}
+
+/* Счёт блоками: на ряду одинаковых цифр состояния повторяются по кругу. */
+function fBlocks(p) {
+  const cells = fWalkCells(p);
+  const lines = [];
+  const marks = new Set();
+  let k0 = 0;
+  p.runs.forEach(([c, m]) => {
+    const seg = cells.slice(k0, k0 + m);
+    const seen = new Map();
+    let pre = -1, per = 0;
+    for (let k = 0; k < seg.length; k++) {
+      const key = seg[k].q;
+      if (seen.has(key)) { pre = seen.get(key); per = k - pre; break; }
+      seen.set(key, k);
+    }
+    const cnt = arr => arr.filter(e => e.w === p.ask).length;
+    const word = p.ask === '1' ? 'единиц' : 'нулей';
+    if (pre < 0) {
+      lines.push('Ряд из ' + m + ' ' + fSym(c, m) + ': ' + word + ' — ' + cnt(seg) + '.');
+    } else {
+      for (let k = k0 + pre; k < k0 + m; k += per) marks.add(k);
+      const q = Math.floor((m - pre) / per), rst = (m - pre) % per;
+      const a = cnt(seg.slice(0, pre)), b = cnt(seg.slice(pre, pre + per)), z = cnt(seg.slice(pre + q * per));
+      const blk = seg.slice(pre, pre + per).map(e => e.w).join('');
+      lines.push('Ряд из ' + m + ' ' + fSym(c, m) + ': ' + (pre ? 'сначала ' + pre + ' ' + tPl(pre, 'клетка', 'клетки', 'клеток') +
+        ' (' + word + ' ' + a + '), потом ' : '') + 'блоки по ' + per + ' ' + tPl(per, 'клетке', 'клетки', 'клеток') +
+        ' «' + blk + '» (в каждом ' + word + ' ' + b + '): полных блоков ' + q + (rst ? ', остаток ' + rst + ' (' + word + ' ' + z + ')' : '') +
+        '. Итого ' + word + ': ' + (pre ? a + ' + ' : '') + q + ' · ' + b + (rst ? ' + ' + z : '') + ' = <b>' + cnt(seg) + '</b>.');
+    }
+    k0 += m;
+  });
+  return {cells: cells, marks: marks, lines: lines};
+}
+
+function fPic(t, raw) {
+  fCss();
+  const p = t.meta.p;
+  const s0 = raw === undefined || raw === null ? '' : String(raw).trim();
+  const mine = s0 && s0 !== t.answer ? s0 : null;
+  let s = '<p class="mtres">Что делает каждое состояние:</p>' + fRoles(p);
+  if (p.type <= 5) {
+    s += '<p class="mtres">Лента по шагам (рамка — головка, жёлтым — изменённые клетки):</p>' + fFrames(p);
+    s += '<p class="mtres">' + p.x + ' = ' + mBin(p.x) + '<sub>2</sub> → ' + mBin(t.meta.want) + '<sub>2</sub> = <b class="key">' +
+         t.answer + '</b>. Короче: ' + p.summary + '.</p>';
+  } else if (p.type === 6) {
+    const cells = fWalkCells(p);
+    s += '<p class="mtres">Головка идёт справа налево, каждую клетку переписывает по строке своего состояния:</p>' +
+         fWalkTable(cells, cells.length);
+    s += '<p class="mtres">' + p.x + ' = ' + mBin(p.x) + '<sub>2</sub> → ' + mWord(fRunP(p).a) + '<sub>2</sub> = <b class="key">' +
+         t.answer + '</b>.</p>';
+  } else if (p.type === 7) {
+    const b = fBlocks(p);
+    s += '<p class="mtres">Головка идёт ' + (p.start === 'R' ? 'справа налево' : 'слева направо') +
+         ' и переписывает каждую клетку; состояния повторяются по кругу (синяя черта — начало блока):</p>' +
+         fWalkTable(b.cells, Math.min(b.cells.length, 18), b.marks);
+    b.lines.forEach(l => { s += '<p class="mtres">' + l + '</p>'; });
+    if (p.runs.length > 1) s += '<p class="mtres">Всего ' + (p.ask === '1' ? 'единиц' : 'нулей') + ': <b class="key">' + t.answer + '</b>.</p>';
+  } else if (p.type === 8) {
+    s += '<p class="mtres">' + p.summary + '. Проверка — программа на найденном числе:</p>' + fFrames(p, t.meta.want);
+    if (p.ask !== 'exact') {
+      const xs = fPre(p, p.ask === 'max' ? p.limit : p.lim);
+      const show = xs.length > 8 ? xs.slice(0, 4).concat(['…']).concat(xs.slice(-3)) : xs;
+      s += '<p class="mtres">Подходят все числа, из которых получается ' + p.res + ': ' +
+           show.map(v => v === '…' ? '…' : (v === t.meta.want ? '<b class="key">' + v + '</b>' : v)).join(', ') +
+           '. ' + (p.ask === 'min' ? 'Наименьшее' : 'Наибольшее меньше ' + p.limit) + ' — <b class="key">' + t.answer + '</b>.</p>';
+    } else {
+      s += '<p class="mtres">' + t.answer + ' = ' + mBin(t.meta.want) + '<sub>2</sub> → ' + mBin(p.res) +
+           '<sub>2</sub> = ' + p.res + '. Ответ: <b class="key">' + t.answer + '</b>.</p>';
+    }
+  } else {
+    const b = f9Best(p);
+    const sy = c => c === '1' ? 'единиц' : 'нулей';
+    s += '<p class="mtres">' + (p.op === '-'
+      ? 'Справа налево: нули хвоста становятся единицами, ближайшая к краю 1 — нулём, стоп. ' +
+        'Было <code>A 1 0…0</code>, стало <code>A 0 1…1</code> (хвост — t нулей, A не меняется).'
+      : 'Справа налево: единицы хвоста становятся нулями, ближайший к краю 0 — единицей, стоп. ' +
+        'Было <code>A 0 1…1</code>, стало <code>A 1 0…0</code> (хвост — t единиц, A не меняется).') + '</p>';
+    s += '<p class="mtres">Пусть в A длиной P = ' + p.L + ' − 1 − t ровно z нулей. Тогда ' + (p.op === '-'
+      ? 'нулей было z + t, стало z + 1; единиц было P − z + 1, стало P − z + t.'
+      : 'нулей было z + 1, стало z + t; единиц было P − z + t, стало P − z + 1.') + '</p>';
+    s += '<p class="mtres">Условие: ' + sy(p.after) + ' после — ровно ' + p.K + '. ' +
+         (b.all ? 'Лучше всего — когда программа проходит всю ленту.'
+                : 'Лучший случай: t = ' + b.t + ', z = ' + b.z + ' (P = ' + b.P + ').') +
+         ' ' + (p.ext === 'max' ? 'Наибольшее' : 'Наименьшее') + ' число ' + sy(p.before) + ' до: <b class="key">' + t.answer + '</b>.</p>';
+  }
+  if (mine !== null) {
+    const k = fTrapOf(t, mine);
+    let bin = '';
+    if (/^[01]+$/.test(mine) && parseInt(mine, 2) === Number(t.answer)) bin = 'это верный ответ, но в двоичной записи — переведи в десятичную';
+    s = '<p class="mtres">Твой ответ <b class="bad">' + mine + '</b>' +
+        (bin ? ' — ' + bin + '.' : k ? ' — ' + fTrapSay(t, k) + '.' : '.') + ' Верный — зелёным.</p>' + s;
+  }
+  return s;
+}
+
+/* ------------------------------------------------------ сборка задач */
+
+function fFinish(type, p) {
+  const want = fSolve(p);
+  if (!Number.isFinite(want) || want <= 0) return null;
+  return {
+    part: 'задание 12',
+    question: fCondHtml(p),
+    answer: String(want),
+    code: fProgram(p),
+    explain: type === 9 ? '[[PIC]]<p>Программой здесь не перебрать: последовательностей из ' + p.L +
+      ' цифр 2<sup>' + p.L + '</sup>. Только рассуждением.</p>'
+      : '[[PIC]]<p>Второй способ — программой, которая выполняет таблицу команду за командой ' +
+        '(пользоваться не обязательно):</p>[[CODE]]',
+    meta: {p: p, want: want, traps: fTraps(p, want)}
+  };
+}
+
+function fCols(rng) { return tPick(rng, [['λ', '0', '1'], ['λ', '0', '1'], ['λ', '1', '0']]); }
+function fDigits(rng, k) { let s = ''; for (let i = 0; i < k; i++) s += tPick(rng, ['0', '1']); return s; }
+function fX(rng, lo, hi) { return tRand(rng, lo || 100, hi || 2100); }
+
+/* Справа — запись цифр suf: головка уже на пустой клетке за числом в
+   состоянии q; последняя цифра — с остановкой либо отдельной строкой «стоп». */
+function fWrite(pr, roles, q, digits, d, stopOnWrite, firstRole) {
+  for (let i = 0; i < digits.length; i++) {
+    const last = i === digits.length - 1;
+    if (last && stopOnWrite) {
+      mPut(pr, q + i, 'λ', digits[i], 'S', q + i);
+    } else {
+      mPut(pr, q + i, 'λ', digits[i], d, q + i + 1);
+    }
+    const say = 'на пустой клетке пишет ' + digits[i] + (last && stopOnWrite ? ' и останавливается' : ', шаг ' + (d === 'R' ? 'вправо' : 'влево'));
+    roles[q + i] = i === 0 && firstRole ? firstRole + '; ' + say : say;
+  }
+  const end = q + digits.length;
+  if (!stopOnWrite) { mPut(pr, end, 'λ', 'λ', 'S', end); roles[end] = 'стоп'; }
+}
+
+function fAppendTask(rng) {
+  for (let tries = 0; tries < 50; tries++) {
+    const x = fX(rng), suf = fDigits(rng, tPick(rng, [1, 2, 2, 3]));
+    const pr = [], roles = [];
+    mPut(pr, 0, 'λ', 'λ', 'R', 1); roles[0] = 'шаг вправо — на первую цифру';
+    mScan(pr, 1, 'R');
+    fWrite(pr, roles, 1, suf, 'R', rng() < 0.4, 'идёт вправо по цифрам до конца числа');
+    const k = suf.length;
+    const p = {type: 0, start: 'L', cols: fCols(rng), pr: pr, roles: roles, x: x, suf: suf,
+               summary: 'справа дописано ' + suf + ', то есть x · ' + Math.pow(2, k) + ' + ' + parseInt(suf, 2)};
+    const t = fFinish(0, p);
+    if (t && Object.keys(t.meta.traps).length >= 2) return t;
+  }
+  return null;
+}
+
+function fPrependTask(rng) {
+  for (let tries = 0; tries < 80; tries++) {
+    const how = tPick(rng, ['direct', 'direct', 'gap', 'left']);
+    const x = fX(rng), pr = [], roles = [];
+    let p;
+    if (how === 'left') {
+      const suf = fDigits(rng, tPick(rng, [1, 2, 3]));
+      mPut(pr, 0, 'λ', '1', 'R', 1); roles[0] = 'пишет 1 перед числом, шаг вправо';
+      mScan(pr, 1, 'R');
+      fWrite(pr, roles, 1, suf, 'R', rng() < 0.5, 'идёт вправо по цифрам до конца числа');
+      p = {type: 1, start: 'L', pr: pr, roles: roles, x: x, pre: '1', suf: suf,
+           summary: 'слева дописана 1, справа — ' + suf};
+    } else {
+      const pre = '1' + fDigits(rng, how === 'gap' ? tRand(rng, 1, 2) : tRand(rng, 0, 2));
+      mPut(pr, 0, 'λ', 'λ', 'L', 1); roles[0] = 'шаг влево — на последнюю цифру';
+      mScan(pr, 1, 'L');
+      if (how === 'direct') {
+        const rev = pre.split('').reverse().join('');
+        fWrite(pr, roles, 1, rev, 'L', rng() < 0.5, 'идёт влево по цифрам до начала числа');
+      } else {
+        /* через пропуск: отступить на длину приписки, писать слева направо */
+        const gap = pre.length - 1;
+        for (let g = 0; g < gap; g++) {
+          mPut(pr, 1 + g, 'λ', 'λ', 'L', 2 + g);
+          roles[1 + g] = g === 0 ? 'идёт влево по цифрам до начала числа; на пустой клетке — ещё шаг влево, ничего не пишет'
+                                 : 'шаг влево по пустой клетке';
+        }
+        fWrite(pr, roles, 1 + gap, pre, 'R', true, '');
+      }
+      p = {type: 1, start: 'R', pr: pr, roles: roles, x: x, pre: pre,
+           summary: 'слева дописано ' + pre + ', то есть x + ' + parseInt(pre, 2) + '·2<sup>n</sup>, где n — число цифр x'};
+    }
+    p.cols = fCols(rng);
+    const t = fFinish(1, p);
+    if (t && Object.keys(t.meta.traps).length >= 2) return t;
+  }
+  return null;
+}
+
+function fIncTask(rng) {
+  for (let tries = 0; tries < 80; tries++) {
+    const op = tPick(rng, ['+', '-']);
+    const d = tPick(rng, ['1', '0', '1', '']);
+    let x = fX(rng, 64, 2100);
+    if (rng() < 0.65) {
+      const tl = tRand(rng, 2, 6);
+      x = op === '+' ? (((x >> tl) << tl) | ((1 << tl) - 1)) : ((x >> tl) << tl);
+    }
+    if (x < 8) continue;
+    const pr = [], roles = [];
+    mPut(pr, 0, 'λ', 'λ', 'L', 1); roles[0] = 'шаг влево — на последнюю цифру';
+    if (op === '+') {
+      mPut(pr, 1, 'λ', '1', 'R', 2); mPut(pr, 1, '0', '1', 'R', 2); mPut(pr, 1, '1', '0', 'L', 1);
+      roles[1] = 'прибавляет 1: единицы справа делает нулями и идёт влево; первый 0 (или пустую клетку) делает единицей и поворачивает направо';
+    } else {
+      mPut(pr, 1, '0', '1', 'L', 1); mPut(pr, 1, '1', '0', 'R', 2);
+      roles[1] = 'вычитает 1: нули справа делает единицами и идёт влево; первую 1 делает нулём и поворачивает направо';
+    }
+    mScan(pr, 2, 'R');
+    mPut(pr, 2, 'λ', d || 'λ', 'S', 2);
+    roles[2] = 'идёт вправо до конца числа; на пустой клетке ' + (d ? 'пишет ' + d + ' и ' : '') + 'останавливается';
+    const p = {type: 2, start: 'R', cols: fCols(rng), pr: pr, roles: roles, x: x, op: op, d: d,
+               summary: (op === '+' ? 'x + 1' : 'x − 1') + (d ? ', и справа дописано ' + d + ': (x ' + (op === '+' ? '+' : '−') + ' 1) · 2' + (d === '1' ? ' + 1' : '') : '')};
+    const t = fFinish(2, p);
+    if (t && Object.keys(t.meta.traps).length >= 3) return t;
+  }
+  return null;
+}
+
+function fInvTask(rng) {
+  for (let tries = 0; tries < 80; tries++) {
+    const how = tPick(rng, ['L', 'L', 'R', 'L1']);
+    const x = fX(rng), pr = [], roles = [];
+    let p;
+    if (how === 'R') {
+      mPut(pr, 0, 'λ', 'λ', 'L', 1); roles[0] = 'шаг влево — на последнюю цифру';
+      mPut(pr, 1, '0', '1', 'L', 1); mPut(pr, 1, '1', '0', 'L', 1); mPut(pr, 1, 'λ', 'λ', 'S', 1);
+      roles[1] = 'идёт влево и меняет каждую цифру на противоположную; на пустой клетке — стоп';
+      p = {type: 3, start: 'R', x: x, suf: '', summary: 'все цифры заменены на противоположные'};
+    } else {
+      const pre = how === 'L1' ? '1' : '';
+      const suf = fDigits(rng, how === 'L1' ? tRand(rng, 1, 2) : tRand(rng, 0, 2));
+      mPut(pr, 0, 'λ', pre || 'λ', 'R', 1);
+      roles[0] = pre ? 'пишет 1 перед числом, шаг вправо' : 'шаг вправо — на первую цифру';
+      mPut(pr, 1, '0', '1', 'R', 1); mPut(pr, 1, '1', '0', 'R', 1);
+      if (suf) fWrite(pr, roles, 1, suf, 'R', rng() < 0.5, 'идёт вправо и меняет каждую цифру на противоположную');
+      else { mPut(pr, 1, 'λ', 'λ', 'S', 1); roles[1] = 'идёт вправо и меняет каждую цифру на противоположную; на пустой клетке — стоп'; }
+      p = {type: 3, start: 'L', x: x, pre: pre, suf: suf,
+           summary: (pre ? 'слева дописана 1, ' : '') + 'цифры числа заменены на противоположные' + (suf ? ', справа дописано ' + suf : '')};
+    }
+    p.pr = pr; p.roles = roles; p.cols = fCols(rng);
+    const t = fFinish(3, p);
+    if (t && Object.keys(t.meta.traps).length >= 2) return t;
+  }
+  return null;
+}
+
+/* До последней цифры: слева — пройти число; справа — один шаг. */
+function fToLast(rng, pr, roles) {
+  if (rng() < 0.5) {
+    mPut(pr, 0, 'λ', 'λ', 'R', 1); roles[0] = 'шаг вправо — на первую цифру';
+    mScan(pr, 1, 'R'); mPut(pr, 1, 'λ', 'λ', 'L', 2);
+    roles[1] = 'идёт вправо до конца числа; на пустой клетке — шаг назад, на последнюю цифру';
+    return {start: 'L', q: 2};
+  }
+  mPut(pr, 0, 'λ', 'λ', 'L', 1); roles[0] = 'шаг влево — на последнюю цифру';
+  return {start: 'R', q: 1};
+}
+
+function fDelTask(rng) {
+  for (let tries = 0; tries < 120; tries++) {
+    const how = tPick(rng, ['k', 'cond', 'cond', 'while']);
+    const x = fX(rng), pr = [], roles = [];
+    const o = fToLast(rng, pr, roles);
+    let q = o.q, summary;
+    if (how === 'k') {
+      const k = tRand(rng, 1, 3);
+      for (let i = 0; i < k; i++) {
+        const last = i === k - 1;
+        mPut(pr, q + i, '0', 'λ', last ? 'S' : 'L', last ? q + i : q + i + 1);
+        mPut(pr, q + i, '1', 'λ', last ? 'S' : 'L', last ? q + i : q + i + 1);
+        roles[q + i] = 'стирает цифру' + (last ? ' и останавливается' : ', шаг влево');
+      }
+      summary = 'стёрты ' + k + ' ' + tPl(k, 'последняя цифра', 'последние цифры', 'последних цифр');
+    } else if (how === 'cond') {
+      const c = tPick(rng, ['0', '1']), other = c === '0' ? '1' : '0';
+      mPut(pr, q, '0', 'λ', 'L', q + 1); mPut(pr, q, '1', 'λ', 'L', q + 1);
+      roles[q] = 'стирает последнюю цифру, шаг влево';
+      mPut(pr, q + 1, c, 'λ', 'S', q + 1); mPut(pr, q + 1, other, other, 'S', q + 1);
+      roles[q + 1] = 'если там ' + c + ' — стирает её; если ' + other + ' — оставляет; стоп';
+      summary = 'стёрта последняя цифра, и ещё одна, если она ' + c;
+    } else {
+      const c = tPick(rng, ['0', '1']), other = c === '0' ? '1' : '0';
+      mPut(pr, q, c, 'λ', 'L', q); mPut(pr, q, other, other, 'S', q); mPut(pr, q, 'λ', 'λ', 'S', q);
+      roles[q] = 'стирает цифры ' + c + ' и идёт влево; на первой ' + other + ' — стоп';
+      summary = 'стёрты все ' + (c === '0' ? 'нули' : 'единицы') + ' в конце числа';
+    }
+    const p = {type: 4, start: o.start, cols: fCols(rng), pr: pr, roles: roles, x: x, summary: summary};
+    const t = fFinish(4, p);
+    if (!t) continue;
+    if (how === 'cond' && Number(t.answer) === p.x >> 1) { if (rng() < 0.6) continue; }
+    if (how === 'while' && mBin(p.x).length - mBin(Number(t.answer)).length < 2) continue;
+    if (Object.keys(t.meta.traps).length >= 2) return t;
+  }
+  return null;
+}
+
+function fEditTask(rng) {
+  for (let tries = 0; tries < 120; tries++) {
+    const how = tPick(rng, ['10', 'second', 'first0', 'flip2']);
+    const x = fX(rng), pr = [], roles = [];
+    let b, start;
+    if (rng() < 0.6) {
+      start = 'R';
+      mPut(pr, 0, 'λ', 'λ', 'L', 1); roles[0] = 'шаг влево — на последнюю цифру';
+      mScan(pr, 1, 'L'); mPut(pr, 1, 'λ', 'λ', 'R', 2);
+      roles[1] = 'идёт влево до начала числа; на пустой клетке — шаг назад, на первую цифру';
+      b = 2;
+    } else {
+      start = 'L';
+      mPut(pr, 0, 'λ', 'λ', 'R', 1); roles[0] = 'шаг вправо — на первую цифру';
+      b = 1;
+    }
+    let summary;
+    if (how === '10') {
+      mPut(pr, b, '1', '0', 'L', b + 1); roles[b] = 'первую 1 делает нулём, шаг влево';
+      mPut(pr, b + 1, 'λ', '1', 'S', b + 1); roles[b + 1] = 'на пустой клетке пишет 1, стоп';
+      summary = 'первая 1 заменена на «10»';
+    } else if (how === 'second') {
+      mPut(pr, b, '1', '1', 'R', b + 1); mPut(pr, b, '0', '0', 'R', b);
+      roles[b] = 'проходит первую 1, шаг вправо';
+      mPut(pr, b + 1, '0', '0', 'R', b + 1);
+      if (rng() < 0.5) {
+        mPut(pr, b + 1, '1', '0', 'S', b + 1); mPut(pr, b + 1, 'λ', 'λ', 'S', b + 1);
+        roles[b + 1] = 'идёт вправо по нулям; первую встреченную 1 делает нулём — стоп';
+      } else {
+        mPut(pr, b + 1, '1', '0', 'R', b + 2); mPut(pr, b + 1, 'λ', 'λ', 'R', b + 2);
+        roles[b + 1] = 'идёт вправо по нулям; первую встреченную 1 делает нулём';
+        mScan(pr, b + 2, 'R'); mPut(pr, b + 2, 'λ', 'λ', 'S', b + 2);
+        roles[b + 2] = 'идёт вправо до конца числа; на пустой клетке — стоп';
+      }
+      summary = 'вторая слева единица заменена нулём';
+    } else if (how === 'first0') {
+      mPut(pr, b, '1', '1', 'R', b); mPut(pr, b, '0', '1', 'S', b); mPut(pr, b, 'λ', 'λ', 'S', b);
+      roles[b] = 'идёт вправо по единицам; первый 0 делает единицей — стоп';
+      summary = 'первый слева ноль заменён единицей';
+    } else {
+      mPut(pr, b, '1', '1', 'R', b + 1); roles[b] = 'проходит первую 1, шаг вправо';
+      mPut(pr, b + 1, '0', '1', 'S', b + 1); mPut(pr, b + 1, '1', '0', 'S', b + 1); mPut(pr, b + 1, 'λ', 'λ', 'S', b + 1);
+      roles[b + 1] = 'вторую цифру меняет на противоположную — стоп';
+      summary = 'вторая цифра числа заменена на противоположную';
+    }
+    const p = {type: 5, start: start, cols: fCols(rng), pr: pr, roles: roles, x: x, summary: summary};
+    const t = fFinish(5, p);
+    if (!t || Number(t.answer) === x) continue;
+    if (Object.keys(t.meta.traps).length >= 2) return t;
+  }
+  return null;
+}
+
+/* Автомат: q0 — шаг на первую клетку ряда, дальше K состояний по очереди
+   переписывают клетки, двигаясь в одну сторону; на пустой клетке — стоп
+   (у первого из них пустая клетка не встречается — клетка остаётся пустой,
+   как в замере). */
+function fAuto(rng, K, dir) {
+  const pr = [];
+  mPut(pr, 0, 'λ', 'λ', dir, 1);
+  for (let s = 1; s <= K; s++) {
+    for (const c of ['0', '1']) mPut(pr, s, c, tPick(rng, ['0', '1']), dir, tRand(rng, 1, K));
+    if (s > 1 || rng() < 0.5) mPut(pr, s, 'λ', 'λ', 'S', s);
+  }
+  return pr;
+}
+
+function fAutoRoles(pr, dir) {
+  const r = ['шаг ' + (dir === 'L' ? 'влево' : 'вправо') + ' — на первую клетку'];
+  for (let s = 1; s < pr.length; s++) {
+    const a = pr[s]['0'], b = pr[s]['1'];
+    r[s] = 'на 0 пишет ' + a[0] + ' → q' + a[2] + '; на 1 пишет ' + b[0] + ' → q' + b[2] + (pr[s]['λ'] ? '; на пустой — стоп' : '');
+  }
+  return r;
+}
+
+/* Автомат «настоящий»: все состояния в деле, состояния различаются,
+   хоть одна клетка меняется и хоть одна — нет. */
+function fAutoOk(p, r) {
+  if (!mGood(r)) return false;
+  for (let s = 1; s < p.pr.length; s++) if (!r.visited.has(s)) return false;
+  const sig = p.pr.slice(1).map(st => JSON.stringify([st['0'], st['1']].map(c => [c[0], c[2]])));
+  if (new Set(sig).size < sig.length) return false;
+  return true;
+}
+
+function fAutoTask(rng) {
+  for (let tries = 0; tries < 400; tries++) {
+    const K = tPick(rng, [2, 3, 3]);
+    const pr = fAuto(rng, K, 'L');
+    const x = fX(rng, 100, 1100);
+    const p = {type: 6, start: 'R', cols: fCols(rng), pr: pr, roles: fAutoRoles(pr, 'L'), x: x};
+    const r = fRunP(p);
+    if (!fAutoOk(p, r)) continue;
+    const res = mVal(r), n = mBin(x).length;
+    if (res === x || res === (Math.pow(2, n) - 1 - x) || res === 0) continue;
+    const t = fFinish(6, p);
+    if (t && Object.keys(t.meta.traps).length >= 2) return t;
+  }
+  return null;
+}
+
+function fCountTask(rng) {
+  for (let tries = 0; tries < 600; tries++) {
+    const K = tPick(rng, [2, 3, 3]);
+    const start = tPick(rng, ['R', 'R', 'L']);
+    const dir = start === 'R' ? 'L' : 'R';
+    const pr = fAuto(rng, K, dir);
+    const two = rng() < 0.5;
+    const c1 = tPick(rng, ['0', '1']);
+    const runs = two ? [[c1, tRand(rng, 10, 60)], [c1 === '0' ? '1' : '0', tRand(rng, 10, 60)]]
+                     : [[c1, tRand(rng, 30, 250)]];
+    const p = {type: 7, start: start, cols: fCols(rng), pr: pr, roles: fAutoRoles(pr, dir), runs: runs,
+               ask: tPick(rng, ['0', '1'])};
+    const r = fRunP(p);
+    if (!fAutoOk(p, r)) continue;
+    /* на каждом ряду состояния должны ходить по кругу длиннее 1, иначе это
+       просто «все цифры станут одинаковыми» */
+    const b = fBlocks(p);
+    if (b.lines.some(l => !/блоки по [2-9]/.test(l))) continue;
+    const t = fFinish(7, p);
+    if (!t) continue;
+    const total = runs.reduce((s, [, m]) => s + m, 0);
+    if (Number(t.answer) >= total) continue;
+    if (Object.keys(t.meta.traps).length >= 2) return t;
+  }
+  return null;
+}
+
+function fBackTask(rng) {
+  for (let tries = 0; tries < 100; tries++) {
+    const how = tPick(rng, ['append', 'left', 'inv1', 'inc', 'inv', 'inv']);
+    let base;
+    if (how === 'append') base = fAppendTask(rng);
+    else if (how === 'left') { do { base = fPrependTask(rng); } while (base && base.meta.p.start !== 'L'); }
+    else if (how === 'inc') base = fIncTask(rng);
+    else {
+      const pr = [], roles = [];
+      if (how === 'inv1') {
+        const suf = fDigits(rng, tRand(rng, 1, 2));
+        mPut(pr, 0, 'λ', '1', 'R', 1); roles[0] = 'пишет 1 перед числом, шаг вправо';
+        mPut(pr, 1, '0', '1', 'R', 1); mPut(pr, 1, '1', '0', 'R', 1);
+        fWrite(pr, roles, 1, suf, 'R', true, 'идёт вправо и меняет каждую цифру на противоположную');
+        base = {meta: {p: {start: 'L', pr: pr, roles: roles,
+                           summary: 'Программа пишет 1 слева, меняет цифры на противоположные и дописывает ' + suf + ' справа; обратно — снять 1 и ' + suf + ', поменять цифры'}}};
+      } else {
+        const start = tPick(rng, ['R', 'L']), dir = start === 'R' ? 'L' : 'R';
+        mPut(pr, 0, 'λ', 'λ', dir, 1); roles[0] = 'шаг ' + (dir === 'L' ? 'влево' : 'вправо') + ' — на крайнюю цифру';
+        mPut(pr, 1, '0', '1', dir, 1); mPut(pr, 1, '1', '0', dir, 1); mPut(pr, 1, 'λ', 'λ', 'S', 1);
+        roles[1] = 'идёт ' + (dir === 'L' ? 'влево' : 'вправо') + ' и меняет каждую цифру на противоположную; на пустой клетке — стоп';
+        base = {meta: {p: {start: start, pr: pr, roles: roles,
+                           summary: 'Программа меняет все цифры на противоположные; первая цифра числа — 1, значит у результата впереди могли стоять нули: исходных чисел много — с разным количеством цифр'}}};
+      }
+    }
+    if (!base) continue;
+    const bp = base.meta.p;
+    const p = {type: 8, start: bp.start, cols: fCols(rng), pr: bp.pr, roles: bp.roles};
+    if (how === 'append') p.summary = 'Программа: ' + bp.summary + '; обратно — снять дописанные цифры';
+    else if (how === 'left') p.summary = 'Программа: ' + bp.summary + '; обратно — снять их с обеих сторон';
+    else if (how === 'inc') p.summary = 'Программа: ' + bp.summary + '; обратно — снять дописанную цифру и сделать обратное действие';
+    else p.summary = bp.summary;
+    const x0 = fX(rng, 100, how === 'inv' ? 900 : 2100);
+    const r = mRun(p.pr, mBin(x0), p.start);
+    if (!mGood(r)) continue;
+    p.res = mVal(r);
+    if (p.res < 4) continue;
+    if (how === 'inv') {
+      p.ask = tPick(rng, ['min', 'max', 'max']);
+      if (p.ask === 'max') p.limit = tPick(rng, [10000, 20000, 30000, 50000]);
+      else p.lim = 50000;
+    } else {
+      p.ask = 'exact';
+      p.lim = 50000;
+    }
+    const xs = fPre(p, p.ask === 'max' ? p.limit : p.lim);
+    if (p.ask === 'exact' && xs.length !== 1) continue;
+    if (p.ask !== 'exact' && xs.length < 2) continue;
+    const t = fFinish(8, p);
+    if (t && Object.keys(t.meta.traps).length >= 2) return t;
+  }
+  return null;
+}
+
+function fDemoTask(rng) {
+  for (let tries = 0; tries < 300; tries++) {
+    const op = tPick(rng, ['-', '-', '+']);
+    const L = tPick(rng, [200, 300, 400, 500, 600, 800, 1000]);
+    const pr = [];
+    mPut(pr, 0, 'λ', 'λ', 'L', 1);
+    if (op === '-') { mPut(pr, 1, 'λ', 'λ', 'S', 1); mPut(pr, 1, '1', '0', 'S', 1); mPut(pr, 1, '0', '1', 'L', 1); }
+    else { mPut(pr, 1, 'λ', '1', 'S', 1); mPut(pr, 1, '0', '1', 'S', 1); mPut(pr, 1, '1', '0', 'L', 1); }
+    const roles = ['шаг влево — на последнюю цифру', op === '-'
+      ? 'идёт влево, нули делает единицами; первую 1 делает нулём — стоп (на пустой клетке тоже стоп)'
+      : 'идёт влево, единицы делает нулями; первый 0 делает единицей — стоп (на пустой клетке пишет 1, стоп)'];
+    const p = {type: 9, start: 'R', cols: tPick(rng, [['λ', '1', '0'], ['λ', '0', '1']]), pr: pr, roles: roles,
+               op: op, L: L, after: tPick(rng, ['0', '0', '1']), before: tPick(rng, ['0', '0', '1']),
+               ext: tPick(rng, ['max', 'max', 'min']), K: tRand(rng, Math.floor(L / 8), Math.floor(L * 0.7))};
+    const t = fFinish(9, p);
+    if (!t) continue;
+    const v = Number(t.answer);
+    if (v < 3 || v === p.K || v === p.L || Math.abs(v - p.K) < 2) continue;
+    if (Object.keys(t.meta.traps).length >= 2) return t;
+  }
+  return null;
+}
+
+const F_MAKERS = [fAppendTask, fPrependTask, fIncTask, fInvTask, fDelTask, fEditTask,
+                  fAutoTask, fCountTask, fBackTask, fDemoTask];
+
+function fMake(type, rng) {
+  const t = F_MAKERS[type](rng);
+  if (!t) throw new Error('не собралась задача типа ' + type);
+  t.type = type;
+  return t;
+}
+
+/* Состав работ.
+   Практикум и домашняя: десять задач, по одной на каждую форму (правило
+   Светы от 21.09: один проход, по задаче на тип).
+   Проверочная: только частые формы настоящего экзамена (dont-merge-types,
+   26.09) — всё, что в замере пришло с демо, волн, резерва, пересдачи,
+   апробаций и ЕГКР: дописать справа, дописать слева, ±1, стереть справа,
+   правка в начале числа. */
+const F_WORKS = {
+  practice: {plan: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], max: 10, scale: [[10, 5], [9, 4], [8, 3]]},
+  homework: {plan: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], max: 10, scale: [[10, 5], [9, 4], [8, 3]]},
+  test:     {plan: [0, 1, 2, 4, 5], shuffle: true, max: 5, scale: [[5, 5], [4, 4], [3, 3]]}
+};
+
+function fWork(rng, w) {
+  w = w || F_WORKS.practice;
+  const plan = w.shuffle ? tShuffle(rng, w.plan) : w.plan;
+  return plan.map(type => fMake(type, rng));
+}
+
+function fPoints(ok, tasks, w) {
+  return ok.filter(Boolean).length;
+}
+
+function fMark(points, w) {
+  w = w || F_WORKS.practice;
+  for (const [need, m] of w.scale) if (points >= need) return m;
+  return 2;
+}
+
+/* Набор по одной задаче каждого типа — для самопроверки и образцов. */
+function fSet(seed) {
+  const rng = tRng(seed || 1);
+  return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(type => fMake(type, rng));
+}
+
+/* Ответ сверяется знак в знак (answer-format-strict), но ошибка всегда
+   названа: что не так с записью или что, похоже, сделано не так. */
+function fVerdict(task, raw) {
+  const s = String(raw === undefined || raw === null ? '' : raw).trim();
+  if (!s) return {ok: false, why: 'ответ пустой'};
+  if (/[.,]/.test(s)) return {ok: false, why: 'ответ — целое число'};
+  if (/\s/.test(s)) return {ok: false, why: 'число записывается без пробелов'};
+  if (!/^\d+$/.test(s)) return {ok: false, why: 'в ответ идёт только число — без слов и знаков'};
+  if (s !== String(Number(s))) return {ok: false, why: 'число записывается без ведущих нулей'};
+  if (s === task.answer) return {ok: true, why: ''};
+  if (/^[01]+$/.test(s) && s.length > 1 && parseInt(s, 2) === Number(task.answer))
+    return {ok: false, why: 'это верное число, но в двоичной записи — в ответ идёт десятичная'};
+  const k = fTrapOf(task, s);
+  return {ok: false, why: k ? 'похоже, ' + fTrapSay(task, k) : ''};
+}
+/* ==== /ЗАДАЧИ ==== */
+
+/* ------------------------------------------------------------------
+   Слайды-примеры собирает генератор практикума: задача каждый раз новая,
+   разбор — тот же рисунок, что в практикуме (fPic), сверка ответа класса —
+   тот же fPic с ответом (Света, 26.09.2026: «красивая яркая сверка с
+   эталоном»). Код примера — картинкой (frz): Света велела морозить код в
+   презентации на всех слайдах (30.09.2026).
+------------------------------------------------------------------ */
+/* ==== FRZ: вставлено freeze.py, руками не править ==== */
+/* Код задачи — картинкой, прямо в браузере.
+   Вставляется freeze.py --sync между маркерами FRZ. Руками в html не править.
+
+   Тренажёр, ДЗ и проверочная рисуют код каждой задачи сами при открытии, и
+   заморозить его при выкладке нельзя — его ещё нет. Поэтому страница
+   рисует код на canvas и вставляет <img>: скопировать мышкой и запустить в
+   IDLE не выйдет — задача снова про чтение (Света, 14.09.2026).
+
+   Стиль тот же, что у блоков <pre>: Consolas 15px, тёмный фон, комментарий
+   после # серо-голубой. Рисуем в двойном размере — чётко на любом экране. */
+function frz(code) {
+  var S = 2, SIZE = 15, LEAD = 22, PX = 14, PY = 12;
+  var lines = String(code).replace(/\r/g, '').split('\n');
+  var c = document.createElement('canvas'), g = c.getContext('2d');
+  var font = (SIZE * S) + 'px Consolas, "Cascadia Mono", "Courier New", monospace';
+  g.font = font;
+  var w = 0;
+  for (var i = 0; i < lines.length; i++) w = Math.max(w, g.measureText(lines[i]).width);
+  c.width = Math.ceil(w) + 2 * PX * S;
+  c.height = lines.length * LEAD * S + 2 * PY * S;
+  g.fillStyle = '#1e2430';
+  g.fillRect(0, 0, c.width, c.height);
+  g.font = font;                       /* смена размера сбрасывает шрифт */
+  g.textBaseline = 'middle';
+  for (var k = 0; k < lines.length; k++) {
+    var y = PY * S + k * LEAD * S + LEAD * S / 2;
+    var line = lines[k], at = line.indexOf('#');
+    var head = at < 0 ? line : line.slice(0, at), tail = at < 0 ? '' : line.slice(at);
+    g.fillStyle = '#e7ecf5';
+    g.fillText(head, PX * S, y);
+    if (tail) {
+      g.fillStyle = '#8fa6c4';
+      g.fillText(tail, PX * S + g.measureText(head).width, y);
+    }
+  }
+  if (!document.getElementById('frz-css')) {
+    var st = document.createElement('style');
+    st.id = 'frz-css';
+    st.textContent = 'img.frz-b{display:block;max-width:100%;height:auto;'
+                   + 'border-radius:10px;margin:8px 0}';
+    document.head.appendChild(st);
+  }
+  return '<img class="frz-b" width="' + (c.width / S) + '" height="' + (c.height / S)
+       + '" alt="код задачи — читай с экрана" src="' + c.toDataURL('image/png') + '">';
+}
+/* ==== /FRZ ==== */
+/* На слайде код крупнее, чем в практикуме: кегль колоды 19–20 против 15. */
+function frzBig(code){
+  return frz(code).replace(/width="(\d+)" height="(\d+)"/, (m, w, h) =>
+      'width="' + Math.round(w * 1.3) + '" height="' + Math.round(h * 1.3) + '"');
+}
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
+                          .replace(/>/g, "&gt;");
+const exRng = tRng((Date.now() ^ (Math.random() * 1e9)) >>> 0);
+fCss();   // ленты и таблицы на статичных слайдах — тем же стилем, что в разборе
+
+// Сверка знак в знак, как на экзамене: причина ошибки — по отпечатку.
+function xCheck(el){
+  const t = el._task;
+  const box = el.querySelector(".xres");
+  const given = el.querySelector(".xin").value.trim();
+  if (!given){ box.innerHTML = ""; return; }
+  const v = fVerdict(t, given);
+  box.innerHTML = '<div class="xverd ' + (v.ok ? "ok" : "bad") + '">'
+      + (v.ok ? "✓ совпало с эталоном" : "✗ не совпало") + '</div>'
+      + (!v.ok && v.why ? '<div class="xwhy">' + v.why + '</div>' : "")
+      + (v.ok ? "" : fPic(t, given));
+}
+
+function buildExample(el){
+  const t = fMake(+el.dataset.type, exRng);
+  el._task = t;
+  el.innerHTML =
+    `<p class="eyebrow">разбираем вместе</p>
+     <h2>Пример: ${esc(F_TYPES[t.type])}</h2>
+     <div class="exwrap">
+       <div class="task cond">${t.question}
+         <div class="xcheck">
+           <input class="xin" type="text" autocomplete="off" spellcheck="false"
+                  placeholder="ответ класса">
+           <button class="xgo">Сверить</button>
+         </div></div>
+       <div class="steps">
+         <div class="xres"></div>
+         <div class="step" hidden>${fPic(t)}</div>
+         <div class="step" hidden>${t.code ? frzBig(t.code) : '<p>Программой здесь не перебрать — только рассуждением.</p>'}</div>
+       </div>
+     </div>`;
+  const inp = el.querySelector(".xin");
+  // набор ответа не должен листать слайды и менять шрифт
+  inp.addEventListener("keydown", e => {
+    e.stopPropagation();
+    if (e.key === "Enter") xCheck(el);
+  });
+  el.querySelector(".xgo").addEventListener("click", () => xCheck(el));
+  setTimeout(fitExamples, 0);
+}
+
+// Условие выше экрана закреплять нельзя: край уедет при прокрутке шагов.
+function fitExamples(){
+  const stage = document.getElementById("stage");
+  const room = stage.clientHeight - 46;
+  document.querySelectorAll(".exwrap .task").forEach(box => {
+    box.classList.remove("tall");
+    if (box.offsetHeight > room) box.classList.add("tall");
+  });
+}
+window.addEventListener("resize", fitExamples);
+
+/* ------------------------------------------------------------------
+   Управление колодой: стрелки листают слайды, пробел раскрывает
+   очередной шаг разбора и только потом уходит дальше.
+------------------------------------------------------------------ */
+const slides = [...document.querySelectorAll(".slide")];
+let cur = 0, shown = 0;
+
+const isExample = i => slides[i].hasAttribute("data-ex");
+const stepsOf = i => [...slides[i].querySelectorAll(".steps > .step, .steps li.step")];
+
+function show(i){
+  slides[cur].classList.remove("on");
+  cur = Math.max(0, Math.min(slides.length - 1, i));
+  slides[cur].classList.add("on");
+  if (isExample(cur) && !slides[cur]._task) buildExample(slides[cur]);
+  shown = stepsOf(cur).filter(el => !el.hidden).length;
+  document.getElementById("stage").scrollTop = 0;
+  sync();
+}
+
+function sync(){
+  const total = stepsOf(cur).length;
+  const ex = isExample(cur);
+  document.getElementById("count").textContent = `${cur + 1} / ${slides.length}`;
+  document.getElementById("prev").disabled = cur === 0;
+  document.getElementById("next").disabled = cur === slides.length - 1;
+  document.getElementById("reroll").hidden = !ex;
+  const b = document.getElementById("step");
+  b.hidden = total === 0;
+  if (total){
+    b.disabled = shown >= total;
+    b.textContent = shown === 0 ? (ex ? "Показать разбор" : "Раскрыть")
+                  : shown >= total ? (ex ? "Разобрано" : "Всё открыто")
+                  : `Дальше (${shown}/${total})`;
+  }
+}
+
+function nextStep(){
+  const steps = stepsOf(cur);
+  if (shown >= steps.length) return false;
+  steps[shown].hidden = false;
+  steps[shown].scrollIntoView({block: "nearest", behavior: "smooth"});
+  shown++;
+  sync();
+  return true;
+}
+
+document.getElementById("prev").addEventListener("click", () => show(cur - 1));
+document.getElementById("next").addEventListener("click", () => show(cur + 1));
+document.getElementById("step").addEventListener("click", nextStep);
+document.getElementById("reroll").addEventListener("click", () => {
+  buildExample(slides[cur]);
+  shown = 0;
+  sync();
+});
+
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowRight" || e.key === "PageDown"){ show(cur + 1); }
+  else if (e.key === "ArrowLeft" || e.key === "PageUp"){ show(cur - 1); }
+  else if (e.key === " " || e.key === "Enter"){
+    if (!nextStep()) show(cur + 1);
+  } else return;
+  e.preventDefault();
+});
+
+show(0);
+
+/* ---- размер шрифта на проекторе ----
+   Zoom только на области слайда: zoom на body растягивает 100vh, и панель
+   уезжает за экран (проверено 17.09.2026). Шаг запоминается в
+   localStorage и общий для всех презентаций: один раз подобрала на
+   проекторе — дальше везде так. ZOOM_BASE — стартовый масштаб этой колоды:
+   у колод с базовым кеглем 20px он выше, чем у 24px. */
+const ZOOM_BASE = 1.2;
+const ZOOM_KEY = "slides-zoom-step";
+let zoomStep = 0;
+try { zoomStep = Math.max(-3, Math.min(6, parseInt(localStorage.getItem(ZOOM_KEY), 10) || 0)); }
+catch (e) {}
+function applyZoom(){
+  const z = Math.round(ZOOM_BASE * Math.pow(1.1, zoomStep) * 100) / 100;
+  document.getElementById("stage").style.zoom = z;
+  document.getElementById("zoomVal").textContent = Math.round(z * 100) + "%";
+  fitExamples();
+}
+function setZoom(d){
+  zoomStep = Math.max(-3, Math.min(6, zoomStep + d));
+  try { localStorage.setItem(ZOOM_KEY, String(zoomStep)); } catch (e) {}
+  applyZoom();
+}
+document.getElementById("zoomIn").addEventListener("click", () => setZoom(1));
+document.getElementById("zoomOut").addEventListener("click", () => setZoom(-1));
+document.addEventListener("keydown", e => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key === "+" || e.key === "=") setZoom(1);
+  else if (e.key === "-" || e.key === "_") setZoom(-1);
+  else return;
+  e.preventDefault();
+});
+applyZoom();
+</script>
+</body>
+</html>

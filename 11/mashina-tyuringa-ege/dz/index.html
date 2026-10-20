@@ -1,0 +1,1857 @@
+<!doctype html>
+<html lang="ru">
+<head><meta name="robots" content="noindex">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Задание 12 ЕГЭ: исполнитель МТ — домашняя работа</title>
+<meta name="description" content="Домашняя работа 11 класса (углублённый) по заданию 12 ЕГЭ: исполнитель МТ. Десять форм задачи по одной на каждую, все сразу на странице; ошибка — та же форма с новыми числами; в конце код работы и снимок черновика.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E11%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{margin:0;padding:20px 16px 60px;font:17px/1.55 "Segoe UI",system-ui,sans-serif}
+.wrap{max-width:860px;margin:0 auto}
+h1{font-size:23px;margin:0 0 4px}
+h2{font-size:18px;margin:0 0 10px}
+h3{font-size:16px;margin:18px 0 6px}
+.sub{color:var(--muted);font-size:15px;margin:0 0 18px}
+code{font-family:Consolas,"Cascadia Mono",monospace;background:var(--card);
+     border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:15px}
+.intro{border:1px solid var(--line);border-radius:12px;background:var(--card);
+       padding:14px 18px;margin-bottom:18px}
+.intro dl{margin:0}
+.intro dt{font-weight:700;margin-top:10px}
+.intro dt:first-child{margin-top:0}
+.intro dd{margin:2px 0 0}
+details{margin-top:12px}
+summary{cursor:pointer;font-weight:600;color:var(--accent)}
+.progress{position:sticky;top:0;z-index:5;border:2px solid var(--accent);border-radius:12px;padding:10px 16px;
+          background:#fff;margin-bottom:18px}
+.ptop{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.ptop h2{margin:0}
+.sp{flex:1 1 auto}
+.score{display:flex;align-items:baseline;gap:10px;color:var(--muted);font-size:15px}
+.score b{font:700 34px/1 "Segoe UI",system-ui,sans-serif;color:var(--ink);
+         min-width:40px;text-align:center;border:2px solid var(--line);
+         border-radius:8px;padding:2px 8px}
+.m5 b{color:var(--ok);border-color:var(--ok-line)}
+.m4 b{color:var(--accent);border-color:#a9c6e8}
+.m3 b{color:#8a5a00;border-color:var(--hi-line)}
+.ladder{display:flex;gap:10px;flex:1 1 100%;margin-top:4px}
+.seg{min-width:0}
+.cells{display:flex;gap:3px}
+.cells i{flex:1 1 0;height:14px;border-radius:4px;background:#e4e7ef}
+.cells i.f{background:var(--accent)}
+.seg.got .cells i{background:var(--ok)}
+.seg .lab{font-size:13px;color:var(--muted);text-align:center;margin-top:2px}
+.seg.got .lab{color:var(--ok)}
+.seg.capped .cells i{background:repeating-linear-gradient(45deg,
+  #f3d3d0 0 4px,#fdecea 4px 8px)}
+.seg.capped .lab{color:var(--err)}
+.q p{margin:0 0 8px}
+.q .ask{font-weight:600}
+.types{display:flex;flex-wrap:wrap;gap:8px}
+.chip{cursor:pointer;border:1px solid var(--line);border-radius:20px;padding:4px 12px;
+      font-size:14px;color:var(--muted);background:var(--card)}
+.chip.done{border-color:var(--ok-line);background:var(--ok-bg);color:var(--ok);
+           font-weight:600}
+.card{border:1px solid var(--line);border-radius:12px;padding:16px 18px;
+      background:#fff;margin-bottom:14px}
+.card.ok{border-color:var(--ok-line);background:var(--ok-bg)}
+.card.err{border-color:var(--err-line);background:var(--err-bg)}
+.tag{font-size:13px;color:var(--muted);margin:0 0 6px}
+.q{font-size:17px}
+.fnote{font-size:14px;color:var(--muted);margin:10px 0 0}
+.bits{font:700 17px/1.4 Consolas,monospace;letter-spacing:.06em;word-break:break-all}
+pre.alg{font-family:Consolas,"Cascadia Mono",monospace;background:var(--card);
+        border:1px solid var(--line);border-radius:10px;padding:10px 14px;
+        font-size:15.5px;line-height:1.5;white-space:pre-wrap;margin:10px 0}
+svg.fpic{display:block;width:100%;max-width:460px;height:auto;margin:10px 0;
+         background:#fff;border:1px solid var(--line);border-radius:10px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+input[type=text]{font:16px/1 Consolas,monospace;padding:10px 12px;border-radius:8px;
+                 border:1px solid var(--line);width:100%;max-width:300px}
+button{font:600 15px/1 inherit;padding:11px 16px;border-radius:9px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);color:var(--muted)}
+.verdict{margin-top:10px;font-size:15.5px;font-weight:600}
+.verdict.ok{color:var(--ok)}
+.verdict.err{color:var(--err)}
+.why{margin-top:8px;font-size:15.5px;font-weight:400}
+.verdict details.why{margin-top:6px;font-weight:400}
+.verdict details.why summary{font-size:15px}
+.note{border:1px solid var(--hi-line);background:var(--hi-bg);border-radius:10px;
+      padding:11px 15px;margin:12px 0;font-size:15.5px}
+.stats{color:var(--muted);font-size:14px}
+.code.wait{font-size:18px;letter-spacing:0;color:#888}
+.code{font:700 26px/1.2 Consolas,monospace;letter-spacing:.06em;
+      background:var(--card);border:2px solid var(--accent);border-radius:10px;
+      padding:12px 16px;margin:10px 0;text-align:center;color:var(--accent)}
+.fields{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px}
+.fields label{display:block;font-size:14px;color:var(--muted);margin-bottom:4px}
+.mailbox{border-top:1px solid var(--line);margin-top:18px;padding-top:12px}
+.sample{font:15px/1.5 Consolas,monospace;background:#fff;border:1px dashed var(--line);
+        border-radius:8px;padding:8px 12px;margin:8px 0}
+.ai-mark{margin:34px auto 0;max-width:860px;padding-top:12px;
+         border-top:1px solid var(--line);color:var(--muted);font-size:13px}
+</style>
+
+<style>img.frz-b{display:block;max-width:100%;height:auto;border-radius:10px;margin:8px 0}img.frz-i{display:inline-block;vertical-align:-0.32em;max-width:100%;height:auto;border-radius:5px}</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Домашняя работа: задание 12 ЕГЭ</h1>
+<p class="sub">11 класс, углублённый уровень. Исполнитель МТ (машина
+Тьюринга): десять форм задачи, решаются разбором таблицы.</p>
+
+<div class="intro">
+  <dl>
+    <dt>Как устроено</dt>
+    <dd>Десять типов задач — <b>все на экране сразу</b>, решай в любом
+        порядке. Тип закрывает <b>один верный ответ</b>. Ошибся — на экране
+        появится разбор этой задачи: лента по шагам и что делает каждое
+        состояние, а кнопка «Новые числа» даст задачу того же типа: применить
+        разбор надо по горячему. Задачи не кончаются.</dd>
+    <dt>Отметка</dt>
+    <dd>Исправленная задача тип не закрывает — засчитается новая по кнопке
+        «Новые числа». Закрыть типы можно всегда, хоть до пятёрки:
+        десять — «5», девять — «4», восемь — «3».</dd>
+    <dt>Чем решать</dt>
+    <dd><b>Разбором таблицы</b>: подпиши каждое состояние одной фразой,
+        прогони программу на коротком числе, найди правило и примени его.
+        Программа на Python, которая выполняет таблицу, — второй способ;
+        полная подсказка — на странице практикума.</dd>
+    <dt>Как сдать</dt>
+    <dd><b>Два шага.</b> Закроешь хотя бы восемь типов — появится
+        <b>код работы</b> и кнопка «Сдать работу»: впишешь код ученика,
+        форма откроется с уже подставленным кодом. Следом кнопка
+        <b>«Отправить черновик»</b> откроет письмо на
+        <a href="mailto:krevskayas+hw@gmail.com">krevskayas+hw@gmail.com</a>
+        — приложи к нему снимки черновика.</dd>
+    <dt>Что на снимках</dt>
+    <dd>Не ответы, а <b>твой разбор</b> — хотя бы по двум задачам: таблица с
+        подписанными состояниями и лента до и после (или твоя программа и то,
+        что она напечатала, если решал вторым способом). Годится фото тетради.
+        <b>Код работы без снимков не засчитывается.</b>
+        <div class="sample">q0 — шаг влево, на последнюю цифру<br>
+        q1 — идёт влево по цифрам; на пустой клетке пишет 1<br>
+        q2 — стоп<br>
+        1111101000 → 11111101000<br>
+        &gt;&gt;&gt; 1000 + 1024 = 2024</div></dd>
+    <dt>Учти</dt>
+    <dd>В начале следующего занятия будет проверочная — пять задач в форме
+        ЕГЭ, без подсказок. Так что задача не «получить код», а
+        научиться.</dd>
+  </dl>
+  <details>
+    <summary>Напоминание: как читать таблицу и что бывает с числом</summary>
+    <ol>
+      <li>Начало — в q<sub>0</sub>. Клетка «строка состояния × столбец
+          символа под головкой»: что записать, куда шаг, куда перейти;
+          S — остановка. Столбцы 0 и 1 стоят в разном порядке.</li>
+      <li>Строка, где цифры переписываются сами в себя со сдвигом, — «идёт до
+          края числа»; 0↔1 — инверсия; 1→0 влево и 0→1 вправо — «+1»;
+          0→1 влево и 1→0 вправо — «−1».</li>
+      <li>Дописали справа k цифр s — x · 2<sup>k</sup> + s; слева 1 — x + 2<sup>n</sup>;
+          инверсия — 2<sup>n</sup> − 1 − x; стёрли последнюю — x // 2.</li>
+      <li>Автомат на ряду одинаковых цифр — состояния по кругу: найди блок и
+          посчитай блоки.</li>
+      <li>Ответ — в десятичной записи.</li>
+    </ol>
+    <h3>Откуда эти задачи</h3>
+  <p><b>Задачи авторские, составлены в форме задания 12 ЕГЭ по
+     информатике.</b> Форма задания и способ решения — как на экзамене,
+     а условия написаны своими словами. Числа каждый раз новые.</p>
+</details>
+</div>
+
+<div class="progress" id="panel">
+  <div class="ptop">
+    <h2>Типы задач</h2>
+    <span class="sp"></span>
+    <div class="score" id="scorebox">
+      <span>наработано на</span><b id="mark">—</b>
+    </div>
+    <div class="ladder" id="ladder"></div>
+  </div>
+  <div class="types" id="types"></div>
+  <p class="stats" id="stats"></p>
+</div>
+
+<div id="area"></div>
+
+<div class="row" style="margin:6px 0 22px">
+  <button class="primary" id="total">Закончить и получить код</button>
+</div>
+<div id="result"></div>
+
+</div>
+
+<script>
+/* ==== ЗАДАЧИ: вставлено gen.py, руками не править ==== */
+/* Задание 12 ЕГЭ (2027): исполнитель МТ (машина Тьюринга). Метод — разбор
+   программы по состояниям: что делает каждая строка таблицы, что станет с
+   лентой, перевод в десятичную (Света, ege-queue, пара 16: «решаем
+   аналитически, желательно понятный визуал»). Второй способ — программа на
+   Python, которая выполняет таблицу команду за командой (её предложение:
+   «можешь предложить программный метод»).
+
+   ЕДИНСТВЕННЫЙ ИСТОЧНИК ЗАДАЧ для практикума, домашней работы, проверочной
+   и примеров на слайдах. В html вписывается скриптом gen.py --sync между
+   маркерами — руками страницы не править (generator-single-source).
+
+   Замер — 26 задач из списка Светы (ege-queue, пара 16): демоверсии 2027 и
+   2026, пересдача 08.07.26, резерв 22.06.26, основные волны 18.06 и 19.06.26,
+   апробация 14.05.26, ЕГКР 18.04.26 и 13.12.25 и задачи без даты. Все 26
+   ключей пересчитаны (gen.py --measure). Формы вопроса и семейства программ:
+
+     0 дописать справа        цифры за числом (ЕГКР 18.04.26, 13.12.25)      2
+     1 дописать слева         цифры перед числом, в т. ч. через пропуск
+                              (демо 2027, основная 19.06.26)                 2
+     2 прибавить / вычесть 1  и дописать цифру (пересдача, резерв)           2
+     3 инверсия               0↔1, иногда с дописанными цифрами              1
+     4 стереть справа         последние цифры, с условием (апробация 14.05)  1
+     5 правка в начале числа  первая 1 → «10», вторая 1 → 0 (основная
+                              18.06.26, апробация 04.03.26)                  2
+     6 автомат: число         2–3 состояния по очереди меняют цифры          3
+     7 сколько нулей/единиц   ряд из N одинаковых или два ряда подряд        6
+     8 обратная задача        какое число было: точно, наименьшее,
+                              наибольшее меньше N                            6
+     9 сколько могло быть     демо 2026: L цифр, после программы ровно K
+                              нулей — наибольшее число нулей до              1
+
+   Порядок столбцов в шапке таблицы бывает «λ, 0, 1» и «λ, 1, 0» (в замере
+   оба) — ловушка чтения, генератор ставит оба. Ответ всюду — натуральное
+   число в десятичной записи (answer-format-strict: сверка знак в знак). */
+
+const F_TYPES = [
+  'дописать справа',
+  'дописать слева',
+  'прибавить или вычесть 1',
+  'инверсия',
+  'стереть справа',
+  'правка в начале числа',
+  'автомат: число в число',
+  'сколько нулей или единиц',
+  'обратная задача',
+  'сколько могло быть'
+];
+
+/* ----------------------------------------------------------- случайность */
+
+function tRng(seed) {
+  let s = (seed >>> 0) || 1;
+  return function () {
+    s ^= s << 13; s >>>= 0;
+    s ^= s >> 17;
+    s ^= s << 5;  s >>>= 0;
+    return s / 4294967296;
+  };
+}
+
+function tRand(rng, a, b) { return a + Math.floor(rng() * (b - a + 1)); }
+function tPick(rng, arr) { return arr[tRand(rng, 0, arr.length - 1)]; }
+
+function tShuffle(rng, arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = tRand(rng, 0, i);
+    const t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+function tPl(n, one, few, many) {
+  const a = Math.abs(n) % 100, b = a % 10;
+  if (a > 10 && a < 20) return many;
+  if (b === 1) return one;
+  if (b >= 2 && b <= 4) return few;
+  return many;
+}
+
+/* ------------------------------------------------------------- машина
+   Программа — массив состояний; состояние — {'λ': cmd, '0': cmd, '1': cmd},
+   команда — [что записать, куда сдвиг (L, R, S), новое состояние]. Лента —
+   массив с запасом пустых клеток; клетка с номером 0 — первая цифра. */
+
+const M_OFF = 8;         // запас пустых клеток по краям — в браузере
+const M_PAD = 5;         // запас 'λ' * 5 в программе на Python: шире не ходить
+
+function mPut(pr, q, c, w, d, nq) {
+  while (pr.length <= q) pr.push({});
+  pr[q][c] = [w, d, nq];
+}
+
+function mScan(pr, q, d) { mPut(pr, q, '0', '0', d, q); mPut(pr, q, '1', '1', d, q); }
+
+function mBin(x) { return x.toString(2); }
+
+function mRun(pr, tape, start, keep) {
+  const n = tape.length;
+  const a = new Array(n + 2 * M_OFF).fill('λ');
+  for (let i = 0; i < n; i++) a[M_OFF + i] = tape[i];
+  let pos = start === 'R' ? n : -1, q = 0, steps = 0, lo = pos, hi = pos;
+  const visited = new Set([0]);
+  const frames = keep ? [] : null;
+  const snap = (stop) => frames && frames.push({pos: pos, q: q, a: a.slice(), stop: !!stop});
+  snap(false);
+  while (steps < 400000) {
+    const i = M_OFF + pos;
+    if (i < 0 || i >= a.length) return {ok: false, why: 'edge'};
+    const c = a[i];
+    const cmd = pr[q] && pr[q][c];
+    if (!cmd) return {ok: false, why: 'empty'};
+    a[i] = cmd[0];
+    steps++;
+    const old = q;
+    q = cmd[2];
+    visited.add(q);
+    if (cmd[1] === 'S') {
+      snap(true);
+      return {ok: true, a: a, n: n, pos: pos, q: q, steps: steps, lo: lo, hi: hi, frames: frames, visited: visited};
+    }
+    pos += cmd[1] === 'L' ? -1 : cmd[1] === 'R' ? 1 : 0;
+    lo = Math.min(lo, pos); hi = Math.max(hi, pos);
+    if (q !== old) snap(false);
+  }
+  return {ok: false, why: 'loop'};
+}
+
+/* Слово на ленте после остановки: от первой непустой клетки до последней. */
+function mWord(a) {
+  let i = 0, j = a.length - 1;
+  while (i <= j && a[i] === 'λ') i++;
+  while (j >= i && a[j] === 'λ') j--;
+  return a.slice(i, j + 1).join('');
+}
+
+/* Годится ли прогон для задачи: остановился, не вышел за запас программы на
+   Python, на ленте одно слово без дыр. */
+function mGood(r) {
+  if (!r || !r.ok) return false;
+  if (r.lo < -M_PAD || r.hi > r.n + M_PAD - 1) return false;
+  const w = mWord(r.a);
+  return w.length > 0 && w.indexOf('λ') < 0;
+}
+
+function mVal(r) { return parseInt(mWord(r.a), 2); }
+
+function mSwapCols(pr) {
+  return pr.map(st => {
+    const o = {};
+    if (st['λ']) o['λ'] = st['λ'];
+    if (st['1']) o['0'] = st['1'];
+    if (st['0']) o['1'] = st['0'];
+    return o;
+  });
+}
+
+/* ------------------------------------------------------- условие задачи */
+
+function fQ(q) { return 'q<sub>' + q + '</sub>'; }
+function fCmd(cmd) { return cmd ? cmd[0] + ', ' + cmd[1] + ', ' + fQ(cmd[2]) : ''; }
+
+function fTable(p) {
+  let s = '<div class="mtw"><table class="mtt"><tr><th></th>' +
+          p.cols.map(c => '<th>' + c + '</th>').join('') + '</tr>';
+  p.pr.forEach((st, q) => {
+    s += '<tr><th>' + fQ(q) + '</th>' + p.cols.map(c => '<td>' + fCmd(st[c]) + '</td>').join('') + '</tr>';
+  });
+  return s + '</table></div>';
+}
+
+const F_RULE = '<p class="mtnote">Команда «0, L, q<sub>3</sub>»: записать в текущую ячейку 0, ' +
+  'сдвинуться в соседнюю ячейку слева и перейти в состояние q<sub>3</sub>; R — сдвиг вправо, ' +
+  'S — остановка после записи. Работа начинается в состоянии q<sub>0</sub>.</p>';
+
+function fSide(start) { return start === 'R' ? 'справа' : 'слева'; }
+
+function fTapeWords(p) {
+  if (p.runs.length === 1) {
+    const [c, m] = p.runs[0];
+    return 'последовательность из <b>' + m + '</b> ' + (c === '1' ? tPl(m, 'единицы', 'единиц', 'единиц')
+                                                                   : tPl(m, 'нуля', 'нулей', 'нулей'));
+  }
+  const w = ([c, m]) => '<b>' + m + '</b> ' + (c === '1' ? tPl(m, 'единицы', 'единиц', 'единиц')
+                                                         : tPl(m, 'нуля', 'нулей', 'нулей'));
+  return 'последовательность из ' + w(p.runs[0]) + ' и ' + w(p.runs[1]) + ' в указанном порядке';
+}
+
+function fSym(c, n) {
+  return c === '1' ? tPl(n, 'единица', 'единицы', 'единиц') : tPl(n, 'ноль', 'нуля', 'нулей');
+}
+
+function fCondHtml(p) {
+  fCss();
+  const head = '<p>На ленте исполнителя МТ в соседних ячейках записан';
+  const blank = ' Ячейки справа и слева от последовательности заполнены пустым символом «λ». В начальный момент ' +
+    'времени головка находится в ближайшей ячейке <b>' + fSide(p.start) + '</b> от последовательности.</p>';
+  const prog = '<p>Программа работы исполнителя:</p>' + fTable(p) + F_RULE;
+  let s;
+  if (p.type <= 6) {
+    s = head + 'о двоичное представление числа <b>' + p.x + '</b> без ведущих нулей.' + blank + prog +
+        '<p class="ask">Определите результат выполнения программы. В ответе запишите получившееся на ' +
+        'ленте число в десятичной системе счисления.</p>';
+  } else if (p.type === 7) {
+    s = head + 'а ' + fTapeWords(p) + '.' + blank + prog +
+        '<p class="ask">Определите, сколько ' + (p.ask === '1' ? 'единиц' : 'нулей') +
+        ' окажется на ленте после выполнения программы.</p>';
+  } else if (p.type === 8) {
+    const what = p.ask === 'exact' ? 'Определите, какое число было записано на ленте до начала работы программы.'
+      : p.ask === 'min' ? 'Определите наименьшее число, которое могло быть записано на ленте до начала работы программы.'
+      : 'Определите наибольшее число, меньшее ' + p.limit + ', которое могло быть записано на ленте до начала работы программы.';
+    s = head + 'о двоичное представление некоторого натурального числа без ведущих нулей.' + blank + prog +
+        '<p>После выполнения программы на ленте оказалась двоичная запись числа <b>' + p.res + '</b>.</p>' +
+        '<p class="ask">' + what + ' В ответе запишите это число в десятичной системе счисления.</p>';
+  } else {
+    s = head + 'а последовательность из <b>' + p.L + '</b> символов, каждый из которых — 0 или 1.' + blank + prog +
+        '<p>После выполнения программы на ленте оказалось ровно <b>' + p.K + '</b> ' + fSym(p.after, p.K) + '.</p>' +
+        '<p class="ask">Определите ' + (p.ext === 'max' ? 'наибольшее' : 'наименьшее') + ' возможное количество ' +
+        (p.before === '1' ? 'единиц' : 'нулей') + ' в исходной последовательности.</p>';
+  }
+  return s;
+}
+
+/* ------------------------------------------------------------ решение */
+
+function fTape(p) {
+  if (p.type === 7) return p.runs.map(([c, m]) => c.repeat(m)).join('');
+  return mBin(p.x);
+}
+
+function fRunP(p, keep) { return mRun(p.pr, fTape(p), p.start, keep); }
+
+/* Все x из 1..lim, у которых программа даёт res. Перебор на десятки тысяч
+   чисел — поэтому свой быстрый исполнитель: программа в числовых массивах,
+   лента — Uint8Array (0 — λ, 1 — '0', 2 — '1'). Результат кешируется в p. */
+function fPre(p, lim) {
+  const key = p.res + ':' + lim;
+  if (p._pre && p._pre.key === key) return p._pre.xs;
+  const Q = p.pr.length, SY = {'λ': 0, '0': 1, '1': 2};
+  const W = new Int8Array(Q * 3).fill(-1), D = new Int8Array(Q * 3), N = new Int16Array(Q * 3);
+  p.pr.forEach((st, q) => Object.keys(st).forEach(c => {
+    const cmd = st[c], i = q * 3 + SY[c];
+    W[i] = SY[cmd[0]]; D[i] = cmd[1] === 'L' ? -1 : cmd[1] === 'R' ? 1 : cmd[1] === 'S' ? 2 : 0; N[i] = cmd[2];
+  }));
+  const OFF = 8, a = new Uint8Array(40 + 2 * OFF), out = [];
+  for (let x = 1; x < lim; x++) {
+    a.fill(0);
+    let n = 0;
+    for (let v = x; v > 0; v >>= 1) n++;
+    for (let k = 0; k < n; k++) a[OFF + k] = ((x >> (n - 1 - k)) & 1) + 1;
+    let pos = OFF + (p.start === 'R' ? n : -1), q = 0, ok = false;
+    for (let step = 0; step < 2000; step++) {
+      if (pos < 0 || pos >= a.length) break;
+      const i = q * 3 + a[pos];
+      if (W[i] < 0) break;
+      a[pos] = W[i]; q = N[i];
+      if (D[i] === 2) { ok = true; break; }
+      pos += D[i];
+    }
+    if (!ok) continue;
+    let lo = 0, hi = a.length - 1;
+    while (lo <= hi && a[lo] === 0) lo++;
+    while (hi >= lo && a[hi] === 0) hi--;
+    if (lo > hi) continue;
+    let v = 0, bad = false;
+    for (let k = lo; k <= hi; k++) { if (a[k] === 0) { bad = true; break; } v = v * 2 + (a[k] - 1); }
+    if (!bad && v === p.res) out.push(x);
+  }
+  p._pre = {key: key, xs: out};
+  return out;
+}
+
+/* Демо 2026. Программа идёт от правого края влево.
+   «−1»: хвост из t нулей становится единицами, ближайшая 1 — нулём, стоп:
+          A 1 0…0  →  A 0 1…1   (или 0…0 → 1…1: единицы нет, дошла до края).
+   «+1»: хвост из t единиц становится нулями, ближайший 0 — единицей:
+          A 0 1…1  →  A 1 0…0   (или 1…1 → 1 0…0: перед числом пишется 1).
+   A — неизменная левая часть длины P = L − 1 − t, в ней z нулей. */
+function f9Best(p) {
+  let best = null;
+  const L = p.L;
+  const take = c => {
+    const after = p.after === '1' ? c.a1 : c.a0;
+    if (after !== p.K) return;
+    const v = p.before === '1' ? c.b1 : c.b0;
+    if (best === null || (p.ext === 'max' ? v > best.v : v < best.v)) best = Object.assign({v: v}, c);
+  };
+  /* z из условия «после ровно K»: счёт линеен по z, решаем, а не перебираем */
+  for (let t = 0; t <= L - 1; t++) {
+    const P = L - 1 - t;
+    const at = z => {
+      if (p.op === '-') return {t: t, z: z, P: P, b0: z + t, a0: z + 1, b1: P - z + 1, a1: P - z + t};
+      return {t: t, z: z, P: P, b0: z + 1, a0: z + t, b1: P - z + t, a1: P - z + 1};
+    };
+    const c0 = at(0), c1 = at(1);
+    const f0 = p.after === '1' ? c0.a1 : c0.a0, f1 = p.after === '1' ? c1.a1 : c1.a0;
+    const z = (p.K - f0) / (f1 - f0);
+    if (Number.isInteger(z) && z >= 0 && z <= P) take(at(z));
+  }
+  take(p.op === '-' ? {all: true, b0: L, a0: 0, b1: 0, a1: L} : {all: true, b0: 0, a0: L, b1: L, a1: 1});
+  return best;
+}
+
+function fSolve(p) {
+  if (p.type <= 6) { const r = fRunP(p); return mGood(r) ? mVal(r) : NaN; }
+  if (p.type === 7) {
+    const r = fRunP(p);
+    if (!mGood(r)) return NaN;
+    return mWord(r.a).split('').filter(c => c === p.ask).length;
+  }
+  if (p.type === 8) {
+    const xs = fPre(p, p.ask === 'max' ? p.limit : p.lim);
+    if (!xs.length) return NaN;
+    if (p.ask === 'exact') return xs.length === 1 ? xs[0] : NaN;
+    return p.ask === 'min' ? xs[0] : xs[xs.length - 1];
+  }
+  const b = f9Best(p);
+  return b ? b.v : NaN;
+}
+
+/* ------------------------------------------------------------- ловушки */
+
+function fTraps(p, want) {
+  const tr = {};
+  const add = (k, v) => {
+    if (v === undefined || v === null || Number.isNaN(v) || v <= 0 || v === want) return;
+    if (Object.values(tr).some(u => u === v)) return;
+    tr[k] = v;
+  };
+  if (p.type <= 6) {
+    const s = mRun(mSwapCols(p.pr), mBin(p.x), p.start);
+    if (mGood(s)) add('cols', mVal(s));
+    const o = mRun(p.pr, mBin(p.x), p.start === 'R' ? 'L' : 'R');
+    if (mGood(o)) add('side', mVal(o));
+    add('orig', p.x);
+    if (p.type === 0 || (p.type === 1 && p.suf)) {
+      const suf = p.suf, rev = suf.split('').reverse().join('');
+      if (rev !== suf) add('rev', want - parseInt(suf, 2) + parseInt(rev, 2));
+    }
+    if (p.type === 1 && p.pre) add('end', parseInt(mBin(p.x) + p.pre, 2));
+    if (p.type === 2) {
+      add('noInc', parseInt(mBin(p.x) + p.d, 2));
+      const y = p.op === '+' ? p.x - 1 : p.x + 1;
+      if (y > 0) add('opp', parseInt(mBin(y) + p.d, 2));
+    }
+    if (p.type === 3) {
+      const b = mBin(p.x);
+      add('noInv', parseInt((p.pre || '') + b + (p.suf || ''), 2));
+    }
+  } else if (p.type === 7) {
+    const r = fRunP(p);
+    if (mGood(r)) {
+      const w = mWord(r.a);
+      add('other', w.split('').filter(c => c !== p.ask).length);
+    }
+    add('before', fTape(p).split('').filter(c => c === p.ask).length);
+    const s = mRun(mSwapCols(p.pr), fTape(p), p.start);
+    if (mGood(s)) add('cols', mWord(s.a).split('').filter(c => c === p.ask).length);
+  } else if (p.type === 8) {
+    add('result', p.res);
+    if (p.ask !== 'exact') {
+      const xs = fPre(p, p.ask === 'max' ? p.limit : p.lim);
+      add('otherEnd', p.ask === 'min' ? xs[xs.length - 1] : xs[0]);
+    }
+    add('bin', parseInt(String(p.res), 2) || undefined);
+  } else {
+    add('same', p.K);
+    const q = Object.assign({}, p, {ext: p.ext === 'max' ? 'min' : 'max'});
+    const b = f9Best(q);
+    if (b) add('otherEnd', b.v);
+    add('total', p.L - p.K);
+  }
+  return tr;
+}
+
+const F_TRAP_SAY = {
+  cols: 'так выходит, если перепутать столбцы 0 и 1 — посмотри, в каком порядке они стоят в шапке таблицы',
+  side: 'так выходит, если начать не с той стороны: головка стоит ',
+  orig: 'это исходное число — программа его меняет',
+  rev: 'дописанные цифры записаны в обратном порядке: головка пишет их по очереди, двигаясь вправо',
+  end: 'цифры дописаны не с той стороны числа',
+  noInc: 'пропущено прибавление (вычитание) единицы — первая часть программы',
+  opp: 'перепутаны «прибавить 1» и «вычесть 1»: посмотри, во что превращаются нули справа',
+  noInv: 'пропущена инверсия: цифры числа программа меняет на противоположные',
+  other: 'посчитаны не те цифры: спрашивают ',
+  before: 'это количество до выполнения программы',
+  result: 'это число после программы, а спрашивают, что было до',
+  otherEnd: 'это другой край: спрашивают ',
+  bin: 'это результат программы, прочитанный как двоичный — а спрашивают исходное число',
+  same: 'это количество после программы, а спрашивают, сколько было до',
+  total: 'это количество других цифр после программы'
+};
+
+function fTrapOf(task, raw) {
+  const tr = task.meta.traps || {};
+  for (const k of Object.keys(tr)) if (String(tr[k]) === String(raw)) return k;
+  return '';
+}
+
+function fTrapSay(task, k) {
+  const p = task.meta.p;
+  if (k === 'side') return F_TRAP_SAY.side + fSide(p.start) + ' от последовательности';
+  if (k === 'other') return F_TRAP_SAY.other + (p.ask === '1' ? 'единицы' : 'нули');
+  if (k === 'otherEnd') {
+    if (p.type === 9) return F_TRAP_SAY.otherEnd + (p.ext === 'max' ? 'наибольшее' : 'наименьшее');
+    return F_TRAP_SAY.otherEnd + (p.ask === 'min' ? 'наименьшее' : 'наибольшее') + ' подходящее число';
+  }
+  return F_TRAP_SAY[k] || '';
+}
+
+/* ------------------------------------------------------ код на Python
+   Второй способ — программа, которая выполняет таблицу команду за командой.
+   Лента — строка с пятью пустыми клетками по краям, состояние — номер,
+   каждая клетка таблицы — одна строка if/elif (без словарей: same-trick-
+   across-tasks). Собирается строками и в самопроверке ИСПОЛНЯЕТСЯ: ученик
+   видит её картинкой и может набрать у себя, значит последняя напечатанная
+   строка обязана совпасть с ключом. */
+
+function fCode(rows) {
+  let w = 0;
+  rows.forEach(r => { if (r[1]) w = Math.max(w, r[0].length); });
+  return rows.map(r => r[1] ? r[0] + ' '.repeat(w - r[0].length + 2) + '# ' + r[1] : r[0]).join('\n');
+}
+
+function fIfs(p, ind) {
+  const rows = [];
+  let first = true;
+  p.pr.forEach((st, q) => {
+    p.cols.forEach(c => {
+      const cmd = st[c];
+      if (!cmd) return;
+      rows.push([ind + (first ? 'if' : 'elif') + ' q == ' + q + " and c == '" + c + "': w, d, q = '" +
+                 cmd[0] + "', '" + cmd[1] + "', " + cmd[2], '']);
+      first = false;
+    });
+  });
+  return rows;
+}
+
+function fLoop(p, ind) {
+  return [[ind + 'q = 0', 'начальное состояние q0'],
+          [ind + 'while True:', ''],
+          [ind + '    c = lenta[pos]', 'что под головкой']]
+    .concat(fIfs(p, ind + '    '))
+    .concat([[ind + '    lenta = lenta[:pos] + w + lenta[pos + 1:]', 'записать'],
+             [ind + "    if d == 'S':", ''],
+             [ind + '        break', 'стоп'],
+             [ind + "    if d == 'L':", ''],
+             [ind + '        pos -= 1', ''],
+             [ind + "    if d == 'R':", ''],
+             [ind + '        pos += 1', '']]);
+}
+
+function fPosRow(p, ind) {
+  return p.start === 'R'
+    ? [ind + 'pos = len(lenta) - 5', 'клетка справа от последовательности']
+    : [ind + 'pos = 4', 'клетка слева от последовательности'];
+}
+
+function fProgram(p) {
+  if (p.type === 9) return '';
+  const rows = [];
+  if (p.type <= 6) {
+    rows.push(["lenta = 'λ' * 5 + f'{" + p.x + ":b}' + 'λ' * 5", 'число в двоичной записи']);
+    rows.push(fPosRow(p, ''));
+    fLoop(p, '').forEach(r => rows.push(r));
+    rows.push(["print(int(lenta.strip('λ'), 2))", 'в десятичную']);
+  } else if (p.type === 7) {
+    rows.push(["lenta = 'λ' * 5 + " + p.runs.map(([c, m]) => "'" + c + "' * " + m).join(' + ') + " + 'λ' * 5", '']);
+    rows.push(fPosRow(p, ''));
+    fLoop(p, '').forEach(r => rows.push(r));
+    rows.push(["print(lenta.count('" + p.ask + "'))", p.ask === '1' ? 'единиц' : 'нулей']);
+  } else {
+    rows.push(['def run(x):', 'что программа делает с числом x']);
+    rows.push(["    lenta = 'λ' * 5 + f'{x:b}' + 'λ' * 5", '']);
+    rows.push(fPosRow(p, '    '));
+    fLoop(p, '    ').forEach(r => rows.push(r));
+    rows.push(["    return int(lenta.strip('λ'), 2)", '']);
+    rows.push(['', '']);
+    const lim = p.ask === 'max' ? p.limit : p.lim;
+    if (p.ask === 'max') rows.push(['last = 0', '']);
+    rows.push(['for x in range(1, ' + lim + '):', 'перебираем исходные числа']);
+    rows.push(['    if run(x) == ' + p.res + ':', '']);
+    if (p.ask === 'max') { rows.push(['        last = x', 'запоминаем']); rows.push(['print(last)', 'наибольшее']); }
+    else { rows.push(['        print(x)', p.ask === 'min' ? 'первое — наименьшее' : 'подходит']);
+           rows.push(['        break', '']); }
+  }
+  return fCode(rows);
+}
+
+/* ------------------------------------------------- разбор рисунком
+   (pictures-over-words) Разбор — это сама лента: строка на каждый момент,
+   когда меняется состояние; головка — рамкой, изменённые клетки — жёлтым.
+   Слева — что делает каждое состояние. У автомата (типы 6–7) — таблица
+   «клетка за клеткой» и счёт блоками. Ответ ученика — красным. */
+
+const F_CSS =
+  '.mtw{overflow-x:auto;margin:8px 0}' +
+  'table.mtt{border-collapse:collapse;font:15px/1.3 Consolas,"Cascadia Mono",monospace}' +
+  'table.mtt th,table.mtt td{border:1px solid #9aa0b4;padding:4px 12px;background:#fff;text-align:center;white-space:nowrap}' +
+  'table.mtt th{background:#f6f7fb;font-weight:700}' +
+  '.mtnote{font-size:14.5px;color:#5c6070;margin:6px 0}' +
+  'table.mtr{border-collapse:collapse;font:14.5px/1.35 "Segoe UI",sans-serif;margin:6px 0}' +
+  'table.mtr td{border:1px solid #d9dce6;padding:4px 10px;background:#fff;text-align:left}' +
+  'table.mtr td:first-child{font:700 14.5px Consolas,monospace;text-align:center;background:#f6f7fb}' +
+  'table.tape{border-collapse:separate;border-spacing:2px;font:15px/1 Consolas,"Cascadia Mono",monospace}' +
+  'table.tape td{width:26px;height:28px;text-align:center;border:1px solid #d9dce6;background:#fff;border-radius:4px;padding:0}' +
+  'table.tape td.lab{width:auto;border:0;background:none;padding:0 8px 0 0;color:#5c6070;font:600 13px "Segoe UI",sans-serif;text-align:right;white-space:nowrap}' +
+  'table.tape td.e{color:#b8bccb}' +
+  'table.tape td.ch{background:#fff4e2;color:#8a4b00;font-weight:700;border-color:#e6c98a}' +
+  'table.tape td.hd{outline:3px solid #1f5fa8;outline-offset:-1px}' +
+  'table.tape tr.fin td.lab{color:#137a41}' +
+  'table.walk{border-collapse:collapse;font:14.5px/1.3 Consolas,"Cascadia Mono",monospace;margin:6px 0}' +
+  'table.walk th,table.walk td{border:1px solid #d9dce6;padding:3px 7px;text-align:center;background:#fff}' +
+  'table.walk th{background:#f6f7fb;font:600 12.5px "Segoe UI",sans-serif;color:#5c6070;text-align:left}' +
+  'table.walk td.ch{background:#fff4e2;color:#8a4b00;font-weight:700}' +
+  'table.walk td.blk{border-left:3px solid #1f5fa8}' +
+  '.mtres{font-size:15.5px;margin:6px 0}' +
+  '.mtres b.key{color:#137a41}' +
+  '.mtres b.bad{color:#b3261e}';
+
+function fCss() {
+  if (typeof document === 'undefined' || document.getElementById('mt-css')) return;
+  const st = document.createElement('style');
+  st.id = 'mt-css';
+  st.textContent = F_CSS;
+  document.head.appendChild(st);
+}
+
+function fRoles(p) {
+  let s = '<table class="mtr">';
+  p.roles.forEach((r, q) => { s += '<tr><td>q' + q + '</td><td>' + r + '</td></tr>'; });
+  return s + '</table>';
+}
+
+/* Кадры ленты: начало, каждая смена состояния, остановка. */
+function fFrames(p, x) {
+  const tape = x === undefined ? fTape(p) : mBin(x);
+  const r = mRun(p.pr, tape, p.start, true);
+  if (!r.ok) return '';
+  const n = tape.length;
+  const lo = Math.min(-1, r.lo) - 1 + M_OFF, hi = Math.max(n, r.hi) + 1 + M_OFF;
+  const init = r.frames[0].a;
+  let s = '<div class="mtw"><table class="tape">';
+  let fr = r.frames;
+  if (fr.length > 9) fr = fr.slice(0, 4).concat(fr.slice(fr.length - 4));
+  fr.forEach((f, k) => {
+    const lab = k === 0 ? 'начало, q' + f.q : f.stop ? 'стоп' : 'q' + f.q;
+    s += '<tr' + (f.stop ? ' class="fin"' : '') + '><td class="lab">' + lab + '</td>';
+    for (let i = lo; i <= hi; i++) {
+      const c = f.a[i];
+      const cls = [];
+      if (c === 'λ') cls.push('e');
+      if (c !== init[i]) cls.push('ch');
+      if (i === M_OFF + f.pos) cls.push('hd');
+      s += '<td' + (cls.length ? ' class="' + cls.join(' ') + '"' : '') + '>' + c + '</td>';
+    }
+    s += '</tr>';
+  });
+  return s + '</table></div>';
+}
+
+/* Ход по клеткам для автомата: для каждой клетки — что было, в каком
+   состоянии головка, что записала. */
+function fWalkCells(p) {
+  const tape = fTape(p);
+  const r = mRun(p.pr, tape, p.start, false);
+  const n = tape.length;
+  const order = [];
+  for (let k = 0; k < n; k++) order.push(p.start === 'R' ? n - 1 - k : k);
+  let q = p.pr[0]['λ'][2];
+  const out = [];
+  order.forEach(i => {
+    const c = tape[i], cmd = p.pr[q][c];
+    out.push({i: i, was: c, q: q, w: cmd[0]});
+    q = cmd[2];
+  });
+  void r;
+  return out;
+}
+
+function fWalkTable(cells, upto, marks) {
+  const head = [['клетка', c => c.k], ['было', c => c.was], ['состояние', c => 'q' + c.q], ['стало', c => c.w]];
+  let s = '<div class="mtw"><table class="walk">';
+  head.forEach(([lab, f], row) => {
+    s += '<tr><th>' + lab + '</th>';
+    cells.slice(0, upto).forEach((c, k) => {
+      const cls = [];
+      if (row === 3 && c.w !== c.was) cls.push('ch');
+      if (marks && marks.has(k)) cls.push('blk');
+      s += '<td' + (cls.length ? ' class="' + cls.join(' ') + '"' : '') + '>' + f(Object.assign({k: k + 1}, c)) + '</td>';
+    });
+    if (cells.length > upto) s += '<td>…</td>';
+    s += '</tr>';
+  });
+  return s + '</table></div>';
+}
+
+/* Счёт блоками: на ряду одинаковых цифр состояния повторяются по кругу. */
+function fBlocks(p) {
+  const cells = fWalkCells(p);
+  const lines = [];
+  const marks = new Set();
+  let k0 = 0;
+  p.runs.forEach(([c, m]) => {
+    const seg = cells.slice(k0, k0 + m);
+    const seen = new Map();
+    let pre = -1, per = 0;
+    for (let k = 0; k < seg.length; k++) {
+      const key = seg[k].q;
+      if (seen.has(key)) { pre = seen.get(key); per = k - pre; break; }
+      seen.set(key, k);
+    }
+    const cnt = arr => arr.filter(e => e.w === p.ask).length;
+    const word = p.ask === '1' ? 'единиц' : 'нулей';
+    if (pre < 0) {
+      lines.push('Ряд из ' + m + ' ' + fSym(c, m) + ': ' + word + ' — ' + cnt(seg) + '.');
+    } else {
+      for (let k = k0 + pre; k < k0 + m; k += per) marks.add(k);
+      const q = Math.floor((m - pre) / per), rst = (m - pre) % per;
+      const a = cnt(seg.slice(0, pre)), b = cnt(seg.slice(pre, pre + per)), z = cnt(seg.slice(pre + q * per));
+      const blk = seg.slice(pre, pre + per).map(e => e.w).join('');
+      lines.push('Ряд из ' + m + ' ' + fSym(c, m) + ': ' + (pre ? 'сначала ' + pre + ' ' + tPl(pre, 'клетка', 'клетки', 'клеток') +
+        ' (' + word + ' ' + a + '), потом ' : '') + 'блоки по ' + per + ' ' + tPl(per, 'клетке', 'клетки', 'клеток') +
+        ' «' + blk + '» (в каждом ' + word + ' ' + b + '): полных блоков ' + q + (rst ? ', остаток ' + rst + ' (' + word + ' ' + z + ')' : '') +
+        '. Итого ' + word + ': ' + (pre ? a + ' + ' : '') + q + ' · ' + b + (rst ? ' + ' + z : '') + ' = <b>' + cnt(seg) + '</b>.');
+    }
+    k0 += m;
+  });
+  return {cells: cells, marks: marks, lines: lines};
+}
+
+function fPic(t, raw) {
+  fCss();
+  const p = t.meta.p;
+  const s0 = raw === undefined || raw === null ? '' : String(raw).trim();
+  const mine = s0 && s0 !== t.answer ? s0 : null;
+  let s = '<p class="mtres">Что делает каждое состояние:</p>' + fRoles(p);
+  if (p.type <= 5) {
+    s += '<p class="mtres">Лента по шагам (рамка — головка, жёлтым — изменённые клетки):</p>' + fFrames(p);
+    s += '<p class="mtres">' + p.x + ' = ' + mBin(p.x) + '<sub>2</sub> → ' + mBin(t.meta.want) + '<sub>2</sub> = <b class="key">' +
+         t.answer + '</b>. Короче: ' + p.summary + '.</p>';
+  } else if (p.type === 6) {
+    const cells = fWalkCells(p);
+    s += '<p class="mtres">Головка идёт справа налево, каждую клетку переписывает по строке своего состояния:</p>' +
+         fWalkTable(cells, cells.length);
+    s += '<p class="mtres">' + p.x + ' = ' + mBin(p.x) + '<sub>2</sub> → ' + mWord(fRunP(p).a) + '<sub>2</sub> = <b class="key">' +
+         t.answer + '</b>.</p>';
+  } else if (p.type === 7) {
+    const b = fBlocks(p);
+    s += '<p class="mtres">Головка идёт ' + (p.start === 'R' ? 'справа налево' : 'слева направо') +
+         ' и переписывает каждую клетку; состояния повторяются по кругу (синяя черта — начало блока):</p>' +
+         fWalkTable(b.cells, Math.min(b.cells.length, 18), b.marks);
+    b.lines.forEach(l => { s += '<p class="mtres">' + l + '</p>'; });
+    if (p.runs.length > 1) s += '<p class="mtres">Всего ' + (p.ask === '1' ? 'единиц' : 'нулей') + ': <b class="key">' + t.answer + '</b>.</p>';
+  } else if (p.type === 8) {
+    s += '<p class="mtres">' + p.summary + '. Проверка — программа на найденном числе:</p>' + fFrames(p, t.meta.want);
+    if (p.ask !== 'exact') {
+      const xs = fPre(p, p.ask === 'max' ? p.limit : p.lim);
+      const show = xs.length > 8 ? xs.slice(0, 4).concat(['…']).concat(xs.slice(-3)) : xs;
+      s += '<p class="mtres">Подходят все числа, из которых получается ' + p.res + ': ' +
+           show.map(v => v === '…' ? '…' : (v === t.meta.want ? '<b class="key">' + v + '</b>' : v)).join(', ') +
+           '. ' + (p.ask === 'min' ? 'Наименьшее' : 'Наибольшее меньше ' + p.limit) + ' — <b class="key">' + t.answer + '</b>.</p>';
+    } else {
+      s += '<p class="mtres">' + t.answer + ' = ' + mBin(t.meta.want) + '<sub>2</sub> → ' + mBin(p.res) +
+           '<sub>2</sub> = ' + p.res + '. Ответ: <b class="key">' + t.answer + '</b>.</p>';
+    }
+  } else {
+    const b = f9Best(p);
+    const sy = c => c === '1' ? 'единиц' : 'нулей';
+    s += '<p class="mtres">' + (p.op === '-'
+      ? 'Справа налево: нули хвоста становятся единицами, ближайшая к краю 1 — нулём, стоп. ' +
+        'Было <code>A 1 0…0</code>, стало <code>A 0 1…1</code> (хвост — t нулей, A не меняется).'
+      : 'Справа налево: единицы хвоста становятся нулями, ближайший к краю 0 — единицей, стоп. ' +
+        'Было <code>A 0 1…1</code>, стало <code>A 1 0…0</code> (хвост — t единиц, A не меняется).') + '</p>';
+    s += '<p class="mtres">Пусть в A длиной P = ' + p.L + ' − 1 − t ровно z нулей. Тогда ' + (p.op === '-'
+      ? 'нулей было z + t, стало z + 1; единиц было P − z + 1, стало P − z + t.'
+      : 'нулей было z + 1, стало z + t; единиц было P − z + t, стало P − z + 1.') + '</p>';
+    s += '<p class="mtres">Условие: ' + sy(p.after) + ' после — ровно ' + p.K + '. ' +
+         (b.all ? 'Лучше всего — когда программа проходит всю ленту.'
+                : 'Лучший случай: t = ' + b.t + ', z = ' + b.z + ' (P = ' + b.P + ').') +
+         ' ' + (p.ext === 'max' ? 'Наибольшее' : 'Наименьшее') + ' число ' + sy(p.before) + ' до: <b class="key">' + t.answer + '</b>.</p>';
+  }
+  if (mine !== null) {
+    const k = fTrapOf(t, mine);
+    let bin = '';
+    if (/^[01]+$/.test(mine) && parseInt(mine, 2) === Number(t.answer)) bin = 'это верный ответ, но в двоичной записи — переведи в десятичную';
+    s = '<p class="mtres">Твой ответ <b class="bad">' + mine + '</b>' +
+        (bin ? ' — ' + bin + '.' : k ? ' — ' + fTrapSay(t, k) + '.' : '.') + ' Верный — зелёным.</p>' + s;
+  }
+  return s;
+}
+
+/* ------------------------------------------------------ сборка задач */
+
+function fFinish(type, p) {
+  const want = fSolve(p);
+  if (!Number.isFinite(want) || want <= 0) return null;
+  return {
+    part: 'задание 12',
+    question: fCondHtml(p),
+    answer: String(want),
+    code: fProgram(p),
+    explain: type === 9 ? '[[PIC]]<p>Программой здесь не перебрать: последовательностей из ' + p.L +
+      ' цифр 2<sup>' + p.L + '</sup>. Только рассуждением.</p>'
+      : '[[PIC]]<p>Второй способ — программой, которая выполняет таблицу команду за командой ' +
+        '(пользоваться не обязательно):</p>[[CODE]]',
+    meta: {p: p, want: want, traps: fTraps(p, want)}
+  };
+}
+
+function fCols(rng) { return tPick(rng, [['λ', '0', '1'], ['λ', '0', '1'], ['λ', '1', '0']]); }
+function fDigits(rng, k) { let s = ''; for (let i = 0; i < k; i++) s += tPick(rng, ['0', '1']); return s; }
+function fX(rng, lo, hi) { return tRand(rng, lo || 100, hi || 2100); }
+
+/* Справа — запись цифр suf: головка уже на пустой клетке за числом в
+   состоянии q; последняя цифра — с остановкой либо отдельной строкой «стоп». */
+function fWrite(pr, roles, q, digits, d, stopOnWrite, firstRole) {
+  for (let i = 0; i < digits.length; i++) {
+    const last = i === digits.length - 1;
+    if (last && stopOnWrite) {
+      mPut(pr, q + i, 'λ', digits[i], 'S', q + i);
+    } else {
+      mPut(pr, q + i, 'λ', digits[i], d, q + i + 1);
+    }
+    const say = 'на пустой клетке пишет ' + digits[i] + (last && stopOnWrite ? ' и останавливается' : ', шаг ' + (d === 'R' ? 'вправо' : 'влево'));
+    roles[q + i] = i === 0 && firstRole ? firstRole + '; ' + say : say;
+  }
+  const end = q + digits.length;
+  if (!stopOnWrite) { mPut(pr, end, 'λ', 'λ', 'S', end); roles[end] = 'стоп'; }
+}
+
+function fAppendTask(rng) {
+  for (let tries = 0; tries < 50; tries++) {
+    const x = fX(rng), suf = fDigits(rng, tPick(rng, [1, 2, 2, 3]));
+    const pr = [], roles = [];
+    mPut(pr, 0, 'λ', 'λ', 'R', 1); roles[0] = 'шаг вправо — на первую цифру';
+    mScan(pr, 1, 'R');
+    fWrite(pr, roles, 1, suf, 'R', rng() < 0.4, 'идёт вправо по цифрам до конца числа');
+    const k = suf.length;
+    const p = {type: 0, start: 'L', cols: fCols(rng), pr: pr, roles: roles, x: x, suf: suf,
+               summary: 'справа дописано ' + suf + ', то есть x · ' + Math.pow(2, k) + ' + ' + parseInt(suf, 2)};
+    const t = fFinish(0, p);
+    if (t && Object.keys(t.meta.traps).length >= 2) return t;
+  }
+  return null;
+}
+
+function fPrependTask(rng) {
+  for (let tries = 0; tries < 80; tries++) {
+    const how = tPick(rng, ['direct', 'direct', 'gap', 'left']);
+    const x = fX(rng), pr = [], roles = [];
+    let p;
+    if (how === 'left') {
+      const suf = fDigits(rng, tPick(rng, [1, 2, 3]));
+      mPut(pr, 0, 'λ', '1', 'R', 1); roles[0] = 'пишет 1 перед числом, шаг вправо';
+      mScan(pr, 1, 'R');
+      fWrite(pr, roles, 1, suf, 'R', rng() < 0.5, 'идёт вправо по цифрам до конца числа');
+      p = {type: 1, start: 'L', pr: pr, roles: roles, x: x, pre: '1', suf: suf,
+           summary: 'слева дописана 1, справа — ' + suf};
+    } else {
+      const pre = '1' + fDigits(rng, how === 'gap' ? tRand(rng, 1, 2) : tRand(rng, 0, 2));
+      mPut(pr, 0, 'λ', 'λ', 'L', 1); roles[0] = 'шаг влево — на последнюю цифру';
+      mScan(pr, 1, 'L');
+      if (how === 'direct') {
+        const rev = pre.split('').reverse().join('');
+        fWrite(pr, roles, 1, rev, 'L', rng() < 0.5, 'идёт влево по цифрам до начала числа');
+      } else {
+        /* через пропуск: отступить на длину приписки, писать слева направо */
+        const gap = pre.length - 1;
+        for (let g = 0; g < gap; g++) {
+          mPut(pr, 1 + g, 'λ', 'λ', 'L', 2 + g);
+          roles[1 + g] = g === 0 ? 'идёт влево по цифрам до начала числа; на пустой клетке — ещё шаг влево, ничего не пишет'
+                                 : 'шаг влево по пустой клетке';
+        }
+        fWrite(pr, roles, 1 + gap, pre, 'R', true, '');
+      }
+      p = {type: 1, start: 'R', pr: pr, roles: roles, x: x, pre: pre,
+           summary: 'слева дописано ' + pre + ', то есть x + ' + parseInt(pre, 2) + '·2<sup>n</sup>, где n — число цифр x'};
+    }
+    p.cols = fCols(rng);
+    const t = fFinish(1, p);
+    if (t && Object.keys(t.meta.traps).length >= 2) return t;
+  }
+  return null;
+}
+
+function fIncTask(rng) {
+  for (let tries = 0; tries < 80; tries++) {
+    const op = tPick(rng, ['+', '-']);
+    const d = tPick(rng, ['1', '0', '1', '']);
+    let x = fX(rng, 64, 2100);
+    if (rng() < 0.65) {
+      const tl = tRand(rng, 2, 6);
+      x = op === '+' ? (((x >> tl) << tl) | ((1 << tl) - 1)) : ((x >> tl) << tl);
+    }
+    if (x < 8) continue;
+    const pr = [], roles = [];
+    mPut(pr, 0, 'λ', 'λ', 'L', 1); roles[0] = 'шаг влево — на последнюю цифру';
+    if (op === '+') {
+      mPut(pr, 1, 'λ', '1', 'R', 2); mPut(pr, 1, '0', '1', 'R', 2); mPut(pr, 1, '1', '0', 'L', 1);
+      roles[1] = 'прибавляет 1: единицы справа делает нулями и идёт влево; первый 0 (или пустую клетку) делает единицей и поворачивает направо';
+    } else {
+      mPut(pr, 1, '0', '1', 'L', 1); mPut(pr, 1, '1', '0', 'R', 2);
+      roles[1] = 'вычитает 1: нули справа делает единицами и идёт влево; первую 1 делает нулём и поворачивает направо';
+    }
+    mScan(pr, 2, 'R');
+    mPut(pr, 2, 'λ', d || 'λ', 'S', 2);
+    roles[2] = 'идёт вправо до конца числа; на пустой клетке ' + (d ? 'пишет ' + d + ' и ' : '') + 'останавливается';
+    const p = {type: 2, start: 'R', cols: fCols(rng), pr: pr, roles: roles, x: x, op: op, d: d,
+               summary: (op === '+' ? 'x + 1' : 'x − 1') + (d ? ', и справа дописано ' + d + ': (x ' + (op === '+' ? '+' : '−') + ' 1) · 2' + (d === '1' ? ' + 1' : '') : '')};
+    const t = fFinish(2, p);
+    if (t && Object.keys(t.meta.traps).length >= 3) return t;
+  }
+  return null;
+}
+
+function fInvTask(rng) {
+  for (let tries = 0; tries < 80; tries++) {
+    const how = tPick(rng, ['L', 'L', 'R', 'L1']);
+    const x = fX(rng), pr = [], roles = [];
+    let p;
+    if (how === 'R') {
+      mPut(pr, 0, 'λ', 'λ', 'L', 1); roles[0] = 'шаг влево — на последнюю цифру';
+      mPut(pr, 1, '0', '1', 'L', 1); mPut(pr, 1, '1', '0', 'L', 1); mPut(pr, 1, 'λ', 'λ', 'S', 1);
+      roles[1] = 'идёт влево и меняет каждую цифру на противоположную; на пустой клетке — стоп';
+      p = {type: 3, start: 'R', x: x, suf: '', summary: 'все цифры заменены на противоположные'};
+    } else {
+      const pre = how === 'L1' ? '1' : '';
+      const suf = fDigits(rng, how === 'L1' ? tRand(rng, 1, 2) : tRand(rng, 0, 2));
+      mPut(pr, 0, 'λ', pre || 'λ', 'R', 1);
+      roles[0] = pre ? 'пишет 1 перед числом, шаг вправо' : 'шаг вправо — на первую цифру';
+      mPut(pr, 1, '0', '1', 'R', 1); mPut(pr, 1, '1', '0', 'R', 1);
+      if (suf) fWrite(pr, roles, 1, suf, 'R', rng() < 0.5, 'идёт вправо и меняет каждую цифру на противоположную');
+      else { mPut(pr, 1, 'λ', 'λ', 'S', 1); roles[1] = 'идёт вправо и меняет каждую цифру на противоположную; на пустой клетке — стоп'; }
+      p = {type: 3, start: 'L', x: x, pre: pre, suf: suf,
+           summary: (pre ? 'слева дописана 1, ' : '') + 'цифры числа заменены на противоположные' + (suf ? ', справа дописано ' + suf : '')};
+    }
+    p.pr = pr; p.roles = roles; p.cols = fCols(rng);
+    const t = fFinish(3, p);
+    if (t && Object.keys(t.meta.traps).length >= 2) return t;
+  }
+  return null;
+}
+
+/* До последней цифры: слева — пройти число; справа — один шаг. */
+function fToLast(rng, pr, roles) {
+  if (rng() < 0.5) {
+    mPut(pr, 0, 'λ', 'λ', 'R', 1); roles[0] = 'шаг вправо — на первую цифру';
+    mScan(pr, 1, 'R'); mPut(pr, 1, 'λ', 'λ', 'L', 2);
+    roles[1] = 'идёт вправо до конца числа; на пустой клетке — шаг назад, на последнюю цифру';
+    return {start: 'L', q: 2};
+  }
+  mPut(pr, 0, 'λ', 'λ', 'L', 1); roles[0] = 'шаг влево — на последнюю цифру';
+  return {start: 'R', q: 1};
+}
+
+function fDelTask(rng) {
+  for (let tries = 0; tries < 120; tries++) {
+    const how = tPick(rng, ['k', 'cond', 'cond', 'while']);
+    const x = fX(rng), pr = [], roles = [];
+    const o = fToLast(rng, pr, roles);
+    let q = o.q, summary;
+    if (how === 'k') {
+      const k = tRand(rng, 1, 3);
+      for (let i = 0; i < k; i++) {
+        const last = i === k - 1;
+        mPut(pr, q + i, '0', 'λ', last ? 'S' : 'L', last ? q + i : q + i + 1);
+        mPut(pr, q + i, '1', 'λ', last ? 'S' : 'L', last ? q + i : q + i + 1);
+        roles[q + i] = 'стирает цифру' + (last ? ' и останавливается' : ', шаг влево');
+      }
+      summary = 'стёрты ' + k + ' ' + tPl(k, 'последняя цифра', 'последние цифры', 'последних цифр');
+    } else if (how === 'cond') {
+      const c = tPick(rng, ['0', '1']), other = c === '0' ? '1' : '0';
+      mPut(pr, q, '0', 'λ', 'L', q + 1); mPut(pr, q, '1', 'λ', 'L', q + 1);
+      roles[q] = 'стирает последнюю цифру, шаг влево';
+      mPut(pr, q + 1, c, 'λ', 'S', q + 1); mPut(pr, q + 1, other, other, 'S', q + 1);
+      roles[q + 1] = 'если там ' + c + ' — стирает её; если ' + other + ' — оставляет; стоп';
+      summary = 'стёрта последняя цифра, и ещё одна, если она ' + c;
+    } else {
+      const c = tPick(rng, ['0', '1']), other = c === '0' ? '1' : '0';
+      mPut(pr, q, c, 'λ', 'L', q); mPut(pr, q, other, other, 'S', q); mPut(pr, q, 'λ', 'λ', 'S', q);
+      roles[q] = 'стирает цифры ' + c + ' и идёт влево; на первой ' + other + ' — стоп';
+      summary = 'стёрты все ' + (c === '0' ? 'нули' : 'единицы') + ' в конце числа';
+    }
+    const p = {type: 4, start: o.start, cols: fCols(rng), pr: pr, roles: roles, x: x, summary: summary};
+    const t = fFinish(4, p);
+    if (!t) continue;
+    if (how === 'cond' && Number(t.answer) === p.x >> 1) { if (rng() < 0.6) continue; }
+    if (how === 'while' && mBin(p.x).length - mBin(Number(t.answer)).length < 2) continue;
+    if (Object.keys(t.meta.traps).length >= 2) return t;
+  }
+  return null;
+}
+
+function fEditTask(rng) {
+  for (let tries = 0; tries < 120; tries++) {
+    const how = tPick(rng, ['10', 'second', 'first0', 'flip2']);
+    const x = fX(rng), pr = [], roles = [];
+    let b, start;
+    if (rng() < 0.6) {
+      start = 'R';
+      mPut(pr, 0, 'λ', 'λ', 'L', 1); roles[0] = 'шаг влево — на последнюю цифру';
+      mScan(pr, 1, 'L'); mPut(pr, 1, 'λ', 'λ', 'R', 2);
+      roles[1] = 'идёт влево до начала числа; на пустой клетке — шаг назад, на первую цифру';
+      b = 2;
+    } else {
+      start = 'L';
+      mPut(pr, 0, 'λ', 'λ', 'R', 1); roles[0] = 'шаг вправо — на первую цифру';
+      b = 1;
+    }
+    let summary;
+    if (how === '10') {
+      mPut(pr, b, '1', '0', 'L', b + 1); roles[b] = 'первую 1 делает нулём, шаг влево';
+      mPut(pr, b + 1, 'λ', '1', 'S', b + 1); roles[b + 1] = 'на пустой клетке пишет 1, стоп';
+      summary = 'первая 1 заменена на «10»';
+    } else if (how === 'second') {
+      mPut(pr, b, '1', '1', 'R', b + 1); mPut(pr, b, '0', '0', 'R', b);
+      roles[b] = 'проходит первую 1, шаг вправо';
+      mPut(pr, b + 1, '0', '0', 'R', b + 1);
+      if (rng() < 0.5) {
+        mPut(pr, b + 1, '1', '0', 'S', b + 1); mPut(pr, b + 1, 'λ', 'λ', 'S', b + 1);
+        roles[b + 1] = 'идёт вправо по нулям; первую встреченную 1 делает нулём — стоп';
+      } else {
+        mPut(pr, b + 1, '1', '0', 'R', b + 2); mPut(pr, b + 1, 'λ', 'λ', 'R', b + 2);
+        roles[b + 1] = 'идёт вправо по нулям; первую встреченную 1 делает нулём';
+        mScan(pr, b + 2, 'R'); mPut(pr, b + 2, 'λ', 'λ', 'S', b + 2);
+        roles[b + 2] = 'идёт вправо до конца числа; на пустой клетке — стоп';
+      }
+      summary = 'вторая слева единица заменена нулём';
+    } else if (how === 'first0') {
+      mPut(pr, b, '1', '1', 'R', b); mPut(pr, b, '0', '1', 'S', b); mPut(pr, b, 'λ', 'λ', 'S', b);
+      roles[b] = 'идёт вправо по единицам; первый 0 делает единицей — стоп';
+      summary = 'первый слева ноль заменён единицей';
+    } else {
+      mPut(pr, b, '1', '1', 'R', b + 1); roles[b] = 'проходит первую 1, шаг вправо';
+      mPut(pr, b + 1, '0', '1', 'S', b + 1); mPut(pr, b + 1, '1', '0', 'S', b + 1); mPut(pr, b + 1, 'λ', 'λ', 'S', b + 1);
+      roles[b + 1] = 'вторую цифру меняет на противоположную — стоп';
+      summary = 'вторая цифра числа заменена на противоположную';
+    }
+    const p = {type: 5, start: start, cols: fCols(rng), pr: pr, roles: roles, x: x, summary: summary};
+    const t = fFinish(5, p);
+    if (!t || Number(t.answer) === x) continue;
+    if (Object.keys(t.meta.traps).length >= 2) return t;
+  }
+  return null;
+}
+
+/* Автомат: q0 — шаг на первую клетку ряда, дальше K состояний по очереди
+   переписывают клетки, двигаясь в одну сторону; на пустой клетке — стоп
+   (у первого из них пустая клетка не встречается — клетка остаётся пустой,
+   как в замере). */
+function fAuto(rng, K, dir) {
+  const pr = [];
+  mPut(pr, 0, 'λ', 'λ', dir, 1);
+  for (let s = 1; s <= K; s++) {
+    for (const c of ['0', '1']) mPut(pr, s, c, tPick(rng, ['0', '1']), dir, tRand(rng, 1, K));
+    if (s > 1 || rng() < 0.5) mPut(pr, s, 'λ', 'λ', 'S', s);
+  }
+  return pr;
+}
+
+function fAutoRoles(pr, dir) {
+  const r = ['шаг ' + (dir === 'L' ? 'влево' : 'вправо') + ' — на первую клетку'];
+  for (let s = 1; s < pr.length; s++) {
+    const a = pr[s]['0'], b = pr[s]['1'];
+    r[s] = 'на 0 пишет ' + a[0] + ' → q' + a[2] + '; на 1 пишет ' + b[0] + ' → q' + b[2] + (pr[s]['λ'] ? '; на пустой — стоп' : '');
+  }
+  return r;
+}
+
+/* Автомат «настоящий»: все состояния в деле, состояния различаются,
+   хоть одна клетка меняется и хоть одна — нет. */
+function fAutoOk(p, r) {
+  if (!mGood(r)) return false;
+  for (let s = 1; s < p.pr.length; s++) if (!r.visited.has(s)) return false;
+  const sig = p.pr.slice(1).map(st => JSON.stringify([st['0'], st['1']].map(c => [c[0], c[2]])));
+  if (new Set(sig).size < sig.length) return false;
+  return true;
+}
+
+function fAutoTask(rng) {
+  for (let tries = 0; tries < 400; tries++) {
+    const K = tPick(rng, [2, 3, 3]);
+    const pr = fAuto(rng, K, 'L');
+    const x = fX(rng, 100, 1100);
+    const p = {type: 6, start: 'R', cols: fCols(rng), pr: pr, roles: fAutoRoles(pr, 'L'), x: x};
+    const r = fRunP(p);
+    if (!fAutoOk(p, r)) continue;
+    const res = mVal(r), n = mBin(x).length;
+    if (res === x || res === (Math.pow(2, n) - 1 - x) || res === 0) continue;
+    const t = fFinish(6, p);
+    if (t && Object.keys(t.meta.traps).length >= 2) return t;
+  }
+  return null;
+}
+
+function fCountTask(rng) {
+  for (let tries = 0; tries < 600; tries++) {
+    const K = tPick(rng, [2, 3, 3]);
+    const start = tPick(rng, ['R', 'R', 'L']);
+    const dir = start === 'R' ? 'L' : 'R';
+    const pr = fAuto(rng, K, dir);
+    const two = rng() < 0.5;
+    const c1 = tPick(rng, ['0', '1']);
+    const runs = two ? [[c1, tRand(rng, 10, 60)], [c1 === '0' ? '1' : '0', tRand(rng, 10, 60)]]
+                     : [[c1, tRand(rng, 30, 250)]];
+    const p = {type: 7, start: start, cols: fCols(rng), pr: pr, roles: fAutoRoles(pr, dir), runs: runs,
+               ask: tPick(rng, ['0', '1'])};
+    const r = fRunP(p);
+    if (!fAutoOk(p, r)) continue;
+    /* на каждом ряду состояния должны ходить по кругу длиннее 1, иначе это
+       просто «все цифры станут одинаковыми» */
+    const b = fBlocks(p);
+    if (b.lines.some(l => !/блоки по [2-9]/.test(l))) continue;
+    const t = fFinish(7, p);
+    if (!t) continue;
+    const total = runs.reduce((s, [, m]) => s + m, 0);
+    if (Number(t.answer) >= total) continue;
+    if (Object.keys(t.meta.traps).length >= 2) return t;
+  }
+  return null;
+}
+
+function fBackTask(rng) {
+  for (let tries = 0; tries < 100; tries++) {
+    const how = tPick(rng, ['append', 'left', 'inv1', 'inc', 'inv', 'inv']);
+    let base;
+    if (how === 'append') base = fAppendTask(rng);
+    else if (how === 'left') { do { base = fPrependTask(rng); } while (base && base.meta.p.start !== 'L'); }
+    else if (how === 'inc') base = fIncTask(rng);
+    else {
+      const pr = [], roles = [];
+      if (how === 'inv1') {
+        const suf = fDigits(rng, tRand(rng, 1, 2));
+        mPut(pr, 0, 'λ', '1', 'R', 1); roles[0] = 'пишет 1 перед числом, шаг вправо';
+        mPut(pr, 1, '0', '1', 'R', 1); mPut(pr, 1, '1', '0', 'R', 1);
+        fWrite(pr, roles, 1, suf, 'R', true, 'идёт вправо и меняет каждую цифру на противоположную');
+        base = {meta: {p: {start: 'L', pr: pr, roles: roles,
+                           summary: 'Программа пишет 1 слева, меняет цифры на противоположные и дописывает ' + suf + ' справа; обратно — снять 1 и ' + suf + ', поменять цифры'}}};
+      } else {
+        const start = tPick(rng, ['R', 'L']), dir = start === 'R' ? 'L' : 'R';
+        mPut(pr, 0, 'λ', 'λ', dir, 1); roles[0] = 'шаг ' + (dir === 'L' ? 'влево' : 'вправо') + ' — на крайнюю цифру';
+        mPut(pr, 1, '0', '1', dir, 1); mPut(pr, 1, '1', '0', dir, 1); mPut(pr, 1, 'λ', 'λ', 'S', 1);
+        roles[1] = 'идёт ' + (dir === 'L' ? 'влево' : 'вправо') + ' и меняет каждую цифру на противоположную; на пустой клетке — стоп';
+        base = {meta: {p: {start: start, pr: pr, roles: roles,
+                           summary: 'Программа меняет все цифры на противоположные; первая цифра числа — 1, значит у результата впереди могли стоять нули: исходных чисел много — с разным количеством цифр'}}};
+      }
+    }
+    if (!base) continue;
+    const bp = base.meta.p;
+    const p = {type: 8, start: bp.start, cols: fCols(rng), pr: bp.pr, roles: bp.roles};
+    if (how === 'append') p.summary = 'Программа: ' + bp.summary + '; обратно — снять дописанные цифры';
+    else if (how === 'left') p.summary = 'Программа: ' + bp.summary + '; обратно — снять их с обеих сторон';
+    else if (how === 'inc') p.summary = 'Программа: ' + bp.summary + '; обратно — снять дописанную цифру и сделать обратное действие';
+    else p.summary = bp.summary;
+    const x0 = fX(rng, 100, how === 'inv' ? 900 : 2100);
+    const r = mRun(p.pr, mBin(x0), p.start);
+    if (!mGood(r)) continue;
+    p.res = mVal(r);
+    if (p.res < 4) continue;
+    if (how === 'inv') {
+      p.ask = tPick(rng, ['min', 'max', 'max']);
+      if (p.ask === 'max') p.limit = tPick(rng, [10000, 20000, 30000, 50000]);
+      else p.lim = 50000;
+    } else {
+      p.ask = 'exact';
+      p.lim = 50000;
+    }
+    const xs = fPre(p, p.ask === 'max' ? p.limit : p.lim);
+    if (p.ask === 'exact' && xs.length !== 1) continue;
+    if (p.ask !== 'exact' && xs.length < 2) continue;
+    const t = fFinish(8, p);
+    if (t && Object.keys(t.meta.traps).length >= 2) return t;
+  }
+  return null;
+}
+
+function fDemoTask(rng) {
+  for (let tries = 0; tries < 300; tries++) {
+    const op = tPick(rng, ['-', '-', '+']);
+    const L = tPick(rng, [200, 300, 400, 500, 600, 800, 1000]);
+    const pr = [];
+    mPut(pr, 0, 'λ', 'λ', 'L', 1);
+    if (op === '-') { mPut(pr, 1, 'λ', 'λ', 'S', 1); mPut(pr, 1, '1', '0', 'S', 1); mPut(pr, 1, '0', '1', 'L', 1); }
+    else { mPut(pr, 1, 'λ', '1', 'S', 1); mPut(pr, 1, '0', '1', 'S', 1); mPut(pr, 1, '1', '0', 'L', 1); }
+    const roles = ['шаг влево — на последнюю цифру', op === '-'
+      ? 'идёт влево, нули делает единицами; первую 1 делает нулём — стоп (на пустой клетке тоже стоп)'
+      : 'идёт влево, единицы делает нулями; первый 0 делает единицей — стоп (на пустой клетке пишет 1, стоп)'];
+    const p = {type: 9, start: 'R', cols: tPick(rng, [['λ', '1', '0'], ['λ', '0', '1']]), pr: pr, roles: roles,
+               op: op, L: L, after: tPick(rng, ['0', '0', '1']), before: tPick(rng, ['0', '0', '1']),
+               ext: tPick(rng, ['max', 'max', 'min']), K: tRand(rng, Math.floor(L / 8), Math.floor(L * 0.7))};
+    const t = fFinish(9, p);
+    if (!t) continue;
+    const v = Number(t.answer);
+    if (v < 3 || v === p.K || v === p.L || Math.abs(v - p.K) < 2) continue;
+    if (Object.keys(t.meta.traps).length >= 2) return t;
+  }
+  return null;
+}
+
+const F_MAKERS = [fAppendTask, fPrependTask, fIncTask, fInvTask, fDelTask, fEditTask,
+                  fAutoTask, fCountTask, fBackTask, fDemoTask];
+
+function fMake(type, rng) {
+  const t = F_MAKERS[type](rng);
+  if (!t) throw new Error('не собралась задача типа ' + type);
+  t.type = type;
+  return t;
+}
+
+/* Состав работ.
+   Практикум и домашняя: десять задач, по одной на каждую форму (правило
+   Светы от 21.09: один проход, по задаче на тип).
+   Проверочная: только частые формы настоящего экзамена (dont-merge-types,
+   26.09) — всё, что в замере пришло с демо, волн, резерва, пересдачи,
+   апробаций и ЕГКР: дописать справа, дописать слева, ±1, стереть справа,
+   правка в начале числа. */
+const F_WORKS = {
+  practice: {plan: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], max: 10, scale: [[10, 5], [9, 4], [8, 3]]},
+  homework: {plan: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], max: 10, scale: [[10, 5], [9, 4], [8, 3]]},
+  test:     {plan: [0, 1, 2, 4, 5], shuffle: true, max: 5, scale: [[5, 5], [4, 4], [3, 3]]}
+};
+
+function fWork(rng, w) {
+  w = w || F_WORKS.practice;
+  const plan = w.shuffle ? tShuffle(rng, w.plan) : w.plan;
+  return plan.map(type => fMake(type, rng));
+}
+
+function fPoints(ok, tasks, w) {
+  return ok.filter(Boolean).length;
+}
+
+function fMark(points, w) {
+  w = w || F_WORKS.practice;
+  for (const [need, m] of w.scale) if (points >= need) return m;
+  return 2;
+}
+
+/* Набор по одной задаче каждого типа — для самопроверки и образцов. */
+function fSet(seed) {
+  const rng = tRng(seed || 1);
+  return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(type => fMake(type, rng));
+}
+
+/* Ответ сверяется знак в знак (answer-format-strict), но ошибка всегда
+   названа: что не так с записью или что, похоже, сделано не так. */
+function fVerdict(task, raw) {
+  const s = String(raw === undefined || raw === null ? '' : raw).trim();
+  if (!s) return {ok: false, why: 'ответ пустой'};
+  if (/[.,]/.test(s)) return {ok: false, why: 'ответ — целое число'};
+  if (/\s/.test(s)) return {ok: false, why: 'число записывается без пробелов'};
+  if (!/^\d+$/.test(s)) return {ok: false, why: 'в ответ идёт только число — без слов и знаков'};
+  if (s !== String(Number(s))) return {ok: false, why: 'число записывается без ведущих нулей'};
+  if (s === task.answer) return {ok: true, why: ''};
+  if (/^[01]+$/.test(s) && s.length > 1 && parseInt(s, 2) === Number(task.answer))
+    return {ok: false, why: 'это верное число, но в двоичной записи — в ответ идёт десятичная'};
+  const k = fTrapOf(task, s);
+  return {ok: false, why: k ? 'похоже, ' + fTrapSay(task, k) : ''};
+}
+/* ==== /ЗАДАЧИ ==== */
+
+/* Форма сдачи ДЗ — одна на все темы. Ссылку разносит set_form_link.py. */
+const FORM = "https://docs.google.com/forms/d/e/1FAIpQLSfQyhaxcnzn4ZaKSe_ZMsluw7qRQnrw_80H6SfrnYB5EThUIA/viewform?usp=pp_url&entry.853601231=УЧЕНИК&entry.487188307=КОД";
+
+const ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+const EPOCH = Date.UTC(2026, 0, 1);
+const PREFIX = "TE";
+/* Один верный ответ закрывает тип: десять задач на всю работу
+   (trainer-twelve-tasks — в домашней по одной на тип). Меняешь число —
+   поправь и тексты наверху: «Как устроено» написано словами. Шкала обязана
+   совпадать с scale в check_homework.py. */
+const NEED_STREAK = 1;
+const MIN_TYPES = 8;       // ниже этого код не выдаётся
+const SCALE = [[10, 5], [9, 4], [8, 3]];
+const TOTAL = SCALE[0][0];
+
+/* Исправленное не в зачёт — вместо него новая задача того же типа, без
+   потолка по ошибкам (Света, 06.10.2026: потолок пробовали и сняли). */
+const LOWEST = SCALE[SCALE.length - 1];
+// ПОТОЛОК СНЯТ (Света, 06.10.2026, после урока: «слишком жёстко — в
+// тренажёре новый материал, сразу чисто не выходит»). Добирать можно до
+// «5». Функция оставлена ради разметки вокруг неё, но всегда отдаёт верхнюю
+// отметку: ветки «выше N не получить» не срабатывают, отрезки лесенки не
+// штрихуются, countedFor отдаёт число как есть.
+const ceilingFor = () => SCALE[0][1];
+
+/* Формат кода прежний. В поле «закрыто типов» уходит число, уже упёртое в
+   потолок: разборщик (check_homework.py) ставит отметку по нему и ничего не
+   знает о потолке, а отметка выходит та же, что на странице. */
+function countedFor(n, errs){
+  const higher = SCALE.find(s => s[1] === ceilingFor(errs) + 1);
+  return higher ? Math.min(n, higher[0] - 1) : n;
+}
+
+/* Лесенка вместо одной цифры (Света, 06.10.2026): до тройки — не «двойка»,
+   а заполняющийся отрезок «на 3». Отрезок выше потолка заштрихован. */
+function ladderHtml(n, cap){
+  let from = 0;
+  return SCALE.slice().reverse().map(([need, m]) => {
+    const size = need - from;
+    const got = Math.max(0, Math.min(size, n - from));
+    const capped = m > cap, reached = n >= need && !capped;
+    from = need;
+    const cells = Array.from({length: size},
+        (_, k) => '<i class="' + (k < got ? "f" : "") + '"></i>').join("");
+    return '<div class="seg' + (reached ? " got" : "") + (capped ? " capped" : "")
+         + '" style="flex:' + size + ' 1 0"><div class="cells">' + cells + '</div>'
+         + '<div class="lab">' + (capped ? "на " + m + " — потолок"
+                                         : (reached ? "✓ " : "") + "на " + m) + '</div></div>';
+  }).join("");
+}
+
+const bin = (v, w) => v.toString(2).padStart(w, "0");
+
+/* Семибитными частями строки: в нагрузке 33 бита, а побитовые операции в JS
+   32-битные — старший бит молча потерялся бы. */
+function checksum(bitstr){
+  let cs = 0x5B;
+  for (let i = 0; i < bitstr.length; i += 7)
+    cs ^= parseInt(bitstr.substr(i, 7).padEnd(7, "0"), 2);
+  return cs & 0x7F;
+}
+
+/* Код ученика вместо фамилии (юрист, 10.10.2026: фамилию страница не
+   спрашивает и никуда не отправляет). Код места вида 9А1-07 или 10У-03 —
+   класс, подгруппа, номер места — выдаёт учитель; кто есть кто, знает только он.
+   seatKey приводит набранное к одному виду: латинские двойники букв —
+   в кириллицу, пробелы прочь, любое тире — в «-», место двумя цифрами
+   («9a1 - 7» -> «9А1-07»); дефис обязателен. Не похоже на код — пустая строка, и кода
+   работы нет. Из ключа получаются 40 бит (FNV-1a и xorshift32), которыми
+   код работы перемешивается. Та же арифметика живёт в homework.py. */
+const SEAT_LAT = {A: "А", B: "В", E: "Е", K: "К", M: "М", H: "Н",
+                  O: "О", P: "Р", C: "С", T: "Т", Y: "У", X: "Х"};
+function seatKey(s){
+  const t = [...String(s || "").trim().toUpperCase()
+                .replace(/[ABEKMHOPCTYX]/g, c => SEAT_LAT[c])]
+    .filter(c => c.trim()).join("")
+    .replace(/[‐‑‒–—−]/g, "-");
+  const m = t.match(/^([0-9]{1,2})([А-ЯЁ]{0,2})([0-9]?)-([0-9]{1,2})$/);
+  return m ? m[1] + m[2] + m[3] + "-" + m[4].padStart(2, "0") : "";
+}
+
+/* Поле «Код ученика»: подсказка под ним, мягкое замечание на неверный
+   код и кнопка, которая не нажимается, пока код не похож на код. Код
+   нигде не запоминается: компьютер в классе общий. */
+function seatInit(inp, btn){
+  if (!inp || inp.dataset.seat) return;
+  inp.dataset.seat = "1";
+  inp.placeholder = "например 9А1-07";
+  inp.setAttribute("autocomplete", "off");
+  inp.setAttribute("spellcheck", "false");
+  const bad = document.createElement("div");
+  bad.className = "seat-bad";
+  bad.style.cssText = "color:#b3261e;font-size:14px;margin-top:4px;min-height:0";
+  const note = document.createElement("div");
+  note.className = "seat-note";
+  note.style.cssText = "color:#5c6070;font-size:13px;margin-top:4px;max-width:340px";
+  note.textContent = "Код выдаёт учитель. Фамилию здесь не вписывают — "
+                   + "в работу уходит только код.";
+  inp.insertAdjacentElement("afterend", note);
+  inp.insertAdjacentElement("afterend", bad);
+  const check = () => {
+    const raw = inp.value.trim();
+    const ok = !!seatKey(raw);
+    bad.textContent = raw && !ok
+      ? "Код вида 9А1-07 или 10У-03: класс, подгруппа, номер места" : "";
+    if (btn) btn.disabled = !ok;
+  };
+  inp.addEventListener("input", check);
+  check();
+}
+
+function seatStream(code){
+  const s = seatKey(code);
+  if (!s) return "0".repeat(40);
+  let h = 0x811C9DC5;
+  for (const ch of s){
+    h ^= ch.charCodeAt(0);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  const step = x => { x ^= x << 13; x ^= x >>> 17; x ^= x << 5; return x >>> 0; };
+  let x = h || 0x9E3779B9;
+  for (let i = 0; i < 4; i++) x = step(x);
+  const w1 = x = step(x), w2 = step(x);
+  return (bin(w1, 32) + bin(w2, 32)).slice(0, 40);
+}
+
+function makeCode(st, code){
+  const day = Math.max(0, Math.min(2047, Math.floor(
+      (Date.now() - EPOCH) / 86400000)));
+  const payload = bin(day, 11) + bin(Math.min(15, st.typesDone), 4) +
+                  bin(Math.min(15, st.cleanTypes), 4) +
+                  bin(Math.min(127, st.solved), 7) +
+                  bin(Math.min(127, st.wrong), 7);
+  const plain = payload + bin(checksum(payload), 7);
+  const key = seatStream(code);
+  let bitstr = "";
+  for (let i = 0; i < 40; i++) bitstr += plain[i] === key[i] ? "0" : "1";
+  let out = "";
+  for (let i = 0; i < 40; i += 5)
+    out += ALPHABET[parseInt(bitstr.substr(i, 5), 2)];
+  return PREFIX + "-" + out.slice(0, 4) + "-" + out.slice(4);
+}
+
+/* ---------------------------------------------------------- состояние */
+const N = F_TYPES.length;
+const rng = tRng((Date.now() ^ (Math.random() * 1e9)) >>> 0);
+const st = {
+  tasks: [], done: Array(N).fill(false), clean: Array(N).fill(true),
+  tries: Array(N).fill(1), answered: Array(N).fill(false),
+  solved: 0, wrong: 0
+};
+// закрыто на самом деле
+Object.defineProperty(st, "closed",
+  {get(){ return st.done.filter(Boolean).length; }});
+// закрыто «для отметки и кода» — упёрто в потолок по ошибкам
+Object.defineProperty(st, "typesDone",
+  {get(){ return countedFor(st.closed, st.wrong); }});
+Object.defineProperty(st, "cleanTypes",
+  {get(){ return st.done.filter((d, i) => d && st.clean[i]).length; }});
+
+function markFor(n){
+  for (const [need, m] of SCALE) if (n >= need) return m;
+  return null;
+}
+
+/* ==== FRZ: вставлено freeze.py, руками не править ==== */
+/* Код задачи — картинкой, прямо в браузере.
+   Вставляется freeze.py --sync между маркерами FRZ. Руками в html не править.
+
+   Тренажёр, ДЗ и проверочная рисуют код каждой задачи сами при открытии, и
+   заморозить его при выкладке нельзя — его ещё нет. Поэтому страница
+   рисует код на canvas и вставляет <img>: скопировать мышкой и запустить в
+   IDLE не выйдет — задача снова про чтение (Света, 14.09.2026).
+
+   Стиль тот же, что у блоков <pre>: Consolas 15px, тёмный фон, комментарий
+   после # серо-голубой. Рисуем в двойном размере — чётко на любом экране. */
+function frz(code) {
+  var S = 2, SIZE = 15, LEAD = 22, PX = 14, PY = 12;
+  var lines = String(code).replace(/\r/g, '').split('\n');
+  var c = document.createElement('canvas'), g = c.getContext('2d');
+  var font = (SIZE * S) + 'px Consolas, "Cascadia Mono", "Courier New", monospace';
+  g.font = font;
+  var w = 0;
+  for (var i = 0; i < lines.length; i++) w = Math.max(w, g.measureText(lines[i]).width);
+  c.width = Math.ceil(w) + 2 * PX * S;
+  c.height = lines.length * LEAD * S + 2 * PY * S;
+  g.fillStyle = '#1e2430';
+  g.fillRect(0, 0, c.width, c.height);
+  g.font = font;                       /* смена размера сбрасывает шрифт */
+  g.textBaseline = 'middle';
+  for (var k = 0; k < lines.length; k++) {
+    var y = PY * S + k * LEAD * S + LEAD * S / 2;
+    var line = lines[k], at = line.indexOf('#');
+    var head = at < 0 ? line : line.slice(0, at), tail = at < 0 ? '' : line.slice(at);
+    g.fillStyle = '#e7ecf5';
+    g.fillText(head, PX * S, y);
+    if (tail) {
+      g.fillStyle = '#8fa6c4';
+      g.fillText(tail, PX * S + g.measureText(head).width, y);
+    }
+  }
+  if (!document.getElementById('frz-css')) {
+    var st = document.createElement('style');
+    st.id = 'frz-css';
+    st.textContent = 'img.frz-b{display:block;max-width:100%;height:auto;'
+                   + 'border-radius:10px;margin:8px 0}';
+    document.head.appendChild(st);
+  }
+  return '<img class="frz-b" width="' + (c.width / S) + '" height="' + (c.height / S)
+       + '" alt="код задачи — читай с экрана" src="' + c.toDataURL('image/png') + '">';
+}
+/* ==== /FRZ ==== */
+
+/* Разбор задачи — рисунок и программа (Света, 21.09.2026: решаем только
+   кодом; 26.09.2026: разбор визуалом). [[PIC]] — цепочка расчёта из tasks.js
+   (fPic), при ошибке на ней же красным то, что, судя по ответу, сломано;
+   [[CODE]] — программа картинкой frz(): набирать руками (template-as-image). */
+function why(t, raw){
+  return t.explain.replace('[[PIC]]', fPic(t, raw))
+                  .replace('[[CODE]]', t.code ? frz(t.code) : '');
+}
+
+function esc(s){ return String(s).replace(/[&<>]/g, c =>
+  ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+
+function placeholder(t){
+  return "число";
+}
+
+function paint(){
+  const box = document.getElementById("types");
+  box.innerHTML = "";
+  F_TYPES.forEach(function(name, i){
+    const c = document.createElement("span");
+    c.className = "chip" + (st.done[i] ? " done" : "");
+    c.textContent = (i + 1) + " " + name + (st.done[i] ? " ✓" : "");
+    c.title = "перейти к задаче " + (i + 1);
+    c.addEventListener("click", function(){
+      document.getElementById("t" + i).scrollIntoView({behavior: "smooth", block: "start"});
+    });
+    box.appendChild(c);
+  });
+  const cap = ceilingFor(st.wrong);
+  document.getElementById("ladder").innerHTML = ladderHtml(st.closed, cap);
+  // «2» по ходу не показываем: до тройки — прочерк и лесенка
+  const m = st.closed >= MIN_TYPES ? markFor(st.typesDone) : null;
+  const sb = document.getElementById("scorebox");
+  sb.className = "score" + (m ? " m" + m : "");
+  document.getElementById("mark").textContent = m || "—";
+  document.getElementById("stats").textContent =
+    "закрыто типов: " + st.closed + " из " + N + " · ошибок: " + st.wrong +
+    (st.closed < MIN_TYPES
+      ? " · до тройки и кода работы осталось закрыть " + (MIN_TYPES - st.closed) : "") +
+    (cap < SCALE[0][1]
+      ? " · выше «" + cap + "» в этом заходе не получить"
+      : (st.wrong ? "" : " · без ошибок пока — пятёрка открыта"));
+}
+
+function renderTask(i){
+  const t = st.tasks[i];
+  const card = document.getElementById("t" + i);
+  card.className = "card";
+  card.innerHTML =
+    '<p class="tag">Задача ' + (i + 1) + ' — ' + F_TYPES[t.type] +
+      (st.tries[i] > 1 ? ' · попытка ' + st.tries[i] : '') + '</p>' +
+    '<div class="q">' + t.question + '</div>' +
+    '<div class="row">' +
+      '<input type="text" id="a' + i + '" autocomplete="off" spellcheck="false" ' +
+             'placeholder="' + placeholder(t) + '">' +
+      '<button class="primary" id="go' + i + '">Проверить</button>' +
+    '</div>' +
+    '<div class="verdict" id="v' + i + '"></div>';
+  document.getElementById("a" + i).addEventListener("keydown", function(e){
+    if (e.key === "Enter") judge(i);
+  });
+  document.getElementById("go" + i).addEventListener("click", function(){ judge(i); });
+}
+
+function judge(i){
+  if (st.answered[i]) return;
+  const raw = document.getElementById("a" + i).value;
+  if (!raw.trim()) return;
+  const t = st.tasks[i];
+  const res = fVerdict(t, raw);
+  st.answered[i] = true;
+  const card = document.getElementById("t" + i);
+  const go = document.getElementById("go" + i);
+  const v = document.getElementById("v" + i);
+  document.getElementById("a" + i).disabled = true;
+  if (res.ok){
+    st.solved++;
+    st.done[i] = true;
+    card.className = "card ok";
+    go.disabled = true;
+    v.className = "verdict ok";
+    v.innerHTML = "Верно. Тип закрыт." +
+      '<details class="why"><summary>как это решалось</summary>' + why(t) + '</details>';
+  } else {
+    st.wrong++;
+    st.clean[i] = false;
+    card.className = "card err";
+    v.className = "verdict err";
+    const cap = ceilingFor(st.wrong);
+    v.innerHTML = "Пока нет" + (res.why ? " — " + res.why : "") +
+      ". Верный ответ: <code>" + t.answer + "</code>." +
+      (cap < SCALE[0][1] ? " Ошибок: " + st.wrong + " — выше «" + cap +
+        "» в этом заходе не получить." : "") +
+      '<div class="why">' + why(t, raw) + '</div>';
+    go.textContent = "Новые числа";
+    go.onclick = function(){
+      st.tasks[i] = fMake(t.type, rng);
+      st.tries[i]++;
+      st.answered[i] = false;
+      renderTask(i);
+      document.getElementById("a" + i).focus();
+      paint();
+    };
+  }
+  paint();
+}
+
+/* ----------------------------------------------------- письмо с файлом
+   Код говорит, сколько типов закрыто, но не показывает, КАК решали.
+   Поэтому рядом с формой второй канал — обычное письмо со снимками
+   черновика. Почта, а не форма: Google Форма берёт файлы только у того,
+   кто вошёл в аккаунт, а письму аккаунт не нужен.
+------------------------------------------------------------------ */
+var MAIL = "krevskayas+hw@gmail.com";
+
+var MAILBOX =
+  '<div class="mailbox">' +
+    '<h3>Осталось прислать черновик</h3>' +
+    '<p>Программы, а не ответы: свой расчёт и то, что он напечатал, — ' +
+       'видно, как посчитаны биты, байты и граница. Двух-трёх ' +
+       'снимков по разным типам хватит; фотография листа тоже годится.</p>' +
+    '<div class="row"><button id="mailbtn">Отправить черновик</button></div>' +
+    '<p class="stats" id="mailnote">Кнопка откроет письмо на <b>' + MAIL +
+       '</b> с уже вписанной темой — останется приложить снимки и нажать ' +
+       '«Отправить». Входить никуда не нужно, письмо годится и с телефона. Фамилию не пиши ни в письме, ни на самой работе, а обложку тетради с именем в кадр не бери: работу опознают по коду ученика.</p>' +
+  '</div>';
+
+function wireMail(){
+  var btn = document.getElementById("mailbtn");
+  if (!btn) return;
+  var note = document.getElementById("mailnote");
+  btn.addEventListener("click", function(){
+    var seatEl = document.getElementById("seat");
+    var f = seatEl ? seatKey(seatEl.value) : "";
+    var code = CURRENT_CODE;
+    if (!f){
+      note.textContent = "Сначала впиши код ученика — он уйдёт в тему письма, "
+                       + "иначе непонятно, чья это работа.";
+      if (seatEl) seatEl.focus();
+      return;
+    }
+    var subject = "ДЗ " + f + " " + code;
+    var body = ["Прикрепи снимки черновика — писать здесь ничего не нужно.", "Фамилию не пиши ни здесь, ни на снимках.",
+                "", "Код ученика: " + seatKey(f), "Код работы: " + code];
+    window.location.href = "mailto:" + MAIL
+      + "?subject=" + encodeURIComponent(subject)
+      + "&body=" + encodeURIComponent(body.join("\r\n"));
+    note.textContent = "Письмо открылось в почтовой программе: приложи снимки "
+      + "и нажми «Отправить». Ничего не открылось — напиши сам(а) на "
+      + MAIL + ", тема письма: " + subject;
+  });
+}
+
+/* Код работы привязан к коду ученика (с 10.10.2026 вместо фамилии —
+   решение юриста): пока код ученика не вписан или не похож на код, кода
+   работы нет, а вписанный подмешивается в код. У двух учеников с
+   одинаковым результатом коды разные, а чужой код к своему коду ученика
+   не подходит. Код ученика страница не запоминает: компьютер общий. */
+let CURRENT_CODE = "";
+// Ни код ученика, ни класс страница не помнит: компьютер в классе общий,
+// а класс и так внутри кода ученика. REMEMBERED — пустая строка, след прежних версий.
+let REMEMBERED = "";
+function wireCode(){
+  const seat = document.getElementById("seat");
+  const box = document.getElementById("code");
+  const hint = document.getElementById("seathint");
+  const update = () => {
+    const f = seat ? seat.value.trim() : "";
+    CURRENT_CODE = box && seatKey(f) ? makeCode(st, f) : "";
+    if (box){
+      box.textContent = CURRENT_CODE || "впиши код ученика — появится код работы";
+      box.classList.toggle("wait", !CURRENT_CODE);
+    }
+  };
+  seatInit(seat, document.getElementById("send"));
+  if (seat) seat.addEventListener("input", update);
+  update();
+}
+
+// Кнопка «Сдать» берёт код, посчитанный по вписанному коду ученика.
+function wireSendB(){
+  const send = document.getElementById("send");
+  if (!send) return;
+  send.addEventListener("click", function(){
+    const seatEl = document.getElementById("seat");
+    const note = document.getElementById("sendnote");
+    const f = seatEl.value.trim();
+    if (!CURRENT_CODE){
+      note.textContent = "Впиши код ученика — без него кода работы нет и непонятно, "
+                       + "чья это работа.";
+      seatEl.focus();
+      return;
+    }
+    try {
+      localStorage.removeItem("hw-fam");
+    } catch (e) {}
+    const url = FORM.replace("УЧЕНИК", encodeURIComponent(seatKey(f)))
+                    .replace("КЛАСС", "")
+                    .replace("КОД", encodeURIComponent(CURRENT_CODE));
+    window.open(url, "_blank", "noopener");
+    note.innerHTML = "Форма открылась в новой вкладке. Работа сдана, только "
+      + "когда в форме нажата «Отправить». Вкладка не открылась — "
+      + '<a href="' + url + '" target="_blank" rel="noopener">открой форму '
+      + "по этой ссылке</a>.";
+  });
+}
+
+/* Итог рисуется внизу, задачи остаются на экране: закрыл ещё тип — нажми
+   «Закончить» снова, код пересчитается. Код ученика не теряем. */
+function finish(){
+  const m = markFor(st.typesDone);
+  const cap = ceilingFor(st.wrong);
+  const ready = st.closed >= MIN_TYPES;
+  const seatOld = document.getElementById("seat");
+  let seat = seatOld ? seatOld.value : "";
+  if (!seatOld) try {
+    localStorage.removeItem("hw-fam");  // фамилию не храним: компьютер общий
+    seat = REMEMBERED;
+    localStorage.removeItem("hw-kls");
+  } catch (e) {}
+  const box = document.getElementById("result");
+  box.innerHTML =
+    '<div class="card">' +
+      '<h2>Итог</h2>' +
+      '<p>Закрыто типов: <b>' + st.closed + '</b> из ' + N +
+        '. Решено задач: ' + st.solved + ', ошибок: ' + st.wrong + '.' +
+        (ready ? ' Наработано на <b>' + m + '</b>.' : '') +
+        (ready && cap < SCALE[0][1] ? ' Выше «' + cap + '» с таким числом ошибок не выйдет.' : '') +
+      '</p>' +
+      (ready
+        ? '<p>Твой код работы:</p><div class="code" id="code"></div>' +
+          '<div class="note">Это код твоей работы. Он собран из кода ученика ' +
+            'и того, сколько и как ты решал: у соседа с тем же результатом ' +
+            'код другой. Поменяешь код ученика — поменяется и код работы. ' +
+            'Впиши код ученика — кнопка откроет форму с уже ' +
+            'подставленным кодом.' +
+            (st.closed < N ? ' Закроешь ещё тип — нажми «Закончить» снова, ' +
+              'код обновится.' : '') + '</div>' +
+          '<div class="fields">' +
+            '<div><label for="seat">Код ученика</label>' +
+              '<input type="text" id="seat" autocomplete="off"></div>' +
+          '</div>' +
+          '<p class="stats" id="seathint"></p>' +
+          '<div class="row"><button id="send" class="primary">Сдать работу</button></div>' +
+          '<p class="stats" id="sendnote"></p>' +
+          MAILBOX
+        : '<div class="note">Закрыто меньше ' + MIN_TYPES +
+          ' типов — кода работы нет. Закрой ещё хотя бы ' +
+          (MIN_TYPES - st.closed) + ' выше, и нажми «Закончить» снова.</div>') +
+    '</div>';
+  const seatEl = document.getElementById("seat");
+  if (seatEl){ seatEl.value = seat; }
+  wireCode();
+  wireSendB();
+  wireMail();
+  box.scrollIntoView({behavior: "smooth", block: "start"});
+  paint();
+}
+
+/* Старт: по задаче каждого типа, все сразу. */
+(function start(){
+  const area = document.getElementById("area");
+  for (let i = 0; i < N; i++){
+    st.tasks.push(fMake(i, rng));
+    const d = document.createElement("div");
+    d.className = "card";
+    d.id = "t" + i;
+    area.appendChild(d);
+    renderTask(i);
+  }
+  document.getElementById("total").addEventListener("click", finish);
+  paint();
+})();
+</script>
+<p class="ai-mark">Материалы подготовлены с использованием технологий искусственного интеллекта.</p>
+<script>/* фамилию не храним: компьютер общий — стираем запомненное прежними версиями */ try { localStorage.removeItem("hw-fam"); localStorage.removeItem("hw-kls"); } catch (e) {}</script>
+</body>
+</html>
