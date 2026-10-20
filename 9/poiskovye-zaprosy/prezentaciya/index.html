@@ -1,0 +1,1292 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Запросы к поисковому серверу — презентация</title>
+<meta name="description" content="Презентация к заданию 8 ОГЭ по информатике, 9 класс: запросы к поисковому серверу, круги Эйлера, десять форм задачи — общее слово, пара как одно слово, строка с нулём, «&amp;» раньше «|».">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E8%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#16181d; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);overflow:hidden;
+     font:24px/1.45 "Segoe UI",system-ui,sans-serif}
+.mono{font-family:Consolas,"Courier New",monospace}
+
+.deck{height:100vh;display:flex;flex-direction:column}
+.stage{flex:1 1 auto;overflow-y:auto;padding:34px 56px 12px}
+.slide{display:none;max-width:1100px;margin:0 auto}
+.slide.on{display:block}
+
+h1{font-size:50px;line-height:1.1;margin:0 0 18px;text-wrap:balance}
+h2{font-size:36px;line-height:1.15;margin:0 0 20px;text-wrap:balance}
+.eyebrow{font-size:16px;letter-spacing:.1em;text-transform:uppercase;
+         color:var(--accent);font-weight:700;margin:0 0 8px}
+.lead{font-size:26px;color:var(--muted);margin:0 0 24px}
+.lead b{color:var(--ink)}
+p.note{margin-top:22px;color:var(--muted);font-size:21px}
+
+.bar{flex:0 0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+     border-top:1px solid var(--line);background:var(--card);padding:12px 24px}
+.bar .spacer{flex:1 1 auto}
+.count{color:var(--muted);font-size:17px;font-variant-numeric:tabular-nums}
+.keys{color:var(--muted);font-size:15px}
+.keys kbd{font:600 13px/1 Consolas,monospace;border:1px solid var(--line);
+     border-bottom-width:2px;border-radius:5px;padding:2px 6px;
+     background:#fff;color:var(--ink)}
+button{font:600 18px/1 inherit;padding:12px 20px;border-radius:10px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);
+       cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.35;cursor:default;border-color:var(--line);
+                color:var(--muted);background:#fff}
+button:focus-visible{outline:3px solid #a9c6e8;outline-offset:2px}
+
+/* ---- блоки разбора ---- */
+.task{border:3px solid var(--accent);border-radius:16px;padding:18px 24px;
+      background:var(--card);font-size:25px;margin:0 0 20px}
+.task p{margin:8px 0}
+.task .ask{margin-top:12px;font-weight:600}
+.steps{display:flex;flex-direction:column;gap:14px}
+.step{border:1px solid var(--line);border-radius:12px;padding:16px 22px;
+      background:#fff;font-size:23px}
+.step.hint{background:var(--hi-bg);border-color:var(--hi-line);color:var(--hi)}
+.step.answer{background:var(--ok-bg);border-color:var(--ok-line);
+             color:var(--ok);font-size:29px;font-weight:700}
+.step .cap{display:block;font-size:15px;letter-spacing:.08em;
+           text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.step.hint .cap{color:var(--hi)}
+.step.answer .cap{color:var(--ok)}
+.step b{color:var(--ink)}
+
+/* ---- само выражение ---- */
+.expr{font-size:32px;text-align:center;margin:18px 0;line-height:1.45}
+.expr.small{font-size:26px}
+.task .expr{margin:12px 0}
+
+/* ---- числовая прямая ---- */
+.axis{margin:10px 0 6px}
+.axis svg{display:block;width:100%;height:auto}
+.axis .cap{font-size:19px;color:var(--muted);margin:2px 0 10px}
+
+/* ---- разбор по значениям ---- */
+table.grid{border-collapse:collapse;font-size:22px;width:100%}
+table.grid td,table.grid th{border:1px solid var(--line);padding:10px 16px;
+     text-align:left;vertical-align:top}
+table.grid th{background:var(--card);color:var(--muted);font-size:17px;
+     letter-spacing:.05em;text-transform:uppercase;font-weight:600}
+table.grid td.k{font-weight:700;color:var(--accent);white-space:nowrap}
+table.grid td.y{color:var(--ok);font-weight:700}
+table.grid td.n{color:var(--err);font-weight:700}
+
+ol.vsteps{list-style:none;counter-reset:v;margin:0;padding:0;
+          display:flex;flex-direction:column;gap:12px}
+ol.vsteps li{counter-increment:v;display:flex;gap:18px;align-items:flex-start;
+             border:1px solid var(--line);border-left:5px solid var(--accent);
+             border-radius:12px;padding:14px 22px;background:#fff}
+ol.vsteps li::before{content:counter(v);flex:0 0 44px;height:44px;
+     border-radius:50%;background:var(--accent);color:#fff;
+     font:700 24px/44px Consolas,monospace;text-align:center}
+ol.vsteps li b{color:var(--accent)}
+ol.vsteps li .txt{font-size:23px;padding-top:6px}
+ol.vsteps li .txt small{display:block;font-size:19px;color:var(--muted);
+     margin-top:4px}
+
+ul.cards{list-style:none;padding:0;margin:0;display:grid;
+         grid-template-columns:repeat(2,1fr);gap:14px 24px}
+ul.cards li{border:1px solid var(--line);border-radius:12px;
+            padding:14px 20px;font-size:23px;background:#fff}
+ul.cards li b{color:var(--accent)}
+ul.cards li small{display:block;font-size:19px;color:var(--muted);
+                  margin-top:4px}
+ul.plain{margin:0;padding-left:26px;font-size:24px}
+ul.plain li{margin:8px 0}
+
+.two{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.box{border:1px solid var(--line);border-radius:14px;padding:18px 22px;
+     background:#fff}
+.box.warm{background:var(--hi-bg);border-color:var(--hi-line)}
+.box.cool{background:var(--ok-bg);border-color:var(--ok-line)}
+.box h3{margin:0 0 8px;font-size:26px;color:var(--accent)}
+.box.warm h3{color:var(--hi)}
+.box.cool h3{color:var(--ok)}
+.box p{margin:6px 0;font-size:21px}
+.box ul{margin:6px 0 0;padding-left:22px;font-size:21px}
+
+@media (max-width:820px){
+  body{font-size:18px}
+  .stage{padding:20px 18px 8px}
+  h1{font-size:32px} h2{font-size:25px} .lead{font-size:20px}
+  .task{font-size:20px} .step{font-size:19px}
+  .expr{font-size:23px} .expr.small{font-size:20px}
+  ul.cards,.two{grid-template-columns:1fr}
+  ol.vsteps li .txt{font-size:19px}
+}
+
+/* ---- задание 8: запросы и круги ---- */
+.side{display:flex;gap:30px;align-items:flex-start;margin:12px 0}
+.side p{margin:0 0 10px;font-size:22px}
+.side p.q{font-size:22px}
+.side .grow{flex:1 1 0;min-width:0}
+.side p.legend,.grow p.legend{font-size:18px;color:var(--muted);margin:8px 0 0}
+.qtab{flex:0 0 auto;border-collapse:collapse;background:var(--card);font-size:20px}
+.qtab th,.qtab td{border:1.5px solid var(--ink);padding:4px 14px;text-align:center}
+.qtab th{font-size:17px;line-height:1.2}
+.trio{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin:12px 0}
+.trio .box{text-align:center}
+.trio .box h3{margin:6px 0 2px}
+.trio .box p{margin:0;font-size:19px}
+.venn{display:flex;justify-content:center}
+/* высота ограничена экраном: на 768 строках слайд обязан влезать без
+   прокрутки даже при шрифте 110% */
+.venn svg{max-height:22vh}
+.veq svg{max-height:13vh}
+.veq{margin:8px 0}
+.task .cmds{font-weight:700;margin:6px 0 6px 28px;line-height:1.5;
+            font-family:Consolas,monospace}
+.task .qtab{font-size:17px;margin:6px auto}
+.task .qline{text-align:center;font-style:italic;font-size:1.05em;margin:4px 0}
+/* Слайд-пример: условие слева и на месте, шаги разбора справа. */
+.exwrap{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);
+        gap:28px;align-items:start}
+.exwrap .task{position:sticky;top:0;font-size:18px;padding:12px 18px}
+.exwrap .task p{margin:5px 0}
+.exwrap .step{padding:10px 18px;font-size:21px}
+.exwrap .steps{gap:10px}
+@media (max-width:1000px){ .exwrap{grid-template-columns:1fr}
+                           .exwrap .task{position:static} }
+.step.xs{padding:6px 14px}
+.step.xs .cap{margin-bottom:2px}
+.xcheck{display:flex;gap:10px;margin-top:12px}
+.xcheck .xin{font:700 26px/1 Consolas,monospace;width:210px;padding:8px 12px;
+             border:2px solid var(--line);border-radius:10px;letter-spacing:2px}
+.xcheck .xin:focus{outline:none;border-color:var(--accent)}
+.steps .xres:empty{display:none}
+.steps .xres{border:3px dashed var(--accent);border-radius:12px;padding:6px 16px 10px;background:#fff}
+.xres .xverd{font:800 24px/1.2 "Segoe UI",system-ui,sans-serif;margin:4px 0 2px}
+.xres .xverd.ok{color:var(--ok)}.xres .xverd.bad{color:var(--err)}
+.xres .xhint{font-size:17px;color:var(--muted)}
+
+/* ---- размер шрифта на проекторе: A− / A+ ---- */
+.zoom{display:inline-flex;align-items:center;gap:3px;margin-left:8px}
+.zoom button{padding:8px 10px;font-size:15px;min-width:36px;line-height:1}
+.zoom .z{color:var(--muted);font-size:15px;min-width:46px;text-align:center;
+         font-variant-numeric:tabular-nums}
+
+/* ---- слайд-пример в две колонки ---- */
+/* Условие слева и на месте, шаги разбора справа. Иначе на пятом шаге
+   условие уже уехало за край, а без него шаг не прочитать. Правится в
+   lessons/9/two_columns.py, не здесь. */
+.exwrap{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);
+        gap:28px;align-items:start}
+.exwrap .task{position:sticky;top:0;font-size:19px;line-height:1.4;
+              padding:10px 18px;margin:0;min-width:0}
+.exwrap .task p{margin:5px 0}
+.exwrap .task .ask{margin-top:8px}
+/* колонка узкая: таблицы и длинные цепочки обязаны в неё влезать */
+.exwrap .task table{font-size:.85em;max-width:100%}
+.exwrap .task table.codetable{font-size:15px}
+.exwrap .task table.codetable td{padding:4px 6px;min-width:0}
+.exwrap .task table.codetable td.c{font-size:14px;letter-spacing:0}
+.exwrap .task table.roads{font-size:18px;margin:6px 0}
+.exwrap .task table.roads td,.exwrap .task table.roads th{width:42px;height:29px}
+.exwrap .task .chain,.exwrap .task .chains,.exwrap .task .expr{
+        overflow-wrap:anywhere;font-size:.95em}
+/* условие не помещается в экран целиком — закрепление снимает
+   fitExamples(): такое условие прокручивается вместе с шагами */
+.exwrap .task.tall{position:static}
+.exwrap .step{padding:10px 18px;font-size:21px}
+.exwrap .steps{gap:10px}
+@media (max-width:1000px){ .exwrap{grid-template-columns:1fr}
+                           .exwrap .task{position:static} }
+/* ---- /слайд-пример в две колонки ---- */
+</style>
+</head>
+<body>
+<div class="deck">
+<div class="stage" id="stage">
+
+  <!-- 1 ------------------------------------------------------------- -->
+  <section class="slide on">
+    <p class="eyebrow">ОГЭ, задание 8</p>
+    <h1>Запросы к поисковому серверу</h1>
+    <p class="lead">Восьмое задание экзамена. В таблице — запросы со знаками
+       <span class="mono">&amp;</span> и <span class="mono">|</span> и сколько страниц по ним нашлось. Надо найти
+       ещё один запрос.</p>
+    <div class="side">
+      <table class="qtab"><tr><th>Запрос</th><th>Найдено страниц<br>(в тысячах)</th></tr><tr><td><i>Кот &amp; Пёс</i></td><td>120</td></tr><tr><td><i>Кот | Пёс</i></td><td>900</td></tr><tr><td><i>Кот</i></td><td>500</td></tr></table>
+      <div class="grow"><p class="q">Какое количество страниц (в тысячах) будет найдено по запросу <i>Пёс</i>?</p>
+        <p class="legend">Это задача про <b>круги</b>: слово — круг, а
+           <span class="mono">&amp;</span> и <span class="mono">|</span> говорят, какую часть кругов взять.</p></div>
+    </div>
+    <p class="note">Задание стоит 1 балл. Решается сложением и вычитанием
+       строк таблицы — если знать, какие строки прибавить, а какие вычесть.
+       Это и подсказывают круги.</p>
+  </section>
+
+  <!-- 2 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">язык запросов</p>
+    <h2>Слово — круг, <span class="mono">&amp;</span> — общая часть, <span class="mono">|</span> — всё вместе</h2>
+    <div class="trio">
+      <div class="box cool"><div class="venn" data-venn='{&quot;words&quot;: [&quot;Кот&quot;, &quot;Пёс&quot;], &quot;layout&quot;: &quot;two&quot;, &quot;shade&quot;: &quot;Кот&quot;, &quot;labels&quot;: true, &quot;w&quot;: 270}'></div>
+        <h3><span class="mono">Кот</span></h3><p>все страницы со словом «Кот»</p></div>
+      <div class="box cool"><div class="venn" data-venn='{&quot;words&quot;: [&quot;Кот&quot;, &quot;Пёс&quot;], &quot;layout&quot;: &quot;two&quot;, &quot;shade&quot;: &quot;Кот &amp; Пёс&quot;, &quot;labels&quot;: true, &quot;w&quot;: 270}'></div>
+        <h3><span class="mono">Кот &amp; Пёс</span></h3><p>где есть <b>оба</b> слова — «И»</p></div>
+      <div class="box cool"><div class="venn" data-venn='{&quot;words&quot;: [&quot;Кот&quot;, &quot;Пёс&quot;], &quot;layout&quot;: &quot;two&quot;, &quot;shade&quot;: &quot;Кот | Пёс&quot;, &quot;labels&quot;: true, &quot;w&quot;: 270}'></div>
+        <h3><span class="mono">Кот | Пёс</span></h3><p>где есть <b>хотя бы одно</b> — «ИЛИ»</p></div>
+    </div>
+    <p class="note">«И» — строже: найдёт меньше всех. «ИЛИ» — щедрее: найдёт
+       больше всех. Это проверка на глаз: <span class="mono">&amp;</span> не может дать больше,
+       чем любое из слов, а <span class="mono">|</span> — меньше.</p>
+  </section>
+
+  <!-- 3 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">главная формула</p>
+    <h2>Два круга: общую часть вычитаем один раз</h2>
+    <div class="veq" data-eq='{&quot;words&quot;: [&quot;Кот&quot;, &quot;Пёс&quot;], &quot;layout&quot;: &quot;two&quot;, &quot;want&quot;: &quot;Кот | Пёс&quot;, &quot;terms&quot;: [[&quot;+&quot;, &quot;Кот&quot;, null], [&quot;+&quot;, &quot;Пёс&quot;, null], [&quot;-&quot;, &quot;Кот &amp; Пёс&quot;, null]], &quot;wantVal&quot;: null}'></div>
+    <div class="two">
+      <div class="box cool">
+        <h3>Почему минус</h3>
+        <p>Сложили два круга — их общая часть попала в сумму <b>дважды</b>,
+           а в <span class="mono">Кот | Пёс</span> она один раз. Лишний раз вычитаем.</p>
+      </div>
+      <div class="box warm">
+        <h3>Четыре числа — одно неизвестно</h3>
+        <p><span class="mono">A | B = A + B − A &amp; B</span>: известны три — четвёртое находится.
+           Это половина всех задач на экзамене.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">два слова</p>
+    <h2>Найти слово или «&amp;» — та же формула</h2>
+    <div class="side">
+      <table class="qtab"><tr><th>Запрос</th><th>Найдено страниц<br>(в тысячах)</th></tr><tr><td><i>Кот &amp; Пёс</i></td><td>120</td></tr><tr><td><i>Кот | Пёс</i></td><td>900</td></tr><tr><td><i>Кот</i></td><td>500</td></tr></table>
+      <div class="grow"><div class="veq" data-eq='{&quot;words&quot;: [&quot;Кот&quot;, &quot;Пёс&quot;], &quot;layout&quot;: &quot;two&quot;, &quot;want&quot;: &quot;Пёс&quot;, &quot;terms&quot;: [[&quot;+&quot;, &quot;Кот &amp; Пёс&quot;, 120], [&quot;+&quot;, &quot;Кот | Пёс&quot;, 900], [&quot;-&quot;, &quot;Кот&quot;, 500]], &quot;wantVal&quot;: &quot;?&quot;}'></div>
+        <p class="legend">120 + 900 − 500 = 520. Ищем весь круг «Пёс»: объединение
+           без круга «Кот», и обратно — общую часть.</p></div>
+    </div>
+    <div class="side">
+      <table class="qtab"><tr><th>Запрос</th><th>Найдено страниц<br>(в тысячах)</th></tr><tr><td><i>Кот</i></td><td>500</td></tr><tr><td><i>Пёс</i></td><td>520</td></tr><tr><td><i>Кот | Пёс</i></td><td>900</td></tr></table>
+      <div class="grow"><div class="veq" data-eq='{&quot;words&quot;: [&quot;Кот&quot;, &quot;Пёс&quot;], &quot;layout&quot;: &quot;two&quot;, &quot;want&quot;: &quot;Кот &amp; Пёс&quot;, &quot;terms&quot;: [[&quot;+&quot;, &quot;Кот&quot;, 500], [&quot;+&quot;, &quot;Пёс&quot;, 520], [&quot;-&quot;, &quot;Кот | Пёс&quot;, 900]], &quot;wantVal&quot;: &quot;?&quot;}'></div>
+        <p class="legend">500 + 520 − 900 = 120. Два круга вместе дают общую часть
+           дважды — лишнее против объединения и есть <span class="mono">&amp;</span>.</p></div>
+    </div>
+  </section>
+
+  <!-- 5 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">три слова, одно общее</p>
+    <h2>Слово во всех строках — та же формула внутри круга</h2>
+    <div class="side">
+      <table class="qtab"><tr><th>Запрос</th><th>Найдено страниц<br>(в тысячах)</th></tr><tr><td><i>Чай &amp; (Сахар | Лимон)</i></td><td>700</td></tr><tr><td><i>Чай &amp; Сахар</i></td><td>450</td></tr><tr><td><i>Чай &amp; Лимон</i></td><td>380</td></tr></table>
+      <div class="grow"><div class="veq" data-eq='{&quot;words&quot;: [&quot;Чай&quot;, &quot;Сахар&quot;, &quot;Лимон&quot;], &quot;layout&quot;: &quot;tri&quot;, &quot;want&quot;: &quot;Чай &amp; Сахар &amp; Лимон&quot;, &quot;terms&quot;: [[&quot;+&quot;, &quot;Чай &amp; Сахар&quot;, 450], [&quot;+&quot;, &quot;Чай &amp; Лимон&quot;, 380], [&quot;-&quot;, &quot;Чай &amp; (Сахар | Лимон)&quot;, 700]], &quot;wantVal&quot;: &quot;?&quot;}'></div>
+        <p class="legend">Всё внутри круга «Чай». <span class="mono">Чай &amp; (Сахар | Лимон)</span>
+           — две части; их общий кусок, все три слова, посчитан дважды.
+           450 + 380 − 700 = 130.</p></div>
+    </div>
+    <p class="note">Спросить могут любое из четырёх: пару, все три или
+       запрос со скобкой. Строки те же — меняется только, что прибавить, а
+       что вычесть. Если вместо <span class="mono">Чай &amp; Лимон</span> в таблице дана тройка,
+       пару находят так: 700 + 130 − 450 = 380.</p>
+  </section>
+
+  <!-- 6 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">пара как одно слово</p>
+    <h2><span class="mono">(A &amp; B) | C</span>: пару считаем одним словом</h2>
+    <div class="side">
+      <table class="qtab"><tr><th>Запрос</th><th>Найдено страниц<br>(в тысячах)</th></tr><tr><td><i>Шашки &amp; Дамка &amp; Доска</i></td><td>90</td></tr><tr><td><i>(Шашки &amp; Дамка) | Доска</i></td><td>1300</td></tr><tr><td><i>Доска</i></td><td>1150</td></tr></table>
+      <div class="grow"><div class="veq" data-eq='{&quot;words&quot;: [&quot;Шашки&quot;, &quot;Дамка&quot;, &quot;Доска&quot;], &quot;layout&quot;: &quot;tri&quot;, &quot;want&quot;: &quot;Шашки &amp; Дамка&quot;, &quot;terms&quot;: [[&quot;+&quot;, &quot;Шашки &amp; Дамка &amp; Доска&quot;, 90], [&quot;+&quot;, &quot;(Шашки &amp; Дамка) | Доска&quot;, 1300], [&quot;-&quot;, &quot;Доска&quot;, 1150]], &quot;wantVal&quot;: &quot;?&quot;}'></div>
+        <p class="legend">«Шашки &amp; Дамка» везде стоит вместе — это одно
+           слово. Тогда задача про два слова, а их общая часть — все три:
+           90 + 1300 − 1150 = 240.</p></div>
+    </div>
+    <p class="note">Скобки в <span class="mono">(Шашки &amp; Дамка) | Доска</span> можно и не
+       писать: <span class="mono">&amp;</span> всё равно выполняется раньше <span class="mono">|</span>.</p>
+  </section>
+
+  <!-- 7 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">строка с нулём</p>
+    <h2>Ноль в таблице — круги не пересекаются</h2>
+    <div class="side">
+      <table class="qtab"><tr><th>Запрос</th><th>Найдено страниц<br>(в тысячах)</th></tr><tr><td><i>Лес</i></td><td>600</td></tr><tr><td><i>Гриб</i></td><td>450</td></tr><tr><td><i>Ягода</i></td><td>300</td></tr><tr><td><i>Лес | Гриб | Ягода</i></td><td>1100</td></tr><tr><td><i>Лес &amp; Гриб</i></td><td>150</td></tr><tr><td><i>Лес &amp; Ягода</i></td><td>0</td></tr></table>
+      <div class="grow"><div class="venn" data-venn='{&quot;words&quot;: [&quot;Лес&quot;, &quot;Гриб&quot;, &quot;Ягода&quot;], &quot;layout&quot;: &quot;chain&quot;, &quot;shade&quot;: &quot;Гриб &amp; Ягода&quot;, &quot;labels&quot;: true, &quot;w&quot;: 330}'></div>
+        <p class="legend"><span class="mono">Лес &amp; Ягода</span> — 0: эти круги порознь, и
+           общей части всех трёх тоже нет. Рисуем <b>цепочкой</b>.</p></div>
+    </div>
+    <div class="veq" data-eq='{&quot;words&quot;: [&quot;Лес&quot;, &quot;Гриб&quot;, &quot;Ягода&quot;], &quot;layout&quot;: &quot;chain&quot;, &quot;want&quot;: &quot;Гриб &amp; Ягода&quot;, &quot;terms&quot;: [[&quot;+&quot;, &quot;Лес&quot;, 600], [&quot;+&quot;, &quot;Гриб&quot;, 450], [&quot;+&quot;, &quot;Ягода&quot;, 300], [&quot;-&quot;, &quot;Лес | Гриб | Ягода&quot;, 1100], [&quot;-&quot;, &quot;Лес &amp; Гриб&quot;, 150]], &quot;wantVal&quot;: &quot;?&quot;}'></div>
+    <p class="note">600 + 450 + 300 − 1100 − 150 = 100. Без строки с нулём такая задача не
+       решается — её и дают, чтобы круги можно было нарисовать.</p>
+  </section>
+
+  <!-- 8 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">порядок действий</p>
+    <h2><span class="mono">&amp;</span> выполняется раньше <span class="mono">|</span></h2>
+    <div class="side">
+      <table class="qtab"><tr><th>Запрос</th><th>Найдено страниц<br>(в тысячах)</th></tr><tr><td><i>Река | Мост</i></td><td>900</td></tr><tr><td><i>Река | Мост &amp; Берег</i></td><td>640</td></tr><tr><td><i>Река | Мост | Берег</i></td><td>1200</td></tr></table>
+      <div class="grow"><div class="venn" data-venn='{&quot;words&quot;: [&quot;Река&quot;, &quot;Мост&quot;, &quot;Берег&quot;], &quot;layout&quot;: &quot;tri&quot;, &quot;shade&quot;: &quot;Река | Мост &amp; Берег&quot;, &quot;labels&quot;: true, &quot;w&quot;: 300}'></div>
+        <p class="legend"><span class="mono">Река | Мост &amp; Берег</span> — это
+           <span class="mono">Река | (Мост &amp; Берег)</span>, как <span class="mono">2 + 3 · 4</span> — это
+           <span class="mono">2 + (3 · 4)</span>.</p></div>
+    </div>
+    <div class="veq" data-eq='{&quot;words&quot;: [&quot;Река&quot;, &quot;Мост&quot;, &quot;Берег&quot;], &quot;layout&quot;: &quot;tri&quot;, &quot;want&quot;: &quot;Река | Берег&quot;, &quot;terms&quot;: [[&quot;+&quot;, &quot;Река | Мост &amp; Берег&quot;, 640], [&quot;+&quot;, &quot;Река | Мост | Берег&quot;, 1200], [&quot;-&quot;, &quot;Река | Мост&quot;, 900]], &quot;wantVal&quot;: &quot;?&quot;}'></div>
+    <p class="note">640 + 1200 − 900 = 940. Прочитать «слева направо» — значит
+       решать другую задачу, и числа не сойдутся.</p>
+  </section>
+
+  <!-- 9 ------------------------------------------------------------- -->
+  <section class="slide">
+    <p class="eyebrow">порядок работы</p>
+    <h2>Четыре шага</h2>
+    <ol class="vsteps">
+      <li><div class="txt"><b>Нарисовать круги.</b> <small>Слово — круг. Есть
+          строка с нулём — эти два круга порознь.</small></div></li>
+      <li><div class="txt"><b>Закрасить искомый запрос.</b> <small><span class="mono">&amp;</span> —
+          общая часть, <span class="mono">|</span> — всё вместе, <span class="mono">&amp;</span> раньше
+          <span class="mono">|</span>.</small></div></li>
+      <li><div class="txt"><b>Подобрать строки со знаками.</b> <small>Каждая
+          часть кругов — в сумме столько раз, сколько в искомом.</small></div></li>
+      <li><div class="txt"><b>Посчитать и проверить на глаз.</b> <small><span class="mono">&amp;</span>
+          не больше слова, <span class="mono">|</span> не меньше. Ответ — число, в тех же
+          единицах.</small></div></li>
+    </ol>
+  </section>
+
+  <!-- 10 ------------------------------------------------------------ -->
+  <section class="slide">
+    <p class="eyebrow">где теряют балл</p>
+    <h2>Пять ошибок, и все ловятся кругами</h2>
+    <div class="two">
+      <div class="box warm">
+        <h3>Перепутан знак</h3>
+        <p>В первой задаче вычли <span class="mono">Кот &amp; Пёс</span> вместо прибавить — вышло
+           280 вместо 520. Посмотри на круги: сколько раз часть
+           уже посчитана?</p>
+      </div>
+      <div class="box warm">
+        <h3>Слева направо</h3>
+        <p><span class="mono">A | B &amp; C</span> прочитали как <span class="mono">(A | B) &amp; C</span>. <span class="mono">&amp;</span> —
+           раньше.</p>
+      </div>
+      <div class="box warm">
+        <h3>Дописали нули</h3>
+        <p>Таблица «в тысячах» — и ответ в тысячах: <span class="mono">520</span>, а
+           не <span class="mono">520000</span>.</p>
+      </div>
+      <div class="box warm">
+        <h3>Записали лишнее</h3>
+        <p>«130 тыс.», «1 100» с пробелом. Ответ сверяет машина:
+           только цифры подряд.</p>
+      </div>
+    </div>
+    <p class="note">И пятая: взяли число прямо из таблицы. Искомого запроса
+       в таблице нет никогда — его всегда получают из строк.</p>
+  </section>
+
+  <!-- 11-13: примеры собирает генератор ------------------------------ -->
+  <section class="slide" data-ex data-type="2"></section>
+  <section class="slide" data-ex data-type="5"></section>
+  <section class="slide" data-ex data-type="8"></section>
+
+  <!-- 14 ------------------------------------------------------------ -->
+  <section class="slide">
+    <p class="eyebrow">итог</p>
+    <h2>Круги, потом строки</h2>
+    <div class="two">
+      <div class="box cool">
+        <h3>Круги</h3>
+        <p>Слово — круг; <span class="mono">&amp;</span> — общая часть, <span class="mono">|</span> — всё вместе</p>
+        <p><span class="mono">&amp;</span> раньше <span class="mono">|</span>; ноль в таблице — круги порознь</p>
+        <p><span class="mono">A | B = A + B − A &amp; B</span></p>
+      </div>
+      <div class="box warm">
+        <h3>Строки</h3>
+        <p>Закрасить искомое и подобрать строки со знаками</p>
+        <p>Каждая часть — столько раз, сколько в искомом</p>
+        <p>Ответ — число подряд, в единицах таблицы</p>
+      </div>
+    </div>
+    <p class="note">Дальше — тренажёр: десять задач, по одной на каждую
+       форму задания. Ошибёшься — страница скажет, где, и нарисует круги.</p>
+  </section>
+
+</div>
+
+<div class="bar">
+  <button id="prev">← Назад</button>
+  <button id="next">Вперёд →</button>
+  <span class="count" id="count"></span>
+  <span class="zoom" title="Размер шрифта на экране: клавиши + и −"><button id="zoomOut" title="Мельче (клавиша −)">A−</button><span class="z" id="zoomVal"></span><button id="zoomIn" title="Крупнее (клавиша +)">A+</button></span>
+  <span class="spacer"></span>
+  <button id="step" class="primary" hidden>Показать</button>
+  <button id="reroll" hidden>Другой пример</button>
+  <span class="ai-mark" style="color:#5c6070;font-size:13px">Материалы подготовлены с использованием технологий искусственного интеллекта.</span>
+  <span class="keys"><kbd>→</kbd> слайд &middot;
+        <kbd>Пробел</kbd> шаг &middot; <kbd>F11</kbd> во весь экран</span>
+</div>
+</div>
+
+<script>
+"use strict";
+
+/* ==== БАЗА: вставлено gen.py, руками не править ==== */
+const TYPES = [
+  {"id": 0, "key": "word-of-two", "n": 2, "layout": "two", "name": "два слова: найти одно слово", "rule": "Известны «A & B», «A | B» и одно слово. Объединение — это оба круга, общая часть в нём посчитана один раз: A | B = A + B − A & B. Отсюда второе слово: B = (A | B) − A + (A & B).", "forms": [{"rows": ["A & B", "A | B", "A"], "target": "B"}]},
+  {"id": 1, "key": "and-of-two", "n": 2, "layout": "two", "name": "два слова: найти «&»", "rule": "Известны оба слова и «A | B». Если сложить A и B, общая часть посчитается дважды, а в объединении она один раз. Лишнее и есть пересечение: A & B = A + B − (A | B).", "forms": [{"rows": ["A", "B", "A | B"], "target": "A & B"}]},
+  {"id": 2, "key": "common-pair", "n": 3, "layout": "tri", "name": "общее слово: найти пару", "rule": "Во всех строках есть одно и то же слово A. «A & (B | C)» — это две части: A & B и A & C, их общий кусок A & B & C в сумме посчитан дважды. Отсюда A & C = A & (B | C) − A & B + A & B & C.", "forms": [{"rows": [["A & (B | C)", "(B | C) & A"], "A & B", "A & B & C"], "target": "A & C"}]},
+  {"id": 3, "key": "common-triple", "n": 3, "layout": "tri", "name": "общее слово: найти все три", "rule": "Те же строки с общим словом A, но спрашивают тройное пересечение. Сложи A & B и A & C — их общий кусок посчитан дважды; лишнее против A & (B | C) и есть A & B & C.", "forms": [{"rows": [["A & (B | C)", "(B | C) & A"], "A & B", "A & C"], "target": "A & B & C"}]},
+  {"id": 4, "key": "common-union", "n": 3, "layout": "tri", "name": "общее слово: найти «&» со скобкой", "rule": "Известны A & B, A & C и A & B & C, а спрашивают A & (B | C) — обе части вместе. Сложи их и вычти общий кусок, посчитанный дважды: A & (B | C) = A & B + A & C − A & B & C.", "forms": [{"rows": ["A & B & C", "A & B", "A & C"], "target": ["A & (B | C)", "(B | C) & A"]}]},
+  {"id": 5, "key": "compound-part", "n": 3, "layout": "tri", "name": "пара как одно слово: найти часть", "rule": "Пара «A & B» везде стоит вместе — считай её одним словом P. Тогда это задача про два слова: P | C = P + C − P & C, где P & C — это A & B & C. Найти надо P или C.", "forms": [{"rows": ["A & B & C", ["(A & B) | C", "C | (A & B)"], "C"], "target": "A & B"}, {"rows": ["A & B & C", ["(A & B) | C", "C | (A & B)"], "A & B"], "target": "C"}]},
+  {"id": 6, "key": "compound-and", "n": 3, "layout": "tri", "name": "пара как одно слово: найти все три", "rule": "Пара «A & B» — одно слово P. Известны P, C и P | C, спрашивают P & C, то есть A & B & C: сложи P и C и вычти объединение — останется общая часть, посчитанная дважды.", "forms": [{"rows": ["C", "A & B", ["(A & B) | C", "C | (A & B)"]], "target": "A & B & C"}]},
+  {"id": 7, "key": "zero-pair", "n": 3, "layout": "chain", "zero": "A & C", "name": "пустое пересечение: найти пару", "rule": "Строка с нулём: эти два круга не пересекаются, значит, и общей части всех трёх нет. Круги стоят цепочкой, и A | B | C = A + B + C − A & B − B & C. Отсюда недостающая пара.", "forms": [{"rows": ["A", "B", "C", "A | B | C", "A & B", "A & C"], "target": "B & C"}]},
+  {"id": 8, "key": "zero-word", "n": 3, "layout": "chain", "zero": "A & C", "name": "пустое пересечение: найти слово", "rule": "Строка с нулём — круги порознь, тройного пересечения нет. Из A | B | C = A + B + C − A & B − B & C находим слово, которого нет в таблице: C = A | B | C − A − B + A & B + B & C.", "forms": [{"rows": ["A | B | C", "B & C", "A & C", "A & B", "A", "B"], "target": "C"}]},
+  {"id": 9, "key": "precedence", "n": 3, "layout": "tri", "name": "«&» раньше «|»", "rule": "Скобок нет, а знаки разные: «&» выполняется раньше «|», как умножение раньше сложения. «A | B & C» — это A | (B & C). Тогда A | C = (A | B | C) − (A | B) + (A | B & C).", "forms": [{"rows": ["A | B", "A | B & C", "A | B | C"], "target": "A | C"}]}
+];
+
+const TEST_TYPES = ["word-of-two", "common-pair", "common-union", "compound-part", "zero-pair", "zero-word"];
+const THEMES = [["Гоголь", "Нос", "Шинель"], ["Шашки", "Дамка", "Доска"], ["Футбол", "Мяч", "Ворота"], ["Космос", "Комета", "Спутник"], ["Океан", "Яхта", "Парус"], ["Лес", "Гриб", "Ягода"], ["Музыка", "Скрипка", "Рояль"], ["Зима", "Лыжи", "Коньки"], ["Чай", "Сахар", "Лимон"], ["Река", "Мост", "Берег"], ["Сказка", "Кощей", "Леший"], ["Город", "Парк", "Фонтан"], ["Школа", "Урок", "Звонок"], ["Компьютер", "Мышь", "Принтер"], ["Байкал", "Омуль", "Нерпа"], ["Театр", "Балет", "Опера"], ["Физика", "Сила", "Масса"], ["Кот", "Пёс", "Попугай"], ["Олимпиада", "Медаль", "Кубок"], ["Планета", "Сатурн", "Юпитер"], ["Пицца", "Сыр", "Томат"], ["Осень", "Дождь", "Листопад"], ["Арктика", "Медведь", "Тюлень"], ["Поезд", "Вагон", "Рельсы"]];
+const UNITS = [{"w": "в тысячах", "mult": 1000, "p": 5}, {"w": "в десятках тысяч", "mult": 10000, "p": 2}, {"w": "в сотнях тысяч", "mult": 100000, "p": 1}, {"w": "в миллионах", "mult": 1000000, "p": 1}];
+
+const TYPES_TOTAL = TYPES.length;
+
+/* Источник случайности — один на все страницы темы. Тренажёр, ДЗ и
+   презентация оставляют Math.random: задачи новые при каждом открытии.
+   Проверочная подменяет RND генератором по коду ученика — тогда вариант
+   у ученика один и тот же, сколько бы раз он ни перезагрузил страницу. */
+let RND = Math.random;
+const randInt = (lo, hi) => lo + Math.floor(RND() * (hi - lo + 1));
+const pick = arr => arr[randInt(0, arr.length - 1)];
+const maybe = p => RND() < p;
+
+function shuffle(arr){
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--){
+    const j = randInt(0, i);
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+const sample = (arr, k) => shuffle(arr).slice(0, k);
+
+/* --------------------------------------------- запрос как части кругов
+   Слова — круги. Часть рисунка (регион) — непустой набор слов, маска по
+   номерам слов: у трёх слов регионов семь, у двух — три. Запрос — набор
+   регионов, тоже маска: бит r стоит, если регион r входит в запрос.
+   «&» — общие регионы, «|» — все вместе; «&» выполняется раньше «|». */
+
+function wordRegions(i, n){
+  let q = 0;
+  for (let r = 1; r < (1 << n); r++) if (r >> i & 1) q |= 1 << r;
+  return q;
+}
+
+function tokenize(src){
+  const out = [];
+  let i = 0;
+  while (i < src.length){
+    const c = src[i];
+    if (/\s/.test(c)){ i++; continue; }
+    if ("()&|".includes(c)){ out.push(c); i++; continue; }
+    let j = i;
+    while (j < src.length && !"()&|".includes(src[j])) j++;
+    out.push(src.slice(i, j).trim());
+    i = j;
+  }
+  return out;
+}
+
+// words — слова задачи по порядку номеров; неизвестное слово — ошибка
+function parseQuery(src, words){
+  const tk = tokenize(src), n = words.length;
+  let p = 0;
+  const factor = () => {
+    const t = tk[p++];
+    if (t === "("){ const v = expr(); if (tk[p++] !== ")") throw new Error(src); return v; }
+    const i = words.indexOf(t);
+    if (i < 0) throw new Error("нет слова «" + t + "» в " + src);
+    return wordRegions(i, n);
+  };
+  const term = () => { let v = factor(); while (tk[p] === "&"){ p++; v &= factor(); } return v; };
+  const expr = () => { let v = term(); while (tk[p] === "|"){ p++; v |= term(); } return v; };
+  const v = expr();
+  if (p !== tk.length) throw new Error(src);
+  return v;
+}
+
+const bits = q => { const out = []; for (let r = 1; r < 8; r++) if (q >> r & 1) out.push(r); return out; };
+
+/* Как получить искомый запрос из строк таблицы: коэффициенты c[i] при
+   строках, чтобы каждый регион посчитался ровно столько раз, сколько в
+   искомом. Регионы внутри строки с нулём пусты — их не считаем.
+   Гаусс на дробях не нужен: строк до шести, коэффициенты целые;
+   решение округляется и проверяется точно. Нет решения — null. */
+function combine(rows, target, universe){
+  const regs = bits(universe), k = rows.length;
+  const A = regs.map(r => rows.map(q => (q >> r & 1) ? 1 : 0).concat([(target >> r & 1) ? 1 : 0]));
+  const piv = [];
+  let row = 0;
+  for (let col = 0; col < k && row < A.length; col++){
+    let best = row;
+    for (let i = row; i < A.length; i++) if (Math.abs(A[i][col]) > Math.abs(A[best][col])) best = i;
+    if (Math.abs(A[best][col]) < 1e-9) continue;
+    [A[row], A[best]] = [A[best], A[row]];
+    const d = A[row][col];
+    for (let j = col; j <= k; j++) A[row][j] /= d;
+    for (let i = 0; i < A.length; i++){
+      if (i === row || Math.abs(A[i][col]) < 1e-12) continue;
+      const f = A[i][col];
+      for (let j = col; j <= k; j++) A[i][j] -= f * A[row][j];
+    }
+    piv.push(col);
+    row++;
+  }
+  const c = new Array(k).fill(0);
+  piv.forEach((col, i) => { c[col] = Math.round(A[i][k]); });
+  // точная проверка: сумма c[i] * строка совпадает с искомым на каждом регионе
+  for (const r of regs){
+    let s = 0;
+    rows.forEach((q, i) => { if (q >> r & 1) s += c[i]; });
+    if (s !== ((target >> r & 1) ? 1 : 0)) return null;
+  }
+  return c;
+}
+
+/* ------------------------------------------------------ сборка задачи */
+
+const LETTERS = ["A", "B", "C"];
+const alt = x => Array.isArray(x) ? pick(x) : x;
+// буквы формы — словами задачи
+const spell = (s, w) => s.replace(/[ABC]/g, ch => w[LETTERS.indexOf(ch)]);
+const fmtNum = (v, spaced) => spaced && v >= 10000
+    ? String(v).replace(/\B(?=(\d{3})+(?!\d))/g, " ") : String(v);
+
+function pickUnit(){
+  const bag = [];
+  UNITS.forEach(u => { for (let i = 0; i < u.p; i++) bag.push(u); });
+  return pick(bag);
+}
+
+function tryMake(type){
+  const form = pick(type.forms), n = type.n;
+  const theme = pick(THEMES);
+  const words = sample(theme, n);           // A, B, C по порядку
+  const all = (1 << (1 << n)) - 2;          // все регионы
+  const zeroQ = type.zero ? parseQuery(spell(type.zero, words), words) : 0;
+  const universe = all & ~zeroQ;
+
+  // размер регионов: шаг как в вариантах — круглые десятки и сотни,
+  // иногда любые числа
+  // крупные единицы — числа поменьше: «43 300 сотен тысяч» страниц не бывает
+  const unit = pickUnit();
+  const step = unit.mult >= 100000 ? pick([1, 10]) : pick([1, 10, 10, 10, 100]);
+  const top = step === 1 ? 300 : step === 10 ? 90 : 300;
+  const reg = {};
+  bits(all).forEach(r => { reg[r] = (universe >> r & 1) ? randInt(1, top) * step : 0; });
+  const value = q => bits(q).reduce((s, r) => s + reg[r], 0);
+
+  const rowsSrc = shuffle(form.rows.map(alt));
+  const rows = rowsSrc.map(s => {
+    const text = spell(s, words);
+    const q = parseQuery(text, words);
+    return {q: text, mask: q, v: value(q)};
+  });
+  const tText = spell(alt(form.target), words);
+  const tMask = parseQuery(tText, words);
+  const answer = value(tMask);
+
+  // чего не бывает: ноль не там, повтор чисел, ответ уже в таблице
+  if (answer <= 0) return null;
+  const vals = rows.map(r => r.v);
+  if (rows.some(r => (r.v === 0) !== (r.mask === zeroQ && zeroQ !== 0))) return null;
+  if (new Set(vals).size !== vals.length || vals.includes(answer)) return null;
+  if (rows.some(r => r.mask === tMask)) return null;
+
+  const coef = combine(rows.map(r => r.mask & universe), tMask & universe, universe);
+  if (!coef) return null;
+  // каждая ненулевая строка участвует — так во всех задачах замера
+  if (rows.some((r, i) => r.v !== 0 && coef[i] === 0)) return null;
+  if (rows.reduce((s, r, i) => s + coef[i] * r.v, 0) !== answer) return null;
+
+  const spaced = maybe(0.4);
+  const demo = maybe(0.5);                  // вопрос в форме демо 2027
+  const t = {type: type.id, key: type.key, name: type.name, rule: type.rule,
+             answer: String(answer)};
+  const head = "Найдено страниц (" + unit.w + ")";
+  t.blocks = [
+    {k: "p", segs: [N("В языке запросов поискового сервера для обозначения логической "
+                      + "операции «ИЛИ» используется символ «|», а для обозначения "
+                      + "логической операции «И» — символ «&».")]},
+    {k: "p", segs: [N(pick(["В таблице приведены запросы и количество найденных по ним "
+                            + "страниц некоторого сегмента сети Интернет.",
+                            "В таблице — запросы и количество страниц, найденных по "
+                            + "каждому из них в некотором сегменте сети Интернет."]))]},
+    {k: "table", head: ["Запрос", head],
+     rows: rows.map(r => [r.q, fmtNum(r.v, spaced)])},
+  ];
+  if (demo){
+    t.blocks.push({k: "p", segs: [N("Компьютер печатает количество страниц (" + unit.w
+                                    + "), которое будет найдено по следующему запросу:")]});
+    t.blocks.push({k: "q", t: tText});
+    t.blocks.push({k: "p", segs: [N("Укажите целое число, которое напечатает компьютер.")]});
+  } else {
+    t.blocks.push({k: "p", segs: [N("Какое количество страниц (" + unit.w
+                                    + ") будет найдено по запросу")]});
+    t.blocks.push({k: "q", t: tText + "?"});
+  }
+  t.blocks.push({k: "p", i: 1, segs: [N("Считается, что все запросы выполнялись практически "
+      + "одновременно, так что набор страниц, содержащих все искомые слова, не изменялся "
+      + "за время выполнения запросов.")]});
+  t.tail = "В ответ — целое число.";
+  t.howto = "Только цифры, без пробелов: в тех же единицах, что в таблице.";
+  t.meta = {words: words, n: n, layout: type.layout, zero: zeroQ, universe: universe,
+            rows: rows, target: tText, tmask: tMask, coef: coef, reg: reg,
+            unit: unit.w, mult: unit.mult, spaced: spaced, demo: demo};
+  t.steps = querySteps(t);
+  t.plain = t.blocks.map(b => b.k === "table"
+      ? "Запрос — " + b.head[1] + ": " + b.rows.map(r => r[0] + " — " + r[1]).join("; ") + "."
+      : b.k === "q" ? b.t : b.segs.map(s => s.t).join("")).join(" ");
+  return t;
+}
+
+const B = s => ({t: s, b: 1});
+const N = s => ({t: s, b: 0});
+
+/* ------------------------------------------------------------- разбор */
+
+const quote = q => "«" + q + "»";
+
+// члены суммы: сначала со знаком плюс, потом минус; строки с нулём — прочь
+function terms(t){
+  const m = t.meta;
+  const out = m.rows.map((r, i) => ({r: r, c: m.coef[i]})).filter(x => x.c !== 0);
+  return out.filter(x => x.c > 0).concat(out.filter(x => x.c < 0));
+}
+
+function formula(t, num){
+  return terms(t).map((x, k) => {
+    const s = x.c > 0 ? (k ? " + " : "") : (k ? " − " : "−");
+    const one = num ? String(x.r.v) : quote(x.r.q);
+    return s + (Math.abs(x.c) > 1 ? Math.abs(x.c) + "·" : "") + one;
+  }).join("");
+}
+
+function querySteps(t){
+  const m = t.meta, steps = [];
+  steps.push("Каждое слово — круг. «&» — общая часть кругов, «|» — всё, что "
+      + "внутри хотя бы одного из них. «&» выполняется раньше «|».");
+  const z = m.rows.find(r => r.v === 0);
+  if (z) steps.push("Строка " + quote(z.q) + " — 0: эти круги не пересекаются. "
+      + "Значит, и общей части всех трёх нет — рисуем круги цепочкой.");
+  if (t.key === "precedence"){
+    const pr = m.rows.find(r => /\|.*&|&.*\|/.test(r.q) && !/\(/.test(r.q));
+    if (pr) steps.push("Скобок нет: " + quote(pr.q) + " читается как «"
+        + pr.q.replace(/(\S+ & \S+)/, "($1)") + "».");
+  }
+  steps.push("Ищем " + quote(m.target) + ". Берём строки таблицы так, чтобы каждая "
+      + "часть кругов посчиталась столько раз, сколько в искомом: "
+      + quote(m.target) + " = " + formula(t, false) + ".");
+  steps.push("Считаем: " + formula(t, true) + " = " + t.answer + ". Ответ: " + t.answer + ".");
+  return steps;
+}
+
+function makeTask(typeId){
+  const type = TYPES[typeId];
+  for (let i = 0; i < 20000; i++){
+    const t = tryMake(type);
+    if (t) return t;
+  }
+  throw new Error("не собралась задача типа " + type.key);
+}
+
+/* ------------------------------------------------------------ проверка
+   Ответ — число, сверка знак в знак: на экзамене ответ читает машина.
+   Подсказка называет настоящую причину, а не просто «неверно»: перепутан
+   знак у строки, не учтена строка, взято число из таблицы, лишние нули. */
+
+const code = s => "<code>" + String(s).replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</code>";
+
+function verdict(t, raw){
+  const given = String(raw).trim();
+  if (!given) return null;
+  if (given === t.answer) return {ok: true, hint: null};
+  const m = t.meta;
+
+  if (!/^\d+$/.test(given)){
+    const flat = given.replace(/[\s\u00a0]/g, "");
+    if (/^[\-−–]\d+$/.test(flat))
+      return {ok: false, hint: "Количество страниц не бывает <b>отрицательным</b>: "
+              + "где-то перепутан знак — проверь, какие строки прибавить, а какие вычесть."};
+    if (/^\d+$/.test(given.replace(/[\s\u00a0.,']/g, "")))
+      return {ok: false, hint: "Число пишут цифрами <b>подряд</b>: без пробелов и точек "
+              + "между разрядами — так, как его напечатал бы компьютер. Ответ читает машина."};
+    return {ok: false, hint: "В ответе — только <b>число</b>: без слов «тысяч», без "
+            + "единиц и без самого запроса."};
+  }
+  const g = Number(given), a = Number(t.answer);
+  if (g === a * m.mult || (g > a && g % a === 0 && [10, 100, 1000, 10000, 100000, 1000000].includes(g / a)))
+    return {ok: false, hint: "Ответ пишут <b>в тех же единицах, что и в таблице</b> — "
+            + m.unit + ". Нули дописывать не нужно."};
+  const same = m.rows.find(r => r.v === g);
+  if (same)
+    return {ok: false, hint: "Это число стоит в таблице у запроса " + code(same.q)
+            + ". Искомый запрос другой — его получают из строк таблицы сложением "
+            + "и вычитанием."};
+  for (const x of terms(t)){
+    if (a - 2 * x.c * x.r.v === g)
+      return {ok: false, hint: "Перепутан знак: строку " + code(x.r.q) + " надо "
+              + (x.c > 0 ? "<b>прибавить</b>, а она вычтена" : "<b>вычесть</b>, а она прибавлена")
+              + ". Посмотри на круги: сколько раз эта часть уже посчитана?"};
+    if (a - x.c * x.r.v === g)
+      return {ok: false, hint: "Не учтена строка " + code(x.r.q) + ": без неё одна "
+              + "из частей кругов посчитана не столько раз, сколько в искомом запросе."};
+  }
+  return {ok: false, hint: "Не сходится. Нарисуй круги и проверь: каждая часть должна "
+          + "попасть в сумму ровно столько раз, сколько она входит в искомый запрос."};
+}
+
+
+/* ============================================ разбор рисунком
+   Света, 26.09.2026: «никто читать не будет, нужна красивая яркая сверка
+   с эталоном» — и на слайдах-примерах, и в подсказках тренажёра. Круги
+   Эйлера: искомое закрашено оранжевым, строки таблицы — синим, и сумма
+   кругов со знаками стоит как равенство. Стили — прямо в разметке:
+   рисунок одинаков на всех страницах, какие бы классы там ни были.
+============================================================ */
+const VCOL = {want: "#f0a33a", row: "#7fa8d8", line: "#1b1b1f",
+              plus: "#137a41", minus: "#b3261e"};
+const VGEO = {
+  two:   {W: 150, H: 96,  c: [[56, 48], [94, 48]], r: 36},
+  tri:   {W: 150, H: 126, c: [[57, 46], [93, 46], [75, 80]], r: 34},
+  chain: {W: 196, H: 96,  c: [[46, 48], [98, 48], [150, 48]], r: 34},
+};
+// где подпись слова: сдвиг по x, над или под кругом, выравнивание
+const VLAB = {
+  two:   [[-4, "top", "end"], [4, "top", "start"]],
+  tri:   [[-4, "top", "end"], [4, "top", "start"], [0, "bot", "middle"]],
+  chain: [[14, "top", "end"], [0, "bot", "middle"], [-14, "top", "start"]],
+};
+let VENN_ID = 0;
+const vEsc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
+                           .replace(/>/g, "&gt;");
+
+/* Круги с закрашенными регионами. shade — маска регионов (как у запроса),
+   opt.labels — слова у кругов, opt.color — цвет заливки, opt.w — ширина
+   на экране. Регион рисуется как прямоугольник, обрезанный по своим кругам
+   (clip-path) и с вырезанными чужими (mask). */
+function vennSvg(layout, n, shade, opt){
+  opt = opt || {};
+  const g = VGEO[layout], id = "v" + (++VENN_ID) + "_";
+  // подписи: верхние уходят наружу от середины, чтобы длинные слова не
+  // налезали друг на друга; нижняя — под кругом
+  const lab = VLAB[layout];
+  const side = opt.labels ? 72 : 0, top = opt.labels ? 24 : 0;
+  const bot = opt.labels && lab.some(x => x[1] === "bot") ? 22 : 0;
+  const W = g.W + 2 * side, H = g.H + top + bot;
+  const C = g.c.slice(0, n).map(p => [p[0] + side, p[1] + top]);
+  let defs = "";
+  C.forEach((p, i) => { defs += '<clipPath id="' + id + "c" + i + '"><circle cx="' + p[0]
+                         + '" cy="' + p[1] + '" r="' + g.r + '"/></clipPath>'; });
+  let body = "";
+  for (let r = 1; r < (1 << n); r++){
+    if (!(shade >> r & 1)) continue;
+    defs += '<mask id="' + id + "m" + r + '"><rect width="' + W + '" height="' + H
+          + '" fill="#fff"/>';
+    C.forEach((p, i) => { if (!(r >> i & 1)) defs += '<circle cx="' + p[0] + '" cy="'
+                          + p[1] + '" r="' + g.r + '" fill="#000"/>'; });
+    defs += "</mask>";
+    let shape = '<rect width="' + W + '" height="' + H + '" fill="' + (opt.color || VCOL.want) + '"/>';
+    C.forEach((p, i) => { if (r >> i & 1) shape = '<g clip-path="url(#' + id + "c" + i + ')">'
+                          + shape + "</g>"; });
+    body += '<g mask="url(#' + id + "m" + r + ')">' + shape + "</g>";
+  }
+  C.forEach(p => { body += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="' + g.r
+                   + '" fill="none" stroke="' + VCOL.line + '" stroke-width="2"/>'; });
+  if (opt.labels) C.forEach((p, i) => {
+    const [dx, where, anchor] = lab[i];
+    body += '<text x="' + (p[0] + dx) + '" y="' + (where === "bot" ? p[1] + g.r + 17 : p[1] - g.r - 7)
+          + '" text-anchor="' + anchor + '" font-size="14" font-weight="700" '
+          + 'font-family="Segoe UI, sans-serif" fill="' + VCOL.line + '">'
+          + vEsc(opt.labels[i]) + "</text>";
+  });
+  const w = opt.w || W;
+  return '<svg viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="'
+       + vEsc(opt.aria || "") + '" style="display:block;width:' + w
+       + 'px;max-width:100%;height:auto">' + "<defs>" + defs + "</defs>" + body + "</svg>";
+}
+
+// одна плитка равенства: круги, под ними запрос и число
+function vTile(m, q, shade, val, color, w){
+  return '<div style="display:inline-flex;flex-direction:column;align-items:center;'
+       + 'max-width:' + (w + 16) + 'px">'
+       + vennSvg(m.layout, m.n, shade, {color: color, w: w, aria: q})
+       + '<div style="font:italic 13px/1.2 Segoe UI,system-ui,sans-serif;text-align:center;'
+       + 'color:#1b1b1f;margin-top:2px">' + vEsc(q) + '</div>'
+       + (val === null ? "" : '<div style="font:700 19px/1.2 Consolas,monospace;color:#1b1b1f">'
+          + vEsc(val) + '</div>') + '</div>';
+}
+
+const vSign = (s, col) => '<div style="font:800 30px/1 Segoe UI,system-ui,sans-serif;color:'
+    + col + ';align-self:center;padding:0 2px">' + s + '</div>';
+
+// равенство кругов: искомое = ± строки; num — с числами под кругами
+function vEquation(t, num){
+  const m = t.meta, mw = m.layout === "chain" ? 92 : 78;
+  let out = vTile(m, m.target, m.tmask & m.universe, num ? "?" : null, VCOL.want, mw)
+          + vSign("=", "#1b1b1f");
+  terms(t).forEach((x, k) => {
+    if (k || x.c < 0) out += vSign(x.c > 0 ? "+" : "−", x.c > 0 ? VCOL.plus : VCOL.minus);
+    out += vTile(m, x.r.q, x.r.mask & m.universe, num ? String(x.r.v) : null, VCOL.row, mw);
+  });
+  return '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:flex-start;margin:6px 0">'
+       + out + '</div>';
+}
+
+const xCap = s => '<div style="font:700 13px/1.2 Segoe UI,system-ui,sans-serif;'
+    + 'letter-spacing:.08em;text-transform:uppercase;color:#5c6070;margin:8px 0 2px">'
+    + s + '</div>';
+
+function xChip(txt, bg){
+  return '<span style="font:700 15px/1.2 Segoe UI,system-ui,sans-serif;border-radius:30px;'
+       + 'padding:5px 12px;color:#fff;background:' + bg + '">' + vEsc(txt) + '</span>';
+}
+
+// что особенного в задаче — короткими яркими ярлыками, а не абзацем
+function xBadges(t){
+  const m = t.meta, out = [xChip("ищем: " + m.target, "#a3480f")];
+  const z = m.rows.find(r => r.v === 0);
+  if (z) out.push(xChip(z.q + " = 0 — круги порознь", "#b3261e"));
+  if (t.key === "precedence"){
+    const pr = m.rows.find(r => /\|.*&|&.*\|/.test(r.q) && !/\(/.test(r.q));
+    if (pr) out.push(xChip("«&» раньше «|»: " + pr.q.replace(/(\S+ & \S+)/, "($1)"), "#b3261e"));
+  }
+  return '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">' + out.join("") + '</div>';
+}
+
+function xTile(s, bad){
+  const c = bad ? "#b3261e" : "#137a41";
+  return '<span style="display:inline-block;min-width:48px;text-align:center;'
+       + 'font:700 30px/1.2 Consolas,monospace;border-radius:10px;padding:2px 12px;'
+       + 'border:3px solid ' + c + ';color:' + c + ';background:' + (bad ? "#fbd9d6" : "#d9f2e3")
+       + '">' + vEsc(s) + '</span>';
+}
+
+// Круги, равенство кругов, счёт и эталон.
+function xSolution(t){
+  const m = t.meta;
+  return xCap("1 · круги: искомое закрашено")
+       + vennSvg(m.layout, m.n, m.tmask & m.universe, {labels: m.words, w: m.layout === "chain" ? 300 : 260,
+                                                       aria: m.target})
+       + xBadges(t)
+       + xCap("2 · складываем и вычитаем строки таблицы") + vEquation(t, true)
+       + xCap("3 · считаем")
+       + '<div style="font:700 21px/1.4 Consolas,monospace;margin:4px 0">'
+       + vEsc(formula(t, true)) + " = " + vEsc(t.answer) + '</div>'
+       + xCap("эталон") + xTile(t.answer, false);
+}
+
+// Сверка чужого ответа с эталоном: красная плитка своего числа. Пусто —
+// если ответ не число (про это скажет вердикт словами).
+function xCompare(t, given){
+  given = String(given || "").trim();
+  if (!/^\d+$/.test(given)) return "";
+  return xCap("твой ответ") + xTile(given, given !== t.answer);
+}
+
+/* ============================================ условие картинкой
+   Условие рисуется на canvas, а не выводится тегами: с картинки нельзя
+   выделить текст и отправить его в нейросеть — только прочитать и решить
+   самому. Таблица — как в вариантах: запросы курсивом.
+============================================================ */
+const COND_W = 680;
+const COND_FONT = ['17px "Segoe UI", system-ui, sans-serif',
+                   '700 17px "Segoe UI", system-ui, sans-serif',
+                   'italic 16px "Segoe UI", system-ui, sans-serif'];
+const COND_LINE = 26;
+const TAB = {x: 50, w1: 380, w2: 200, row: 30, head: 52};
+
+function tokens(segs){
+  const out = [];
+  segs.forEach(s => {
+    String(s.t).split(/(\s+)/).forEach(w => {
+      if (w !== "") out.push({t: w, b: s.b});
+    });
+  });
+  return out;
+}
+
+function layout(ctx, segs, fonts, maxWidth){
+  const lines = [];
+  let cur = [], w = 0;
+  tokens(segs).forEach(tok => {
+    ctx.font = fonts[tok.b];
+    const tw = ctx.measureText(tok.t).width;
+    if (cur.length && w + tw > maxWidth && !/^\s+$/.test(tok.t)){
+      lines.push(cur);
+      cur = [];
+      w = 0;
+    }
+    if (!cur.length && /^\s+$/.test(tok.t)) return;   // пробел в начале
+    cur.push(tok);
+    w += tw;
+  });
+  if (cur.length) lines.push(cur);
+  return lines;
+}
+
+function drawLine(ctx, line, fonts, x, y){
+  line.forEach(tok => {
+    ctx.font = fonts[tok.b];
+    ctx.fillText(tok.t, x, y);
+    x += ctx.measureText(tok.t).width;
+  });
+}
+
+function drawTable(ctx, b, y){
+  const x0 = TAB.x, x1 = x0 + TAB.w1, x2 = x1 + TAB.w2;
+  const H = TAB.head + b.rows.length * TAB.row;
+  ctx.strokeStyle = "#1b1b1f";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(x0 + .5, y + .5, TAB.w1 + TAB.w2, H);
+  ctx.beginPath();
+  ctx.moveTo(x1 + .5, y); ctx.lineTo(x1 + .5, y + H);
+  for (let i = 0; i <= b.rows.length; i++){
+    const yy = y + TAB.head + i * TAB.row + .5;
+    if (i < b.rows.length){ ctx.moveTo(x0, yy); ctx.lineTo(x2, yy); }
+  }
+  ctx.stroke();
+  ctx.textAlign = "center";
+  ctx.font = COND_FONT[1];
+  ctx.fillText(b.head[0], (x0 + x1) / 2, y + 15);
+  const h2 = b.head[1].replace(" (", "\n(").split("\n");
+  h2.forEach((s, i) => ctx.fillText(s, (x1 + x2) / 2, y + 4 + i * 22));
+  b.rows.forEach((r, i) => {
+    const yy = y + TAB.head + i * TAB.row + 6;
+    ctx.font = COND_FONT[2];
+    ctx.fillText(r[0], (x0 + x1) / 2, yy);
+    ctx.font = COND_FONT[0];
+    ctx.fillText(r[1], (x1 + x2) / 2, yy);
+  });
+  ctx.textAlign = "left";
+  return H;
+}
+
+function renderCondition(t){
+  const m = document.createElement("canvas").getContext("2d");
+  const width = COND_W;
+
+  const plan = [];
+  let H = 0;
+  t.blocks.forEach(b => {
+    if (b.k === "table"){
+      const h = TAB.head + b.rows.length * TAB.row + 1;
+      plan.push({table: b, h: h});
+      H += h + 12;
+      return;
+    }
+    if (b.k === "q"){
+      plan.push({q: b.t});
+      H += COND_LINE + 8;
+      return;
+    }
+    const segs = b.i ? b.segs.map(s => ({t: s.t, b: 2})) : b.segs;
+    const lines = layout(m, segs, COND_FONT, width);
+    plan.push({x: 0, lines: lines, gap: 8});
+    H += lines.length * COND_LINE + 8;
+  });
+
+  const dpr = Math.max(1, window.devicePixelRatio || 1);
+  const canvas = document.createElement("canvas");
+  canvas.width = width * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width = width + "px";
+  canvas.setAttribute("role", "img");
+  canvas.setAttribute("aria-label", conditionText(t));
+
+  const ctx = canvas.getContext("2d");
+  ctx.scale(dpr, dpr);
+  ctx.textBaseline = "top";
+  ctx.fillStyle = "#1b1b1f";
+
+  let y = 0;
+  plan.forEach(b => {
+    if (b.table){ drawTable(ctx, b.table, y); y += b.h + 12; return; }
+    if (b.q !== undefined){
+      ctx.font = COND_FONT[2].replace("16px", "18px");
+      ctx.textAlign = "center";
+      ctx.fillText(b.q, width / 2, y);
+      ctx.textAlign = "left";
+      y += COND_LINE + 8;
+      return;
+    }
+    b.lines.forEach(line => {
+      drawLine(ctx, line, COND_FONT, b.x, y);
+      y += COND_LINE;
+    });
+    y += b.gap;
+  });
+  return canvas;
+}
+
+// Текст условия для программы чтения с экрана: картинка картинкой, но
+// незрячий ученик должен получить то же самое.
+function conditionText(t){
+  return t.plain;
+}
+
+/* ==== /БАЗА ==== */
+
+/* ------------------------------------------------------------------
+   Слайды-примеры собираются тем же генератором, что и тренажёр: значит,
+   на доске разбирается ровно та задача, какая потом достанется ученику.
+   Кнопка «Другой пример» перебрасывает числа — можно разобрать два-три
+   подряд, не уходя со слайда.
+------------------------------------------------------------------ */
+
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
+                          .replace(/>/g, "&gt;");
+
+// Условие на слайде — обычным html: с проектора не копируют. Таблица —
+// как в вариантах, запросы курсивом.
+const segsHtml = segs => segs.map(s =>
+    s.b ? `<b>${esc(s.t)}</b>` : esc(s.t)).join("");
+
+function condition(t){
+  return t.blocks.map(b => b.k === "table"
+      ? `<table class="qtab"><tr><th>${esc(b.head[0])}</th><th>${esc(b.head[1])}</th></tr>`
+        + b.rows.map(r => `<tr><td><i>${esc(r[0])}</i></td><td>${esc(r[1])}</td></tr>`).join("")
+        + `</table>`
+      : b.k === "q" ? `<p class="qline">${esc(b.t)}</p>`
+      : b.i ? `<p><small>${segsHtml(b.segs)}</small></p>` : `<p>${segsHtml(b.segs)}</p>`).join("");
+}
+
+// Круги и равенства на слайдах-объяснениях: в разметке только описание
+// (deck_slides.py), рисует тот же код, что и разбор в тренажёре.
+function drawSpecs(){
+  document.querySelectorAll("[data-venn]").forEach(el => {
+    const s = JSON.parse(el.dataset.venn);
+    el.innerHTML = vennSvg(s.layout, s.words.length, parseQuery(s.shade, s.words),
+                           {labels: s.labels ? s.words : null, w: s.w, aria: s.shade,
+                            color: s.color});
+  });
+  document.querySelectorAll("[data-eq]").forEach(el => {
+    const s = JSON.parse(el.dataset.eq);
+    const m = {layout: s.layout, n: s.words.length};
+    const w = s.layout === "chain" ? 110 : 96;
+    let out = vTile(m, s.want, parseQuery(s.want, s.words), s.wantVal, VCOL.want, w)
+            + vSign("=", "#1b1b1f");
+    s.terms.forEach((x, k) => {
+      if (k || x[0] === "-") out += vSign(x[0] === "+" ? "+" : "−",
+                                          x[0] === "+" ? VCOL.plus : VCOL.minus);
+      out += vTile(m, x[1], parseQuery(x[1], s.words), x[2] === null ? null : String(x[2]),
+                   VCOL.row, w);
+    });
+    el.innerHTML = '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start">'
+                 + out + '</div>';
+  });
+}
+drawSpecs();
+
+// Сверка ответа класса с эталоном: большой знак и плитка — общие с
+// тренажёром (verdict и xCompare в gen.py).
+function xCheck(el, t){
+  const box = el.querySelector(".xres");
+  const given = el.querySelector(".xin").value.trim();
+  if (!given){ box.innerHTML = ""; return; }
+  const v = verdict(t, given);
+  box.innerHTML = `<div class="xverd ${v.ok ? "ok" : "bad"}">${v.ok ? "✓ совпало с эталоном"
+        : "✗ не совпало"}</div>` + (v.ok ? "" : xCompare(t, given)
+        + `<div class="xhint">${v.hint}</div>`);
+}
+
+function buildExample(el){
+  const id = +el.dataset.type;
+  const t = makeTask(id), m = t.meta;
+
+  el.innerHTML =
+    `<p class="eyebrow">разбираем вместе</p>
+     <h2>Пример: ${esc(t.name)}</h2>
+     <div class="exwrap">
+       <div class="task">${condition(t)}
+         <div class="xcheck">
+           <input class="xin" type="text" inputmode="numeric" autocomplete="off"
+                  spellcheck="false" placeholder="ответ класса">
+           <button class="xgo">Сверить</button>
+         </div></div>
+       <div class="steps">
+         <div class="xres"></div>
+         <div class="step xs" hidden><span class="cap">1 · круги: искомое закрашено</span>
+           <div class="venn">${vennSvg(m.layout, m.n, m.tmask & m.universe,
+                {labels: m.words, w: m.layout === "chain" ? 320 : 270, aria: m.target})}</div>
+           ${xBadges(t)}</div>
+         <div class="step xs" hidden><span class="cap">2 · складываем и вычитаем строки</span>
+           <div class="veq">${vEquation(t, true)}</div></div>
+         <div class="step answer xs" hidden><span class="cap">3 · считаем</span>
+           <div style="font:700 22px/1.4 Consolas,monospace">${esc(formula(t, true))}
+             = ${esc(t.answer)}</div></div>
+       </div>
+     </div>`;
+  const inp = el.querySelector(".xin");
+  // набор ответа не должен листать слайды и менять шрифт
+  inp.addEventListener("keydown", e => {
+    e.stopPropagation();
+    if (e.key === "Enter") xCheck(el, t);
+  });
+  el.querySelector(".xgo").addEventListener("click", () => xCheck(el, t));
+  // условие выше экрана закреплять нельзя — см. fitExamples() в конце файла;
+  // через таймер: к этому моменту слайд показан и масштаб применён
+  setTimeout(() => { if (typeof fitExamples === "function") fitExamples(); }, 0);
+  el.dataset.answer = t.answer;
+}
+
+/* ------------------------------------------------------------------
+   Управление колодой: стрелки листают слайды, пробел раскрывает
+   очередной шаг разбора и только потом уходит дальше.
+------------------------------------------------------------------ */
+
+const slides = [...document.querySelectorAll(".slide")];
+let cur = 0;
+let shown = 0;
+
+const isExample = i => slides[i].hasAttribute("data-ex");
+const stepsOf = i => [...slides[i].querySelectorAll(".steps > .step")];
+
+function show(i){
+  slides[cur].classList.remove("on");
+  cur = Math.max(0, Math.min(slides.length - 1, i));
+  slides[cur].classList.add("on");
+  if (isExample(cur) && !slides[cur].dataset.answer) buildExample(slides[cur]);
+  shown = stepsOf(cur).filter(el => !el.hidden).length;
+  document.getElementById("stage").scrollTop = 0;
+  sync();
+}
+
+function sync(){
+  const total = stepsOf(cur).length;
+  const ex = isExample(cur);
+  document.getElementById("count").textContent =
+      `${cur + 1} / ${slides.length}`;
+  document.getElementById("prev").disabled = cur === 0;
+  document.getElementById("next").disabled = cur === slides.length - 1;
+
+  const stepBtn = document.getElementById("step");
+  stepBtn.hidden = total === 0;
+  document.getElementById("reroll").hidden = !ex;
+  if (total){
+    stepBtn.disabled = shown >= total;
+    stepBtn.textContent =
+        shown === 0 ? (ex ? "Показать разбор" : "Раскрыть")
+      : shown >= total ? (ex ? "Разобрано" : "Всё открыто")
+      : `Дальше (${shown}/${total})`;
+  }
+}
+
+function nextStep(){
+  const steps = stepsOf(cur);
+  if (shown >= steps.length) return false;
+  steps[shown].hidden = false;
+  steps[shown].scrollIntoView({block: "nearest", behavior: "smooth"});
+  shown++;
+  sync();
+  return true;
+}
+
+document.getElementById("prev").addEventListener("click", () => show(cur - 1));
+document.getElementById("next").addEventListener("click", () => show(cur + 1));
+document.getElementById("step").addEventListener("click", nextStep);
+document.getElementById("reroll").addEventListener("click", () => {
+  buildExample(slides[cur]); shown = 0; sync();
+});
+
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowRight" || e.key === "PageDown"){ show(cur + 1); }
+  else if (e.key === "ArrowLeft" || e.key === "PageUp"){ show(cur - 1); }
+  else if (e.key === " " || e.key === "Enter"){
+    // пробел ведёт урок: шаг за шагом, потом на следующий слайд
+    if (!nextStep()) show(cur + 1);
+  } else return;
+  e.preventDefault();
+});
+
+show(0);
+
+/* ---- размер шрифта на проекторе ----
+   Zoom только на области слайда: zoom на body растягивает 100vh, и панель
+   уезжает за экран (проверено 17.09.2026). Шаг запоминается в
+   localStorage и общий для всех презентаций: один раз подобрала на
+   проекторе — дальше везде так. ZOOM_BASE — стартовый масштаб этой колоды:
+   у колод с базовым кеглем 20px он выше, чем у 24px. */
+const ZOOM_BASE = 1.1;
+const ZOOM_KEY = "slides-zoom-step";
+let zoomStep = 0;
+try { zoomStep = Math.max(-3, Math.min(6, parseInt(localStorage.getItem(ZOOM_KEY), 10) || 0)); }
+catch (e) {}
+function applyZoom(){
+  const z = Math.round(ZOOM_BASE * Math.pow(1.1, zoomStep) * 100) / 100;
+  document.getElementById("stage").style.zoom = z;
+  document.getElementById("zoomVal").textContent = Math.round(z * 100) + "%";
+}
+function setZoom(d){
+  zoomStep = Math.max(-3, Math.min(6, zoomStep + d));
+  try { localStorage.setItem(ZOOM_KEY, String(zoomStep)); } catch (e) {}
+  applyZoom();
+}
+document.getElementById("zoomIn").addEventListener("click", () => setZoom(1));
+document.getElementById("zoomOut").addEventListener("click", () => setZoom(-1));
+document.addEventListener("keydown", e => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key === "+" || e.key === "=") setZoom(1);
+  else if (e.key === "-" || e.key === "_") setZoom(-1);
+  else return;
+  e.preventDefault();
+});
+applyZoom();
+
+/* ==== ДВЕ КОЛОНКИ: вставлено two_columns.py, руками не править ==== */
+/* Закреплять можно только условие, которое помещается в экран целиком.
+   Меряем видимые прямоугольники (на области слайда стоит zoom, и
+   clientHeight с ним не дружит) и вычитаем внутренние отступы области.
+   Проверка повторяется при смене шрифта и размера окна. */
+function fitExamples(){
+  const stage = document.getElementById("stage");
+  if (!stage) return;
+  const sr = stage.getBoundingClientRect();
+  const cs = getComputedStyle(stage);
+  const k = stage.offsetHeight ? sr.height / stage.offsetHeight : 1;
+  const room = sr.height
+             - (parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom)) * k - 8;
+  document.querySelectorAll(".slide.on .exwrap .task").forEach(tk => {
+    tk.classList.remove("tall");
+    if (tk.getBoundingClientRect().height > room) tk.classList.add("tall");
+  });
+}
+window.addEventListener("resize", fitExamples);
+["zoomIn", "zoomOut"].forEach(id => {
+  const b = document.getElementById(id);
+  if (b) b.addEventListener("click", () => setTimeout(fitExamples, 0));
+});
+document.addEventListener("keydown", e => {
+  if ("+=-_".indexOf(e.key) >= 0) setTimeout(fitExamples, 0);
+});
+setTimeout(fitExamples, 0);
+/* ==== /ДВЕ КОЛОНКИ ==== */
+</script>
+</body>
+</html>
