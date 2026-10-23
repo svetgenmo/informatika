@@ -1,0 +1,1060 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Код Хаффмана и условие Фано — презентация</title>
+<meta name="description" content="Презентация-разбор ко второй паре 11 класса (углублённый): равномерный код и его длина, неравномерный код и условие Фано, наименьшая длина нового кодового слова, декодирование префиксного кода, алгоритм Хаффмана и длина сообщения как сумма слияний, выигрыш против равномерного кода; шесть слайдов-примеров со сверкой ответа класса">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E11%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ink)}
+body{font:20px/1.5 "Segoe UI",system-ui,sans-serif}
+.deck{height:100vh;display:flex;flex-direction:column}
+.stage{flex:1 1 auto;overflow-y:auto;padding:34px 56px 12px}
+.slide{display:none;max-width:1100px;margin:0 auto}
+.slide.on{display:block}
+
+h1{font-size:50px;line-height:1.1;margin:0 0 18px;text-wrap:balance}
+h2{font-size:36px;line-height:1.15;margin:0 0 20px;text-wrap:balance}
+.lead{font-size:24px;color:var(--muted);margin:0 0 26px}
+.eyebrow{font:700 14px/1 "Segoe UI",system-ui,sans-serif;letter-spacing:.1em;
+         text-transform:uppercase;color:var(--accent);margin:0 0 8px}
+p{margin:0 0 14px}
+ul,ol{margin:0 0 14px;padding-left:28px}
+li{margin:8px 0}
+code{font-family:Consolas,"Cascadia Mono",monospace;background:var(--card);
+     border:1px solid var(--line);border-radius:6px;padding:1px 7px;font-size:.92em}
+pre{font-family:Consolas,"Cascadia Mono",monospace;background:#1e2430;color:#e7ecf5;
+    padding:16px 20px;border-radius:12px;font-size:22px;line-height:1.45;
+    overflow-x:auto;margin:10px 0}
+pre code{background:none;border:0;padding:0;color:inherit;font-size:inherit}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+.box{border:1px solid var(--line);border-radius:14px;padding:16px 20px;background:#fff}
+.box h3{margin:0 0 8px;font-size:22px}
+.good{border-color:var(--ok-line);background:var(--ok-bg)}
+.bad{border-color:var(--err-line);background:var(--err-bg)}
+.warn{border-color:var(--hi-line);background:var(--hi-bg)}
+.big{font-size:26px}
+table{border-collapse:collapse;width:100%;font-size:22px;margin:10px 0}
+th,td{border:1px solid var(--line);padding:9px 14px;text-align:left}
+th{background:var(--card)}
+.step[hidden]{display:none}
+.bar{flex:0 0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+     border-top:1px solid var(--line);background:var(--card);padding:12px 24px}
+.bar .spacer{flex:1 1 auto}
+.count{color:var(--muted);font-size:17px;font-variant-numeric:tabular-nums}
+.keys{color:var(--muted);font-size:15px}
+.keys kbd{font:600 13px/1 Consolas,monospace;border:1px solid var(--line);
+          border-bottom-width:2px;border-radius:5px;padding:2px 6px;background:#fff}
+button{font:600 17px/1 inherit;padding:11px 18px;border-radius:10px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);color:var(--muted)}
+
+/* ---- размер шрифта на проекторе: A− / A+ ---- */
+.zoom{display:inline-flex;align-items:center;gap:3px;margin-left:8px}
+.zoom button{padding:8px 10px;font-size:15px;min-width:36px;line-height:1}
+.zoom .z{color:var(--muted);font-size:15px;min-width:46px;text-align:center;
+         font-variant-numeric:tabular-nums}
+
+/* ---- слайд-пример: условие слева на месте, разбор справа ---- */
+.exwrap{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:22px;align-items:start}
+.exwrap .task{position:sticky;top:0;font-size:18px;padding:12px 18px}
+.exwrap .task.tall{position:static}
+.exwrap .task p{margin:6px 0}
+.exwrap .steps{display:flex;flex-direction:column;gap:10px}
+.exwrap .step{border:1px solid var(--line);border-radius:14px;padding:10px 18px;font-size:19px;background:#fff}
+@media (max-width:1000px){ .exwrap{grid-template-columns:1fr} .exwrap .task{position:static} }
+.xcheck{display:flex;gap:10px;margin-top:12px;align-items:flex-start}
+.xcheck .xin{font:700 24px/1 Consolas,monospace;width:240px;padding:8px 12px;
+             border:2px solid var(--line);border-radius:10px}
+.xcheck textarea.xin{font:600 18px/1.4 Consolas,monospace;width:300px;height:150px;resize:vertical}
+.xcheck .xin:focus{outline:none;border-color:var(--accent)}
+.steps .xres:empty{display:none}
+.steps .xres{border:3px dashed var(--accent);border-radius:12px;padding:6px 16px 10px;background:#fff}
+.xres .xverd{font:800 24px/1.2 "Segoe UI",system-ui,sans-serif;margin:4px 0 2px}
+.xres .xverd.ok{color:var(--ok)}
+.xres .xverd.bad{color:var(--err)}
+
+/* ---- условие и разбор: таблицы Поста и Маркова (из tasks.js) ---- */
+.task ol.st{margin:8px 0;padding-left:24px}
+.task ol.st li{margin:5px 0}
+.task ol.op{margin:8px 0;padding-left:24px}
+.task ol.op li{margin:3px 0}
+.task p.rules{font-size:14px;color:var(--muted);margin:4px 0 8px}
+.task i{font-style:normal;font-weight:600}
+table.gm{border-collapse:collapse;width:auto;margin:8px 0;
+         font:17px/1.2 Consolas,"Cascadia Mono",monospace}
+table.gm th,table.gm td{border:1px solid var(--line);min-width:30px;height:30px;
+         text-align:center;padding:0 6px;background:#fff}
+table.gm th{background:var(--card);color:var(--muted);font-weight:600}
+table.gm td.h{background:var(--hi-bg);border:2px solid var(--hi);font-weight:700}
+table.gm td.miss{background:var(--hi-bg);color:var(--hi);font-weight:700}
+table.post td,table.mk td{min-width:110px;text-align:left;padding:0 12px;white-space:nowrap}
+table.tape tr:first-child td{color:var(--muted);font-size:14px;height:22px}
+table.xtr td.cmd{text-align:left;white-space:nowrap;min-width:96px}
+table.xtr tr.fin td,table.xtr tr.fin th{border-bottom:3px solid var(--ok)}
+table.xmk td{text-align:left;white-space:nowrap;padding:0 10px}
+table.xmk s.del{color:var(--err);text-decoration:line-through;font-weight:700}
+table.xmk b.ins{color:var(--ok)}
+table.xop td{text-align:left;padding:4px 10px;font-family:"Segoe UI",system-ui,sans-serif;
+             font-size:16px;white-space:normal}
+table.xop tr.y td{background:var(--ok-bg)}
+table.xop tr.n td{color:var(--muted)}
+.xcap{font-size:17px;color:var(--muted);margin:6px 0}
+.xcap b{color:var(--ink)}
+ol.xst{padding-left:0;list-style:none;margin:0;font-size:17px}
+ol.xst li{border-radius:10px;padding:6px 12px;margin:6px 0}
+ol.xst li.y{background:var(--ok-bg)}
+ol.xst li.n{background:var(--err-bg)}
+ol.xst li b{font-size:20px}
+ol.xst li.y b{color:var(--ok)} ol.xst li.n b{color:var(--err)}
+ol.xst small{color:var(--muted);font-size:15px}
+.xcmp{font-size:20px;border-radius:10px;padding:6px 12px;margin:6px 0}
+.xcmp.y{background:var(--ok-bg);color:var(--ok)}
+.xcmp.n{background:var(--err-bg);color:var(--err)}
+.keyline{font-size:22px}
+.keyline b{display:inline-block;border:2px solid var(--ok-line);background:var(--ok-bg);
+           color:var(--ok);border-radius:10px;padding:2px 14px;font-family:Consolas,monospace}
+
+
+/* ---- пара 2: слияния Хаффмана, слова Фано, разбор потока бит ---- */
+table.gm{border-collapse:collapse;width:auto;margin:8px 0;
+         font:18px/1.2 Consolas,"Cascadia Mono",monospace}
+table.gm th,table.gm td{border:1px solid var(--line);min-width:34px;height:32px;
+         text-align:center;padding:2px 8px;background:#fff}
+table.gm th{background:var(--card);color:var(--muted);font-weight:600;
+         font-family:"Segoe UI",system-ui,sans-serif;font-size:16px}
+table.gm td.l,table.gm th.l{text-align:left}
+table.gm td.ok{background:var(--ok-bg);border:2px solid var(--ok);font-weight:700;color:var(--ok)}
+table.gm td.bad{background:var(--err-bg);border:2px solid var(--err);color:var(--err)}
+table.gm tr.sum td,table.gm tr.sum th{border-top:3px solid var(--ok);background:var(--ok-bg)}
+table.gm.flow td{font-family:"Segoe UI",system-ui,sans-serif;font-size:17px}
+table.hf span{display:inline-block;min-width:30px;padding:1px 5px;margin:1px;border-radius:6px;
+              border:1px solid var(--line);text-align:center}
+table.hf span.h{background:var(--hi-bg);border:2px solid var(--hi);font-weight:700}
+table.fano td.l{white-space:normal;max-width:520px}
+table.fano span.w{display:inline-block;padding:1px 6px;margin:2px;border-radius:6px;border:2px solid var(--line)}
+table.fano span.w i{font:600 13px/1 "Segoe UI",sans-serif;margin-left:4px}
+span.w.own{background:#e3eefb;border-color:#7aa7dc}
+span.w.bad{background:var(--err-bg);border-color:var(--err-line);color:var(--err);text-decoration:line-through}
+span.w.ok{background:var(--ok-bg);border-color:var(--ok);color:var(--ok);font-weight:700}
+table.dec td{line-height:1.25;padding:4px 6px}
+table.dec td.r0{background:#e3eefb} table.dec td.r1{background:#fff1d6}
+table.dec td b{font:700 17px "Segoe UI",sans-serif}
+.xcap{font-size:17px;color:var(--muted);margin:6px 0}
+.xcap b{color:var(--ink)}
+.xcap.n{color:var(--err)}
+ol.xst{padding-left:0;list-style:none;margin:0;font-size:18px}
+ol.xst li{border-radius:10px;padding:5px 12px;margin:5px 0}
+ol.xst li.y{background:var(--ok-bg)}
+ol.xst li.n{background:var(--err-bg)}
+ol.xst li b{display:inline-block;min-width:80px}
+ol.xst li.y b{color:var(--ok)} ol.xst li.n b{color:var(--err)}
+ol.xst small{color:var(--muted);font-size:15px}
+.xcmp{font-size:20px;border-radius:10px;padding:6px 12px;margin:6px 0}
+.xcmp.y{background:var(--ok-bg);color:var(--ok)}
+.xcmp.n{background:var(--err-bg);color:var(--err)}
+.keyline{font-size:22px}
+.keyline b{display:inline-block;border:2px solid var(--ok-line);background:var(--ok-bg);
+           color:var(--ok);border-radius:10px;padding:2px 14px;font-family:Consolas,monospace}
+.formula{font:700 30px/1.2 "Cambria Math",Cambria,serif;text-align:center;margin:10px 0 16px}
+.task code{white-space:normal;word-break:break-all}
+</style>
+
+<style>img.frz-b{display:block;max-width:100%;height:auto;border-radius:10px;margin:8px 0}img.frz-i{display:inline-block;vertical-align:-0.32em;max-width:100%;height:auto;border-radius:5px}</style>
+</head>
+<body>
+<div class="deck">
+<div class="stage" id="stage">
+
+<section class="slide on">
+  <h1>Код Хаффмана и условие Фано</h1>
+  <p class="lead">Как закодировать текст короче — и так, чтобы его можно было
+  прочитать обратно. 11 класс, углублённый уровень — пара вторая.</p>
+  <p>Продолжаем тему «Алгоритмы сжатия данных». На прошлой паре было RLE —
+  сжатие серий. Сегодня — коды, где частые буквы получают короткие кодовые
+  слова, а редкие — длинные.</p>
+  <p>Это же — задание 4 ЕГЭ: кодирование и декодирование, условие Фано. Здесь
+  хвост пары по программе и подготовка к экзамену совпадают.</p>
+</section>
+
+<section class="slide">
+  <h2>Равномерный код</h2>
+  <p>У всех букв кодовые слова <b>одной длины</b>. Какая длина нужна на n букв?</p>
+  <div class="steps">
+    <div class="step" hidden>
+      <p>Нужно наименьшее i, при котором 2<sup>i</sup> ≥ n. Пример: 5 букв.</p>
+      <div data-uni-demo="5"></div>
+    </div>
+    <div class="step" hidden>
+      <div class="box good">Три бита различают 2<sup>3</sup> = 8 слов, занято 5 —
+      ещё <b>3 буквы</b> можно добавить, не удлиняя код.</div>
+    </div>
+    <div class="step" hidden>
+      <p>Плюс равномерного кода — читать просто: режь поток по i бит. Минус — частая
+      буква «А» стоит столько же, сколько редкая «Ъ».</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-ex data-type="4"></section>
+
+<section class="slide">
+  <h2>Неравномерный код и беда с ним</h2>
+  <p>Дадим частым буквам короткие слова: А = <img class="frz-i" width="24" height="22" alt="код" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAtCAIAAABnKH+VAAADW0lEQVR42u2YS0gbURSGT16jTpQK2kEtUo0N1k0EqYIVRFBBfGymFRdiBQ1UaAhpFmoWdpWHlUrEjYUKmo1FsKnURDAFo2ClcacEXzRdGMYSNbFE40RMTBfXDiFx49CxLuZu8s89ZyYf9zzunRHs/NiHuzSEcMeGGP3kP7j/31G81OFdXCEeiAf6R1XGbmysr1utVpfL5fP5IpEIQRAVFRUkST4pL2f9TAFqjDct+3A4bDQaP05NXWttbmkxmUypqaksyp7NCkWjUbVa7VxcRJc4jstkstDZmXdvLxKJAIBtbu738fGH8XGxWHwbOfR+bAzRSCSSvv7+7y7X59lZh8PhWlt72dMjEAgAYGVlxWKx3EbIDg8OamtraZoGALPZ3NzSkuBgmZzU6/UAIJVKv62uSqVSbjv1J6sV0VRXVyfTAMCLzs7HJSUAEAqFHA4H5yGz2+1IdHR0XOvgWFj4tX91gvh6c6CbJV0oFNrZ3gYADMOeVlUlWGmaNuj109PTzMzm5ia3QLu7u7FYDAAKCwsxDIs3bW1taTSanx5P/CRFUScnJxkZGVyFjKIoJHJzc5nJWCw2MTHxjCQRDY7jb4eG0tPTkTUQCHCYQ6enp0zvQeLo6Ki7q8toMFxcXACAQqH4MjdHkuS9zMyEWzgJWZimr26TSABgeXm5r7fX7/cDgFAo7FYqtVotaoYioZBJLA6BmN0gGAwaDAbL5CRKKYIg3g0PV1ZWxic4EmlpaRwCMV1uyelkJuvq6kyDg5l/Y4SyKhgMIs0kEydAWdnZCQvWr9O1t7cnuO1T1Pn5OQCIRKKcnBwOgYqLi+O1eWRELpcnu7ndbiQeFhSkpKRwWGVZWVkEQSDd2Nh4LQ0AOJeWkCgrK+N866ivr0diZmYmGo0mO/j9frvNhnRTUxPnQCRJXm3OXu/o6Giyw5uBgXA4DACyoqL4uuMKSFFa2tDQwByMBk0m9PcA4PP5VCoVs8PrdDqRSHQbR9jDg4O2tjav18t07UdyeZimPR4PE8RXKpVGo2FxhGV5pqYoSq1Wb6yvJ5swDHut1SqVSnav0iyBAODy8tJus83Pz7vd7kAggON4Xl5eTU3N89bW/Px81u/27IH4jw08EA/EA/FAPBDcpU96aB/hV+ia8Qe1FWHljElxEAAAAABJRU5ErkJggg==">, Б = <img class="frz-i" width="34" height="22" alt="код" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEQAAAAtCAIAAACYilp3AAAEDklEQVR42u2YX0hbVxzHf0lM1Phngu1FTWXVNri8RJBV6izigwHRBvRuVai4QhtmYUGCaJMg3VOTuExZyR46WbtELHUSl3WaCL1io+DDkjdL0DYswzTEEU3SGc0fMTF7OPUSEged0OVO7nm533PO75fcD+f8zvndH+PV75twWhoTTlHLQY9K3tn/NYbHu33aVoaGoWFomBOdZidrL1ZXTSaTzWbz+XzxeBzDsPr6ehzHP7506V3cd3Z2fpqampyc9Pl8AKBSq7u6urIAE4vF1Gr11JMnqYNut9vtdhuNxqtisUajycvL+yf3jY0Ng15vMpmi0WiWVyaRSPT391ufP0ddLpdbXV0djkQ8r1/H43EAMM/N/fXmzQ8PH+bkpP++3W7/8dEjq9V6eHhIiZj5/sEDRMJms+UKxW822y9PnxIEYbPb+27fZjAYALCysjIxMZHmaNDre65fX1xcRCQCgcBgMGQTZntra3x8HGmtViuRSPLz81G3uLh4cHBweHgYdb/T6cLhcKqvSCRiMpkAwOPxvhkd/XV2tvHKlWzC/Hy00Zuamq6KxZkGn9+48ZFAAADhcJggiNQp3rlzYrFYLpcTCwsdHR1oDbMZMxaLBYne3t5jDYhnz/7cfJuJLxBEZ2dn6uzo2BhVjuZwOPzq5UsA4HA4nzQ2ps1Go1HVvXvT09PkyNraGnXvGafTmUwmAaCqqorD4aROra+vy2SyP1yu1EGv17u7u1tUVETFDMDr9SJRXl5ODiaTSb1e/ymOIxIul/u1VltYWIhmg8EgRdOZvb098m5Bwu/337p5U61SHRwcAIBQKJydm8Nx/IOSkjQXym2z2NGFncNmA8Dy8rL8zp1AIAAATCbzlkQyMDCALkoWk0kGEkVhyAwlFAqpVKoJgwGFEIZho2NjDQ0NqYcBEuQtRDmYgoICJJasVnKwpaVFMzJScrSvUBSFQiGkyeChHEzpmTNpC6VQKnt6etLMNr3e/f19AGCxWGVlZRSFqampSdXf3r/P5/MzzRwOBxIfnj+fm5tL0dOstLQUwzCk29rajiUBAOvSEhJ1dXWU/tIUiURIzMzMJBKJTINAIGAxm5Fub2+nNAyO429LVR6PTqfLNPjq7t1YLAYA1RcupJ5vVIQR1ta2traSHzYjGg16dQDw+XxSqZTMlJVKJYvF+i9hGKjW/K8qmttbW93d3R6Ph8wGLvL5sWjU5XKRG+9LqVQmk2X6Nly+7Pf73+VfvujrGxoagvdd0TyLYZOPHwtra1E3Eom8WF11Op2IhMPhyBWKY0koWp3h8XhGo9FiNs/PzzscjmAwyOVyKyoqmpubP7t2rbKyMiulppNsM6AL53RFk4ahYWgYGoaGoWFomPeZaKLchl4ZCrW/AfWJlrk2n+Q+AAAAAElFTkSuQmCC">,
+  В = <img class="frz-i" width="24" height="22" alt="код" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAtCAIAAABnKH+VAAAA9klEQVR42mO8eecZw2ACTAyDDLBAKFlp0QF3yuOnrwdjCI06aNRBA+2gjx8/zpwxw8baWlVFRVVFZdWqVdTJ9mSABw8eLJg/f926dd+/f6d+OUQSOHXq1Ly5c/fv3//v37+Bj7IF8+dHR0Xt3bsX4hpNTc0FCxYMpINcXV2ZmJgYGBikpaW7e3o2btpkbWMzkFEmLSPj6+uroaERFx/PxsZGq7qMJNDT2ztaDo06aNRBow4addCog0YdNGQcxAjp25PUc7W0sHjz5g0xKtPS00tLS0d7rgPeQDt+4sRoLht10KiDRh006qBRBw22ugxS9Y+GEBYAAGTWRjdim3n+AAAAAElFTkSuQmCC">. Пришло <img class="frz-i" width="34" height="22" alt="код" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEQAAAAtCAIAAACYilp3AAAEDklEQVR42u2YX0hbVxzHf0lM1Phngu1FTWXVNri8RJBV6izigwHRBvRuVai4QhtmYUGCaJMg3VOTuExZyR46WbtELHUSl3WaCL1io+DDkjdL0DYswzTEEU3SGc0fMTF7OPUSEged0OVO7nm533PO75fcD+f8zvndH+PV75twWhoTTlHLQY9K3tn/NYbHu33aVoaGoWFomBOdZidrL1ZXTSaTzWbz+XzxeBzDsPr6ehzHP7506V3cd3Z2fpqampyc9Pl8AKBSq7u6urIAE4vF1Gr11JMnqYNut9vtdhuNxqtisUajycvL+yf3jY0Ng15vMpmi0WiWVyaRSPT391ufP0ddLpdbXV0djkQ8r1/H43EAMM/N/fXmzQ8PH+bkpP++3W7/8dEjq9V6eHhIiZj5/sEDRMJms+UKxW822y9PnxIEYbPb+27fZjAYALCysjIxMZHmaNDre65fX1xcRCQCgcBgMGQTZntra3x8HGmtViuRSPLz81G3uLh4cHBweHgYdb/T6cLhcKqvSCRiMpkAwOPxvhkd/XV2tvHKlWzC/Hy00Zuamq6KxZkGn9+48ZFAAADhcJggiNQp3rlzYrFYLpcTCwsdHR1oDbMZMxaLBYne3t5jDYhnz/7cfJuJLxBEZ2dn6uzo2BhVjuZwOPzq5UsA4HA4nzQ2ps1Go1HVvXvT09PkyNraGnXvGafTmUwmAaCqqorD4aROra+vy2SyP1yu1EGv17u7u1tUVETFDMDr9SJRXl5ODiaTSb1e/ymOIxIul/u1VltYWIhmg8EgRdOZvb098m5Bwu/337p5U61SHRwcAIBQKJydm8Nx/IOSkjQXym2z2NGFncNmA8Dy8rL8zp1AIAAATCbzlkQyMDCALkoWk0kGEkVhyAwlFAqpVKoJgwGFEIZho2NjDQ0NqYcBEuQtRDmYgoICJJasVnKwpaVFMzJScrSvUBSFQiGkyeChHEzpmTNpC6VQKnt6etLMNr3e/f19AGCxWGVlZRSFqampSdXf3r/P5/MzzRwOBxIfnj+fm5tL0dOstLQUwzCk29rajiUBAOvSEhJ1dXWU/tIUiURIzMzMJBKJTINAIGAxm5Fub2+nNAyO429LVR6PTqfLNPjq7t1YLAYA1RcupJ5vVIQR1ta2traSHzYjGg16dQDw+XxSqZTMlJVKJYvF+i9hGKjW/K8qmttbW93d3R6Ph8wGLvL5sWjU5XKRG+9LqVQmk2X6Nly+7Pf73+VfvujrGxoagvdd0TyLYZOPHwtra1E3Eom8WF11Op2IhMPhyBWKY0koWp3h8XhGo9FiNs/PzzscjmAwyOVyKyoqmpubP7t2rbKyMiulppNsM6AL53RFk4ahYWgYGoaGoWFomPeZaKLchl4ZCrW/AfWJlrk2n+Q+AAAAAElFTkSuQmCC">. Что это?</p>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="two">
+        <div class="box">0 + 1 → <b>АВ</b></div>
+        <div class="box">01 → <b>Б</b></div>
+      </div>
+    </div>
+    <div class="step" hidden>
+      <div class="box bad big">Два прочтения — сообщение <b>не декодируется
+      однозначно</b>. Виновато то, что <img class="frz-i" width="24" height="22" alt="код" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAtCAIAAABnKH+VAAADW0lEQVR42u2YS0gbURSGT16jTpQK2kEtUo0N1k0EqYIVRFBBfGymFRdiBQ1UaAhpFmoWdpWHlUrEjYUKmo1FsKnURDAFo2ClcacEXzRdGMYSNbFE40RMTBfXDiFx49CxLuZu8s89ZyYf9zzunRHs/NiHuzSEcMeGGP3kP7j/31G81OFdXCEeiAf6R1XGbmysr1utVpfL5fP5IpEIQRAVFRUkST4pL2f9TAFqjDct+3A4bDQaP05NXWttbmkxmUypqaksyp7NCkWjUbVa7VxcRJc4jstkstDZmXdvLxKJAIBtbu738fGH8XGxWHwbOfR+bAzRSCSSvv7+7y7X59lZh8PhWlt72dMjEAgAYGVlxWKx3EbIDg8OamtraZoGALPZ3NzSkuBgmZzU6/UAIJVKv62uSqVSbjv1J6sV0VRXVyfTAMCLzs7HJSUAEAqFHA4H5yGz2+1IdHR0XOvgWFj4tX91gvh6c6CbJV0oFNrZ3gYADMOeVlUlWGmaNuj109PTzMzm5ia3QLu7u7FYDAAKCwsxDIs3bW1taTSanx5P/CRFUScnJxkZGVyFjKIoJHJzc5nJWCw2MTHxjCQRDY7jb4eG0tPTkTUQCHCYQ6enp0zvQeLo6Ki7q8toMFxcXACAQqH4MjdHkuS9zMyEWzgJWZimr26TSABgeXm5r7fX7/cDgFAo7FYqtVotaoYioZBJLA6BmN0gGAwaDAbL5CRKKYIg3g0PV1ZWxic4EmlpaRwCMV1uyelkJuvq6kyDg5l/Y4SyKhgMIs0kEydAWdnZCQvWr9O1t7cnuO1T1Pn5OQCIRKKcnBwOgYqLi+O1eWRELpcnu7ndbiQeFhSkpKRwWGVZWVkEQSDd2Nh4LQ0AOJeWkCgrK+N866ivr0diZmYmGo0mO/j9frvNhnRTUxPnQCRJXm3OXu/o6Giyw5uBgXA4DACyoqL4uuMKSFFa2tDQwByMBk0m9PcA4PP5VCoVs8PrdDqRSHQbR9jDg4O2tjav18t07UdyeZimPR4PE8RXKpVGo2FxhGV5pqYoSq1Wb6yvJ5swDHut1SqVSnav0iyBAODy8tJus83Pz7vd7kAggON4Xl5eTU3N89bW/Px81u/27IH4jw08EA/EA/FAPBDcpU96aB/hV+ia8Qe1FWHljElxEAAAAABJRU5ErkJggg=="> — начало слова
+      <img class="frz-i" width="34" height="22" alt="код" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEQAAAAtCAIAAACYilp3AAAEDklEQVR42u2YX0hbVxzHf0lM1Phngu1FTWXVNri8RJBV6izigwHRBvRuVai4QhtmYUGCaJMg3VOTuExZyR46WbtELHUSl3WaCL1io+DDkjdL0DYswzTEEU3SGc0fMTF7OPUSEged0OVO7nm533PO75fcD+f8zvndH+PV75twWhoTTlHLQY9K3tn/NYbHu33aVoaGoWFomBOdZidrL1ZXTSaTzWbz+XzxeBzDsPr6ehzHP7506V3cd3Z2fpqampyc9Pl8AKBSq7u6urIAE4vF1Gr11JMnqYNut9vtdhuNxqtisUajycvL+yf3jY0Ng15vMpmi0WiWVyaRSPT391ufP0ddLpdbXV0djkQ8r1/H43EAMM/N/fXmzQ8PH+bkpP++3W7/8dEjq9V6eHhIiZj5/sEDRMJms+UKxW822y9PnxIEYbPb+27fZjAYALCysjIxMZHmaNDre65fX1xcRCQCgcBgMGQTZntra3x8HGmtViuRSPLz81G3uLh4cHBweHgYdb/T6cLhcKqvSCRiMpkAwOPxvhkd/XV2tvHKlWzC/Hy00Zuamq6KxZkGn9+48ZFAAADhcJggiNQp3rlzYrFYLpcTCwsdHR1oDbMZMxaLBYne3t5jDYhnz/7cfJuJLxBEZ2dn6uzo2BhVjuZwOPzq5UsA4HA4nzQ2ps1Go1HVvXvT09PkyNraGnXvGafTmUwmAaCqqorD4aROra+vy2SyP1yu1EGv17u7u1tUVETFDMDr9SJRXl5ODiaTSb1e/ymOIxIul/u1VltYWIhmg8EgRdOZvb098m5Bwu/337p5U61SHRwcAIBQKJydm8Nx/IOSkjQXym2z2NGFncNmA8Dy8rL8zp1AIAAATCbzlkQyMDCALkoWk0kGEkVhyAwlFAqpVKoJgwGFEIZho2NjDQ0NqYcBEuQtRDmYgoICJJasVnKwpaVFMzJScrSvUBSFQiGkyeChHEzpmTNpC6VQKnt6etLMNr3e/f19AGCxWGVlZRSFqampSdXf3r/P5/MzzRwOBxIfnj+fm5tL0dOstLQUwzCk29rajiUBAOvSEhJ1dXWU/tIUiURIzMzMJBKJTINAIGAxm5Fub2+nNAyO429LVR6PTqfLNPjq7t1YLAYA1RcupJ5vVIQR1ta2traSHzYjGg16dQDw+XxSqZTMlJVKJYvF+i9hGKjW/K8qmttbW93d3R6Ph8wGLvL5sWjU5XKRG+9LqVQmk2X6Nly+7Pf73+VfvujrGxoagvdd0TyLYZOPHwtra1E3Eom8WF11Op2IhMPhyBWKY0koWp3h8XhGo9FiNs/PzzscjmAwyOVyKyoqmpubP7t2rbKyMiulppNsM6AL53RFk4ahYWgYGoaGoWFomPeZaKLchl4ZCrW/AfWJlrk2n+Q+AAAAAElFTkSuQmCC">.</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Условие Фано</h2>
+  <div class="box big">Ни одно кодовое слово не должно быть <b>началом</b>
+  другого кодового слова.</div>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="two">
+        <div class="box good"><h3>Годится</h3><img class="frz-i" width="24" height="22" alt="код" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAtCAIAAABnKH+VAAADW0lEQVR42u2YS0gbURSGT16jTpQK2kEtUo0N1k0EqYIVRFBBfGymFRdiBQ1UaAhpFmoWdpWHlUrEjYUKmo1FsKnURDAFo2ClcacEXzRdGMYSNbFE40RMTBfXDiFx49CxLuZu8s89ZyYf9zzunRHs/NiHuzSEcMeGGP3kP7j/31G81OFdXCEeiAf6R1XGbmysr1utVpfL5fP5IpEIQRAVFRUkST4pL2f9TAFqjDct+3A4bDQaP05NXWttbmkxmUypqaksyp7NCkWjUbVa7VxcRJc4jstkstDZmXdvLxKJAIBtbu738fGH8XGxWHwbOfR+bAzRSCSSvv7+7y7X59lZh8PhWlt72dMjEAgAYGVlxWKx3EbIDg8OamtraZoGALPZ3NzSkuBgmZzU6/UAIJVKv62uSqVSbjv1J6sV0VRXVyfTAMCLzs7HJSUAEAqFHA4H5yGz2+1IdHR0XOvgWFj4tX91gvh6c6CbJV0oFNrZ3gYADMOeVlUlWGmaNuj109PTzMzm5ia3QLu7u7FYDAAKCwsxDIs3bW1taTSanx5P/CRFUScnJxkZGVyFjKIoJHJzc5nJWCw2MTHxjCQRDY7jb4eG0tPTkTUQCHCYQ6enp0zvQeLo6Ki7q8toMFxcXACAQqH4MjdHkuS9zMyEWzgJWZimr26TSABgeXm5r7fX7/cDgFAo7FYqtVotaoYioZBJLA6BmN0gGAwaDAbL5CRKKYIg3g0PV1ZWxic4EmlpaRwCMV1uyelkJuvq6kyDg5l/Y4SyKhgMIs0kEydAWdnZCQvWr9O1t7cnuO1T1Pn5OQCIRKKcnBwOgYqLi+O1eWRELpcnu7ndbiQeFhSkpKRwWGVZWVkEQSDd2Nh4LQ0AOJeWkCgrK+N866ivr0diZmYmGo0mO/j9frvNhnRTUxPnQCRJXm3OXu/o6Giyw5uBgXA4DACyoqL4uuMKSFFa2tDQwByMBk0m9PcA4PP5VCoVs8PrdDqRSHQbR9jDg4O2tjav18t07UdyeZimPR4PE8RXKpVGo2FxhGV5pqYoSq1Wb6yvJ5swDHut1SqVSnav0iyBAODy8tJus83Pz7vd7kAggON4Xl5eTU3N89bW/Px81u/27IH4jw08EA/EA/FAPBDcpU96aB/hV+ia8Qe1FWHljElxEAAAAABJRU5ErkJggg==">, <img class="frz-i" width="34" height="22" alt="код" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEQAAAAtCAIAAACYilp3AAAEFklEQVR42u2ZX0xaVxzHf/wRFf/MxPZGpWbVljheNDGrqbMxPkhitCR6t2pS45q0pDaZMcRogZjuqYBjmjXsoTNrB8amzuBYp2BSjEUTHwZvNkRbUhYpwYUW6EQvYATZw6l3BPsAJtI7c38vfM85v3PDh3t+v/M7B8bLV5twUowJJ8jY6KOcd/p/jeH2vD1pb4aGoWFomCNlsyPb1tbWr1NTk5OTXq8XABRKZWdnZyoTn6+uGgwGq9Xq9Xqj0SiGYXV1dTiOf37hwkeA2djY0Gm1BoMhHA6nNTESiSiVyqnHjxM7XS6Xy+XS6/WXRSKVSpWTk5MhGJvN9svDhxaLZX9/P925sVisv7/f8uwZanK53MrKSiIUcr9+HY1GAcA4N/fPu3c/P3jAZrOPPWZ0Wm331auLi4uIRCAQ6HS61Kf/dP8+IsnKypLKZH9arb8/eWI2m602W++tWwwGAwBWVlYmJiYykQCEQiGTyQQAHo/3/ejoH7OzDZcupTj37Zs34+PjSKvVarFYnJubi5qFhYWDg4PDw8Oo+aNGQxDEscPwzpwRiURSqdS8sNDe3o5+yxTtt4MAa2xsvCwSHXb4+tq1zwQCACAIwmw2ZyJmRsfGjpYzTCYTEj09PR90MD99+vfm+yp+wWzu6OjIaGpO3QiCePniBQBwOJwvGhqSRsPhsOLu3enpabJnbW0t0/tM6uZwOOLxOABUVFRwOJzEofX1dYlE8pfTmdjp8Xi2t7cLCgqoWAF4PB4kSktLyc54PK7Var/EcUTC5XK/U6vz8/PRaCAQoGg5s7OzQ+4tSPh8vhvXrysVir29PQCorq6enZvDcfyToqKkKZRbZpGDQoGdlQUAy8vL0tu3/X4/ADCZzBti8cDAANooWUwmGUgUhSErlGAwqFAoJnQ6FEIYho2OjdXX1ycmAyTIXYhyMHl5eUgsWSxkZ3Nzs2pkpOhgXaEoCgaDSJPBQzmY4lOnkl6UTC7v7u5Octv0eHZ3dwGAxWKVlJRQFKaqqipR/3DvHp/PP+xmt9uR+PTs2ezsbIpms+LiYgzDkG5tbf0gCQBYlpaQqK2tpfRJUygUIjEzMxOLxQ47+P1+k9GIdFtbG6VhcBx/f83ldms0msMO3965E4lEAKDy3LnE/EZFmOqampaWFvJgM6JSoa8OAF6vt6+vj6yU5XI5i8VK9/kMdNec1o1m/cWLPp8vFc+bvb1DQ0NJR5quri63201WA+f5/Eg47HQ6yYX3TV+fRCIB6t9onsawyUePqmtqUDMUCj1fXXU4HIiEw+FIZbJ0ST5Cav7veMfj6fV6k9E4Pz9vt9sDgQCXyy0rK2tqavrqypXy8vIjP/koywzoi3OgbzRpGBqGhqFhaBgahoaB4/sbENU29JuhkP0Lk8+WuU/30ZMAAAAASUVORK5CYII=">,
+        <img class="frz-i" width="44" height="22" alt="код" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFgAAAAtCAIAAAClGDsRAAAEI0lEQVR42u2ZX0hbdxTHT/6q8c8E26CmsmoT1IdG6lNdRIQayLR5MFsRKlZowywsSBCtyaTrHhrjMmUle6iydomsdGjUtWqEZtgo+DDTvViCsWEZpiEONUlnNH9EY/bwm3ch9qGGemF3v/Nyv7/fPefC/XDP+Z37+9Fe/b4G2ADoGAEyJroU8U7/bxF4vJv4i8CpgUFgEBgEOSC2traGBgerRSIBny/g80dHR0mIfbm09NWdOx9LJJUXLgjPn6+7dOkLtfq3Fy/ew/KZgq2urhoNhomJiUgkQlpsNBrt7e396fHjxEm32+12u00m02WpVKvVpqenkwTCZrP98PCh1Wo9ODggMzYWi7W3t1ufP0dDDodTUlISCoc9r1/v7+8DwPTU1F9v3nz/4AGTyTzx1DAaDM1Xr87OzqI3KS8vNxqNJMQCwOD9+4gCi8XqVql+XVz8+ckTi8WyaLO13bxJo9EAYGFhYXh4mIwaIRaL6XQ6APB4vG/6+59OToqqq0mI3dzYGBoaQlqn08nl8oyMDDTMycnp7Ozs6elBw+/0+lAodOKpwTtzRiqVlpWVXWttZbPZpMWOHxaUmpqay1LpUYdrra1j4+MrDkcoFLJYLI2NjSdeI/oHBlIusSnHms1mJFpaWt7qYHn27M+1f/6kfyEHBPkWCoVerawAAJvN/kgkSrobiUQ0d++OjIwQM8vLy+Qtn2Sa0+mMx+MAUFxcnJRTDodDqVT+4XIlTnq93u3t7ezsbKp1ll6vF4mCggJiMh6PGwyGT2QyRIHD4Xyt02VlZaG7gUCAgi32zs4O0Tsg4fP5bly/3qvR7O3tAYBQKJycmpLJZB/k5iaFUCo1oocNKJPFAoD5+fnuW7f8fj8A0On0G3J5R0cHaqIYdDpROCgIguiag8GgRqMZNhpRyeByuf0DA1VVVYmFEwmiy6AUiMzMTCTmrFZisq6uTtvXl3uYC6hqBINBpIliQSkQeadOJX0gKrW6ubk5yW3N693d3QUABoORn59PQRClpaWJ+tt79wQCwVE3u92OxIdnz6alpVFw1cjLy+NyuUjX19e/lQIAWOfmkKisrKTsDpVYLEZibGwsFosddfD7/ebpaaQbGhooC0ImkyHh8Xj0ev1Rhy9v345GowBQcu5c4jpCNRDCigqJREJsTPRptei1AWB9fV2hUFgsFjRUq9UMBuO4z6ehs89jnXRVXbzo8/nexfOztraurq73Fbu5sdHU1OTxeIguky8QRCMRl8tFJMvnCoVSqQRqn3Sd5nJ/fPRIWFGBhuFw+OXSktPpRBTYbHa3SnVcCv+x5fPfrR0ez2QymaenZ2Zm7HZ7IBDgcDiFhYW1tbWfXrlSVFSU8pNTSQ3Ah8CAD3gwCAwCg8AgMAhsGAQGgUFgEO/004X6bfxFYIO/AV+sxhEAbI0IAAAAAElFTkSuQmCC">, <img class="frz-i" width="44" height="22" alt="код" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFgAAAAtCAIAAAClGDsRAAABJElEQVR42u3ZsWqDUBTG8RMpvkGnm24G9A1SdHX0BVJotuYJfIqaPR1S7+wgNLu4+waFDkJpl7o4uUmHu5c0xEbp/ywu98PLj3v0wpm9vn0KJWJBYOrKPG7U9b8leP/44kTQGkAAAcTfQLRt+7TbBb6/cJyF42RZNv7sT7/PE6qua52meZ53XTeV7Jkhqqp63u/Lsuz7firZ87eGTtO71aooCrMbz/O01iPPDgIRhqFlWSKilHpMkpfDwQ+CkWcHaQ01n0dR5Lru/Xpt2/YkskN9I5Lt9uT3XSrLPQIIIIAAAggggAACCCCAAOKSNTOzz19Num6Xy6Zpjln5sNnEcTyGrDDpojWGbw1hCExrAAEEEEAAQQEBBBBAyFFDYHPf5kRQ8g3a2LSYIzaDcgAAAABJRU5ErkJggg=="> — ни одно не начало другого.</div>
+        <div class="box bad"><h3>Нет</h3><img class="frz-i" width="24" height="22" alt="код" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAtCAIAAABnKH+VAAADW0lEQVR42u2YS0gbURSGT16jTpQK2kEtUo0N1k0EqYIVRFBBfGymFRdiBQ1UaAhpFmoWdpWHlUrEjYUKmo1FsKnURDAFo2ClcacEXzRdGMYSNbFE40RMTBfXDiFx49CxLuZu8s89ZyYf9zzunRHs/NiHuzSEcMeGGP3kP7j/31G81OFdXCEeiAf6R1XGbmysr1utVpfL5fP5IpEIQRAVFRUkST4pL2f9TAFqjDct+3A4bDQaP05NXWttbmkxmUypqaksyp7NCkWjUbVa7VxcRJc4jstkstDZmXdvLxKJAIBtbu738fGH8XGxWHwbOfR+bAzRSCSSvv7+7y7X59lZh8PhWlt72dMjEAgAYGVlxWKx3EbIDg8OamtraZoGALPZ3NzSkuBgmZzU6/UAIJVKv62uSqVSbjv1J6sV0VRXVyfTAMCLzs7HJSUAEAqFHA4H5yGz2+1IdHR0XOvgWFj4tX91gvh6c6CbJV0oFNrZ3gYADMOeVlUlWGmaNuj109PTzMzm5ia3QLu7u7FYDAAKCwsxDIs3bW1taTSanx5P/CRFUScnJxkZGVyFjKIoJHJzc5nJWCw2MTHxjCQRDY7jb4eG0tPTkTUQCHCYQ6enp0zvQeLo6Ki7q8toMFxcXACAQqH4MjdHkuS9zMyEWzgJWZimr26TSABgeXm5r7fX7/cDgFAo7FYqtVotaoYioZBJLA6BmN0gGAwaDAbL5CRKKYIg3g0PV1ZWxic4EmlpaRwCMV1uyelkJuvq6kyDg5l/Y4SyKhgMIs0kEydAWdnZCQvWr9O1t7cnuO1T1Pn5OQCIRKKcnBwOgYqLi+O1eWRELpcnu7ndbiQeFhSkpKRwWGVZWVkEQSDd2Nh4LQ0AOJeWkCgrK+N866ivr0diZmYmGo0mO/j9frvNhnRTUxPnQCRJXm3OXu/o6Giyw5uBgXA4DACyoqL4uuMKSFFa2tDQwByMBk0m9PcA4PP5VCoVs8PrdDqRSHQbR9jDg4O2tjav18t07UdyeZimPR4PE8RXKpVGo2FxhGV5pqYoSq1Wb6yvJ5swDHut1SqVSnav0iyBAODy8tJus83Pz7vd7kAggON4Xl5eTU3N89bW/Px81u/27IH4jw08EA/EA/FAPBDcpU96aB/hV+ia8Qe1FWHljElxEAAAAABJRU5ErkJggg==">, <img class="frz-i" width="34" height="22" alt="код" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEQAAAAtCAIAAACYilp3AAAEDklEQVR42u2YX0hbVxzHf0lM1Phngu1FTWXVNri8RJBV6izigwHRBvRuVai4QhtmYUGCaJMg3VOTuExZyR46WbtELHUSl3WaCL1io+DDkjdL0DYswzTEEU3SGc0fMTF7OPUSEged0OVO7nm533PO75fcD+f8zvndH+PV75twWhoTTlHLQY9K3tn/NYbHu33aVoaGoWFomBOdZidrL1ZXTSaTzWbz+XzxeBzDsPr6ehzHP7506V3cd3Z2fpqampyc9Pl8AKBSq7u6urIAE4vF1Gr11JMnqYNut9vtdhuNxqtisUajycvL+yf3jY0Ng15vMpmi0WiWVyaRSPT391ufP0ddLpdbXV0djkQ8r1/H43EAMM/N/fXmzQ8PH+bkpP++3W7/8dEjq9V6eHhIiZj5/sEDRMJms+UKxW822y9PnxIEYbPb+27fZjAYALCysjIxMZHmaNDre65fX1xcRCQCgcBgMGQTZntra3x8HGmtViuRSPLz81G3uLh4cHBweHgYdb/T6cLhcKqvSCRiMpkAwOPxvhkd/XV2tvHKlWzC/Hy00Zuamq6KxZkGn9+48ZFAAADhcJggiNQp3rlzYrFYLpcTCwsdHR1oDbMZMxaLBYne3t5jDYhnz/7cfJuJLxBEZ2dn6uzo2BhVjuZwOPzq5UsA4HA4nzQ2ps1Go1HVvXvT09PkyNraGnXvGafTmUwmAaCqqorD4aROra+vy2SyP1yu1EGv17u7u1tUVETFDMDr9SJRXl5ODiaTSb1e/ymOIxIul/u1VltYWIhmg8EgRdOZvb098m5Bwu/337p5U61SHRwcAIBQKJydm8Nx/IOSkjQXym2z2NGFncNmA8Dy8rL8zp1AIAAATCbzlkQyMDCALkoWk0kGEkVhyAwlFAqpVKoJgwGFEIZho2NjDQ0NqYcBEuQtRDmYgoICJJasVnKwpaVFMzJScrSvUBSFQiGkyeChHEzpmTNpC6VQKnt6etLMNr3e/f19AGCxWGVlZRSFqampSdXf3r/P5/MzzRwOBxIfnj+fm5tL0dOstLQUwzCk29rajiUBAOvSEhJ1dXWU/tIUiURIzMzMJBKJTINAIGAxm5Fub2+nNAyO429LVR6PTqfLNPjq7t1YLAYA1RcupJ5vVIQR1ta2traSHzYjGg16dQDw+XxSqZTMlJVKJYvF+i9hGKjW/K8qmttbW93d3R6Ph8wGLvL5sWjU5XKRG+9LqVQmk2X6Nly+7Pf73+VfvujrGxoagvdd0TyLYZOPHwtra1E3Eom8WF11Op2IhMPhyBWKY0koWp3h8XhGo9FiNs/PzzscjmAwyOVyKyoqmpubP7t2rbKyMiulppNsM6AL53RFk4ahYWgYGoaGoWFomPeZaKLchl4ZCrW/AfWJlrk2n+Q+AAAAAElFTkSuQmCC">,
+        <img class="frz-i" width="34" height="22" alt="код" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEQAAAAtCAIAAACYilp3AAABEklEQVR42u3asQqCUBQG4KuEb9B0bTPQNyh0dfQFDGqrJ/Ap0r2G8s4OQu7i7hsEDULUkouTmzS4R5neyv6zuPijH/dclYPC8XQlfSmR9KgG9WFEhz/NOF9ufVsZYIABhi+mKIrtZmPo+lhRxooSBAGf7KNHc4PKsoz5fhiGZVnyzLaMSdN0v9slSVJVFc9s+23GfH9m23Ec13ejaRpjjEO2E4xpmqIoEkIopWvXPUSRbhgcsp20GZVly7JUVZ0vFpIkcct2tWdcz2t8vXeyeM8AAwwwwAADDDDAAPOZEupZ80sTzelkkuf5M2cuVyvHcdrKEkw0/6nNCAbnaDNggAEGGGCAAYZ0+FND/W2DlfmiugM8gX8IMvNjmQAAAABJRU5ErkJggg==">: <img class="frz-i" width="24" height="22" alt="код" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAtCAIAAABnKH+VAAADW0lEQVR42u2YS0gbURSGT16jTpQK2kEtUo0N1k0EqYIVRFBBfGymFRdiBQ1UaAhpFmoWdpWHlUrEjYUKmo1FsKnURDAFo2ClcacEXzRdGMYSNbFE40RMTBfXDiFx49CxLuZu8s89ZyYf9zzunRHs/NiHuzSEcMeGGP3kP7j/31G81OFdXCEeiAf6R1XGbmysr1utVpfL5fP5IpEIQRAVFRUkST4pL2f9TAFqjDct+3A4bDQaP05NXWttbmkxmUypqaksyp7NCkWjUbVa7VxcRJc4jstkstDZmXdvLxKJAIBtbu738fGH8XGxWHwbOfR+bAzRSCSSvv7+7y7X59lZh8PhWlt72dMjEAgAYGVlxWKx3EbIDg8OamtraZoGALPZ3NzSkuBgmZzU6/UAIJVKv62uSqVSbjv1J6sV0VRXVyfTAMCLzs7HJSUAEAqFHA4H5yGz2+1IdHR0XOvgWFj4tX91gvh6c6CbJV0oFNrZ3gYADMOeVlUlWGmaNuj109PTzMzm5ia3QLu7u7FYDAAKCwsxDIs3bW1taTSanx5P/CRFUScnJxkZGVyFjKIoJHJzc5nJWCw2MTHxjCQRDY7jb4eG0tPTkTUQCHCYQ6enp0zvQeLo6Ki7q8toMFxcXACAQqH4MjdHkuS9zMyEWzgJWZimr26TSABgeXm5r7fX7/cDgFAo7FYqtVotaoYioZBJLA6BmN0gGAwaDAbL5CRKKYIg3g0PV1ZWxic4EmlpaRwCMV1uyelkJuvq6kyDg5l/Y4SyKhgMIs0kEydAWdnZCQvWr9O1t7cnuO1T1Pn5OQCIRKKcnBwOgYqLi+O1eWRELpcnu7ndbiQeFhSkpKRwWGVZWVkEQSDd2Nh4LQ0AOJeWkCgrK+N866ivr0diZmYmGo0mO/j9frvNhnRTUxPnQCRJXm3OXu/o6Giyw5uBgXA4DACyoqL4uuMKSFFa2tDQwByMBk0m9PcA4PP5VCoVs8PrdDqRSHQbR9jDg4O2tjav18t07UdyeZimPR4PE8RXKpVGo2FxhGV5pqYoSq1Wb6yvJ5swDHut1SqVSnav0iyBAODy8tJus83Pz7vd7kAggON4Xl5eTU3N89bW/Px81u/27IH4jw08EA/EA/FAPBDcpU96aB/hV+ia8Qe1FWHljElxEAAAAABJRU5ErkJggg=="> — начало <img class="frz-i" width="34" height="22" alt="код" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEQAAAAtCAIAAACYilp3AAAEDklEQVR42u2YX0hbVxzHf0lM1Phngu1FTWXVNri8RJBV6izigwHRBvRuVai4QhtmYUGCaJMg3VOTuExZyR46WbtELHUSl3WaCL1io+DDkjdL0DYswzTEEU3SGc0fMTF7OPUSEged0OVO7nm533PO75fcD+f8zvndH+PV75twWhoTTlHLQY9K3tn/NYbHu33aVoaGoWFomBOdZidrL1ZXTSaTzWbz+XzxeBzDsPr6ehzHP7506V3cd3Z2fpqampyc9Pl8AKBSq7u6urIAE4vF1Gr11JMnqYNut9vtdhuNxqtisUajycvL+yf3jY0Ng15vMpmi0WiWVyaRSPT391ufP0ddLpdbXV0djkQ8r1/H43EAMM/N/fXmzQ8PH+bkpP++3W7/8dEjq9V6eHhIiZj5/sEDRMJms+UKxW822y9PnxIEYbPb+27fZjAYALCysjIxMZHmaNDre65fX1xcRCQCgcBgMGQTZntra3x8HGmtViuRSPLz81G3uLh4cHBweHgYdb/T6cLhcKqvSCRiMpkAwOPxvhkd/XV2tvHKlWzC/Hy00Zuamq6KxZkGn9+48ZFAAADhcJggiNQp3rlzYrFYLpcTCwsdHR1oDbMZMxaLBYne3t5jDYhnz/7cfJuJLxBEZ2dn6uzo2BhVjuZwOPzq5UsA4HA4nzQ2ps1Go1HVvXvT09PkyNraGnXvGafTmUwmAaCqqorD4aROra+vy2SyP1yu1EGv17u7u1tUVETFDMDr9SJRXl5ODiaTSb1e/ymOIxIul/u1VltYWIhmg8EgRdOZvb098m5Bwu/337p5U61SHRwcAIBQKJydm8Nx/IOSkjQXym2z2NGFncNmA8Dy8rL8zp1AIAAATCbzlkQyMDCALkoWk0kGEkVhyAwlFAqpVKoJgwGFEIZho2NjDQ0NqYcBEuQtRDmYgoICJJasVnKwpaVFMzJScrSvUBSFQiGkyeChHEzpmTNpC6VQKnt6etLMNr3e/f19AGCxWGVlZRSFqampSdXf3r/P5/MzzRwOBxIfnj+fm5tL0dOstLQUwzCk29rajiUBAOvSEhJ1dXWU/tIUiURIzMzMJBKJTINAIGAxm5Fub2+nNAyO429LVR6PTqfLNPjq7t1YLAYA1RcupJ5vVIQR1ta2traSHzYjGg16dQDw+XxSqZTMlJVKJYvF+i9hGKjW/K8qmttbW93d3R6Ph8wGLvL5sWjU5XKRG+9LqVQmk2X6Nly+7Pf73+VfvujrGxoagvdd0TyLYZOPHwtra1E3Eom8WF11Op2IhMPhyBWKY0koWp3h8XhGo9FiNs/PzzscjmAwyOVyKyoqmpubP7t2rbKyMiulppNsM6AL53RFk4ahYWgYGoaGoWFomPeZaKLchl4ZCrW/AfWJlrk2n+Q+AAAAAElFTkSuQmCC">.</div>
+      </div>
+    </div>
+    <div class="step" hidden>
+      <p>Код с условием Фано называют <b>префиксным</b>. Его поток читается
+      слева направо однозначно, без разделителей.</p>
+    </div>
+    <div class="step" hidden>
+      <p>Какое слово ещё можно добавить к А = <img class="frz-i" width="24" height="22" alt="код" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAtCAIAAABnKH+VAAADW0lEQVR42u2YS0gbURSGT16jTpQK2kEtUo0N1k0EqYIVRFBBfGymFRdiBQ1UaAhpFmoWdpWHlUrEjYUKmo1FsKnURDAFo2ClcacEXzRdGMYSNbFE40RMTBfXDiFx49CxLuZu8s89ZyYf9zzunRHs/NiHuzSEcMeGGP3kP7j/31G81OFdXCEeiAf6R1XGbmysr1utVpfL5fP5IpEIQRAVFRUkST4pL2f9TAFqjDct+3A4bDQaP05NXWttbmkxmUypqaksyp7NCkWjUbVa7VxcRJc4jstkstDZmXdvLxKJAIBtbu738fGH8XGxWHwbOfR+bAzRSCSSvv7+7y7X59lZh8PhWlt72dMjEAgAYGVlxWKx3EbIDg8OamtraZoGALPZ3NzSkuBgmZzU6/UAIJVKv62uSqVSbjv1J6sV0VRXVyfTAMCLzs7HJSUAEAqFHA4H5yGz2+1IdHR0XOvgWFj4tX91gvh6c6CbJV0oFNrZ3gYADMOeVlUlWGmaNuj109PTzMzm5ia3QLu7u7FYDAAKCwsxDIs3bW1taTSanx5P/CRFUScnJxkZGVyFjKIoJHJzc5nJWCw2MTHxjCQRDY7jb4eG0tPTkTUQCHCYQ6enp0zvQeLo6Ki7q8toMFxcXACAQqH4MjdHkuS9zMyEWzgJWZimr26TSABgeXm5r7fX7/cDgFAo7FYqtVotaoYioZBJLA6BmN0gGAwaDAbL5CRKKYIg3g0PV1ZWxic4EmlpaRwCMV1uyelkJuvq6kyDg5l/Y4SyKhgMIs0kEydAWdnZCQvWr9O1t7cnuO1T1Pn5OQCIRKKcnBwOgYqLi+O1eWRELpcnu7ndbiQeFhSkpKRwWGVZWVkEQSDd2Nh4LQ0AOJeWkCgrK+N866ivr0diZmYmGo0mO/j9frvNhnRTUxPnQCRJXm3OXu/o6Giyw5uBgXA4DACyoqL4uuMKSFFa2tDQwByMBk0m9PcA4PP5VCoVs8PrdDqRSHQbR9jDg4O2tjav18t07UdyeZimPR4PE8RXKpVGo2FxhGV5pqYoSq1Wb6yvJ5swDHut1SqVSnav0iyBAODy8tJus83Pz7vd7kAggON4Xl5eTU3N89bW/Px81u/27IH4jw08EA/EA/FAPBDcpU96aB/hV+ia8Qe1FWHljElxEAAAAABJRU5ErkJggg==">, Б = <img class="frz-i" width="34" height="22" alt="код" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEQAAAAtCAIAAACYilp3AAAEFklEQVR42u2ZX0xaVxzHf/wRFf/MxPZGpWbVljheNDGrqbMxPkhitCR6t2pS45q0pDaZMcRogZjuqYBjmjXsoTNrB8amzuBYp2BSjEUTHwZvNkRbUhYpwYUW6EQvYATZw6l3BPsAJtI7c38vfM85v3PDh3t+v/M7B8bLV5twUowJJ8jY6KOcd/p/jeH2vD1pb4aGoWFomCNlsyPb1tbWr1NTk5OTXq8XABRKZWdnZyoTn6+uGgwGq9Xq9Xqj0SiGYXV1dTiOf37hwkeA2djY0Gm1BoMhHA6nNTESiSiVyqnHjxM7XS6Xy+XS6/WXRSKVSpWTk5MhGJvN9svDhxaLZX9/P925sVisv7/f8uwZanK53MrKSiIUcr9+HY1GAcA4N/fPu3c/P3jAZrOPPWZ0Wm331auLi4uIRCAQ6HS61Kf/dP8+IsnKypLKZH9arb8/eWI2m602W++tWwwGAwBWVlYmJiYykQCEQiGTyQQAHo/3/ejoH7OzDZcupTj37Zs34+PjSKvVarFYnJubi5qFhYWDg4PDw8Oo+aNGQxDEscPwzpwRiURSqdS8sNDe3o5+yxTtt4MAa2xsvCwSHXb4+tq1zwQCACAIwmw2ZyJmRsfGjpYzTCYTEj09PR90MD99+vfm+yp+wWzu6OjIaGpO3QiCePniBQBwOJwvGhqSRsPhsOLu3enpabJnbW0t0/tM6uZwOOLxOABUVFRwOJzEofX1dYlE8pfTmdjp8Xi2t7cLCgqoWAF4PB4kSktLyc54PK7Var/EcUTC5XK/U6vz8/PRaCAQoGg5s7OzQ+4tSPh8vhvXrysVir29PQCorq6enZvDcfyToqKkKZRbZpGDQoGdlQUAy8vL0tu3/X4/ADCZzBti8cDAANooWUwmGUgUhSErlGAwqFAoJnQ6FEIYho2OjdXX1ycmAyTIXYhyMHl5eUgsWSxkZ3Nzs2pkpOhgXaEoCgaDSJPBQzmY4lOnkl6UTC7v7u5Octv0eHZ3dwGAxWKVlJRQFKaqqipR/3DvHp/PP+xmt9uR+PTs2ezsbIpms+LiYgzDkG5tbf0gCQBYlpaQqK2tpfRJUygUIjEzMxOLxQ47+P1+k9GIdFtbG6VhcBx/f83ldms0msMO3965E4lEAKDy3LnE/EZFmOqampaWFvJgM6JSoa8OAF6vt6+vj6yU5XI5i8VK9/kMdNec1o1m/cWLPp8vFc+bvb1DQ0NJR5quri63201WA+f5/Eg47HQ6yYX3TV+fRCIB6t9onsawyUePqmtqUDMUCj1fXXU4HIiEw+FIZbJ0ST5Cav7veMfj6fV6k9E4Pz9vt9sDgQCXyy0rK2tqavrqypXy8vIjP/koywzoi3OgbzRpGBqGhqFhaBgahoaB4/sbENU29JuhkP0Lk8+WuU/30ZMAAAAASUVORK5CYII=">?
+      Перебираем слова по длине:</p>
+      <div data-fano-demo></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-ex data-type="2"></section>
+
+<section class="slide" data-ex data-type="5"></section>
+
+<section class="slide">
+  <h2>Декодирование префиксного кода</h2>
+  <p>А = <img class="frz-i" width="24" height="22" alt="код" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAtCAIAAABnKH+VAAADW0lEQVR42u2YS0gbURSGT16jTpQK2kEtUo0N1k0EqYIVRFBBfGymFRdiBQ1UaAhpFmoWdpWHlUrEjYUKmo1FsKnURDAFo2ClcacEXzRdGMYSNbFE40RMTBfXDiFx49CxLuZu8s89ZyYf9zzunRHs/NiHuzSEcMeGGP3kP7j/31G81OFdXCEeiAf6R1XGbmysr1utVpfL5fP5IpEIQRAVFRUkST4pL2f9TAFqjDct+3A4bDQaP05NXWttbmkxmUypqaksyp7NCkWjUbVa7VxcRJc4jstkstDZmXdvLxKJAIBtbu738fGH8XGxWHwbOfR+bAzRSCSSvv7+7y7X59lZh8PhWlt72dMjEAgAYGVlxWKx3EbIDg8OamtraZoGALPZ3NzSkuBgmZzU6/UAIJVKv62uSqVSbjv1J6sV0VRXVyfTAMCLzs7HJSUAEAqFHA4H5yGz2+1IdHR0XOvgWFj4tX91gvh6c6CbJV0oFNrZ3gYADMOeVlUlWGmaNuj109PTzMzm5ia3QLu7u7FYDAAKCwsxDIs3bW1taTSanx5P/CRFUScnJxkZGVyFjKIoJHJzc5nJWCw2MTHxjCQRDY7jb4eG0tPTkTUQCHCYQ6enp0zvQeLo6Ki7q8toMFxcXACAQqH4MjdHkuS9zMyEWzgJWZimr26TSABgeXm5r7fX7/cDgFAo7FYqtVotaoYioZBJLA6BmN0gGAwaDAbL5CRKKYIg3g0PV1ZWxic4EmlpaRwCMV1uyelkJuvq6kyDg5l/Y4SyKhgMIs0kEydAWdnZCQvWr9O1t7cnuO1T1Pn5OQCIRKKcnBwOgYqLi+O1eWRELpcnu7ndbiQeFhSkpKRwWGVZWVkEQSDd2Nh4LQ0AOJeWkCgrK+N866ivr0diZmYmGo0mO/j9frvNhnRTUxPnQCRJXm3OXu/o6Giyw5uBgXA4DACyoqL4uuMKSFFa2tDQwByMBk0m9PcA4PP5VCoVs8PrdDqRSHQbR9jDg4O2tjav18t07UdyeZimPR4PE8RXKpVGo2FxhGV5pqYoSq1Wb6yvJ5swDHut1SqVSnav0iyBAODy8tJus83Pz7vd7kAggON4Xl5eTU3N89bW/Px81u/27IH4jw08EA/EA/FAPBDcpU96aB/hV+ia8Qe1FWHljElxEAAAAABJRU5ErkJggg==">, Б = <img class="frz-i" width="34" height="22" alt="код" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEQAAAAtCAIAAACYilp3AAAEFklEQVR42u2ZX0xaVxzHf/wRFf/MxPZGpWbVljheNDGrqbMxPkhitCR6t2pS45q0pDaZMcRogZjuqYBjmjXsoTNrB8amzuBYp2BSjEUTHwZvNkRbUhYpwYUW6EQvYATZw6l3BPsAJtI7c38vfM85v3PDh3t+v/M7B8bLV5twUowJJ8jY6KOcd/p/jeH2vD1pb4aGoWFomCNlsyPb1tbWr1NTk5OTXq8XABRKZWdnZyoTn6+uGgwGq9Xq9Xqj0SiGYXV1dTiOf37hwkeA2djY0Gm1BoMhHA6nNTESiSiVyqnHjxM7XS6Xy+XS6/WXRSKVSpWTk5MhGJvN9svDhxaLZX9/P925sVisv7/f8uwZanK53MrKSiIUcr9+HY1GAcA4N/fPu3c/P3jAZrOPPWZ0Wm331auLi4uIRCAQ6HS61Kf/dP8+IsnKypLKZH9arb8/eWI2m602W++tWwwGAwBWVlYmJiYykQCEQiGTyQQAHo/3/ejoH7OzDZcupTj37Zs34+PjSKvVarFYnJubi5qFhYWDg4PDw8Oo+aNGQxDEscPwzpwRiURSqdS8sNDe3o5+yxTtt4MAa2xsvCwSHXb4+tq1zwQCACAIwmw2ZyJmRsfGjpYzTCYTEj09PR90MD99+vfm+yp+wWzu6OjIaGpO3QiCePniBQBwOJwvGhqSRsPhsOLu3enpabJnbW0t0/tM6uZwOOLxOABUVFRwOJzEofX1dYlE8pfTmdjp8Xi2t7cLCgqoWAF4PB4kSktLyc54PK7Var/EcUTC5XK/U6vz8/PRaCAQoGg5s7OzQ+4tSPh8vhvXrysVir29PQCorq6enZvDcfyToqKkKZRbZpGDQoGdlQUAy8vL0tu3/X4/ADCZzBti8cDAANooWUwmGUgUhSErlGAwqFAoJnQ6FEIYho2OjdXX1ycmAyTIXYhyMHl5eUgsWSxkZ3Nzs2pkpOhgXaEoCgaDSJPBQzmY4lOnkl6UTC7v7u5Octv0eHZ3dwGAxWKVlJRQFKaqqipR/3DvHp/PP+xmt9uR+PTs2ezsbIpms+LiYgzDkG5tbf0gCQBYlpaQqK2tpfRJUygUIjEzMxOLxQ47+P1+k9GIdFtbG6VhcBx/f83ldms0msMO3965E4lEAKDy3LnE/EZFmOqampaWFvJgM6JSoa8OAF6vt6+vj6yU5XI5i8VK9/kMdNec1o1m/cWLPp8vFc+bvb1DQ0NJR5quri63201WA+f5/Eg47HQ6yYX3TV+fRCIB6t9onsawyUePqmtqUDMUCj1fXXU4HIiEw+FIZbJ0ST5Cav7veMfj6fV6k9E4Pz9vt9sDgQCXyy0rK2tqavrqypXy8vIjP/koywzoi3OgbzRpGBqGhqFhaBgahoaB4/sbENU29JuhkP0Lk8+WuU/30ZMAAAAASUVORK5CYII=">, В = <img class="frz-i" width="44" height="22" alt="код" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFgAAAAtCAIAAAClGDsRAAAEI0lEQVR42u2ZX0hbdxTHT/6q8c8E26CmsmoT1IdG6lNdRIQayLR5MFsRKlZowywsSBCtyaTrHhrjMmUle6iydomsdGjUtWqEZtgo+DDTvViCsWEZpiEONUlnNH9EY/bwm3ch9qGGemF3v/Nyv7/fPefC/XDP+Z37+9Fe/b4G2ADoGAEyJroU8U7/bxF4vJv4i8CpgUFgEBgEOSC2traGBgerRSIBny/g80dHR0mIfbm09NWdOx9LJJUXLgjPn6+7dOkLtfq3Fy/ew/KZgq2urhoNhomJiUgkQlpsNBrt7e396fHjxEm32+12u00m02WpVKvVpqenkwTCZrP98PCh1Wo9ODggMzYWi7W3t1ufP0dDDodTUlISCoc9r1/v7+8DwPTU1F9v3nz/4AGTyTzx1DAaDM1Xr87OzqI3KS8vNxqNJMQCwOD9+4gCi8XqVql+XVz8+ckTi8WyaLO13bxJo9EAYGFhYXh4mIwaIRaL6XQ6APB4vG/6+59OToqqq0mI3dzYGBoaQlqn08nl8oyMDDTMycnp7Ozs6elBw+/0+lAodOKpwTtzRiqVlpWVXWttZbPZpMWOHxaUmpqay1LpUYdrra1j4+MrDkcoFLJYLI2NjSdeI/oHBlIusSnHms1mJFpaWt7qYHn27M+1f/6kfyEHBPkWCoVerawAAJvN/kgkSrobiUQ0d++OjIwQM8vLy+Qtn2Sa0+mMx+MAUFxcnJRTDodDqVT+4XIlTnq93u3t7ezsbKp1ll6vF4mCggJiMh6PGwyGT2QyRIHD4Xyt02VlZaG7gUCAgi32zs4O0Tsg4fP5bly/3qvR7O3tAYBQKJycmpLJZB/k5iaFUCo1oocNKJPFAoD5+fnuW7f8fj8A0On0G3J5R0cHaqIYdDpROCgIguiag8GgRqMZNhpRyeByuf0DA1VVVYmFEwmiy6AUiMzMTCTmrFZisq6uTtvXl3uYC6hqBINBpIliQSkQeadOJX0gKrW6ubk5yW3N693d3QUABoORn59PQRClpaWJ+tt79wQCwVE3u92OxIdnz6alpVFw1cjLy+NyuUjX19e/lQIAWOfmkKisrKTsDpVYLEZibGwsFosddfD7/ebpaaQbGhooC0ImkyHh8Xj0ev1Rhy9v345GowBQcu5c4jpCNRDCigqJREJsTPRptei1AWB9fV2hUFgsFjRUq9UMBuO4z6ehs89jnXRVXbzo8/nexfOztraurq73Fbu5sdHU1OTxeIguky8QRCMRl8tFJMvnCoVSqQRqn3Sd5nJ/fPRIWFGBhuFw+OXSktPpRBTYbHa3SnVcCv+x5fPfrR0ez2QymaenZ2Zm7HZ7IBDgcDiFhYW1tbWfXrlSVFSU8pNTSQ3Ah8CAD3gwCAwCg8AgMAhsGAQGgUFgEO/004X6bfxFYIO/AV+sxhEAbI0IAAAAAElFTkSuQmCC">, Г =
+  <img class="frz-i" width="44" height="22" alt="код" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFgAAAAtCAIAAAClGDsRAAABJElEQVR42u3ZsWqDUBTG8RMpvkGnm24G9A1SdHX0BVJotuYJfIqaPR1S7+wgNLu4+waFDkJpl7o4uUmHu5c0xEbp/ywu98PLj3v0wpm9vn0KJWJBYOrKPG7U9b8leP/44kTQGkAAAcTfQLRt+7TbBb6/cJyF42RZNv7sT7/PE6qua52meZ53XTeV7Jkhqqp63u/Lsuz7firZ87eGTtO71aooCrMbz/O01iPPDgIRhqFlWSKilHpMkpfDwQ+CkWcHaQ01n0dR5Lru/Xpt2/YkskN9I5Lt9uT3XSrLPQIIIIAAAggggAACCCCAAOKSNTOzz19Num6Xy6Zpjln5sNnEcTyGrDDpojWGbw1hCExrAAEEEEAAQQEBBBBAyFFDYHPf5kRQ8g3a2LSYIzaDcgAAAABJRU5ErkJggg==">. Пришло <img class="frz-i" width="114" height="22" alt="код" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOQAAAAtCAIAAAAx0lCmAAAFKklEQVR42u1cXUhbZxh+TTRq/JlgG9RUVu1EvVGQVeos4oWCaHNhtipUrNDKLEwkiFZFuqtGnVNW3EUna5eIpU7UrKs/0BQbBS8W7yxBbZhDG+KImnRGYyImZhffDFl00PUkfOeD97nxPed8r8/zfDycfDnn5IS9+X0TEAgWIMApQLCCcPInVXoe5wLBW5jM23hmReAyAIHAsCIwrAgEhhWBCPrVgA/D66UljUaj1+stFovb7ZZIJPn5+XK5/NPLl9+nfXd39+eRkeHhYYvFAgDKrq6qqio+89LSzKJfjr3BDKvL5erq6hp5+tR/58bGxsbGxtjY2DWZrLu7Oyoq6r/a19fX1SqVRqNxOp1M8NLSzKJfjr1BDqvH42lqatK9ekU2xWJxenq64+DA9Pat2+0GgKnJyb/evfvx0aPw8MD/v7i4+NPjxzqd7vj4mBVeWppZ9MulNyRr1h8ePiQzGBER0dbe/pte/8uzZ1qtVr+42HDnTlhYGAAsLCwMDQ0FNKpVqpobN2ZnZ4mT7OxstVrNc15amln0y3Gugh/W7a2twcFBUvf29tbX10dHR5PN+Pj4lpaWzs5Osvn9wIDD4fDvLS0tFQgEACCVSr/t6/v1+fPCq1d5zktLM4t+ufSGZBkwcbIQKSoquiaTnR5ws65ufGJidWXF4XBotdrKykrfIemFCzKZLCsr62ZdnUgkYoKXlmYW/XLpDUlYp6enSVFbW3vmAO2LF39u/vMk18t/TyIA9PX3f5hQWry0NLPol2NvkMPqcDjerK4CgEgk+qywMOCo0+lU3r8/Ojrq27O8vBwUlbR4aWlm0S/vrrMajUav1wsAaWlpAef5lZUVhULxx9qa/06z2by3txcXF8dRJS1eWppZ9At8u4NlNptJkZyc7Nvp9XpVKtXncjmZQbFY/E1vb2xsLDlqs9m4q6TFS0szi355F9b9/X3fNT9S7Ozs3L51q0upPDo6AoCcnJznk5NyufyjhISAFi6gxUtLM4t+ebcMcJ3ckAiPiACA+fn5trt3rVYrAAgEgtv19c3NzeQCtVAg8C2wuKukxUtLM4t+eRdW3509u92uVCqH1GqytJJIJH39/QUFBf5fAkjhuzrIBbR4aWlm0S/vwhoTE0OKOZ3Ot7OkpKS7pyfh5POIrK7sdjupfYsqLqDFS0szi355F9bEc+cCTh7tHR01NTUBwzbN5sPDQwAQCoVJSUncVdLipaWZRb+8C2tmZqZ//d2DBxkZGaeHGQwGUnx88WJkZCR3lbR4aWlm0S/vrgYkJiZKJBJSl5eXnzmDAKCbmyNFXl5ecM5SlHhpaWbRLx9/KVBaWkqK8fFxj8dzeoDVap2emiJ1RUVFsITS4qWlmUW/vAurXC4nhclkGhgYOD3g63v3XC4XAKRfuuT/vZUjaPHS0syiX96FNSc3t6ysDE4euOzp7iZTBgAWi6WxsVGr1ZLNjo4OoVAYLKG0eGlpZtFvqBFG3nX1v97Isr21VV1dbTKZ4OQuyycZGS6nc21tzfeB9VVjo0KhON1bcOXKzs7O+7B82dDQ2trKB15amln0y6UXQvFGlvMSyfCTJzm5uWTz4ODg9dKS0WgkMygSidra28+cQY6gxUtLM4t++fjrVqlUOjY2Nj01NTMzYzAYbDabWCxOSUkpLi7+4vr11NTUEMmlxUtLM4t++bUMQCAAX8yGQOAbWRAYVgQCw4pAYFgRGFYEAsOKQGBYERhWBALDikBgWBHA2IMs5N4rAoFnVgQiCPgbmtSafOpG7AoAAAAASUVORK5CYII=">.</p>
+  <div class="steps">
+    <div class="step" hidden>
+      <div data-dec-demo></div>
+    </div>
+    <div class="step" hidden>
+      <div class="box good">Набираем биты по одному; как только набранное совпало
+      с кодовым словом — записали букву и начинаем заново. Возвращаться не
+      приходится: это и даёт условие Фано. Здесь — <b>АБВАГ</b>.</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-ex data-type="3"></section>
+
+<section class="slide">
+  <h2>Алгоритм Хаффмана</h2>
+  <p>Строит префиксный код, при котором сообщение выходит <b>самым коротким</b>.
+  Частоты: А — 5, Б — 2, В — 1, Г — 1.</p>
+  <div class="steps">
+    <div class="step" hidden>
+      <ol>
+        <li>Взять <b>две наименьшие</b> частоты и слить в один узел с весом-суммой.</li>
+        <li>Повторять, пока не останется один узел.</li>
+      </ol>
+      <div data-huff-demo></div>
+    </div>
+    <div class="step" hidden>
+      <div class="box good big">Длина сообщения = <b>сумма всех слияний</b>:
+      2 + 4 + 9 = 15 бит.</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Почему сумма слияний</h2>
+  <div class="two">
+    <div>
+      <p>Каждое слияние — новый уровень дерева: всем буквам под ним код
+      удлиняется на один бит. Вес слияния — сколько раз эти буквы встречаются,
+      то есть сколько бит добавилось ко всему сообщению.</p>
+      <p>Проверка по кодам того же дерева:</p>
+    </div>
+    <table>
+      <tr><th>буква</th><th>раз</th><th>код</th><th>бит</th></tr>
+      <tr><td>А</td><td>5</td><td><img class="frz-i" width="24" height="22" alt="код" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAtCAIAAABnKH+VAAADW0lEQVR42u2YS0gbURSGT16jTpQK2kEtUo0N1k0EqYIVRFBBfGymFRdiBQ1UaAhpFmoWdpWHlUrEjYUKmo1FsKnURDAFo2ClcacEXzRdGMYSNbFE40RMTBfXDiFx49CxLuZu8s89ZyYf9zzunRHs/NiHuzSEcMeGGP3kP7j/31G81OFdXCEeiAf6R1XGbmysr1utVpfL5fP5IpEIQRAVFRUkST4pL2f9TAFqjDct+3A4bDQaP05NXWttbmkxmUypqaksyp7NCkWjUbVa7VxcRJc4jstkstDZmXdvLxKJAIBtbu738fGH8XGxWHwbOfR+bAzRSCSSvv7+7y7X59lZh8PhWlt72dMjEAgAYGVlxWKx3EbIDg8OamtraZoGALPZ3NzSkuBgmZzU6/UAIJVKv62uSqVSbjv1J6sV0VRXVyfTAMCLzs7HJSUAEAqFHA4H5yGz2+1IdHR0XOvgWFj4tX91gvh6c6CbJV0oFNrZ3gYADMOeVlUlWGmaNuj109PTzMzm5ia3QLu7u7FYDAAKCwsxDIs3bW1taTSanx5P/CRFUScnJxkZGVyFjKIoJHJzc5nJWCw2MTHxjCQRDY7jb4eG0tPTkTUQCHCYQ6enp0zvQeLo6Ki7q8toMFxcXACAQqH4MjdHkuS9zMyEWzgJWZimr26TSABgeXm5r7fX7/cDgFAo7FYqtVotaoYioZBJLA6BmN0gGAwaDAbL5CRKKYIg3g0PV1ZWxic4EmlpaRwCMV1uyelkJuvq6kyDg5l/Y4SyKhgMIs0kEydAWdnZCQvWr9O1t7cnuO1T1Pn5OQCIRKKcnBwOgYqLi+O1eWRELpcnu7ndbiQeFhSkpKRwWGVZWVkEQSDd2Nh4LQ0AOJeWkCgrK+N866ivr0diZmYmGo0mO/j9frvNhnRTUxPnQCRJXm3OXu/o6Giyw5uBgXA4DACyoqL4uuMKSFFa2tDQwByMBk0m9PcA4PP5VCoVs8PrdDqRSHQbR9jDg4O2tjav18t07UdyeZimPR4PE8RXKpVGo2FxhGV5pqYoSq1Wb6yvJ5swDHut1SqVSnav0iyBAODy8tJus83Pz7vd7kAggON4Xl5eTU3N89bW/Px81u/27IH4jw08EA/EA/FAPBDcpU96aB/hV+ia8Qe1FWHljElxEAAAAABJRU5ErkJggg=="></td><td>5 · 1 = 5</td></tr>
+      <tr><td>Б</td><td>2</td><td><img class="frz-i" width="34" height="22" alt="код" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEQAAAAtCAIAAACYilp3AAAEFklEQVR42u2ZX0xaVxzHf/wRFf/MxPZGpWbVljheNDGrqbMxPkhitCR6t2pS45q0pDaZMcRogZjuqYBjmjXsoTNrB8amzuBYp2BSjEUTHwZvNkRbUhYpwYUW6EQvYATZw6l3BPsAJtI7c38vfM85v3PDh3t+v/M7B8bLV5twUowJJ8jY6KOcd/p/jeH2vD1pb4aGoWFomCNlsyPb1tbWr1NTk5OTXq8XABRKZWdnZyoTn6+uGgwGq9Xq9Xqj0SiGYXV1dTiOf37hwkeA2djY0Gm1BoMhHA6nNTESiSiVyqnHjxM7XS6Xy+XS6/WXRSKVSpWTk5MhGJvN9svDhxaLZX9/P925sVisv7/f8uwZanK53MrKSiIUcr9+HY1GAcA4N/fPu3c/P3jAZrOPPWZ0Wm331auLi4uIRCAQ6HS61Kf/dP8+IsnKypLKZH9arb8/eWI2m602W++tWwwGAwBWVlYmJiYykQCEQiGTyQQAHo/3/ejoH7OzDZcupTj37Zs34+PjSKvVarFYnJubi5qFhYWDg4PDw8Oo+aNGQxDEscPwzpwRiURSqdS8sNDe3o5+yxTtt4MAa2xsvCwSHXb4+tq1zwQCACAIwmw2ZyJmRsfGjpYzTCYTEj09PR90MD99+vfm+yp+wWzu6OjIaGpO3QiCePniBQBwOJwvGhqSRsPhsOLu3enpabJnbW0t0/tM6uZwOOLxOABUVFRwOJzEofX1dYlE8pfTmdjp8Xi2t7cLCgqoWAF4PB4kSktLyc54PK7Var/EcUTC5XK/U6vz8/PRaCAQoGg5s7OzQ+4tSPh8vhvXrysVir29PQCorq6enZvDcfyToqKkKZRbZpGDQoGdlQUAy8vL0tu3/X4/ADCZzBti8cDAANooWUwmGUgUhSErlGAwqFAoJnQ6FEIYho2OjdXX1ycmAyTIXYhyMHl5eUgsWSxkZ3Nzs2pkpOhgXaEoCgaDSJPBQzmY4lOnkl6UTC7v7u5Octv0eHZ3dwGAxWKVlJRQFKaqqipR/3DvHp/PP+xmt9uR+PTs2ezsbIpms+LiYgzDkG5tbf0gCQBYlpaQqK2tpfRJUygUIjEzMxOLxQ47+P1+k9GIdFtbG6VhcBx/f83ldms0msMO3965E4lEAKDy3LnE/EZFmOqampaWFvJgM6JSoa8OAF6vt6+vj6yU5XI5i8VK9/kMdNec1o1m/cWLPp8vFc+bvb1DQ0NJR5quri63201WA+f5/Eg47HQ6yYX3TV+fRCIB6t9onsawyUePqmtqUDMUCj1fXXU4HIiEw+FIZbJ0ST5Cav7veMfj6fV6k9E4Pz9vt9sDgQCXyy0rK2tqavrqypXy8vIjP/koywzoi3OgbzRpGBqGhqFhaBgahoaB4/sbENU29JuhkP0Lk8+WuU/30ZMAAAAASUVORK5CYII="></td><td>2 · 2 = 4</td></tr>
+      <tr><td>В</td><td>1</td><td><img class="frz-i" width="44" height="22" alt="код" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFgAAAAtCAIAAAClGDsRAAAEI0lEQVR42u2ZX0hbdxTHT/6q8c8E26CmsmoT1IdG6lNdRIQayLR5MFsRKlZowywsSBCtyaTrHhrjMmUle6iydomsdGjUtWqEZtgo+DDTvViCsWEZpiEONUlnNH9EY/bwm3ch9qGGemF3v/Nyv7/fPefC/XDP+Z37+9Fe/b4G2ADoGAEyJroU8U7/bxF4vJv4i8CpgUFgEBgEOSC2traGBgerRSIBny/g80dHR0mIfbm09NWdOx9LJJUXLgjPn6+7dOkLtfq3Fy/ew/KZgq2urhoNhomJiUgkQlpsNBrt7e396fHjxEm32+12u00m02WpVKvVpqenkwTCZrP98PCh1Wo9ODggMzYWi7W3t1ufP0dDDodTUlISCoc9r1/v7+8DwPTU1F9v3nz/4AGTyTzx1DAaDM1Xr87OzqI3KS8vNxqNJMQCwOD9+4gCi8XqVql+XVz8+ckTi8WyaLO13bxJo9EAYGFhYXh4mIwaIRaL6XQ6APB4vG/6+59OToqqq0mI3dzYGBoaQlqn08nl8oyMDDTMycnp7Ozs6elBw+/0+lAodOKpwTtzRiqVlpWVXWttZbPZpMWOHxaUmpqay1LpUYdrra1j4+MrDkcoFLJYLI2NjSdeI/oHBlIusSnHms1mJFpaWt7qYHn27M+1f/6kfyEHBPkWCoVerawAAJvN/kgkSrobiUQ0d++OjIwQM8vLy+Qtn2Sa0+mMx+MAUFxcnJRTDodDqVT+4XIlTnq93u3t7ezsbKp1ll6vF4mCggJiMh6PGwyGT2QyRIHD4Xyt02VlZaG7gUCAgi32zs4O0Tsg4fP5bly/3qvR7O3tAYBQKJycmpLJZB/k5iaFUCo1oocNKJPFAoD5+fnuW7f8fj8A0On0G3J5R0cHaqIYdDpROCgIguiag8GgRqMZNhpRyeByuf0DA1VVVYmFEwmiy6AUiMzMTCTmrFZisq6uTtvXl3uYC6hqBINBpIliQSkQeadOJX0gKrW6ubk5yW3N693d3QUABoORn59PQRClpaWJ+tt79wQCwVE3u92OxIdnz6alpVFw1cjLy+NyuUjX19e/lQIAWOfmkKisrKTsDpVYLEZibGwsFosddfD7/ebpaaQbGhooC0ImkyHh8Xj0ev1Rhy9v345GowBQcu5c4jpCNRDCigqJREJsTPRptei1AWB9fV2hUFgsFjRUq9UMBuO4z6ehs89jnXRVXbzo8/nexfOztraurq73Fbu5sdHU1OTxeIguky8QRCMRl8tFJMvnCoVSqQRqn3Sd5nJ/fPRIWFGBhuFw+OXSktPpRBTYbHa3SnVcCv+x5fPfrR0ez2QymaenZ2Zm7HZ7IBDgcDiFhYW1tbWfXrlSVFSU8pNTSQ3Ah8CAD3gwCAwCg8AgMAhsGAQGgUFgEO/004X6bfxFYIO/AV+sxhEAbI0IAAAAAElFTkSuQmCC"></td><td>1 · 3 = 3</td></tr>
+      <tr><td>Г</td><td>1</td><td><img class="frz-i" width="44" height="22" alt="код" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFgAAAAtCAIAAAClGDsRAAABJElEQVR42u3ZsWqDUBTG8RMpvkGnm24G9A1SdHX0BVJotuYJfIqaPR1S7+wgNLu4+waFDkJpl7o4uUmHu5c0xEbp/ywu98PLj3v0wpm9vn0KJWJBYOrKPG7U9b8leP/44kTQGkAAAcTfQLRt+7TbBb6/cJyF42RZNv7sT7/PE6qua52meZ53XTeV7Jkhqqp63u/Lsuz7firZ87eGTtO71aooCrMbz/O01iPPDgIRhqFlWSKilHpMkpfDwQ+CkWcHaQ01n0dR5Lru/Xpt2/YkskN9I5Lt9uT3XSrLPQIIIIAAAggggAACCCCAAOKSNTOzz19Num6Xy6Zpjln5sNnEcTyGrDDpojWGbw1hCExrAAEEEEAAQQEBBBBAyFFDYHPf5kRQ8g3a2LSYIzaDcgAAAABJRU5ErkJggg=="></td><td>1 · 3 = 3</td></tr>
+      <tr><th colspan="3">всего</th><th>15</th></tr>
+    </table>
+  </div>
+  <div class="steps">
+    <div class="step" hidden>
+      <div class="box warn">При равных весах дерево строят по-разному, и коды
+      отдельных букв выходят разными — а сумма всегда одна. Поэтому в задачах
+      спрашивают длину сообщения, а не «код буквы Б».</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-ex data-type="0"></section>
+
+<section class="slide">
+  <h2>Выигрыш против равномерного кода</h2>
+  <p>Тот же пример: 4 буквы, в сообщении 5 + 2 + 1 + 1 = 9 букв.</p>
+  <div class="steps">
+    <div class="step" hidden>
+      <div data-gain-demo></div>
+    </div>
+    <div class="step" hidden>
+      <div class="formula">выигрыш = K · i − (сумма слияний)</div>
+      <p>K — букв в сообщении, i — длина равномерного кода. Если частоты близки,
+      дерево выходит ровным и выигрыша нет: Хаффман помогает там, где буквы
+      встречаются по-разному часто.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-ex data-type="1"></section>
+
+<section class="slide">
+  <h2>Что делаем дальше</h2>
+  <ol>
+    <li><b>Обзорный практикум</b> — шесть задач, все сразу на странице, в любом
+        порядке: код Хаффмана, выигрыш против равномерного, условие Фано,
+        декодирование, равномерный код, проверка префиксности.</li>
+    <li>Слияния и перебор слов — <b>на черновике</b> таблицей, как на слайдах.</li>
+    <li>Ответ везде — целое число, без единиц.</li>
+  </ol>
+  <p>Ошибся — сразу виден разбор, а «Новые числа» дают ту же задачу с другими
+  данными. Отметка: закрыто 6 из 6 — «5», 5 — «4», 3 или 4 — «3».</p>
+</section>
+
+<section class="slide">
+  <h1>За работу</h1>
+  <p class="lead">Практикум «Код Хаффмана и условие Фано» — в общей папке и на
+  сайте. Не успел на уроке — пройди дома: вариант будет другой, сдаётся тем же
+  кодом.</p>
+  <p>Карточку в тетрадь можно взять с собой: на ней равномерный код, алгоритм
+  Хаффмана, условие Фано, декодирование и формула выигрыша.</p>
+</section>
+
+</div>
+
+<div class="bar">
+  <button id="prev">← Назад</button>
+  <button id="step" class="primary">Раскрыть</button>
+  <button id="next">Вперёд →</button>
+  <button id="reroll" hidden>Другая задача</button>
+  <span class="count" id="count"></span>
+  <span class="zoom" title="Размер шрифта на экране: клавиши + и −"><button id="zoomOut" title="Мельче (клавиша −)">A−</button><span class="z" id="zoomVal"></span><button id="zoomIn" title="Крупнее (клавиша +)">A+</button></span>
+  <div class="spacer"></div>
+  <span class="ai-mark" style="color:#5c6070;font-size:13px">Материалы подготовлены с использованием технологий искусственного интеллекта.</span>
+  <span class="keys"><kbd>Пробел</kbd> раскрыть и дальше ·
+    <kbd>←</kbd> <kbd>→</kbd> слайды</span>
+</div>
+</div>
+
+<script>
+/* ==== ЗАДАЧИ: вставлено gen.py, руками не править ==== */
+/* Обзорный тест-практикум ко второй паре 11 класса (углублённый уровень).
+   Содержание ФГОС: алгоритм Хаффмана, префиксные коды, построение кода
+   с помощью дерева. Работает на задание 4 ЕГЭ (кодирование и
+   декодирование, условие Фано).
+
+   Единственный источник задач. В practice.html вписывается скриптом
+   gen.py между маркерами — руками страницу не править.
+
+   Ответ везде целое число: тест-практикум приучает к формату КЕГЭ, где
+   ответ сверяет машина. */
+
+const T_TYPES = [
+  "код Хаффмана",
+  "выигрыш против равномерного кода",
+  "условие Фано",
+  "декодирование",
+  "равномерный код",
+  "проверка префиксности"
+];
+
+function tRng(seed) {
+  let s = seed >>> 0;
+  return function () {
+    s ^= s << 13; s >>>= 0;
+    s ^= s >> 17;
+    s ^= s << 5;  s >>>= 0;
+    return s / 4294967296;
+  };
+}
+
+function tRand(rng, a, b) { return a + Math.floor(rng() * (b - a + 1)); }
+function tPick(rng, arr) { return arr[tRand(rng, 0, arr.length - 1)]; }
+
+function tPl(n, one, few, many) {
+  const h = n % 100, t = n % 10;
+  if (h >= 11 && h <= 14) return many;
+  if (t === 1) return one;
+  if (t >= 2 && t <= 4) return few;
+  return many;
+}
+
+function tBits(n) { return n + " " + tPl(n, "бит", "бита", "бит"); }
+
+const T_LETTERS = ["А", "Б", "В", "Г", "Д", "Е"];
+
+/* -------------------------------------------------------------- механика */
+
+/* Суммарная длина сообщения, закодированного по Хаффману. Дерево может
+   строиться по-разному, когда веса совпадают, но СУММА длин от этого не
+   меняется — она равна сумме весов всех слияний. Поэтому у задачи ровно
+   один ответ, и на неоднозначность дерева ссылаться не нужно. */
+function huffTotal(freqs) {
+  const arr = freqs.slice();
+  let total = 0;
+  while (arr.length > 1) {
+    arr.sort(function (a, b) { return a - b; });
+    const a = arr.shift(), b = arr.shift();
+    total += a + b;
+    arr.push(a + b);
+  }
+  return total;
+}
+
+/* Префиксный набор кодов: начинаем с «0» и «1» и дробим случайное слово
+   на две ветки. Что бы ни выпало, условие Фано выполняется по построению. */
+function makePrefix(rng, n) {
+  let codes = ["0", "1"];
+  while (codes.length < n) {
+    const i = tRand(rng, 0, codes.length - 1);
+    const w = codes[i];
+    codes.splice(i, 1, w + "0", w + "1");
+  }
+  return codes;
+}
+
+function isPrefix(a, b) { return b.indexOf(a) === 0; }
+
+/* Можно ли добавить слово w к набору, не нарушив условие Фано. */
+function canAdd(codes, w) {
+  for (const c of codes)
+    if (isPrefix(c, w) || isPrefix(w, c)) return false;
+  return true;
+}
+
+/* Минимальная длина кодового слова, которое ещё можно добавить. */
+function minFanoLen(codes) {
+  for (let L = 1; L <= 9; L++) {
+    for (let v = 0; v < (1 << L); v++) {
+      const w = v.toString(2).padStart(L, "0");
+      if (canAdd(codes, w)) return L;
+    }
+  }
+  return 0;
+}
+
+function table(letters, codes) {
+  return letters.map(function (ch, i) { return ch + ":" + codes[i]; }).join(" ");
+}
+
+/* Частоты с разбросом: если все одинаковы, Хаффман не выигрывает у
+   равномерного кода и задача про выигрыш вырождается. */
+function freqs(rng, n) {
+  const f = [];
+  for (let i = 0; i < n; i++) f.push(tRand(rng, 2, 9) * (i === 0 ? 3 : 1));
+  f[0] = f[0] + tRand(rng, 6, 20);
+  return f;
+}
+
+/* ---------------------------------------------------------------- задачи */
+
+function tTask(type, rng) {
+  if (type === 0) return tHuff(rng);
+  if (type === 1) return tGain(rng);
+  if (type === 2) return tFano(rng);
+  if (type === 3) return tDecode(rng);
+  if (type === 4) return tUniform(rng);
+  return tCheckPrefix(rng);
+}
+
+/* 0. Длина сообщения, закодированного по Хаффману. */
+function tHuff(rng) {
+  const n = tRand(rng, 4, 6);
+  const letters = T_LETTERS.slice(0, n);
+  const f = freqs(rng, n);
+  const total = huffTotal(f);
+  return {
+    type: 0, answer: String(total),
+    question: "В сообщении встречаются только буквы " + letters.join(", ") +
+      ". Сколько раз встречается каждая, показано в таблице: <code>" +
+      table(letters, f.map(String)) + "</code>. Сообщение кодируют " +
+      "алгоритмом Хаффмана. Сколько бит займёт закодированное сообщение?",
+    explain: "Алгоритм сливает два наименьших веса, и так до одного " +
+      "корня. Суммарная длина сообщения равна сумме весов всех слияний " +
+      "и не зависит от того, как разрешаются совпадения весов, — здесь " +
+      "она равна " + tBits(total) + ".",
+    x: {letters: letters, f: f}
+  };
+}
+
+/* 1. Насколько код Хаффмана короче равномерного. */
+function tGain(rng) {
+  const n = tRand(rng, 4, 6);
+  const letters = T_LETTERS.slice(0, n);
+  const width = Math.ceil(Math.log2(n));
+  /* При четырёх буквах с близкими частотами дерево Хаффмана выходит
+     ровным, и выигрыша нет вовсе — вопрос «на сколько короче» теряет
+     смысл. Поэтому частоты перебираются, пока выигрыш не появится. */
+  let f, huff, count, flat;
+  for (let i = 0; i < 40; i++) {
+    f = freqs(rng, n);
+    huff = huffTotal(f);
+    count = f.reduce(function (a, b) { return a + b; }, 0);
+    flat = count * width;
+    if (flat - huff > 0) break;
+  }
+  return {
+    type: 1, answer: String(flat - huff),
+    question: "В сообщении встречаются только буквы " + letters.join(", ") +
+      " со следующими частотами: <code>" + table(letters, f.map(String)) +
+      "</code>. На сколько бит запись, закодированная по Хаффману, короче " +
+      "записи равномерным кодом?",
+    explain: "Букв " + n + ", значит равномерный код требует " +
+      tBits(width) + " на символ, а всего символов " + count + " — это " +
+      count + " · " + width + " = " + tBits(flat) + ". Код Хаффмана даёт " +
+      tBits(huff) + ". Разница: " + flat + " − " + huff + " = " +
+      tBits(flat - huff) + ".",
+    x: {letters: letters, f: f, width: width}
+  };
+}
+
+/* 2. Условие Фано: минимальная длина кода для оставшейся буквы. */
+function tFano(rng) {
+  const n = tRand(rng, 4, 5);
+  const codes = makePrefix(rng, n);
+  const use = tRand(rng, 2, Math.min(3, n - 1));
+  const chosen = [];
+  const pool = codes.slice();
+  for (let i = 0; i < use; i++)
+    chosen.push(pool.splice(tRand(rng, 0, pool.length - 1), 1)[0]);
+  const letters = T_LETTERS.slice(0, use);
+  const next = T_LETTERS[use];
+  const L = minFanoLen(chosen);
+  return {
+    type: 2, answer: String(L),
+    question: "Для букв " + letters.join(", ") + " заданы кодовые слова: " +
+      "<code>" + table(letters, chosen) + "</code>. Нужно добавить кодовое " +
+      "слово для буквы " + next + " так, чтобы код остался однозначно " +
+      "декодируемым (выполнялось условие Фано). Какова наименьшая " +
+      "возможная длина этого кодового слова?",
+    explain: "Условие Фано: никакое кодовое слово не должно быть началом " +
+      "другого. Слова длиной меньше " + L + " не подходят — каждое из них " +
+      "либо само начинается с уже занятого кода, либо служит его началом. " +
+      "При длине " + L + " подходящее слово находится, значит ответ " + L + ".",
+    x: {letters: letters, codes: chosen, next: next}
+  };
+}
+
+/* 3. Декодирование префиксного кода: сколько букв в сообщении. */
+function tDecode(rng) {
+  const n = tRand(rng, 4, 5);
+  const codes = makePrefix(rng, n);
+  const letters = T_LETTERS.slice(0, n);
+  const count = tRand(rng, 7, 12);
+  let bits = "";
+  for (let i = 0; i < count; i++) bits += tPick(rng, codes);
+  return {
+    type: 3, answer: String(count),
+    question: "Кодовая таблица задана так: <code>" + table(letters, codes) +
+      "</code>. Получено сообщение <code>" + bits + "</code>. Сколько букв " +
+      "в исходном сообщении?",
+    explain: "Код префиксный, поэтому сообщение читается слева направо " +
+      "без возвратов: как только накопленные биты совпали с кодовым " +
+      "словом, буква распознана и отсчёт начинается заново. Так " +
+      "набирается " + count + " " + tPl(count, "буква", "буквы", "букв") + ".",
+    x: {letters: letters, codes: codes, bits: bits}
+  };
+}
+
+/* 4. Равномерный код: сколько бит на символ и сколько места остаётся. */
+function tUniform(rng) {
+  let n = tRand(rng, 5, 200);
+  while ((n & (n - 1)) === 0) n++;          // степень двойки — случай вырожден
+  const width = Math.ceil(Math.log2(n));
+  if (rng() < 0.5) {
+    return {
+      type: 4, kind: "width", answer: String(width),
+      question: "Алфавит содержит <b>" + n + "</b> " +
+        tPl(n, "символ", "символа", "символов") + ". Сколько бит нужно на " +
+        "один символ при равномерном кодировании?",
+      explain: "Нужно наименьшее i, при котором 2<sup>i</sup> ≥ " + n +
+        ". Здесь 2<sup>" + (width - 1) + "</sup> = " +
+        Math.pow(2, width - 1) + " — мало, 2<sup>" + width + "</sup> = " +
+        Math.pow(2, width) + " — хватает, значит " + tBits(width) + ".",
+      x: {n: n}
+    };
+  }
+  return {
+    type: 4, kind: "spare", answer: String(Math.pow(2, width) - n),
+    question: "Алфавит содержит <b>" + n + "</b> " +
+      tPl(n, "символ", "символа", "символов") + ", их кодируют равномерным " +
+      "кодом наименьшей длины. Сколько ещё символов можно добавить в " +
+      "алфавит, не увеличивая длину кода?",
+    explain: "Наименьшая длина равномерного кода — " + tBits(width) +
+      ", такой код различает 2<sup>" + width + "</sup> = " +
+      Math.pow(2, width) + " символов. Занято " + n + ", свободно " +
+      Math.pow(2, width) + " − " + n + " = " + (Math.pow(2, width) - n) + ".",
+    x: {n: n}
+  };
+}
+
+/* 5. Сколько слов НЕЛЬЗЯ добавить к набору без нарушения условия Фано. */
+function tCheckPrefix(rng) {
+  /* Берём ПОДНАБОР: полный префиксный код покрывает всё дерево, и к нему
+     нельзя добавить вообще ничего — тогда «сколько нельзя» вырождается
+     в «все пять», а список подходящих вариантов оказывается пуст. */
+  const full = makePrefix(rng, tRand(rng, 4, 5));
+  const pool = full.slice();
+  const codes = [];
+  const use = Math.min(3, full.length - 1);
+  for (let i = 0; i < use; i++)
+    codes.push(pool.splice(tRand(rng, 0, pool.length - 1), 1)[0]);
+  const letters = T_LETTERS.slice(0, codes.length);
+
+  const bad = [], good = [];
+  for (let L = 1; L <= 5; L++)
+    for (let v = 0; v < (1 << L); v++) {
+      const w = v.toString(2).padStart(L, "0");
+      (canAdd(codes, w) ? good : bad).push(w);
+    }
+  /* Короткие слова разбираются в уме, длинные превращают задачу в
+     побуквенное сличение — берём из самых коротких. */
+  const byLen = function (a, b) { return a.length - b.length; };
+  bad.sort(byLen).splice(10);
+  good.sort(byLen).splice(10);
+  const k = tRand(rng, 1, Math.min(4, bad.length, 5 - Math.min(1, good.length)));
+  const items = [];
+  const bp = bad.slice(), gp = good.slice();
+  for (let i = 0; i < k; i++)
+    items.push(bp.splice(tRand(rng, 0, bp.length - 1), 1)[0]);
+  const marked = items.slice();
+  for (let i = 0; i < 5 - k; i++)
+    items.push(gp.splice(tRand(rng, 0, gp.length - 1), 1)[0]);
+  for (let i = items.length - 1; i > 0; i--) {
+    const j = tRand(rng, 0, i);
+    const t = items[i]; items[i] = items[j]; items[j] = t;
+  }
+  return {
+    type: 5, answer: String(k),
+    question: "Уже заняты кодовые слова: <code>" + table(letters, codes) +
+      "</code>. Предлагают добавить ещё одно слово, варианты: <code>" +
+      items.join(" ") + "</code>. Сколько из них добавить <b>нельзя</b> — " +
+      "условие Фано будет нарушено?",
+    explain: "Нельзя добавить слово, которое начинается с уже занятого " +
+      "кода или само служит его началом. Таких здесь " + k + ": " +
+      marked.join(", ") + ".",
+    x: {letters: letters, codes: codes, items: items}
+  };
+}
+
+/* ------------------------------------------------------------- сборка */
+
+function tMake(seed) {
+  const rng = tRng(seed || 1);
+  const order = [0, 1, 2, 3, 4, 5];
+  for (let j = order.length - 1; j > 0; j--) {
+    const t = tRand(rng, 0, j);
+    const tmp = order[j]; order[j] = order[t]; order[t] = tmp;
+  }
+  return order.map(function (type) { return tTask(type, rng); });
+}
+
+function tCheck(task, raw) {
+  const s = String(raw === undefined || raw === null ? "" : raw)
+    .replace(/\s+/g, "");
+  if (!/^\d+$/.test(s)) return false;
+  return String(Number(s)) === task.answer;
+}
+
+/* Что не так с записью ответа — коротко, без разгадки. */
+function tHint(task, raw) {
+  const s = String(raw === undefined || raw === null ? "" : raw).trim();
+  if (/^\d+$/.test(s)) return null;
+  if (/^\d+\s*\D+$/.test(s)) return "Без единиц измерения — только число.";
+  if (/\d/.test(s)) return "Только число — без пробелов, запятых, точек и знаков.";
+  return "Ответ — целое число.";
+}
+
+/* ==================================================== разбор рисунком
+   Для слайдов-примеров презентации (правило Светы 26.09.2026: разбор —
+   рисунком, текст — подписью). Всё собирается из поля x задачи своим
+   ходом, а не из explain и не из huffTotal / minFanoLen; итог рисунка
+   стоит в <b class="xv"> — gen.py --selftest сверяет его с ключом. */
+
+function xEsc(s) {
+  return String(s).replace(/[&<>]/g, function (c) {
+    return {"&": "&amp;", "<": "&lt;", ">": "&gt;"}[c];
+  });
+}
+
+function xV(v) { return '<b class="xv">' + v + "</b>"; }
+
+/* Таблица частот: буква — сколько раз. */
+function xFreq(letters, f) {
+  return '<table class="gm"><tr><th>буква</th>' + letters.map(function (ch) {
+    return "<td>" + ch + "</td>"; }).join("") + "</tr><tr><th>раз</th>" +
+    f.map(function (v) { return "<td>" + v + "</td>"; }).join("") + "</tr></table>";
+}
+
+/* Слияния Хаффмана по шагам: веса по возрастанию, два наименьших — жёлтым. */
+function xMerges(f) {
+  let w = f.slice(), sum = 0;
+  let h = '<table class="gm hf"><tr><th>шаг</th><th class="l">веса по возрастанию</th><th>слили</th></tr>';
+  let step = 1;
+  while (w.length > 1) {
+    w.sort(function (a, b) { return a - b; });
+    const cells = w.map(function (v, j) {
+      return "<span" + (j < 2 ? ' class="h"' : "") + ">" + v + "</span>"; }).join(" ");
+    const m = w[0] + w[1];
+    sum += m;
+    h += "<tr><td>" + step++ + '</td><td class="l">' + cells + "</td><td>" + w[0] + " + " + w[1] + " = <b>" + m + "</b></td></tr>";
+    w = [m].concat(w.slice(2));
+  }
+  return {sum: sum, html: h + "</table>"};
+}
+
+function xHuff(x) {
+  const m = xMerges(x.f);
+  return m.html + '<p class="xcap">Каждое слияние добавляет по биту всем буквам под ним — ' +
+    "длина сообщения равна <b>сумме слияний</b> (жирные числа): " + xV(m.sum) + ".</p>";
+}
+
+function xGain(x) {
+  const m = xMerges(x.f);
+  let count = 0;
+  x.f.forEach(function (v) { count += v; });
+  let w = 0;
+  while ((1 << w) < x.letters.length) w++;
+  const flat = count * w;
+  return m.html + '<table class="gm flow">' +
+    "<tr><th>Хаффман</th><td>сумма слияний</td><td><b>" + m.sum + "</b></td></tr>" +
+    "<tr><th>равномерный</th><td>" + x.letters.length + " букв → " + w + " бита на букву, букв в сообщении " +
+    count + "</td><td>" + count + " · " + w + " = <b>" + flat + "</b></td></tr>" +
+    '<tr class="sum"><th>разница</th><td></td><td>' + flat + " − " + m.sum + " = " + xV(flat - m.sum) + "</td></tr></table>";
+}
+
+/* Слово w и набор кодов: «занято», «конфликт с …» или «свободно». */
+function xClash(codes, letters, w) {
+  for (let i = 0; i < codes.length; i++) {
+    const c = codes[i];
+    if (c === w) return {k: "own", why: letters[i]};
+    if (w.indexOf(c) === 0) return {k: "bad", why: "начинается с " + c + " (" + letters[i] + ")"};
+    if (c.indexOf(w) === 0) return {k: "bad", why: "начало " + c + " (" + letters[i] + ")"};
+  }
+  return {k: "ok", why: "свободно"};
+}
+
+function xFano(x) {
+  let h = '<table class="gm fano"><tr><th>длина</th><th class="l">все слова этой длины</th></tr>';
+  let found = 0;
+  for (let L = 1; L <= 6 && !found; L++) {
+    let row = "";
+    for (let v = 0; v < (1 << L); v++) {
+      const w = v.toString(2).padStart(L, "0");
+      const c = xClash(x.codes, x.letters, w);
+      row += '<span class="w ' + c.k + '">' + w + (c.k === "own" ? "<i>" + c.why + "</i>" : "") + "</span>";
+      if (c.k === "ok") { found = L; break; }
+    }
+    h += "<tr><td>" + L + '</td><td class="l">' + row + "</td></tr>";
+  }
+  return h + "</table>" + '<p class="xcap">Синие — уже заняты, красные — начало занятого или начинаются с ' +
+    "него. Первое <b>зелёное</b> слово — на длине " + xV(found) + ".</p>";
+}
+
+/* Чтение префиксного кода слева направо: набираем биты, пока не совпало. */
+function xDecode(x) {
+  const parts = [];
+  let buf = "";
+  for (const b of x.bits) {
+    buf += b;
+    const i = x.codes.indexOf(buf);
+    if (i >= 0) { parts.push([buf, x.letters[i]]); buf = ""; }
+  }
+  const cells = parts.map(function (p, j) {
+    return '<td class="r' + (j % 2) + '">' + p[0] + "<br><b>" + p[1] + "</b></td>"; }).join("");
+  return '<p class="xcap">Таблица: <b>' + x.letters.map(function (ch, i) { return ch + " = " + x.codes[i]; }).join(", ") +
+    "</b></p>" + '<table class="gm dec"><tr>' + cells + "</tr></table>" +
+    '<p class="xcap">Набираем биты, пока не совпадёт с кодом из таблицы, — буква, начинаем заново. ' +
+    "Кусков: " + xV(buf ? -1 : parts.length) + ".</p>";
+}
+
+function xUniform(t) {
+  const n = t.x.n;
+  let w = 0;
+  while ((1 << w) < n) w++;
+  let top = "<tr><th>i, бит</th>", bot = "<tr><th>2<sup>i</sup></th>";
+  for (let j = 1; j <= 8; j++) {
+    const c = j === w ? ' class="ok"' : j === w - 1 ? ' class="bad"' : "";
+    top += "<td" + c + ">" + j + "</td>";
+    bot += "<td" + c + ">" + Math.pow(2, j) + "</td>";
+  }
+  const pw = Math.pow(2, w);
+  return '<table class="gm pw">' + top + "</tr>" + bot + "</tr></table>" +
+    '<p class="xcap">' + Math.pow(2, w - 1) + " &lt; " + n + " ≤ " + pw + ": " + (w - 1) +
+    " бит мало (красный), " + w + " — хватает (зелёный).</p>" +
+    (t.kind === "width" ? '<p class="keyline">На символ — ' + xV(w) + " бит</p>"
+      : '<p class="keyline">Свободно: ' + pw + " − " + n + " = " + xV(pw - n) + "</p>");
+}
+
+function xCheckPrefix(x) {
+  let bad = 0;
+  const li = x.items.map(function (w) {
+    const c = xClash(x.codes, x.letters, w);
+    if (c.k !== "ok") bad++;
+    return '<li class="' + (c.k === "ok" ? "y" : "n") + '"><b>' + (c.k === "ok" ? "можно" : "нельзя") +
+      "</b> <code>" + w + "</code> <small>" + (c.k === "own" ? "уже занято (" + c.why + ")" : c.why) + "</small></li>";
+  }).join("");
+  return '<p class="xcap">Заняты: <b>' + x.letters.map(function (ch, i) { return ch + " = " + x.codes[i]; }).join(", ") +
+    '</b></p><ol class="xst">' + li + '</ol><p class="xcap">Нельзя — ' + xV(bad) + ".</p>";
+}
+
+function xSolution(t) {
+  if (t.type === 0) return xHuff(t.x);
+  if (t.type === 1) return xGain(t.x);
+  if (t.type === 2) return xFano(t.x);
+  if (t.type === 3) return xDecode(t.x);
+  if (t.type === 4) return xUniform(t);
+  return xCheckPrefix(t.x);
+}
+
+/* Ответ класса рядом с эталоном; где можно — откуда могло взяться число. */
+function xCompare(t, given) {
+  const g = String(given === undefined || given === null ? "" : given).trim();
+  const ok = g === t.answer;
+  let h = '<p class="xcmp ' + (ok ? "y" : "n") + '">класс: <b>' + xEsc(g || "—") + "</b>" +
+    (ok ? "" : " · эталон: <b>" + xEsc(t.answer) + "</b>") + "</p>";
+  if (ok || !/^\d+$/.test(g)) return h;
+  const k = Number(g), x = t.x;
+  let why = "";
+  if (t.type === 0 || t.type === 1) {
+    let count = 0;
+    x.f.forEach(function (v) { count += v; });
+    if (t.type === 0 && k === count) why = "Это число букв в сообщении, а нужна длина в битах — сумма слияний.";
+    const last = xMerges(x.f).html.match(/<b>(\d+)<\/b><\/td><\/tr><\/table>$/);
+    if (t.type === 0 && last && k === Number(last[1]) && k !== count)
+      why = "Это вес корня — последнее слияние; сложить надо все слияния.";
+  }
+  if (t.type === 3 && k === x.bits.length) why = "Это число бит, а спрашивают буквы.";
+  if (t.type === 4 && t.kind === "spare") {
+    let w = 0;
+    while ((1 << w) < x.n) w++;
+    if (k === Math.pow(2, w)) why = "Это сколько всего символов различает код; занятые " + x.n + " надо вычесть.";
+  }
+  if (t.type === 5 && k === 5 - Number(t.answer)) why = "Посчитаны слова, которые добавить можно.";
+  return h + (why ? '<p class="xcap n">' + why + "</p>" : "");
+}
+/* ==== /ЗАДАЧИ ==== */
+
+
+/* ------------------------------------------------------------------
+   Слайды-примеры собирает генератор практикума: задача каждый раз новая,
+   разбор — рисунком (xSolution из tasks.js), сверка ответа класса —
+   xCompare (правила Светы 26.09.2026).
+------------------------------------------------------------------ */
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
+                          .replace(/>/g, "&gt;");
+const exRng = tRng((Date.now() ^ (Math.random() * 1e9)) >>> 0);
+
+// Сверка знак в знак, как на экзамене.
+function xCheck(el){
+  const t = el._task;
+  const box = el.querySelector(".xres");
+  const given = el.querySelector(".xin").value;
+  if (!given.trim()){ box.innerHTML = ""; return; }
+  const ok = tCheck(t, given);
+  const hint = ok || typeof tHint !== "function" ? null : tHint(t, given);
+  box.innerHTML = '<div class="xverd ' + (ok ? "ok" : "bad") + '">'
+      + (ok ? "✓ совпало с эталоном" : "✗ не совпало") + '</div>'
+      + (hint ? '<div class="xcap">' + hint + '</div>' : "")
+      + xCompare(t, given);
+}
+
+function buildExample(el){
+  const t = tTask(+el.dataset.type, exRng);
+  el._task = t;
+  const code = t.code && typeof frz === "function" ? frz(t.code) : "";
+  el.innerHTML =
+    `<p class="eyebrow">разбираем вместе</p>
+     <h2>Пример: ${esc(T_TYPES[t.type])}</h2>
+     <div class="exwrap">
+       <div class="task box">
+         <div>${t.question}${code}${t.after || ""}</div>
+         <div class="xcheck"><input class="xin" type="text" autocomplete="off" spellcheck="false" placeholder="ответ класса"><button class="xgo">Сверить</button></div></div>
+       <div class="steps">
+         <div class="xres"></div>
+         <div class="step" hidden>${xSolution(t)}</div>
+         <div class="step" hidden><p class="keyline">Ответ: <b>${esc(t.answer)}</b></p></div>
+       </div>
+     </div>`;
+  const inp = el.querySelector(".xin");
+  // набор ответа не должен листать слайды и менять шрифт
+  inp.addEventListener("keydown", e => {
+    e.stopPropagation();
+    if (e.key === "Enter"){ e.preventDefault(); xCheck(el); }
+  });
+  el.querySelector(".xgo").addEventListener("click", () => xCheck(el));
+  setTimeout(fitExamples, 0);
+}
+
+// Условие выше экрана закреплять нельзя: край уедет при прокрутке шагов.
+function fitExamples(){
+  const stage = document.getElementById("stage");
+  const room = stage.clientHeight - 46;
+  document.querySelectorAll(".exwrap .task").forEach(box => {
+    box.classList.remove("tall");
+    if (box.offsetHeight > room) box.classList.add("tall");
+  });
+}
+window.addEventListener("resize", fitExamples);
+
+/* Примеры теории рисует тот же код, что разбор задач, из данных на слайде. */
+const DEMO_F = {letters: ["А", "Б", "В", "Г"], f: [5, 2, 1, 1], width: 2};
+document.querySelectorAll("[data-uni-demo]").forEach(el => {
+  el.innerHTML = xUniform({kind: "spare", x: {n: +el.dataset.uniDemo}});
+});
+document.querySelectorAll("[data-fano-demo]").forEach(el => {
+  el.innerHTML = xFano({letters: ["А", "Б"], codes: ["0", "10"]});
+});
+document.querySelectorAll("[data-dec-demo]").forEach(el => {
+  el.innerHTML = xDecode({letters: ["А", "Б", "В", "Г"], codes: ["0", "10", "110", "111"],
+                          bits: "0101100111"});
+});
+document.querySelectorAll("[data-huff-demo]").forEach(el => { el.innerHTML = xMerges(DEMO_F.f).html; });
+document.querySelectorAll("[data-gain-demo]").forEach(el => { el.innerHTML = xGain(DEMO_F); });
+
+/* ------------------------------------------------------------------
+   Управление колодой: стрелки листают слайды, пробел раскрывает
+   очередной шаг разбора и только потом уходит дальше.
+------------------------------------------------------------------ */
+const slides = [...document.querySelectorAll(".slide")];
+let cur = 0, shown = 0;
+
+const isExample = i => slides[i].hasAttribute("data-ex");
+const stepsOf = i => [...slides[i].querySelectorAll(".steps > .step")];
+
+function show(i){
+  slides[cur].classList.remove("on");
+  cur = Math.max(0, Math.min(slides.length - 1, i));
+  slides[cur].classList.add("on");
+  if (isExample(cur) && !slides[cur]._task) buildExample(slides[cur]);
+  shown = stepsOf(cur).filter(el => !el.hidden).length;
+  document.getElementById("stage").scrollTop = 0;
+  sync();
+}
+
+function sync(){
+  const total = stepsOf(cur).length;
+  const ex = isExample(cur);
+  document.getElementById("count").textContent = `${cur + 1} / ${slides.length}`;
+  document.getElementById("prev").disabled = cur === 0;
+  document.getElementById("next").disabled = cur === slides.length - 1;
+  document.getElementById("reroll").hidden = !ex;
+  const b = document.getElementById("step");
+  b.hidden = total === 0;
+  if (total){
+    b.disabled = shown >= total;
+    b.textContent = shown === 0 ? (ex ? "Показать разбор" : "Раскрыть")
+                  : shown >= total ? (ex ? "Разобрано" : "Всё открыто")
+                  : `Дальше (${shown}/${total})`;
+  }
+}
+
+function nextStep(){
+  const steps = stepsOf(cur);
+  if (shown >= steps.length) return false;
+  steps[shown].hidden = false;
+  steps[shown].scrollIntoView({block: "nearest", behavior: "smooth"});
+  shown++;
+  sync();
+  return true;
+}
+
+document.getElementById("prev").addEventListener("click", () => show(cur - 1));
+document.getElementById("next").addEventListener("click", () => show(cur + 1));
+document.getElementById("step").addEventListener("click", nextStep);
+document.getElementById("reroll").addEventListener("click", () => {
+  buildExample(slides[cur]);
+  shown = 0;
+  sync();
+});
+
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowRight" || e.key === "PageDown"){ show(cur + 1); }
+  else if (e.key === "ArrowLeft" || e.key === "PageUp"){ show(cur - 1); }
+  else if (e.key === " " || e.key === "Enter"){
+    if (!nextStep()) show(cur + 1);
+  } else return;
+  e.preventDefault();
+});
+
+show(0);
+
+/* ---- размер шрифта на проекторе ----
+   Zoom только на области слайда: zoom на body растягивает 100vh, и панель
+   уезжает за экран (проверено 17.09.2026). Шаг запоминается в
+   localStorage и общий для всех презентаций. ZOOM_BASE — стартовый
+   масштаб колоды с базовым кеглем 20px. */
+const ZOOM_BASE = 1.2;
+const ZOOM_KEY = "slides-zoom-step";
+let zoomStep = 0;
+try { zoomStep = Math.max(-3, Math.min(6, parseInt(localStorage.getItem(ZOOM_KEY), 10) || 0)); }
+catch (e) {}
+function applyZoom(){
+  const z = Math.round(ZOOM_BASE * Math.pow(1.1, zoomStep) * 100) / 100;
+  document.getElementById("stage").style.zoom = z;
+  document.getElementById("zoomVal").textContent = Math.round(z * 100) + "%";
+  fitExamples();
+}
+function setZoom(d){
+  zoomStep = Math.max(-3, Math.min(6, zoomStep + d));
+  try { localStorage.setItem(ZOOM_KEY, String(zoomStep)); } catch (e) {}
+  applyZoom();
+}
+document.getElementById("zoomIn").addEventListener("click", () => setZoom(1));
+document.getElementById("zoomOut").addEventListener("click", () => setZoom(-1));
+document.addEventListener("keydown", e => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key === "+" || e.key === "=") setZoom(1);
+  else if (e.key === "-" || e.key === "_") setZoom(-1);
+  else return;
+  e.preventDefault();
+});
+applyZoom();
+</script>
+</body>
+</html>

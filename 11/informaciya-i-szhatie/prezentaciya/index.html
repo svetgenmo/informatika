@@ -1,0 +1,1020 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Количество информации и сжатие данных — презентация</title>
+<meta name="description" content="Презентация-разбор к первой паре 11 класса (углублённый): бит и формула Хартли, закон аддитивности, информационный объём сообщения, вероятность и количество информации, сжатие без потерь и с потерями, алгоритм RLE; шесть слайдов-примеров со сверкой ответа класса">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5fa8'/%3E%3Ctext x='16' y='23' font-family='Consolas,monospace' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3E11%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#1b1b1f; --muted:#5c6070; --line:#d9dce6; --accent:#1f5fa8;
+  --bg:#fff; --card:#f6f7fb;
+  --ok:#137a41; --ok-bg:#e6f5ec; --ok-line:#9dd4b4;
+  --err:#b3261e; --err-bg:#fdecea; --err-line:#f0b3ae;
+  --hi:#8a4b00; --hi-bg:#fff4e2; --hi-line:#e6c98a;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ink)}
+body{font:20px/1.5 "Segoe UI",system-ui,sans-serif}
+.deck{height:100vh;display:flex;flex-direction:column}
+.stage{flex:1 1 auto;overflow-y:auto;padding:34px 56px 12px}
+.slide{display:none;max-width:1100px;margin:0 auto}
+.slide.on{display:block}
+
+h1{font-size:50px;line-height:1.1;margin:0 0 18px;text-wrap:balance}
+h2{font-size:36px;line-height:1.15;margin:0 0 20px;text-wrap:balance}
+.lead{font-size:24px;color:var(--muted);margin:0 0 26px}
+.eyebrow{font:700 14px/1 "Segoe UI",system-ui,sans-serif;letter-spacing:.1em;
+         text-transform:uppercase;color:var(--accent);margin:0 0 8px}
+p{margin:0 0 14px}
+ul,ol{margin:0 0 14px;padding-left:28px}
+li{margin:8px 0}
+code{font-family:Consolas,"Cascadia Mono",monospace;background:var(--card);
+     border:1px solid var(--line);border-radius:6px;padding:1px 7px;font-size:.92em}
+pre{font-family:Consolas,"Cascadia Mono",monospace;background:#1e2430;color:#e7ecf5;
+    padding:16px 20px;border-radius:12px;font-size:22px;line-height:1.45;
+    overflow-x:auto;margin:10px 0}
+pre code{background:none;border:0;padding:0;color:inherit;font-size:inherit}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+.box{border:1px solid var(--line);border-radius:14px;padding:16px 20px;background:#fff}
+.box h3{margin:0 0 8px;font-size:22px}
+.good{border-color:var(--ok-line);background:var(--ok-bg)}
+.bad{border-color:var(--err-line);background:var(--err-bg)}
+.warn{border-color:var(--hi-line);background:var(--hi-bg)}
+.big{font-size:26px}
+table{border-collapse:collapse;width:100%;font-size:22px;margin:10px 0}
+th,td{border:1px solid var(--line);padding:9px 14px;text-align:left}
+th{background:var(--card)}
+.step[hidden]{display:none}
+.bar{flex:0 0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+     border-top:1px solid var(--line);background:var(--card);padding:12px 24px}
+.bar .spacer{flex:1 1 auto}
+.count{color:var(--muted);font-size:17px;font-variant-numeric:tabular-nums}
+.keys{color:var(--muted);font-size:15px}
+.keys kbd{font:600 13px/1 Consolas,monospace;border:1px solid var(--line);
+          border-bottom-width:2px;border-radius:5px;padding:2px 6px;background:#fff}
+button{font:600 17px/1 inherit;padding:11px 18px;border-radius:10px;
+       border:1px solid var(--accent);background:#fff;color:var(--accent);cursor:pointer}
+button:hover:not(:disabled){background:#eaf1fa}
+button.primary{background:var(--accent);color:#fff}
+button.primary:hover:not(:disabled){background:#194f8c}
+button:disabled{opacity:.4;cursor:default;border-color:var(--line);color:var(--muted)}
+
+/* ---- размер шрифта на проекторе: A− / A+ ---- */
+.zoom{display:inline-flex;align-items:center;gap:3px;margin-left:8px}
+.zoom button{padding:8px 10px;font-size:15px;min-width:36px;line-height:1}
+.zoom .z{color:var(--muted);font-size:15px;min-width:46px;text-align:center;
+         font-variant-numeric:tabular-nums}
+
+/* ---- слайд-пример: условие слева на месте, разбор справа ---- */
+.exwrap{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:22px;align-items:start}
+.exwrap .task{position:sticky;top:0;font-size:18px;padding:12px 18px}
+.exwrap .task.tall{position:static}
+.exwrap .task p{margin:6px 0}
+.exwrap .steps{display:flex;flex-direction:column;gap:10px}
+.exwrap .step{border:1px solid var(--line);border-radius:14px;padding:10px 18px;font-size:19px;background:#fff}
+@media (max-width:1000px){ .exwrap{grid-template-columns:1fr} .exwrap .task{position:static} }
+.xcheck{display:flex;gap:10px;margin-top:12px;align-items:flex-start}
+.xcheck .xin{font:700 24px/1 Consolas,monospace;width:240px;padding:8px 12px;
+             border:2px solid var(--line);border-radius:10px}
+.xcheck textarea.xin{font:600 18px/1.4 Consolas,monospace;width:300px;height:150px;resize:vertical}
+.xcheck .xin:focus{outline:none;border-color:var(--accent)}
+.steps .xres:empty{display:none}
+.steps .xres{border:3px dashed var(--accent);border-radius:12px;padding:6px 16px 10px;background:#fff}
+.xres .xverd{font:800 24px/1.2 "Segoe UI",system-ui,sans-serif;margin:4px 0 2px}
+.xres .xverd.ok{color:var(--ok)}
+.xres .xverd.bad{color:var(--err)}
+
+/* ---- условие и разбор: таблицы Поста и Маркова (из tasks.js) ---- */
+.task ol.st{margin:8px 0;padding-left:24px}
+.task ol.st li{margin:5px 0}
+.task ol.op{margin:8px 0;padding-left:24px}
+.task ol.op li{margin:3px 0}
+.task p.rules{font-size:14px;color:var(--muted);margin:4px 0 8px}
+.task i{font-style:normal;font-weight:600}
+table.gm{border-collapse:collapse;width:auto;margin:8px 0;
+         font:17px/1.2 Consolas,"Cascadia Mono",monospace}
+table.gm th,table.gm td{border:1px solid var(--line);min-width:30px;height:30px;
+         text-align:center;padding:0 6px;background:#fff}
+table.gm th{background:var(--card);color:var(--muted);font-weight:600}
+table.gm td.h{background:var(--hi-bg);border:2px solid var(--hi);font-weight:700}
+table.gm td.miss{background:var(--hi-bg);color:var(--hi);font-weight:700}
+table.post td,table.mk td{min-width:110px;text-align:left;padding:0 12px;white-space:nowrap}
+table.tape tr:first-child td{color:var(--muted);font-size:14px;height:22px}
+table.xtr td.cmd{text-align:left;white-space:nowrap;min-width:96px}
+table.xtr tr.fin td,table.xtr tr.fin th{border-bottom:3px solid var(--ok)}
+table.xmk td{text-align:left;white-space:nowrap;padding:0 10px}
+table.xmk s.del{color:var(--err);text-decoration:line-through;font-weight:700}
+table.xmk b.ins{color:var(--ok)}
+table.xop td{text-align:left;padding:4px 10px;font-family:"Segoe UI",system-ui,sans-serif;
+             font-size:16px;white-space:normal}
+table.xop tr.y td{background:var(--ok-bg)}
+table.xop tr.n td{color:var(--muted)}
+.xcap{font-size:17px;color:var(--muted);margin:6px 0}
+.xcap b{color:var(--ink)}
+ol.xst{padding-left:0;list-style:none;margin:0;font-size:17px}
+ol.xst li{border-radius:10px;padding:6px 12px;margin:6px 0}
+ol.xst li.y{background:var(--ok-bg)}
+ol.xst li.n{background:var(--err-bg)}
+ol.xst li b{font-size:20px}
+ol.xst li.y b{color:var(--ok)} ol.xst li.n b{color:var(--err)}
+ol.xst small{color:var(--muted);font-size:15px}
+.xcmp{font-size:20px;border-radius:10px;padding:6px 12px;margin:6px 0}
+.xcmp.y{background:var(--ok-bg);color:var(--ok)}
+.xcmp.n{background:var(--err-bg);color:var(--err)}
+.keyline{font-size:22px}
+.keyline b{display:inline-block;border:2px solid var(--ok-line);background:var(--ok-bg);
+           color:var(--ok);border-radius:10px;padding:2px 14px;font-family:Consolas,monospace}
+
+
+/* ---- пара 1: клетки-биты, степени двойки, серии RLE ---- */
+table.gm{border-collapse:collapse;width:auto;margin:8px 0;
+         font:18px/1.2 Consolas,"Cascadia Mono",monospace}
+table.gm th,table.gm td{border:1px solid var(--line);min-width:34px;height:32px;
+         text-align:center;padding:0 8px;background:#fff}
+table.gm th{background:var(--card);color:var(--muted);font-weight:600;text-align:left;
+         font-family:"Segoe UI",system-ui,sans-serif;font-size:16px}
+table.gm td.ok{background:var(--ok-bg);border:2px solid var(--ok);font-weight:700;color:var(--ok)}
+table.gm td.bad{background:var(--err-bg);border:2px solid var(--err);color:var(--err)}
+table.gm tr.sum td,table.gm tr.sum th{border-top:3px solid var(--ok);background:var(--ok-bg)}
+table.gm.flow td{text-align:left;font-family:"Segoe UI",system-ui,sans-serif;font-size:18px}
+table.gm.add td{text-align:left}
+table.seq{border-collapse:collapse;width:auto;margin:6px 0}
+table.seq td{border:1px solid var(--line);min-width:34px;height:30px;text-align:center;
+             padding:0 6px;font:18px/1 Consolas,"Cascadia Mono",monospace;background:#fff}
+table.seq td.ok{background:var(--ok-bg);border:2px solid var(--ok);font-weight:700}
+table.seq.big td{min-width:52px;height:42px;font-size:22px}
+table.seq.bits td{min-width:22px;height:22px;padding:0;border:2px solid #fff;border-radius:5px}
+table.seq.bits td.b{background:#7aa7dc}
+table.seq.bits td.g{background:#8fcf9f}
+table.gm.rle td{font-size:20px;letter-spacing:.12em}
+table.gm.rle td.r0{background:#e3eefb} table.gm.rle td.r1{background:#fff1d6}
+table.gm.rle td.r2{background:#e4f5e9} table.gm.rle td.r3{background:#f6e3f3}
+table.gm.rle td.r4{background:#ececec}
+.exwrap table.gm.rle td{font-size:16px;letter-spacing:0;padding:0 4px;word-break:break-all}
+.xcap{font-size:17px;color:var(--muted);margin:6px 0}
+.xcap b{color:var(--ink)}
+.xcap.n{color:var(--err)}
+ol.xst{padding-left:0;list-style:none;margin:0;font-size:18px}
+ol.xst li{border-radius:10px;padding:6px 12px;margin:6px 0}
+ol.xst li.y{background:var(--ok-bg)}
+ol.xst li.n{background:var(--err-bg)}
+ol.xst li b{display:inline-block;min-width:130px}
+ol.xst li.y b{color:var(--ok)} ol.xst li.n b{color:var(--err)}
+.xcmp{font-size:20px;border-radius:10px;padding:6px 12px;margin:6px 0}
+.xcmp.y{background:var(--ok-bg);color:var(--ok)}
+.xcmp.n{background:var(--err-bg);color:var(--err)}
+.keyline{font-size:22px}
+.keyline b{display:inline-block;border:2px solid var(--ok-line);background:var(--ok-bg);
+           color:var(--ok);border-radius:10px;padding:2px 14px;font-family:Consolas,monospace}
+.formula{font:700 34px/1.2 "Cambria Math",Cambria,serif;text-align:center;margin:10px 0 16px}
+.task i{font-style:normal;font-weight:600}
+</style>
+
+<style>img.frz-b{display:block;max-width:100%;height:auto;border-radius:10px;margin:8px 0}img.frz-i{display:inline-block;vertical-align:-0.32em;max-width:100%;height:auto;border-radius:5px}</style>
+</head>
+<body>
+<div class="deck">
+<div class="stage" id="stage">
+
+<section class="slide on">
+  <h1>Количество информации и сжатие данных</h1>
+  <p class="lead">Как измерить информацию в битах — и как сделать файл меньше.
+  11 класс, углублённый уровень — пара первая.</p>
+  <p>Уроки 1–2 поурочного плана: «Количество информации» и «Алгоритмы сжатия
+  данных». Всё, что здесь есть, понадобится весь год: в задачах ЕГЭ на объём
+  рисунка, звука и текста, на коды и пароли считают теми же формулами.</p>
+</section>
+
+<section class="slide">
+  <h2>Бит — ответ на вопрос «да или нет»</h2>
+  <p>Загадано число от 1 до 8. Сколько вопросов «да/нет» нужно, чтобы его
+  точно узнать?</p>
+  <div class="steps">
+    <div class="step" hidden>
+      <p>Каждый вопрос «больше четырёх?» отбрасывает <b>половину</b> вариантов:</p>
+      <div data-halves="8"></div>
+    </div>
+    <div class="step" hidden>
+      <div class="box good big"><b>1 бит</b> — количество информации, которое
+      уменьшает неопределённость <b>вдвое</b>. Чтобы выбрать одно из 8, нужно
+      три деления пополам — 3 бита.</div>
+    </div>
+    <div class="step" hidden>
+      <p>Это <b>алфавитный</b> взгляд: считаем, сколько двоичных знаков нужно на
+      выбор. Смысл сообщения в счёт не идёт.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>Формула Хартли</h2>
+  <div class="formula">N = 2<sup>i</sup></div>
+  <p>N — сколько <b>равновероятных</b> вариантов, i — сколько бит несёт сообщение о
+  том, какой выпал.</p>
+  <div class="steps">
+    <div class="step" hidden>
+      <p>Степени двойки надо знать наизусть — по этой таблице решается больше
+      половины задач:</p>
+      <div data-powers></div>
+    </div>
+    <div class="step" hidden>
+      <div class="two">
+        <div class="box"><h3>Знаем N — ищем i</h3>32 варианта: 32 = 2<sup>5</sup>,
+        значит <b>5 бит</b>.</div>
+        <div class="box"><h3>Знаем i — ищем N</h3>6 бит: 2<sup>6</sup> = <b>64
+        варианта</b>.</div>
+      </div>
+    </div>
+    <div class="step" hidden>
+      <div class="box warn">N не степень двойки — <b>округляем вверх</b>: на 5
+      вариантов 2 бит мало (это только 4), нужно <b>3</b>.</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-ex data-type="0"></section>
+
+<section class="slide">
+  <h2>Закон аддитивности</h2>
+  <p>Выбрали одну из 8 букв, потом — одну из 4 цифр. Сколько бит в сообщении
+  о полном результате?</p>
+  <div class="steps">
+    <div class="step" hidden>
+      <div data-add-demo></div>
+    </div>
+    <div class="step" hidden>
+      <div class="box good big">Независимые выборы: <b>биты складываются</b>,
+      i = i<sub>1</sub> + i<sub>2</sub>, а варианты <b>перемножаются</b>,
+      N = N<sub>1</sub> · N<sub>2</sub>.</div>
+    </div>
+    <div class="step" hidden>
+      <p>Проверка по Хартли: 8 · 4 = 32 = 2<sup>5</sup>, и 3 + 2 = 5. Сходится —
+      так и должно быть, ведь 2<sup>3</sup> · 2<sup>2</sup> = 2<sup>3+2</sup>.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-ex data-type="1"></section>
+
+<section class="slide">
+  <h2>Информационный объём сообщения</h2>
+  <div class="formula">I = K · i</div>
+  <p>K — сколько символов в сообщении, i — сколько бит весит один символ.
+  Вес символа берём из мощности алфавита по Хартли: N = 2<sup>i</sup>.</p>
+  <div class="steps">
+    <div class="step" hidden>
+      <p>Алфавит из 32 символов, сообщение из 40 символов:</p>
+      <div data-vol-demo></div>
+    </div>
+    <div class="step" hidden>
+      <div class="two">
+        <table>
+          <tr><th>1 байт</th><td>8 бит</td></tr>
+          <tr><th>1 Кбайт</th><td>1024 байта</td></tr>
+          <tr><th>1 Мбайт</th><td>1024 Кбайт</td></tr>
+        </table>
+        <div class="box warn">Самая частая ошибка — ответ в битах, когда спросили
+        байты. Читай, в каких единицах нужен ответ, и дели на 8.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-ex data-type="2"></section>
+
+<section class="slide">
+  <h2>Вероятность и количество информации</h2>
+  <p>Если варианты <b>не равновероятны</b>, информация зависит от вероятности
+  события p:</p>
+  <div class="formula">i = log<sub>2</sub>(1/p)</div>
+  <div class="steps">
+    <div class="step" hidden>
+      <p>В ящике 16 шаров, белых — 2. Достали белый: p = 2/16 = 1/8.</p>
+      <div data-prob-demo></div>
+    </div>
+    <div class="step" hidden>
+      <div class="box good">Чем <b>реже</b> событие, тем <b>больше</b> информации
+      несёт сообщение о нём. Событие с вероятностью 1/2 — один бит, 1/4 — два,
+      1/8 — три.</div>
+    </div>
+    <div class="step" hidden>
+      <p>Формула Хартли — частный случай: у N равновероятных вариантов p = 1/N,
+      и log<sub>2</sub>N = i.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-ex data-type="3"></section>
+
+<section class="slide">
+  <h2>Зачем сжимать и как</h2>
+  <p><b>Сжатие</b> — запись тех же данных меньшим числом бит: файл быстрее
+  передаётся и меньше места занимает.</p>
+  <div class="two">
+    <div class="box good"><h3>Без потерь</h3>Распакованный файл совпадает с
+    исходным <b>бит в бит</b>. Так сжимают тексты, программы, таблицы: там
+    нельзя потерять ни одного знака.</div>
+    <div class="box bad"><h3>С потерями</h3>Выбрасывается то, чего человек не
+    заметит: мелкие оттенки, неслышные звуки. Файл намного меньше, но
+    выброшенное <b>не вернуть</b>. Так сжимают фото, звук, видео.</div>
+  </div>
+</section>
+
+<section class="slide">
+  <h2>RLE — сжатие серий</h2>
+  <p>Подряд идущие одинаковые символы — <b>серия</b>. Каждую серию заменяем парой
+  «сколько, что».</p>
+  <div class="steps">
+    <div class="step" hidden>
+      <div data-rle-demo="AAAAABBBCCCC"></div>
+    </div>
+    <div class="step" hidden>
+      <p>Каждая серия даёт <b>два</b> символа записи, сколько бы в ней ни было
+      букв. Длина записи = число серий · 2.</p>
+    </div>
+    <div class="step" hidden>
+      <div class="box bad">На чередовании RLE <b>удлиняет</b>: в
+      строке из шести символов шесть серий по одному — запись из двенадцати.</div>
+      <div data-rle-demo="ABABAB"></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-ex data-type="4"></section>
+
+<section class="slide">
+  <h2>Кто сжимает с потерями</h2>
+  <table>
+    <tr><th>без потерь</th><td>RLE, алгоритм Хаффмана, LZW, ZIP, PNG, GIF</td></tr>
+    <tr><th>с потерями</th><td>JPEG, MP3, AAC, MPEG-4 (видео), уменьшение глубины
+    кодирования цвета</td></tr>
+  </table>
+  <div class="steps">
+    <div class="step" hidden>
+      <p>Подсказка для памяти: <b>фото, звук и видео</b> «для человека» — почти
+      всегда с потерями. <b>Архивы</b> и картинки-схемы (PNG, GIF) — без потерь.</p>
+    </div>
+    <div class="step" hidden>
+      <div class="box warn">Уменьшить глубину цвета (с 24 до 8 бит на точку) —
+      тоже сжатие с потерями: оттенки, которых больше нет в палитре, не
+      восстановить.</div>
+    </div>
+    <div class="step" hidden>
+      <p>Хаффман и LZW разберём на следующих парах — это тоже сжатие без потерь.</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-ex data-type="5"></section>
+
+<section class="slide">
+  <h2>Что делаем дальше</h2>
+  <ol>
+    <li><b>Обзорный практикум</b> — шесть задач, все сразу на странице, в любом
+        порядке: формула Хартли, закон аддитивности, объём сообщения, вероятность,
+        RLE, с потерями или без.</li>
+    <li>Таблицу степеней двойки держи перед глазами — она на карточке в тетрадь.</li>
+    <li>Ответ везде — целое число, без единиц: <img class="frz-i" width="34" height="22" alt="код" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEQAAAAtCAIAAACYilp3AAADw0lEQVR42u2YUUiaURTHj31qfJSzgtGiMsIChSamVPSyHhwEZVtPrj3VWGxBDVoQlJQPq5awMmbBahWsQY31EkxhBbHhCByBjQ0hYpGL/IYYhUb56ddn7uGCc82cK0mL7//i8XrvgZ/n3nPPuay19Z9wWZQEl0hs9JGbffVCY2wR25ctMgwMA8PAnCqb/ZdIkjSZTGaz2Wq12re23G43l8vNyMgQi8UKhaJaqcRxPHpvgUDgbl2dxWJBX3k83sqXL+cHMz4+PqzXH8MjCIIgiMXFxZGREd3QkEwmi9Lb9PR0kCSe2wzHcYFAIJPJRCJRcnIyGiQI4l5Dw/r6ejQeHA7HwLNn8dxmQqGwvb39RkWFSCQKDc7s27darZamaY/HMzgw8GJ09J+uNBrNwcEBACiVSqPRGAeY6urqsFGqb2jwkKRucBAATCaTz+cLhiusjEbjxw8fAKCoqOh+Y+PZYWKczaqqqpBxeHjodDojzHS7XL09PQDAZrP7+/sxDEu41JzG5/92nRTJeV9f387ODgA8bGoSicWJeM/YCQIZqampWVlZJ01bWlqam5sDgIKCgubm5gS9NGdnZ5FRW1t7UmRIkuzu6kKh69dqORxOPLNZWHm93smJiTczMwBQWFjY2tp60kydTme32wGgvr5eKpXGuQJAstlsBoMBAPx+v9Pp/GQyoRNfWlr6XK/np6WFXfXt69fXU1MAkJub+7itLf7lDNIPm+1YHQAA+fn59xsb09PTwy6haVqtVh8dHbFYrL6nT/+r6onDmbHZbA8fPKi9fdtqtf7968uxsbW1NQBQqVTl5eUxLzRZ6EHjLG0zulIcDsdns3l6Zmbb6QQALpf7amqqpKTkN+fGhlKppCgqMzPz/fw8j8cLdbK6unqrpubUhWbM2mYOh5OdnS2Xy5tbWhYWFhAARVGdHR2BQCBYGqvVaoqiAOBJT88xkgSKzDFtbm7eVCiQ/c5gEIvFALCysnJHpULkxcXFf6/yeDxoZ2IYJpfL0WDmtWs6nS76yLBj/vfk5eXhOE6SJADs7+8Ht2LQWF5ejrDc7/cHJwgEgjh3mi6Xy+v1IjsnJyfRO83IGtbr0VGRSCTBiqasrOx7xA7njAkgxjA0TVsslsnJSVTVs1isjs7ORH8D2N3dfdTSEjri8/n29vbsdnvwYGAY1tvbG5qXExSGoqjIJ1gqlXZrNBKJ5GK8zvyRQJKSUlJSrvD5BULhdYmksrIytJc+Z8X+ngHm4Zx50WRgGBgGhoFhYBgYBuZshSaqbZjIJJB+AV32hV6vhc5EAAAAAElFTkSuQmCC">, а не «34 бита».</li>
+  </ol>
+  <p>Ошибся — сразу виден разбор, а «Новые числа» дают ту же задачу с другими
+  данными. Отметка: закрыто 6 из 6 — «5», 5 — «4», 3 или 4 — «3».</p>
+</section>
+
+<section class="slide">
+  <h1>За работу</h1>
+  <p class="lead">Практикум «Количество информации и сжатие данных» — в общей
+  папке и на сайте. Не успел на уроке — пройди дома: вариант будет другой,
+  сдаётся тем же кодом.</p>
+  <p>Карточку в тетрадь можно взять с собой: на ней формула Хартли с таблицей
+  степеней двойки, объём сообщения, вероятность, RLE и список «с потерями и без».</p>
+</section>
+
+</div>
+
+<div class="bar">
+  <button id="prev">← Назад</button>
+  <button id="step" class="primary">Раскрыть</button>
+  <button id="next">Вперёд →</button>
+  <button id="reroll" hidden>Другая задача</button>
+  <span class="count" id="count"></span>
+  <span class="zoom" title="Размер шрифта на экране: клавиши + и −"><button id="zoomOut" title="Мельче (клавиша −)">A−</button><span class="z" id="zoomVal"></span><button id="zoomIn" title="Крупнее (клавиша +)">A+</button></span>
+  <div class="spacer"></div>
+  <span class="ai-mark" style="color:#5c6070;font-size:13px">Материалы подготовлены с использованием технологий искусственного интеллекта.</span>
+  <span class="keys"><kbd>Пробел</kbd> раскрыть и дальше ·
+    <kbd>←</kbd> <kbd>→</kbd> слайды</span>
+</div>
+</div>
+
+<script>
+/* ==== ЗАДАЧИ: вставлено gen.py, руками не править ==== */
+/* Обзорный тест-практикум к первой паре 11 класса (углублённый уровень).
+   Содержание ФГОС: количество информации (Хартли, закон аддитивности,
+   информация и вероятность) и алгоритмы сжатия данных (RLE, с потерями
+   и без потерь).
+
+   Единственный источник задач. В practice.html вписывается скриптом
+   gen.py между маркерами — руками страницу не править.
+
+   Ответ везде целое число: тест-практикум приучает к формату КЕГЭ, где
+   ответ сверяет машина. */
+
+const T_TYPES = [
+  "формула Хартли",
+  "закон аддитивности",
+  "объём сообщения",
+  "вероятность и информация",
+  "алгоритм RLE",
+  "с потерями или без"
+];
+
+function tRng(seed) {
+  let s = seed >>> 0;
+  return function () {
+    s ^= s << 13; s >>>= 0;
+    s ^= s >> 17;
+    s ^= s << 5;  s >>>= 0;
+    return s / 4294967296;
+  };
+}
+
+function tRand(rng, a, b) { return a + Math.floor(rng() * (b - a + 1)); }
+function tPick(rng, arr) { return arr[tRand(rng, 0, arr.length - 1)]; }
+
+/* ---------------------------------------------------------------- сюжеты */
+
+/* Склонение при числительном: 1 шар, 2 шара, 5 шаров. Без этого на
+   странице вылезает «В ящике 2 карточек» — мелочь, которую ученик
+   замечает раньше, чем формулу. */
+function tPl(n, one, few, many) {
+  const h = n % 100, t = n % 10;
+  if (h >= 11 && h <= 14) return many;
+  if (t === 1) return one;
+  if (t >= 2 && t <= 4) return few;
+  return many;
+}
+
+function tBits(n) { return n + " " + tPl(n, "бит", "бита", "бит"); }
+
+/* [где, ед., 2-4, мн., событие] */
+const T_SETS = [
+  ["В корзине", "шар", "шара", "шаров", "вынули шар номер k"],
+  ["В колоде", "карточка", "карточки", "карточек", "открыли карточку номер k"],
+  ["В зале", "место", "места", "мест", "занято место номер k"],
+  ["На полке", "книга", "книги", "книг", "взяли книгу номер k"],
+  ["На улице", "дом", "дома", "домов", "нужен дом номер k"]
+];
+
+const T_PAIRS = [
+  ["одну из %1 букв", "один из %2 номеров"],
+  ["один из %1 городов", "одну из %2 дат"],
+  ["одну из %1 команд", "один из %2 стадионов"],
+  ["один из %1 цветов", "одну из %2 фигур"]
+];
+
+/* [что лежит (род. мн.), какие именно, событие] */
+const T_BALLS = [
+  ["шаров", "белых", "достали белый шар"],
+  ["карандашей", "красных", "достали красный карандаш"],
+  ["карточек", "с буквой А", "достали карточку с буквой А"],
+  ["деталей", "бракованных", "достали бракованную деталь"]
+];
+
+const T_LOSSY = [
+  "JPEG", "MP3", "MPEG-4 (видео)", "AAC",
+  "уменьшение глубины кодирования цвета"
+];
+const T_LOSSLESS = ["RLE", "алгоритм Хаффмана", "LZW", "ZIP", "PNG"];
+
+const T_LETTERS = ["А", "Б", "В", "Г", "Д"];
+
+/* ---------------------------------------------------------------- задачи */
+
+function tTask(type, rng) {
+  if (type === 0) return tHartley(rng);
+  if (type === 1) return tAdditive(rng);
+  if (type === 2) return tVolume(rng);
+  if (type === 3) return tProbability(rng);
+  if (type === 4) return tRle(rng);
+  return tLossy(rng);
+}
+
+/* 0. Формула Хартли: N = 2^i. Спрашиваем то биты, то число вариантов. */
+function tHartley(rng) {
+  const i = tRand(rng, 3, 8);
+  const n = Math.pow(2, i);
+  const s = tPick(rng, T_SETS);
+  if (rng() < 0.5) {
+    return {
+      type: 0, kind: "bits", answer: String(i),
+      question: s[0] + " <b>" + n + "</b> " + tPl(n, s[1], s[2], s[3]) +
+        ", все они одинаково вероятны. Сколько бит информации несёт " +
+        "сообщение «" + s[4] + "»?",
+      explain: "По формуле Хартли N = 2<sup>i</sup>. Здесь N = " + n +
+        " = 2<sup>" + i + "</sup>, значит i = " + tBits(i) + ".",
+      x: {mode: "bits", n: n, i: i}
+    };
+  }
+  return {
+    type: 0, kind: "count", answer: String(n),
+    question: "Сообщение о том, какой объект выбран из набора равновероятных, " +
+      "несёт <b>" + i + "</b> " + tPl(i, "бит", "бита", "бит") +
+      " информации. Сколько объектов было в наборе?",
+    explain: "По формуле Хартли N = 2<sup>i</sup> = 2<sup>" + i + "</sup> = " +
+      n + " " + tPl(n, "объект", "объекта", "объектов") + ".",
+    x: {mode: "count", n: n, i: i}
+  };
+}
+
+/* 1. Закон аддитивности: независимые сообщения складываются по битам. */
+function tAdditive(rng) {
+  const a = tRand(rng, 2, 6);
+  let b = tRand(rng, 2, 6);
+  if (b === a) b = a === 6 ? 2 : b + 1;
+  const n1 = Math.pow(2, a), n2 = Math.pow(2, b);
+  const p = tPick(rng, T_PAIRS);
+  const part1 = p[0].replace("%1", "<b>" + n1 + "</b>");
+  const part2 = p[1].replace("%2", "<b>" + n2 + "</b>");
+  return {
+    type: 1, answer: String(a + b),
+    question: "Сначала равновероятно выбирают " + part1 + ", затем — " + part2 +
+      ". Сколько бит информации несёт сообщение о полном результате выбора?",
+    explain: "Первое сообщение: " + n1 + " = 2<sup>" + a + "</sup> → " +
+      tBits(a) + ". Второе: " + n2 + " = 2<sup>" + b + "</sup> → " + tBits(b) +
+      ". Выборы независимы, поэтому по закону аддитивности " + a + " + " + b +
+      " = " + tBits(a + b) + ".",
+    x: {n1: n1, n2: n2, a: a, b: b}
+  };
+}
+
+/* 2. Информационный объём сообщения: K символов алфавита мощности N. */
+function tVolume(rng) {
+  const i = tRand(rng, 1, 8);
+  const n = Math.pow(2, i);
+  const k = tRand(rng, 2, 24) * 8;
+  return {
+    type: 2, answer: String(k * i / 8),
+    question: "Алфавит содержит <b>" + n + "</b> " +
+      tPl(n, "символ", "символа", "символов") + ". Сообщение состоит из <b>" +
+      k + "</b> " + tPl(k, "символа", "символов", "символов") +
+      " этого алфавита. Каков информационный объём сообщения " +
+      "<b>в байтах</b>?",
+    explain: "Один символ алфавита из " + n + " = 2<sup>" + i + "</sup> " +
+      tPl(n, "символа", "символов", "символов") + " весит " + tBits(i) +
+      ". Всё сообщение: " + k + " · " + i + " = " + tBits(k * i) + ", это " +
+      (k * i) + " / 8 = " + (k * i / 8) + " " +
+      tPl(k * i / 8, "байт", "байта", "байт") + ".",
+    x: {n: n, i: i, k: k}
+  };
+}
+
+/* 3. Информация и вероятность: p = 1/2^k, значит i = k бит. */
+function tProbability(rng) {
+  const k = tRand(rng, 1, 5);
+  const pow = Math.pow(2, k);
+  const mMin = Math.max(1, Math.ceil(12 / pow));
+  const mMax = Math.min(9, Math.floor(200 / pow));
+  const m = tRand(rng, mMin, mMax);
+  const n = m * pow;
+  const s = tPick(rng, T_BALLS);
+  return {
+    type: 3, answer: String(k),
+    question: "В ящике <b>" + n + "</b> " + s[0] + ", из них " + s[1] +
+      " — <b>" + m + "</b>. Наугад достают один. Сколько бит информации " +
+      "несёт сообщение «" + s[2] + "»?",
+    explain: "Вероятность события p = " + m + " / " + n + " = 1/" + pow +
+      ". Количество информации i = log<sub>2</sub>(1/p) = log<sub>2</sub>" +
+      pow + " = " + tBits(k) + ".",
+    x: {n: n, m: m}
+  };
+}
+
+/* 4. RLE: каждая серия одинаковых символов заменяется парой «число, символ»,
+      то есть ровно двумя символами. Серии делаем длиннее одного символа,
+      чтобы сжатие всегда выигрывало и «экономия» не уходила в минус. */
+function tRle(rng) {
+  const runs = tRand(rng, 4, 6);
+  let str = "", prev = "", parts = [];
+  for (let r = 0; r < runs; r++) {
+    let ch = tPick(rng, T_LETTERS);
+    while (ch === prev) ch = tPick(rng, T_LETTERS);
+    prev = ch;
+    const len = tRand(rng, 2, 6);
+    str += ch.repeat(len);
+    parts.push(len + ch);
+  }
+  const coded = runs * 2;
+  const x = {s: str};
+  const shown = "<code>" + str + "</code>";
+  const how = "В строке " + runs + " " +
+    tPl(runs, "серия", "серии", "серий") + " одинаковых символов: <code>" +
+    parts.join(" ") + "</code>. Каждая серия — это два символа записи " +
+    "(число и буква), всего " + runs + " · 2 = " + coded + " " +
+    tPl(coded, "символ", "символа", "символов") + ".";
+  if (rng() < 0.5) {
+    return {
+      type: 4, kind: "len", answer: String(coded),
+      question: "Строку " + shown + " кодируют алгоритмом RLE: каждая серия " +
+        "одинаковых символов заменяется парой «количество, символ». Сколько " +
+        "символов будет в закодированной записи?",
+      explain: how,
+      x: x
+    };
+  }
+  return {
+    type: 4, kind: "save", answer: String(str.length - coded),
+    question: "Строку " + shown + " кодируют алгоритмом RLE: каждая серия " +
+      "одинаковых символов заменяется парой «количество, символ». На сколько " +
+      "символов запись стала короче?",
+    explain: how + " Исходная строка длиной " + str.length + " " +
+      tPl(str.length, "символ", "символа", "символов") + ", значит короче на " +
+      str.length + " − " + coded + " = " + (str.length - coded) + ".",
+    x: x
+  };
+}
+
+/* 5. С потерями или без. Список из пяти пунктов, среди них от одного до
+      четырёх «с потерями» — крайние случаи не берём, иначе считать нечего. */
+function tLossy(rng) {
+  const k = tRand(rng, 1, 4);
+  const lossy = T_LOSSY.slice(), lossless = T_LOSSLESS.slice();
+  const items = [];
+  for (let j = 0; j < k; j++)
+    items.push(lossy.splice(tRand(rng, 0, lossy.length - 1), 1)[0]);
+  const marked = items.slice();
+  for (let j = 0; j < 5 - k; j++)
+    items.push(lossless.splice(tRand(rng, 0, lossless.length - 1), 1)[0]);
+  for (let j = items.length - 1; j > 0; j--) {
+    const t = tRand(rng, 0, j);
+    const tmp = items[j]; items[j] = items[t]; items[t] = tmp;
+  }
+  return {
+    type: 5, answer: String(k),
+    question: "Перечислены способы сжатия данных: <b>" + items.join(", ") +
+      "</b>. Сколько из них сжимают данные <b>с потерями</b>?",
+    explain: "С потерями сжимают: " + marked.join(", ") + " — всего " + k +
+      ". Остальные из списка восстанавливают исходные данные точно.",
+    x: {items: items.map(function (it) { return {t: it, v: marked.indexOf(it) >= 0}; })}
+  };
+}
+
+/* ------------------------------------------------------------- сборка */
+
+function tMake(seed) {
+  const rng = tRng(seed || 1);
+  const order = [0, 1, 2, 3, 4, 5];
+  for (let j = order.length - 1; j > 0; j--) {
+    const t = tRand(rng, 0, j);
+    const tmp = order[j]; order[j] = order[t]; order[t] = tmp;
+  }
+  return order.map(function (type) { return tTask(type, rng); });
+}
+
+/* Ответ сверяется знак в знак: только целое число, пробелы по краям
+   отбрасываются, всё остальное — ошибка. Так же читает ответ машина
+   на КЕГЭ. */
+function tCheck(task, raw) {
+  const s = String(raw === undefined || raw === null ? "" : raw)
+    .replace(/\s+/g, "");
+  if (!/^\d+$/.test(s)) return false;
+  return String(Number(s)) === task.answer;
+}
+
+/* Что не так с записью ответа — коротко, без разгадки. */
+function tHint(task, raw) {
+  const s = String(raw === undefined || raw === null ? "" : raw).trim();
+  if (/^\d+$/.test(s)) return null;
+  if (/^\d+\s*\D+$/.test(s)) return "Без единиц измерения — только число.";
+  if (/\d/.test(s)) return "Только число — без пробелов, запятых, точек и знаков.";
+  return "Ответ — целое число.";
+}
+
+/* ==================================================== разбор рисунком
+   Для слайдов-примеров презентации (правило Светы 26.09.2026: разбор —
+   рисунком, текст — подписью). Всё собирается из поля x задачи своим
+   ходом, а не из explain; gen.py --selftest сверяет итог рисунка с ключом. */
+
+function xEsc(s) {
+  return String(s).replace(/[&<>]/g, function (c) {
+    return {"&": "&amp;", "<": "&lt;", ">": "&gt;"}[c];
+  });
+}
+
+function xLog2(n) { let i = 0; while ((1 << i) < n) i++; return i; }
+
+/* Ряд клеток: по клетке на бит. */
+function xTds(k, cls) {
+  let h = "";
+  for (let j = 0; j < k; j++) h += '<td class="' + (cls || "b") + '"></td>';
+  return h;
+}
+function xCells(k, cls) { return '<table class="seq bits"><tr>' + xTds(k, cls) + "</tr></table>"; }
+
+/* Таблица степеней двойки, столбец i подсвечен. */
+function xPowers(i, mine) {
+  let top = "<tr><th>i, бит</th>", bot = "<tr><th>N = 2<sup>i</sup></th>";
+  for (let j = 1; j <= 8; j++) {
+    const c = j === i ? ' class="ok"' : j === mine ? ' class="bad"' : "";
+    top += "<td" + c + ">" + j + "</td>";
+    bot += "<td" + c + ">" + Math.pow(2, j) + "</td>";
+  }
+  return '<table class="gm pw">' + top + "</tr>" + bot + "</tr></table>";
+}
+
+function xHartley(x) {
+  if (x.mode === "bits")
+    return xPowers(x.i) + '<p class="xcap">Ищем N = <b>' + x.n + "</b> в нижней строке — над ним " +
+      "i = <b>" + x.i + "</b>. Каждый бит делит варианты пополам:</p>" + xCells(x.i) +
+      '<p class="xcap">' + x.n + " → " + xHalves(x.n, 1).join(" → ") + "</p>";
+  return xPowers(x.i) + '<p class="xcap">Ищем i = <b>' + x.i + "</b> в верхней строке — под ним " +
+    "N = <b>" + x.n + "</b>: каждый бит удваивает число вариантов.</p>";
+}
+
+function xHalves(from, to) {
+  const out = [];
+  for (let v = from / 2; v >= to; v /= 2) out.push(v);
+  return out;
+}
+
+function xAdditive(x) {
+  return '<table class="gm add">' +
+    "<tr><th>первый выбор</th><td>" + x.n1 + " = 2<sup>" + x.a + "</sup></td><td>" + xCells(x.a, "b") + "</td><td>" + x.a + "</td></tr>" +
+    "<tr><th>второй выбор</th><td>" + x.n2 + " = 2<sup>" + x.b + "</sup></td><td>" + xCells(x.b, "g") + "</td><td>" + x.b + "</td></tr>" +
+    '<tr class="sum"><th>вместе</th><td>' + (x.n1 * x.n2) + " = 2<sup>" + (x.a + x.b) + "</sup></td><td>" +
+    '<table class="seq bits"><tr>' + xTds(x.a, "b") + xTds(x.b, "g") + "</tr></table></td><td>" + (x.a + x.b) + "</td></tr></table>" +
+    '<p class="xcap">Биты независимых выборов <b>складываются</b>, а варианты — перемножаются: ' +
+    x.n1 + " · " + x.n2 + " = " + (x.n1 * x.n2) + ".</p>";
+}
+
+function xVolume(x) {
+  const bits = x.k * x.i;
+  return '<table class="gm flow">' +
+    "<tr><th>алфавит</th><td>N = " + x.n + " = 2<sup>" + x.i + "</sup></td><td>символ весит <b>" + x.i + "</b> " + tPl(x.i, "бит", "бита", "бит") + "</td></tr>" +
+    "<tr><th>сообщение</th><td>K = " + x.k + "</td><td>I = " + x.k + " · " + x.i + " = <b>" + bits + "</b> бит</td></tr>" +
+    '<tr class="sum"><th>в байтах</th><td>8 бит = 1 байт</td><td>' + bits + " / 8 = <b>" + (bits / 8) + "</b></td></tr></table>" +
+    '<p class="xcap">Один символ — ' + x.i + " " + tPl(x.i, "клетка", "клетки", "клеток") + ":</p>" + xCells(x.i);
+}
+
+function xProb(x) {
+  const pow = x.n / x.m;
+  const k = xLog2(pow);
+  const chain = [x.n].concat(xHalves(x.n, x.m));
+  const cells = chain.map(function (v, j) {
+    return "<td" + (j === chain.length - 1 ? ' class="ok"' : "") + ">" + v + "</td>";
+  }).join("");
+  return '<p class="xcap">p = ' + x.m + " / " + x.n + " = 1/" + pow + ". Сообщение сужает выбор с <b>" + x.n +
+    "</b> до <b>" + x.m + "</b>; каждый бит — вдвое:</p>" +
+    '<table class="seq big"><tr>' + cells + "</tr></table>" +
+    '<p class="xcap">Делений пополам — <b>' + k + "</b>: i = log<sub>2</sub>" + pow + " = " + k + ".</p>";
+}
+
+/* Строка RLE: серии своим цветом, под каждой — её пара «сколько, что». */
+function xRuns(s) {
+  const runs = s.match(/(.)\1*/g) || [];
+  return runs.map(function (r) { return [r[0], r.length]; });
+}
+
+function xRle(t) {
+  const runs = xRuns(t.x.s);
+  let top = "", bot = "";
+  runs.forEach(function (r, j) {
+    top += '<td class="r' + (j % 5) + '" colspan="' + r[1] + '">' + r[0].repeat(r[1]) + "</td>";
+    bot += '<td class="r' + (j % 5) + '" colspan="' + r[1] + '"><b>' + r[1] + r[0] + "</b></td>";
+  });
+  const coded = runs.length * 2, len = t.x.s.length;
+  return '<table class="gm rle"><tr><th>строка</th>' + top + "</tr><tr><th>RLE</th>" + bot + "</tr></table>" +
+    '<p class="xcap">Серий — <b>' + runs.length + "</b>, каждая — два символа записи: " + runs.length +
+    " · 2 = <b>" + coded + "</b>." + (t.kind === "save"
+      ? " Было " + len + ", стало " + coded + ": короче на " + len + " − " + coded + " = <b>" + (len - coded) + "</b>."
+      : "") + "</p>";
+}
+
+function xLossy(x) {
+  return '<ol class="xst">' + x.items.map(function (it) {
+    return '<li class="' + (it.v ? "n" : "y") + '"><b>' + (it.v ? "с потерями" : "без потерь") + "</b> " + xEsc(it.t) + "</li>";
+  }).join("") + "</ol>" +
+    '<p class="xcap">Красные — <b>с потерями</b>, их ' + x.items.filter(function (it) { return it.v; }).length + ".</p>";
+}
+
+function xSolution(t) {
+  if (t.type === 0) return xHartley(t.x);
+  if (t.type === 1) return xAdditive(t.x);
+  if (t.type === 2) return xVolume(t.x);
+  if (t.type === 3) return xProb(t.x);
+  if (t.type === 4) return xRle(t);
+  return xLossy(t.x);
+}
+
+/* Ответ класса рядом с эталоном; где можно — откуда могло взяться число. */
+function xCompare(t, given) {
+  const g = String(given === undefined || given === null ? "" : given).trim();
+  const ok = g === t.answer;
+  let h = '<p class="xcmp ' + (ok ? "y" : "n") + '">класс: <b>' + xEsc(g || "—") + "</b>" +
+    (ok ? "" : " · эталон: <b>" + xEsc(t.answer) + "</b>") + "</p>";
+  if (ok || !/^\d+$/.test(g)) return h;
+  const k = Number(g), x = t.x;
+  let why = "";
+  if (t.type === 0 && x.mode === "bits" && k >= 1 && k <= 8)
+    why = "При i = " + k + " вариантов было бы 2<sup>" + k + "</sup> = " + Math.pow(2, k) + ", а их " + x.n + ".";
+  if (t.type === 0 && x.mode === "count" && k === 2 * x.i)
+    why = "Это 2 · " + x.i + ", а нужно 2<sup>" + x.i + "</sup> — двойка умножается сама на себя " + x.i + " раз.";
+  if (t.type === 1 && k === x.a * x.b) why = "Биты перемножены — а их надо сложить.";
+  if (t.type === 1 && k === x.n1 * x.n2) why = "Это число вариантов, а спрашивают биты.";
+  if (t.type === 2 && k === x.k * x.i) why = "Это биты — осталось разделить на 8.";
+  if (t.type === 2 && k === x.k * x.n / 8) why = "Умножено на N, а нужно на вес символа i = " + x.i + ".";
+  if (t.type === 3 && k === xLog2(x.n)) why = "Это информация о выборе одного из " + x.n + ", а событие — достали один из " + x.m + ".";
+  if (t.type === 4 && t.kind === "save" && k === xRuns(x.s).length * 2) why = "Это длина записи, а спрашивают, на сколько короче.";
+  if (t.type === 4 && k === xRuns(x.s).length) why = "Серий столько, но каждая — два символа записи.";
+  if (t.type === 5 && k === 5 - Number(t.answer)) why = "Посчитаны способы без потерь.";
+  return h + (why ? '<p class="xcap n">' + why + "</p>" : "");
+}
+/* ==== /ЗАДАЧИ ==== */
+
+
+/* ------------------------------------------------------------------
+   Слайды-примеры собирает генератор практикума: задача каждый раз новая,
+   разбор — рисунком (xSolution из tasks.js), сверка ответа класса —
+   xCompare (правила Светы 26.09.2026).
+------------------------------------------------------------------ */
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
+                          .replace(/>/g, "&gt;");
+const exRng = tRng((Date.now() ^ (Math.random() * 1e9)) >>> 0);
+
+// Сверка знак в знак, как на экзамене.
+function xCheck(el){
+  const t = el._task;
+  const box = el.querySelector(".xres");
+  const given = el.querySelector(".xin").value;
+  if (!given.trim()){ box.innerHTML = ""; return; }
+  const ok = tCheck(t, given);
+  const hint = ok || typeof tHint !== "function" ? null : tHint(t, given);
+  box.innerHTML = '<div class="xverd ' + (ok ? "ok" : "bad") + '">'
+      + (ok ? "✓ совпало с эталоном" : "✗ не совпало") + '</div>'
+      + (hint ? '<div class="xcap">' + hint + '</div>' : "")
+      + xCompare(t, given);
+}
+
+function buildExample(el){
+  const t = tTask(+el.dataset.type, exRng);
+  el._task = t;
+  const code = t.code && typeof frz === "function" ? frz(t.code) : "";
+  el.innerHTML =
+    `<p class="eyebrow">разбираем вместе</p>
+     <h2>Пример: ${esc(T_TYPES[t.type])}</h2>
+     <div class="exwrap">
+       <div class="task box">
+         <div>${t.question}${code}${t.after || ""}</div>
+         <div class="xcheck"><input class="xin" type="text" autocomplete="off" spellcheck="false" placeholder="ответ класса"><button class="xgo">Сверить</button></div></div>
+       <div class="steps">
+         <div class="xres"></div>
+         <div class="step" hidden>${xSolution(t)}</div>
+         <div class="step" hidden><p class="keyline">Ответ: <b>${esc(t.answer)}</b></p></div>
+       </div>
+     </div>`;
+  const inp = el.querySelector(".xin");
+  // набор ответа не должен листать слайды и менять шрифт
+  inp.addEventListener("keydown", e => {
+    e.stopPropagation();
+    if (e.key === "Enter"){ e.preventDefault(); xCheck(el); }
+  });
+  el.querySelector(".xgo").addEventListener("click", () => xCheck(el));
+  setTimeout(fitExamples, 0);
+}
+
+// Условие выше экрана закреплять нельзя: край уедет при прокрутке шагов.
+function fitExamples(){
+  const stage = document.getElementById("stage");
+  const room = stage.clientHeight - 46;
+  document.querySelectorAll(".exwrap .task").forEach(box => {
+    box.classList.remove("tall");
+    if (box.offsetHeight > room) box.classList.add("tall");
+  });
+}
+window.addEventListener("resize", fitExamples);
+
+/* Примеры теории рисует тот же код, что разбор задач, из данных на слайде. */
+document.querySelectorAll("[data-halves]").forEach(el => {
+  const n = +el.dataset.halves;
+  const chain = [n].concat(xHalves(n, 1));
+  el.innerHTML = '<table class="seq big"><tr>' + chain.map((v, j) =>
+    "<td" + (j === chain.length - 1 ? ' class="ok"' : "") + ">" + v + "</td>").join("") +
+    "</tr></table>" + '<p class="xcap">вариантов после каждого вопроса · вопросов — <b>' +
+    (chain.length - 1) + "</b></p>";
+});
+document.querySelectorAll("[data-powers]").forEach(el => { el.innerHTML = xPowers(0); });
+document.querySelectorAll("[data-add-demo]").forEach(el => {
+  el.innerHTML = xAdditive({n1: 8, n2: 4, a: 3, b: 2});
+});
+document.querySelectorAll("[data-vol-demo]").forEach(el => {
+  el.innerHTML = xVolume({n: 32, i: 5, k: 40});
+});
+document.querySelectorAll("[data-prob-demo]").forEach(el => {
+  el.innerHTML = xProb({n: 16, m: 2});
+});
+document.querySelectorAll("[data-rle-demo]").forEach(el => {
+  el.innerHTML = xRle({kind: "len", x: {s: el.dataset.rleDemo}});
+});
+
+/* ------------------------------------------------------------------
+   Управление колодой: стрелки листают слайды, пробел раскрывает
+   очередной шаг разбора и только потом уходит дальше.
+------------------------------------------------------------------ */
+const slides = [...document.querySelectorAll(".slide")];
+let cur = 0, shown = 0;
+
+const isExample = i => slides[i].hasAttribute("data-ex");
+const stepsOf = i => [...slides[i].querySelectorAll(".steps > .step")];
+
+function show(i){
+  slides[cur].classList.remove("on");
+  cur = Math.max(0, Math.min(slides.length - 1, i));
+  slides[cur].classList.add("on");
+  if (isExample(cur) && !slides[cur]._task) buildExample(slides[cur]);
+  shown = stepsOf(cur).filter(el => !el.hidden).length;
+  document.getElementById("stage").scrollTop = 0;
+  sync();
+}
+
+function sync(){
+  const total = stepsOf(cur).length;
+  const ex = isExample(cur);
+  document.getElementById("count").textContent = `${cur + 1} / ${slides.length}`;
+  document.getElementById("prev").disabled = cur === 0;
+  document.getElementById("next").disabled = cur === slides.length - 1;
+  document.getElementById("reroll").hidden = !ex;
+  const b = document.getElementById("step");
+  b.hidden = total === 0;
+  if (total){
+    b.disabled = shown >= total;
+    b.textContent = shown === 0 ? (ex ? "Показать разбор" : "Раскрыть")
+                  : shown >= total ? (ex ? "Разобрано" : "Всё открыто")
+                  : `Дальше (${shown}/${total})`;
+  }
+}
+
+function nextStep(){
+  const steps = stepsOf(cur);
+  if (shown >= steps.length) return false;
+  steps[shown].hidden = false;
+  steps[shown].scrollIntoView({block: "nearest", behavior: "smooth"});
+  shown++;
+  sync();
+  return true;
+}
+
+document.getElementById("prev").addEventListener("click", () => show(cur - 1));
+document.getElementById("next").addEventListener("click", () => show(cur + 1));
+document.getElementById("step").addEventListener("click", nextStep);
+document.getElementById("reroll").addEventListener("click", () => {
+  buildExample(slides[cur]);
+  shown = 0;
+  sync();
+});
+
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowRight" || e.key === "PageDown"){ show(cur + 1); }
+  else if (e.key === "ArrowLeft" || e.key === "PageUp"){ show(cur - 1); }
+  else if (e.key === " " || e.key === "Enter"){
+    if (!nextStep()) show(cur + 1);
+  } else return;
+  e.preventDefault();
+});
+
+show(0);
+
+/* ---- размер шрифта на проекторе ----
+   Zoom только на области слайда: zoom на body растягивает 100vh, и панель
+   уезжает за экран (проверено 17.09.2026). Шаг запоминается в
+   localStorage и общий для всех презентаций. ZOOM_BASE — стартовый
+   масштаб колоды с базовым кеглем 20px. */
+const ZOOM_BASE = 1.2;
+const ZOOM_KEY = "slides-zoom-step";
+let zoomStep = 0;
+try { zoomStep = Math.max(-3, Math.min(6, parseInt(localStorage.getItem(ZOOM_KEY), 10) || 0)); }
+catch (e) {}
+function applyZoom(){
+  const z = Math.round(ZOOM_BASE * Math.pow(1.1, zoomStep) * 100) / 100;
+  document.getElementById("stage").style.zoom = z;
+  document.getElementById("zoomVal").textContent = Math.round(z * 100) + "%";
+  fitExamples();
+}
+function setZoom(d){
+  zoomStep = Math.max(-3, Math.min(6, zoomStep + d));
+  try { localStorage.setItem(ZOOM_KEY, String(zoomStep)); } catch (e) {}
+  applyZoom();
+}
+document.getElementById("zoomIn").addEventListener("click", () => setZoom(1));
+document.getElementById("zoomOut").addEventListener("click", () => setZoom(-1));
+document.addEventListener("keydown", e => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key === "+" || e.key === "=") setZoom(1);
+  else if (e.key === "-" || e.key === "_") setZoom(-1);
+  else return;
+  e.preventDefault();
+});
+applyZoom();
+</script>
+</body>
+</html>

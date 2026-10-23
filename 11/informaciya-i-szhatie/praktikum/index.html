@@ -182,7 +182,7 @@ details.help pre{font-family:Consolas,"Cascadia Mono",monospace;
   <h3>С потерями и без</h3>
   <table>
     <tr><th>без потерь</th><td>RLE, Хаффман, LZW, ZIP, PNG, GIF</td></tr>
-    <tr><th>с потерями</th><td>JPEG, MP3, AAC, MPEG</td></tr>
+    <tr><th>с потерями</th><td>JPEG, MP3, AAC, MPEG, уменьшение глубины цвета</td></tr>
   </table>
   <p>Без потерь — исходный файл восстанавливается точно, бит в бит. С
      потерями — выбрасывается то, чего человек не заметит; вернуть
@@ -296,7 +296,8 @@ function tHartley(rng) {
         ", все они одинаково вероятны. Сколько бит информации несёт " +
         "сообщение «" + s[4] + "»?",
       explain: "По формуле Хартли N = 2<sup>i</sup>. Здесь N = " + n +
-        " = 2<sup>" + i + "</sup>, значит i = " + tBits(i) + "."
+        " = 2<sup>" + i + "</sup>, значит i = " + tBits(i) + ".",
+      x: {mode: "bits", n: n, i: i}
     };
   }
   return {
@@ -305,7 +306,8 @@ function tHartley(rng) {
       "несёт <b>" + i + "</b> " + tPl(i, "бит", "бита", "бит") +
       " информации. Сколько объектов было в наборе?",
     explain: "По формуле Хартли N = 2<sup>i</sup> = 2<sup>" + i + "</sup> = " +
-      n + " " + tPl(n, "объект", "объекта", "объектов") + "."
+      n + " " + tPl(n, "объект", "объекта", "объектов") + ".",
+    x: {mode: "count", n: n, i: i}
   };
 }
 
@@ -325,7 +327,8 @@ function tAdditive(rng) {
     explain: "Первое сообщение: " + n1 + " = 2<sup>" + a + "</sup> → " +
       tBits(a) + ". Второе: " + n2 + " = 2<sup>" + b + "</sup> → " + tBits(b) +
       ". Выборы независимы, поэтому по закону аддитивности " + a + " + " + b +
-      " = " + tBits(a + b) + "."
+      " = " + tBits(a + b) + ".",
+    x: {n1: n1, n2: n2, a: a, b: b}
   };
 }
 
@@ -345,7 +348,8 @@ function tVolume(rng) {
       tPl(n, "символа", "символов", "символов") + " весит " + tBits(i) +
       ". Всё сообщение: " + k + " · " + i + " = " + tBits(k * i) + ", это " +
       (k * i) + " / 8 = " + (k * i / 8) + " " +
-      tPl(k * i / 8, "байт", "байта", "байт") + "."
+      tPl(k * i / 8, "байт", "байта", "байт") + ".",
+    x: {n: n, i: i, k: k}
   };
 }
 
@@ -365,7 +369,8 @@ function tProbability(rng) {
       "несёт сообщение «" + s[2] + "»?",
     explain: "Вероятность события p = " + m + " / " + n + " = 1/" + pow +
       ". Количество информации i = log<sub>2</sub>(1/p) = log<sub>2</sub>" +
-      pow + " = " + tBits(k) + "."
+      pow + " = " + tBits(k) + ".",
+    x: {n: n, m: m}
   };
 }
 
@@ -384,6 +389,7 @@ function tRle(rng) {
     parts.push(len + ch);
   }
   const coded = runs * 2;
+  const x = {s: str};
   const shown = "<code>" + str + "</code>";
   const how = "В строке " + runs + " " +
     tPl(runs, "серия", "серии", "серий") + " одинаковых символов: <code>" +
@@ -396,7 +402,8 @@ function tRle(rng) {
       question: "Строку " + shown + " кодируют алгоритмом RLE: каждая серия " +
         "одинаковых символов заменяется парой «количество, символ». Сколько " +
         "символов будет в закодированной записи?",
-      explain: how
+      explain: how,
+      x: x
     };
   }
   return {
@@ -406,7 +413,8 @@ function tRle(rng) {
       "символов запись стала короче?",
     explain: how + " Исходная строка длиной " + str.length + " " +
       tPl(str.length, "символ", "символа", "символов") + ", значит короче на " +
-      str.length + " − " + coded + " = " + (str.length - coded) + "."
+      str.length + " − " + coded + " = " + (str.length - coded) + ".",
+    x: x
   };
 }
 
@@ -430,7 +438,8 @@ function tLossy(rng) {
     question: "Перечислены способы сжатия данных: <b>" + items.join(", ") +
       "</b>. Сколько из них сжимают данные <b>с потерями</b>?",
     explain: "С потерями сжимают: " + marked.join(", ") + " — всего " + k +
-      ". Остальные из списка восстанавливают исходные данные точно."
+      ". Остальные из списка восстанавливают исходные данные точно.",
+    x: {items: items.map(function (it) { return {t: it, v: marked.indexOf(it) >= 0}; })}
   };
 }
 
@@ -454,6 +463,155 @@ function tCheck(task, raw) {
     .replace(/\s+/g, "");
   if (!/^\d+$/.test(s)) return false;
   return String(Number(s)) === task.answer;
+}
+
+/* Что не так с записью ответа — коротко, без разгадки. */
+function tHint(task, raw) {
+  const s = String(raw === undefined || raw === null ? "" : raw).trim();
+  if (/^\d+$/.test(s)) return null;
+  if (/^\d+\s*\D+$/.test(s)) return "Без единиц измерения — только число.";
+  if (/\d/.test(s)) return "Только число — без пробелов, запятых, точек и знаков.";
+  return "Ответ — целое число.";
+}
+
+/* ==================================================== разбор рисунком
+   Для слайдов-примеров презентации (правило Светы 26.09.2026: разбор —
+   рисунком, текст — подписью). Всё собирается из поля x задачи своим
+   ходом, а не из explain; gen.py --selftest сверяет итог рисунка с ключом. */
+
+function xEsc(s) {
+  return String(s).replace(/[&<>]/g, function (c) {
+    return {"&": "&amp;", "<": "&lt;", ">": "&gt;"}[c];
+  });
+}
+
+function xLog2(n) { let i = 0; while ((1 << i) < n) i++; return i; }
+
+/* Ряд клеток: по клетке на бит. */
+function xTds(k, cls) {
+  let h = "";
+  for (let j = 0; j < k; j++) h += '<td class="' + (cls || "b") + '"></td>';
+  return h;
+}
+function xCells(k, cls) { return '<table class="seq bits"><tr>' + xTds(k, cls) + "</tr></table>"; }
+
+/* Таблица степеней двойки, столбец i подсвечен. */
+function xPowers(i, mine) {
+  let top = "<tr><th>i, бит</th>", bot = "<tr><th>N = 2<sup>i</sup></th>";
+  for (let j = 1; j <= 8; j++) {
+    const c = j === i ? ' class="ok"' : j === mine ? ' class="bad"' : "";
+    top += "<td" + c + ">" + j + "</td>";
+    bot += "<td" + c + ">" + Math.pow(2, j) + "</td>";
+  }
+  return '<table class="gm pw">' + top + "</tr>" + bot + "</tr></table>";
+}
+
+function xHartley(x) {
+  if (x.mode === "bits")
+    return xPowers(x.i) + '<p class="xcap">Ищем N = <b>' + x.n + "</b> в нижней строке — над ним " +
+      "i = <b>" + x.i + "</b>. Каждый бит делит варианты пополам:</p>" + xCells(x.i) +
+      '<p class="xcap">' + x.n + " → " + xHalves(x.n, 1).join(" → ") + "</p>";
+  return xPowers(x.i) + '<p class="xcap">Ищем i = <b>' + x.i + "</b> в верхней строке — под ним " +
+    "N = <b>" + x.n + "</b>: каждый бит удваивает число вариантов.</p>";
+}
+
+function xHalves(from, to) {
+  const out = [];
+  for (let v = from / 2; v >= to; v /= 2) out.push(v);
+  return out;
+}
+
+function xAdditive(x) {
+  return '<table class="gm add">' +
+    "<tr><th>первый выбор</th><td>" + x.n1 + " = 2<sup>" + x.a + "</sup></td><td>" + xCells(x.a, "b") + "</td><td>" + x.a + "</td></tr>" +
+    "<tr><th>второй выбор</th><td>" + x.n2 + " = 2<sup>" + x.b + "</sup></td><td>" + xCells(x.b, "g") + "</td><td>" + x.b + "</td></tr>" +
+    '<tr class="sum"><th>вместе</th><td>' + (x.n1 * x.n2) + " = 2<sup>" + (x.a + x.b) + "</sup></td><td>" +
+    '<table class="seq bits"><tr>' + xTds(x.a, "b") + xTds(x.b, "g") + "</tr></table></td><td>" + (x.a + x.b) + "</td></tr></table>" +
+    '<p class="xcap">Биты независимых выборов <b>складываются</b>, а варианты — перемножаются: ' +
+    x.n1 + " · " + x.n2 + " = " + (x.n1 * x.n2) + ".</p>";
+}
+
+function xVolume(x) {
+  const bits = x.k * x.i;
+  return '<table class="gm flow">' +
+    "<tr><th>алфавит</th><td>N = " + x.n + " = 2<sup>" + x.i + "</sup></td><td>символ весит <b>" + x.i + "</b> " + tPl(x.i, "бит", "бита", "бит") + "</td></tr>" +
+    "<tr><th>сообщение</th><td>K = " + x.k + "</td><td>I = " + x.k + " · " + x.i + " = <b>" + bits + "</b> бит</td></tr>" +
+    '<tr class="sum"><th>в байтах</th><td>8 бит = 1 байт</td><td>' + bits + " / 8 = <b>" + (bits / 8) + "</b></td></tr></table>" +
+    '<p class="xcap">Один символ — ' + x.i + " " + tPl(x.i, "клетка", "клетки", "клеток") + ":</p>" + xCells(x.i);
+}
+
+function xProb(x) {
+  const pow = x.n / x.m;
+  const k = xLog2(pow);
+  const chain = [x.n].concat(xHalves(x.n, x.m));
+  const cells = chain.map(function (v, j) {
+    return "<td" + (j === chain.length - 1 ? ' class="ok"' : "") + ">" + v + "</td>";
+  }).join("");
+  return '<p class="xcap">p = ' + x.m + " / " + x.n + " = 1/" + pow + ". Сообщение сужает выбор с <b>" + x.n +
+    "</b> до <b>" + x.m + "</b>; каждый бит — вдвое:</p>" +
+    '<table class="seq big"><tr>' + cells + "</tr></table>" +
+    '<p class="xcap">Делений пополам — <b>' + k + "</b>: i = log<sub>2</sub>" + pow + " = " + k + ".</p>";
+}
+
+/* Строка RLE: серии своим цветом, под каждой — её пара «сколько, что». */
+function xRuns(s) {
+  const runs = s.match(/(.)\1*/g) || [];
+  return runs.map(function (r) { return [r[0], r.length]; });
+}
+
+function xRle(t) {
+  const runs = xRuns(t.x.s);
+  let top = "", bot = "";
+  runs.forEach(function (r, j) {
+    top += '<td class="r' + (j % 5) + '" colspan="' + r[1] + '">' + r[0].repeat(r[1]) + "</td>";
+    bot += '<td class="r' + (j % 5) + '" colspan="' + r[1] + '"><b>' + r[1] + r[0] + "</b></td>";
+  });
+  const coded = runs.length * 2, len = t.x.s.length;
+  return '<table class="gm rle"><tr><th>строка</th>' + top + "</tr><tr><th>RLE</th>" + bot + "</tr></table>" +
+    '<p class="xcap">Серий — <b>' + runs.length + "</b>, каждая — два символа записи: " + runs.length +
+    " · 2 = <b>" + coded + "</b>." + (t.kind === "save"
+      ? " Было " + len + ", стало " + coded + ": короче на " + len + " − " + coded + " = <b>" + (len - coded) + "</b>."
+      : "") + "</p>";
+}
+
+function xLossy(x) {
+  return '<ol class="xst">' + x.items.map(function (it) {
+    return '<li class="' + (it.v ? "n" : "y") + '"><b>' + (it.v ? "с потерями" : "без потерь") + "</b> " + xEsc(it.t) + "</li>";
+  }).join("") + "</ol>" +
+    '<p class="xcap">Красные — <b>с потерями</b>, их ' + x.items.filter(function (it) { return it.v; }).length + ".</p>";
+}
+
+function xSolution(t) {
+  if (t.type === 0) return xHartley(t.x);
+  if (t.type === 1) return xAdditive(t.x);
+  if (t.type === 2) return xVolume(t.x);
+  if (t.type === 3) return xProb(t.x);
+  if (t.type === 4) return xRle(t);
+  return xLossy(t.x);
+}
+
+/* Ответ класса рядом с эталоном; где можно — откуда могло взяться число. */
+function xCompare(t, given) {
+  const g = String(given === undefined || given === null ? "" : given).trim();
+  const ok = g === t.answer;
+  let h = '<p class="xcmp ' + (ok ? "y" : "n") + '">класс: <b>' + xEsc(g || "—") + "</b>" +
+    (ok ? "" : " · эталон: <b>" + xEsc(t.answer) + "</b>") + "</p>";
+  if (ok || !/^\d+$/.test(g)) return h;
+  const k = Number(g), x = t.x;
+  let why = "";
+  if (t.type === 0 && x.mode === "bits" && k >= 1 && k <= 8)
+    why = "При i = " + k + " вариантов было бы 2<sup>" + k + "</sup> = " + Math.pow(2, k) + ", а их " + x.n + ".";
+  if (t.type === 0 && x.mode === "count" && k === 2 * x.i)
+    why = "Это 2 · " + x.i + ", а нужно 2<sup>" + x.i + "</sup> — двойка умножается сама на себя " + x.i + " раз.";
+  if (t.type === 1 && k === x.a * x.b) why = "Биты перемножены — а их надо сложить.";
+  if (t.type === 1 && k === x.n1 * x.n2) why = "Это число вариантов, а спрашивают биты.";
+  if (t.type === 2 && k === x.k * x.i) why = "Это биты — осталось разделить на 8.";
+  if (t.type === 2 && k === x.k * x.n / 8) why = "Умножено на N, а нужно на вес символа i = " + x.i + ".";
+  if (t.type === 3 && k === xLog2(x.n)) why = "Это информация о выборе одного из " + x.n + ", а событие — достали один из " + x.m + ".";
+  if (t.type === 4 && t.kind === "save" && k === xRuns(x.s).length * 2) why = "Это длина записи, а спрашивают, на сколько короче.";
+  if (t.type === 4 && k === xRuns(x.s).length) why = "Серий столько, но каждая — два символа записи.";
+  if (t.type === 5 && k === 5 - Number(t.answer)) why = "Посчитаны способы без потерь.";
+  return h + (why ? '<p class="xcap n">' + why + "</p>" : "");
 }
 /* ==== /ЗАДАЧИ ==== */
 

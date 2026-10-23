@@ -321,7 +321,8 @@ function tHuff(rng) {
     explain: "Алгоритм сливает два наименьших веса, и так до одного " +
       "корня. Суммарная длина сообщения равна сумме весов всех слияний " +
       "и не зависит от того, как разрешаются совпадения весов, — здесь " +
-      "она равна " + tBits(total) + "."
+      "она равна " + tBits(total) + ".",
+    x: {letters: letters, f: f}
   };
 }
 
@@ -351,7 +352,8 @@ function tGain(rng) {
       tBits(width) + " на символ, а всего символов " + count + " — это " +
       count + " · " + width + " = " + tBits(flat) + ". Код Хаффмана даёт " +
       tBits(huff) + ". Разница: " + flat + " − " + huff + " = " +
-      tBits(flat - huff) + "."
+      tBits(flat - huff) + ".",
+    x: {letters: letters, f: f, width: width}
   };
 }
 
@@ -377,7 +379,8 @@ function tFano(rng) {
     explain: "Условие Фано: никакое кодовое слово не должно быть началом " +
       "другого. Слова длиной меньше " + L + " не подходят — каждое из них " +
       "либо само начинается с уже занятого кода, либо служит его началом. " +
-      "При длине " + L + " подходящее слово находится, значит ответ " + L + "."
+      "При длине " + L + " подходящее слово находится, значит ответ " + L + ".",
+    x: {letters: letters, codes: chosen, next: next}
   };
 }
 
@@ -397,7 +400,8 @@ function tDecode(rng) {
     explain: "Код префиксный, поэтому сообщение читается слева направо " +
       "без возвратов: как только накопленные биты совпали с кодовым " +
       "словом, буква распознана и отсчёт начинается заново. Так " +
-      "набирается " + count + " " + tPl(count, "буква", "буквы", "букв") + "."
+      "набирается " + count + " " + tPl(count, "буква", "буквы", "букв") + ".",
+    x: {letters: letters, codes: codes, bits: bits}
   };
 }
 
@@ -415,7 +419,8 @@ function tUniform(rng) {
       explain: "Нужно наименьшее i, при котором 2<sup>i</sup> ≥ " + n +
         ". Здесь 2<sup>" + (width - 1) + "</sup> = " +
         Math.pow(2, width - 1) + " — мало, 2<sup>" + width + "</sup> = " +
-        Math.pow(2, width) + " — хватает, значит " + tBits(width) + "."
+        Math.pow(2, width) + " — хватает, значит " + tBits(width) + ".",
+      x: {n: n}
     };
   }
   return {
@@ -427,7 +432,8 @@ function tUniform(rng) {
     explain: "Наименьшая длина равномерного кода — " + tBits(width) +
       ", такой код различает 2<sup>" + width + "</sup> = " +
       Math.pow(2, width) + " символов. Занято " + n + ", свободно " +
-      Math.pow(2, width) + " − " + n + " = " + (Math.pow(2, width) - n) + "."
+      Math.pow(2, width) + " − " + n + " = " + (Math.pow(2, width) - n) + ".",
+    x: {n: n}
   };
 }
 
@@ -475,7 +481,8 @@ function tCheckPrefix(rng) {
       "условие Фано будет нарушено?",
     explain: "Нельзя добавить слово, которое начинается с уже занятого " +
       "кода или само служит его началом. Таких здесь " + k + ": " +
-      marked.join(", ") + "."
+      marked.join(", ") + ".",
+    x: {letters: letters, codes: codes, items: items}
   };
 }
 
@@ -496,6 +503,184 @@ function tCheck(task, raw) {
     .replace(/\s+/g, "");
   if (!/^\d+$/.test(s)) return false;
   return String(Number(s)) === task.answer;
+}
+
+/* Что не так с записью ответа — коротко, без разгадки. */
+function tHint(task, raw) {
+  const s = String(raw === undefined || raw === null ? "" : raw).trim();
+  if (/^\d+$/.test(s)) return null;
+  if (/^\d+\s*\D+$/.test(s)) return "Без единиц измерения — только число.";
+  if (/\d/.test(s)) return "Только число — без пробелов, запятых, точек и знаков.";
+  return "Ответ — целое число.";
+}
+
+/* ==================================================== разбор рисунком
+   Для слайдов-примеров презентации (правило Светы 26.09.2026: разбор —
+   рисунком, текст — подписью). Всё собирается из поля x задачи своим
+   ходом, а не из explain и не из huffTotal / minFanoLen; итог рисунка
+   стоит в <b class="xv"> — gen.py --selftest сверяет его с ключом. */
+
+function xEsc(s) {
+  return String(s).replace(/[&<>]/g, function (c) {
+    return {"&": "&amp;", "<": "&lt;", ">": "&gt;"}[c];
+  });
+}
+
+function xV(v) { return '<b class="xv">' + v + "</b>"; }
+
+/* Таблица частот: буква — сколько раз. */
+function xFreq(letters, f) {
+  return '<table class="gm"><tr><th>буква</th>' + letters.map(function (ch) {
+    return "<td>" + ch + "</td>"; }).join("") + "</tr><tr><th>раз</th>" +
+    f.map(function (v) { return "<td>" + v + "</td>"; }).join("") + "</tr></table>";
+}
+
+/* Слияния Хаффмана по шагам: веса по возрастанию, два наименьших — жёлтым. */
+function xMerges(f) {
+  let w = f.slice(), sum = 0;
+  let h = '<table class="gm hf"><tr><th>шаг</th><th class="l">веса по возрастанию</th><th>слили</th></tr>';
+  let step = 1;
+  while (w.length > 1) {
+    w.sort(function (a, b) { return a - b; });
+    const cells = w.map(function (v, j) {
+      return "<span" + (j < 2 ? ' class="h"' : "") + ">" + v + "</span>"; }).join(" ");
+    const m = w[0] + w[1];
+    sum += m;
+    h += "<tr><td>" + step++ + '</td><td class="l">' + cells + "</td><td>" + w[0] + " + " + w[1] + " = <b>" + m + "</b></td></tr>";
+    w = [m].concat(w.slice(2));
+  }
+  return {sum: sum, html: h + "</table>"};
+}
+
+function xHuff(x) {
+  const m = xMerges(x.f);
+  return m.html + '<p class="xcap">Каждое слияние добавляет по биту всем буквам под ним — ' +
+    "длина сообщения равна <b>сумме слияний</b> (жирные числа): " + xV(m.sum) + ".</p>";
+}
+
+function xGain(x) {
+  const m = xMerges(x.f);
+  let count = 0;
+  x.f.forEach(function (v) { count += v; });
+  let w = 0;
+  while ((1 << w) < x.letters.length) w++;
+  const flat = count * w;
+  return m.html + '<table class="gm flow">' +
+    "<tr><th>Хаффман</th><td>сумма слияний</td><td><b>" + m.sum + "</b></td></tr>" +
+    "<tr><th>равномерный</th><td>" + x.letters.length + " букв → " + w + " бита на букву, букв в сообщении " +
+    count + "</td><td>" + count + " · " + w + " = <b>" + flat + "</b></td></tr>" +
+    '<tr class="sum"><th>разница</th><td></td><td>' + flat + " − " + m.sum + " = " + xV(flat - m.sum) + "</td></tr></table>";
+}
+
+/* Слово w и набор кодов: «занято», «конфликт с …» или «свободно». */
+function xClash(codes, letters, w) {
+  for (let i = 0; i < codes.length; i++) {
+    const c = codes[i];
+    if (c === w) return {k: "own", why: letters[i]};
+    if (w.indexOf(c) === 0) return {k: "bad", why: "начинается с " + c + " (" + letters[i] + ")"};
+    if (c.indexOf(w) === 0) return {k: "bad", why: "начало " + c + " (" + letters[i] + ")"};
+  }
+  return {k: "ok", why: "свободно"};
+}
+
+function xFano(x) {
+  let h = '<table class="gm fano"><tr><th>длина</th><th class="l">все слова этой длины</th></tr>';
+  let found = 0;
+  for (let L = 1; L <= 6 && !found; L++) {
+    let row = "";
+    for (let v = 0; v < (1 << L); v++) {
+      const w = v.toString(2).padStart(L, "0");
+      const c = xClash(x.codes, x.letters, w);
+      row += '<span class="w ' + c.k + '">' + w + (c.k === "own" ? "<i>" + c.why + "</i>" : "") + "</span>";
+      if (c.k === "ok") { found = L; break; }
+    }
+    h += "<tr><td>" + L + '</td><td class="l">' + row + "</td></tr>";
+  }
+  return h + "</table>" + '<p class="xcap">Синие — уже заняты, красные — начало занятого или начинаются с ' +
+    "него. Первое <b>зелёное</b> слово — на длине " + xV(found) + ".</p>";
+}
+
+/* Чтение префиксного кода слева направо: набираем биты, пока не совпало. */
+function xDecode(x) {
+  const parts = [];
+  let buf = "";
+  for (const b of x.bits) {
+    buf += b;
+    const i = x.codes.indexOf(buf);
+    if (i >= 0) { parts.push([buf, x.letters[i]]); buf = ""; }
+  }
+  const cells = parts.map(function (p, j) {
+    return '<td class="r' + (j % 2) + '">' + p[0] + "<br><b>" + p[1] + "</b></td>"; }).join("");
+  return '<p class="xcap">Таблица: <b>' + x.letters.map(function (ch, i) { return ch + " = " + x.codes[i]; }).join(", ") +
+    "</b></p>" + '<table class="gm dec"><tr>' + cells + "</tr></table>" +
+    '<p class="xcap">Набираем биты, пока не совпадёт с кодом из таблицы, — буква, начинаем заново. ' +
+    "Кусков: " + xV(buf ? -1 : parts.length) + ".</p>";
+}
+
+function xUniform(t) {
+  const n = t.x.n;
+  let w = 0;
+  while ((1 << w) < n) w++;
+  let top = "<tr><th>i, бит</th>", bot = "<tr><th>2<sup>i</sup></th>";
+  for (let j = 1; j <= 8; j++) {
+    const c = j === w ? ' class="ok"' : j === w - 1 ? ' class="bad"' : "";
+    top += "<td" + c + ">" + j + "</td>";
+    bot += "<td" + c + ">" + Math.pow(2, j) + "</td>";
+  }
+  const pw = Math.pow(2, w);
+  return '<table class="gm pw">' + top + "</tr>" + bot + "</tr></table>" +
+    '<p class="xcap">' + Math.pow(2, w - 1) + " &lt; " + n + " ≤ " + pw + ": " + (w - 1) +
+    " бит мало (красный), " + w + " — хватает (зелёный).</p>" +
+    (t.kind === "width" ? '<p class="keyline">На символ — ' + xV(w) + " бит</p>"
+      : '<p class="keyline">Свободно: ' + pw + " − " + n + " = " + xV(pw - n) + "</p>");
+}
+
+function xCheckPrefix(x) {
+  let bad = 0;
+  const li = x.items.map(function (w) {
+    const c = xClash(x.codes, x.letters, w);
+    if (c.k !== "ok") bad++;
+    return '<li class="' + (c.k === "ok" ? "y" : "n") + '"><b>' + (c.k === "ok" ? "можно" : "нельзя") +
+      "</b> <code>" + w + "</code> <small>" + (c.k === "own" ? "уже занято (" + c.why + ")" : c.why) + "</small></li>";
+  }).join("");
+  return '<p class="xcap">Заняты: <b>' + x.letters.map(function (ch, i) { return ch + " = " + x.codes[i]; }).join(", ") +
+    '</b></p><ol class="xst">' + li + '</ol><p class="xcap">Нельзя — ' + xV(bad) + ".</p>";
+}
+
+function xSolution(t) {
+  if (t.type === 0) return xHuff(t.x);
+  if (t.type === 1) return xGain(t.x);
+  if (t.type === 2) return xFano(t.x);
+  if (t.type === 3) return xDecode(t.x);
+  if (t.type === 4) return xUniform(t);
+  return xCheckPrefix(t.x);
+}
+
+/* Ответ класса рядом с эталоном; где можно — откуда могло взяться число. */
+function xCompare(t, given) {
+  const g = String(given === undefined || given === null ? "" : given).trim();
+  const ok = g === t.answer;
+  let h = '<p class="xcmp ' + (ok ? "y" : "n") + '">класс: <b>' + xEsc(g || "—") + "</b>" +
+    (ok ? "" : " · эталон: <b>" + xEsc(t.answer) + "</b>") + "</p>";
+  if (ok || !/^\d+$/.test(g)) return h;
+  const k = Number(g), x = t.x;
+  let why = "";
+  if (t.type === 0 || t.type === 1) {
+    let count = 0;
+    x.f.forEach(function (v) { count += v; });
+    if (t.type === 0 && k === count) why = "Это число букв в сообщении, а нужна длина в битах — сумма слияний.";
+    const last = xMerges(x.f).html.match(/<b>(\d+)<\/b><\/td><\/tr><\/table>$/);
+    if (t.type === 0 && last && k === Number(last[1]) && k !== count)
+      why = "Это вес корня — последнее слияние; сложить надо все слияния.";
+  }
+  if (t.type === 3 && k === x.bits.length) why = "Это число бит, а спрашивают буквы.";
+  if (t.type === 4 && t.kind === "spare") {
+    let w = 0;
+    while ((1 << w) < x.n) w++;
+    if (k === Math.pow(2, w)) why = "Это сколько всего символов различает код; занятые " + x.n + " надо вычесть.";
+  }
+  if (t.type === 5 && k === 5 - Number(t.answer)) why = "Посчитаны слова, которые добавить можно.";
+  return h + (why ? '<p class="xcap n">' + why + "</p>" : "");
 }
 /* ==== /ЗАДАЧИ ==== */
 
