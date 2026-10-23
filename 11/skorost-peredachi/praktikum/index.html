@@ -287,7 +287,8 @@ function tTime(rng) {
       "Объём в битах: " + kb + " Кбайт · 2<sup>13</sup> (в килобайте 1024 · 8 = 2<sup>13</sup> бит). " +
       "Скорость " + q + " = 2<sup>" + k + "</sup> бит/с. Время: " + kb +
       " · 2<sup>13</sup> : 2<sup>" + k + "</sup> = " + kb + " : " +
-      (1 << (k - 13)) + " = " + t + " с."
+      (1 << (k - 13)) + " = " + t + " с.",
+    x: {kb: kb, k: k}
   };
 }
 
@@ -310,7 +311,8 @@ function tVolume(rng) {
         " · 60 = " + t + " с. " : "") +
       "Объём = скорость · время = " + q + " · " + t + " бит. В килобайте " +
       "2<sup>13</sup> = 8192 бит: " + q + " : 8192 = " + (q / 8192) +
-      " Кбайт/с, за " + t + " с — " + (q / 8192) + " · " + t + " = " + ans + " Кбайт."
+      " Кбайт/с, за " + t + " с — " + (q / 8192) + " · " + t + " = " + ans + " Кбайт.",
+    x: {q: q, t: t}
   };
 }
 
@@ -346,7 +348,8 @@ function tArchive(rng) {
       t1 + " + " + (tb * p / 100) + " + " + t2 + " = " + ta + " с. Быстрее способ " +
       (ta < tb ? "А" : "Б") + ", разница " + diff + " с." +
       (ta < tb ? "" : " Сжатие окупается не всегда: на быстром канале время " +
-        "архиватора больше выигрыша.")
+        "архиватора больше выигрыша."),
+    x: {mb: mb, k: k, p: p, t1: t1, t2: t2}
   };
 }
 
@@ -380,7 +383,8 @@ function tRelay(rng) {
       "стартом: " + s + " Кбайт · 2<sup>13</sup> : 2<sup>" + k1 + "</sup> = " + delay +
       " с. Передача всего объёма по медленному каналу: " + mb +
       " · 2<sup>23</sup> : 2<sup>" + k2 + "</sup> = " + t2 + " с. Всего " + delay +
-      " + " + t2 + " = " + (delay + t2) + " с."
+      " + " + t2 + " = " + (delay + t2) + " с.",
+    x: {mb: mb, k1: k1, k2: k2, s: s}
   };
   return {
     type: 3, kind: kind, answer: String(t1 + t2),
@@ -389,7 +393,8 @@ function tRelay(rng) {
       "передачи из А до полного получения данных в пункте В?",
     explain: "Два участка проходятся по очереди, времена складываются. А–Б: " + mb +
       " · 2<sup>23</sup> : 2<sup>" + k1 + "</sup> = " + t1 + " с. Б–В: " + mb +
-      " · 2<sup>23</sup> : 2<sup>" + k2 + "</sup> = " + t2 + " с. Всего " + (t1 + t2) + " с."
+      " · 2<sup>23</sup> : 2<sup>" + k2 + "</sup> = " + t2 + " с. Всего " + (t1 + t2) + " с.",
+    x: {mb: mb, k1: k1, k2: k2}
   };
 }
 
@@ -410,7 +415,8 @@ function tProportion(rng) {
       explain: "Скорость одна и та же, значит объём пропорционален времени. За " +
         "секунду проходит " + (v * t1) + " : " + t1 + " = " + v + " Кбайт, за " + t2 +
         " с — " + v + " · " + t2 + " = " + (v * t2) + " Кбайт. Переводить в биты " +
-        "не понадобилось."
+        "не понадобилось.",
+      x: {v1: v * t1, t1: t1, t2: t2}
     };
   }
   const r = tRand(rng, 2, 4);
@@ -426,7 +432,8 @@ function tProportion(rng) {
       "</b> Кбайт?",
     explain: "Скорость первого соединения: " + (v * t1) + " : " + t1 + " = " + v +
       " Кбайт/с. Второе в " + r + " " + tPl(r, "раз", "раза", "раз") + " быстрее: " +
-      (v * r) + " Кбайт/с. Время: " + (v * r * t) + " : " + (v * r) + " = " + t + " с."
+      (v * r) + " Кбайт/с. Время: " + (v * r * t) + " : " + (v * r) + " = " + t + " с.",
+    x: {v1: v * t1, t1: t1, r: r, v2: v * r * t}
   };
 }
 
@@ -450,7 +457,8 @@ function tMedia(rng) {
         "<b>секунд</b> займёт передача?",
       explain: "Объём: " + vPow(w) + " · " + vPow(h) + " · " + i + " бит. Скорость 2<sup>" +
         k + "</sup> бит/с. Время: " + w + " · " + h + " · " + i + " : " + (1 << k) +
-        " = " + t + " с. Объём уже в битах — переводить в байты незачем."
+        " = " + t + " с. Объём уже в битах — переводить в байты незачем.",
+      x: {w: w, h: h, i: i, k: k}
     };
   }
   let f, i, ch, dur, q, t;
@@ -476,7 +484,8 @@ function tMedia(rng) {
       " бит. Время передачи: " + (f * i * ch * dur) + " : " + q + " = " + t +
       " с. Удобнее сокращать до умножения: " + f + " · " + i + (ch === 2 ? " · 2" : "") +
       " = " + (f * i * ch) + " бит на секунду записи против " + q +
-      " бит/с у канала."
+      " бит/с у канала.",
+    x: {f: f, i: i, ch: ch, dur: dur, q: q}
   };
 }
 
@@ -497,6 +506,189 @@ function tCheck(task, raw) {
     .replace(/\s+/g, "");
   if (!/^\d+$/.test(s)) return false;
   return String(Number(s)) === task.answer;
+}
+
+/* Что не так с записью ответа — коротко, без разгадки. */
+function tHint(task, raw) {
+  const s = String(raw === undefined || raw === null ? "" : raw).trim();
+  if (/^\d+$/.test(s)) return null;
+  if (/^\d+\s*\D+$/.test(s)) return "Без единиц измерения — только число.";
+  if (/\d/.test(s)) return "Только число — без пробелов, запятых, точек и знаков.";
+  return "Ответ — целое число.";
+}
+
+/* ==================================================== разбор рисунком
+   Для слайдов-примеров презентации (правило Светы 26.09.2026: разбор —
+   рисунком, текст — подписью). Всё собирается из поля x задачи своим
+   ходом, а не из explain; gen.py --selftest сверяет итог рисунка
+   (<b class="xv">) с ключом. Времена — полосами на общей оси. */
+
+function xEsc(s) {
+  return String(s).replace(/[&<>]/g, function (c) {
+    return {"&": "&amp;", "<": "&lt;", ">": "&gt;"}[c];
+  });
+}
+
+function xV(n) { return '<b class="xv">' + n + "</b>"; }
+
+function xP2(e) { return "2<sup>" + e + "</sup>"; }
+
+/* Таблица хода: строки [подпись, запись]; последняя — итог. */
+function xFlow(rows) {
+  return '<table class="gm flow">' + rows.map(function (r, j) {
+    return "<tr" + (j === rows.length - 1 ? ' class="sum"' : "") + "><th>" + r[0] + "</th><td>" +
+      r[1] + "</td></tr>";
+  }).join("") + "</table>";
+}
+
+/* Полоса времени: отрезки [секунд, подпись, цвет, сдвиг]; общая шкала max. */
+function xLane(label, segs, max) {
+  let h = '<div class="lane"><span class="ln">' + label + '</span><div class="track">';
+  let at = 0;
+  segs.forEach(function (s) {
+    const from = s[3] === undefined ? at : s[3];
+    if (from > at) h += '<i class="gap" style="width:' + (100 * (from - at) / max) + '%"></i>';
+    h += '<i class="' + s[2] + '" style="width:' + (100 * s[0] / max) + '%">' + s[1] + "</i>";
+    at = from + s[0];
+  });
+  return h + "</div></div>";
+}
+
+function xTime(x) {
+  const t = x.kb / (1 << (x.k - 13));
+  const mb = x.kb % 1024 === 0;
+  return xFlow([
+    ["объём", (mb ? (x.kb / 1024) + " Мбайт = " : "") + x.kb + " Кбайт = " + x.kb + " · " + xP2(13) + " бит"],
+    ["скорость", (1 << x.k) + " = " + xP2(x.k) + " бит/с"],
+    ["время", x.kb + " · " + xP2(13) + " : " + xP2(x.k) + " = " + x.kb + " : " + xP2(x.k - 13) +
+      " = " + xV(t) + " с"]
+  ]) + '<p class="xcap">Степени двойки не перемножаем, а вычитаем показатели: ' +
+    xP2(13) + " : " + xP2(x.k) + " = 1 : " + xP2(x.k - 13) + ".</p>";
+}
+
+function xVolumeKb(t) {
+  const x = t.x, v = x.q / 8192;
+  const rows = [];
+  if (t.kind === "min") rows.push(["время", (x.t / 60) + " мин · 60 = " + x.t + " с"]);
+  rows.push(["скорость", x.q + " бит/с : 8192 = " + v + " Кбайт/с"]);
+  rows.push(["объём", v + " · " + x.t + " = " + xV(v * x.t) + " Кбайт"]);
+  return xFlow(rows) + '<p class="xcap">В килобайте 1024 · 8 = 8192 бит — делим на это сразу.</p>';
+}
+
+function xArchive(x) {
+  const tb = x.mb * (1 << (23 - x.k));
+  const tr = tb * x.p / 100, ta = x.t1 + tr + x.t2;
+  const max = Math.max(ta, tb), d = Math.abs(ta - tb);
+  return xLane("А: сжать, передать, распаковать",
+      [[x.t1, x.t1, "c"], [tr, tr, "b"], [x.t2, x.t2, "c"]], max) +
+    xLane("Б: передать как есть", [[tb, tb, "b"]], max) +
+    xFlow([
+      ["Б", x.mb + " · " + xP2(23) + " : " + xP2(x.k) + " = " + tb + " с"],
+      ["А", x.t1 + " + " + x.p + "% от " + tb + " + " + x.t2 + " = " + x.t1 + " + " + tr + " + " + x.t2 + " = " + ta + " с"],
+      ["разница", "быстрее " + (ta < tb ? "А" : "Б") + " на " + xV(d) + " с"]
+    ]);
+}
+
+function xRelay(t) {
+  const x = t.x;
+  const t1 = x.mb * (1 << (23 - x.k1)), t2 = x.mb * (1 << (23 - x.k2));
+  if (t.kind === "full") {
+    const max = t1 + t2;
+    return xLane("А → Б", [[t1, t1, "b"]], max) + xLane("Б → В", [[t2, t2, "g", t1]], max) +
+      xFlow([
+        ["А → Б", x.mb + " · " + xP2(23) + " : " + xP2(x.k1) + " = " + t1 + " с"],
+        ["Б → В", x.mb + " · " + xP2(23) + " : " + xP2(x.k2) + " = " + t2 + " с"],
+        ["всего", "участки по очереди: " + t1 + " + " + t2 + " = " + xV(t1 + t2) + " с"]
+      ]);
+  }
+  const dl = x.s * 8192 / (1 << x.k1), max = dl + t2;
+  return xLane("А → Б", [[dl, dl, "c"], [t1 - dl, "", "b"]], max) +
+    xLane("Б → В", [[t2, t2, "g", dl]], max) +
+    xFlow([
+      ["задержка", "первые " + x.s + " Кбайт: " + x.s + " · " + xP2(13) + " : " + xP2(x.k1) + " = " + dl + " с"],
+      ["Б → В", "весь объём по медленному: " + x.mb + " · " + xP2(23) + " : " + xP2(x.k2) + " = " + t2 + " с"],
+      ["всего", dl + " + " + t2 + " = " + xV(dl + t2) + " с"]
+    ]) + '<p class="xcap">Первый канал быстрее — узел Б не простаивает, конец задаёт медленный канал.</p>';
+}
+
+function xProp(t) {
+  const x = t.x, v = x.v1 / x.t1;
+  if (t.kind === "same")
+    return xFlow([
+      ["за секунду", x.v1 + " : " + x.t1 + " = " + v + " Кбайт"],
+      ["за " + x.t2 + " с", v + " · " + x.t2 + " = " + xV(v * x.t2) + " Кбайт"]
+    ]) + '<p class="xcap">Скорость та же — объём растёт вместе со временем. В биты переводить не нужно.</p>';
+  return xFlow([
+    ["первое", x.v1 + " : " + x.t1 + " = " + v + " Кбайт/с"],
+    ["второе", v + " · " + x.r + " = " + (v * x.r) + " Кбайт/с"],
+    ["время", x.v2 + " : " + (v * x.r) + " = " + xV(x.v2 / (v * x.r)) + " с"]
+  ]);
+}
+
+function xMedia(t) {
+  const x = t.x;
+  if (t.kind === "image") {
+    const bits = x.w * x.h * x.i;
+    return xFlow([
+      ["объём", x.w + " · " + x.h + " · " + x.i + " = " + bits + " бит"],
+      ["скорость", (1 << x.k) + " = " + xP2(x.k) + " бит/с"],
+      ["время", bits + " : " + (1 << x.k) + " = " + xV(bits / (1 << x.k)) + " с"]
+    ]) + '<p class="xcap">Объём получился сразу в битах — в байты не переводим.</p>';
+  }
+  const ps = x.f * x.i * x.ch;
+  return xFlow([
+    ["за секунду записи", x.f + " · " + x.i + (x.ch === 2 ? " · 2 (стерео)" : " (моно)") + " = " + ps + " бит"],
+    ["вся запись", ps + " · " + x.dur + " = " + (ps * x.dur) + " бит"],
+    ["время", (ps * x.dur) + " : " + x.q + " = " + xV(ps * x.dur / x.q) + " с"]
+  ]);
+}
+
+function xSolution(t) {
+  if (t.type === 0) return xTime(t.x);
+  if (t.type === 1) return xVolumeKb(t);
+  if (t.type === 2) return xArchive(t.x);
+  if (t.type === 3) return xRelay(t);
+  if (t.type === 4) return xProp(t);
+  return xMedia(t);
+}
+
+/* Ответ класса рядом с эталоном; где можно — откуда могло взяться число. */
+function xCompare(t, given) {
+  const g = String(given === undefined || given === null ? "" : given).trim();
+  const ok = g === t.answer;
+  let h = '<p class="xcmp ' + (ok ? "y" : "n") + '">класс: <b>' + xEsc(g || "—") + "</b>" +
+    (ok ? "" : " · эталон: <b>" + xEsc(t.answer) + "</b>") + "</p>";
+  if (ok || !/^\d+$/.test(g)) return h;
+  const k = Number(g), x = t.x, a = Number(t.answer);
+  let why = "";
+  if (t.type === 0) {
+    if (k * 8 === a) why = "Объём взят в байтах — а скорость в битах: умножь на 8.";
+    if (k * 1024 === a) why = "Мегабайты не переведены в килобайты.";
+  }
+  if (t.type === 1) {
+    if (t.kind === "min" && k * 60 === a) why = "Минуты не переведены в секунды.";
+    if (k === a * 8) why = "Это Кбиты — ещё разделить на 8.";
+    if (k === a * 1024) why = "Это байты — ещё разделить на 1024.";
+  }
+  if (t.type === 2) {
+    const tb = x.mb * (1 << (23 - x.k)), tr = tb * x.p / 100;
+    if (k === tb || k === x.t1 + tr + x.t2) why = "Это время одного способа, а спрашивают разницу.";
+    if (k === tb - tr) why = "Забыто время на сжатие и распаковку.";
+  }
+  if (t.type === 3) {
+    const t1 = x.mb * (1 << (23 - x.k1)), t2 = x.mb * (1 << (23 - x.k2));
+    if (t.kind === "buffer" && k === t1 + t2) why = "Так было бы, если бы узел ждал данные целиком.";
+    if (k === t2) why = "Это только медленный участок — " + (t.kind === "buffer" ? "забыта задержка." : "первый участок тоже идёт своё время.");
+  }
+  if (t.type === 4) {
+    if (t.kind === "same" && k === x.v1) why = "Это объём за прежнее время, а время другое.";
+    if (t.kind === "faster" && k === a * x.r) why = "Скорость второго соединения в " + x.r + " " + tPl(x.r, "раз", "раза", "раз") + " выше.";
+  }
+  if (t.type === 5) {
+    if (k * 8 === a) why = "Объём уже в битах — делить на 8 не нужно.";
+    if (t.kind === "sound" && x.ch === 2 && k * 2 === a) why = "Стерео — два канала: умножь на 2.";
+  }
+  return h + (why ? '<p class="xcap n">' + why + "</p>" : "");
 }
 /* ==== /ЗАДАЧИ ==== */
 

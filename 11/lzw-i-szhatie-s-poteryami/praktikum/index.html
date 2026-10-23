@@ -357,7 +357,8 @@ function tLzwEncode(rng) {
     explain: "На каждом шаге берём самую длинную фразу, которая уже есть в " +
       "словаре, выдаём её код и заносим в словарь эту фразу плюс следующий " +
       "символ. " + trace + "Кодов " + r.codes.length + " вместо " +
-      text.length + " символов."
+      text.length + " символов.",
+    x: {text: text, k: k}
   };
   if (kind === "dict") return {
     type: 0, kind: kind, answer: String(r.order.length),
@@ -366,7 +367,8 @@ function tLzwEncode(rng) {
     explain: "Каждый выданный код, кроме последнего, добавляет в словарь одну " +
       "новую фразу. " + trace + "Кодов " + r.codes.length + ", значит новых фраз " +
       (r.codes.length - 1) + ", а всего " + k + " + " + (r.codes.length - 1) +
-      " = " + r.order.length + "."
+      " = " + r.order.length + ".",
+    x: {text: text, k: k}
   };
   return {
     type: 0, kind: kind, answer: String(r.codes[r.codes.length - 1]),
@@ -374,7 +376,8 @@ function tLzwEncode(rng) {
       "последовательности?",
     explain: "Кодируем до конца, каждый раз выбирая самую длинную фразу из " +
       "словаря. " + trace + "Последний код — " + r.codes[r.codes.length - 1] +
-      ", это фраза «" + r.order[r.codes[r.codes.length - 1] - 1] + "»."
+      ", это фраза «" + r.order[r.codes[r.codes.length - 1] - 1] + "».",
+    x: {text: text, k: k}
   };
 }
 
@@ -407,14 +410,16 @@ function tLzwDecode(rng) {
     type: 1, kind: kind, answer: String(text.length),
     question: lead + "Сколько <b>символов</b> в исходном сообщении?",
     explain: how + trace + "В нём " + text.length + " " +
-      tPl(text.length, "символ", "символа", "символов") + "."
+      tPl(text.length, "символ", "символа", "символов") + ".",
+    x: {codes: r.codes, k: k}
   };
   return {
     type: 1, kind: kind, answer: String(cnt),
     question: lead + "Сколько раз в исходном сообщении встречается буква <b>" +
       letter + "</b>?",
     explain: how + trace + "Буква " + letter + " встречается " + cnt + " " +
-      tPl(cnt, "раз", "раза", "раз") + "."
+      tPl(cnt, "раз", "раза", "раз") + ".",
+    x: {codes: r.codes, k: k, letter: letter}
   };
 }
 
@@ -434,7 +439,8 @@ function tLzwVolume(rng) {
       explain: "Исходное сообщение: " + n + " · 8 = " + (8 * n) + " бит. Сжатое: " +
         kk + " · " + b + " = " + (kk * b) + " бит. Разница " + (8 * n) + " − " +
         (kk * b) + " = " + ans + " бит. Код LZW длиннее одного символа, но " +
-        "кодов намного меньше, чем символов: один код заменяет целую фразу."
+        "кодов намного меньше, чем символов: один код заменяет целую фразу.",
+      x: {n: n, b: b, kk: kk}
     };
   }
   let d;
@@ -448,7 +454,8 @@ function tLzwVolume(rng) {
       "у каждой фразы свой код. Какова наименьшая возможная длина кода в битах?",
     explain: "Кодом из b бит можно пронумеровать 2<sup>b</sup> фраз. 2<sup>" +
       (b - 1) + "</sup> = " + (1 << (b - 1)) + " — мало, 2<sup>" + b + "</sup> = " +
-      (1 << b) + " ≥ " + d + " — хватает. Ответ " + b + "."
+      (1 << b) + " ≥ " + d + " — хватает. Ответ " + b + ".",
+    x: {d: d}
   };
 }
 
@@ -466,7 +473,8 @@ function tColorDepth(rng) {
       explain: "При глубине i бит доступно 2<sup>i</sup> цветов. Было 2<sup>" + i1 +
         "</sup>, стало 2<sup>" + i2 + "</sup>; отношение 2<sup>" + i1 + " − " + i2 +
         "</sup> = 2<sup>" + (i1 - i2) + "</sup> = " + (1 << (i1 - i2)) +
-        ". Потерянные оттенки назад не вернуть — это сжатие с потерями."
+        ". Потерянные оттенки назад не вернуть — это сжатие с потерями.",
+      x: {i1: i1, i2: i2}
     };
   }
   const w = 128 * tRand(rng, 2, 8), h = 128 * tRand(rng, 2, 8);
@@ -483,7 +491,8 @@ function tColorDepth(rng) {
       "пиксель. Глубину уменьшили до <b>" + pair[1] + "</b> бит. На сколько " +
       "<b>Кбайт</b> уменьшился объём изображения? Заголовок файла и сжатие не " +
       "учитывать.",
-    explain: tail
+    explain: tail,
+    x: {w: w, h: h, i1: pair[0], i2: pair[1]}
   };
   return {
     type: 3, kind: kind, answer: String(ans),
@@ -495,7 +504,8 @@ function tColorDepth(rng) {
       "Заголовок файла и сжатие не учитывать.",
     explain: Math.pow(2, pair[0]) + " = 2<sup>" + pair[0] + "</sup> цветов — это " +
       pair[0] + " бит на пиксель, " + Math.pow(2, pair[1]) + " = 2<sup>" + pair[1] +
-      "</sup> — " + pair[1] + " бит. " + tail
+      "</sup> — " + pair[1] + " бит. " + tail,
+    x: {w: w, h: h, i1: pair[0], i2: pair[1]}
   };
 }
 
@@ -511,7 +521,8 @@ function tJpeg(rng) {
         "размером <b>" + w + "</b> × <b>" + h + "</b> пикселей?",
       explain: "По ширине " + w + " : 8 = " + (w / 8) + " блоков, по высоте " + h +
         " : 8 = " + (h / 8) + ". Всего " + (w / 8) + " · " + (h / 8) + " = " +
-        (w * h / 64) + "."
+        (w * h / 64) + ".",
+      x: {w: w, h: h}
     };
   }
   if (kind === "subsample") {
@@ -527,7 +538,8 @@ function tJpeg(rng) {
       explain: "Яркость: " + w + " · " + h + " = " + (w * h) + " чисел. Квадратов " +
         "2 × 2: " + (w / 2) + " · " + (h / 2) + " = " + (w * h / 4) + ", на каждый " +
         "по два числа (Cb и Cr) — ещё " + (w * h / 2) + ". Всего " + ans +
-        " — вдвое меньше, чем " + (3 * w * h) + " без прореживания."
+        " — вдвое меньше, чем " + (3 * w * h) + " без прореживания.",
+      x: {w: w, h: h}
     };
   }
   let c, q;
@@ -545,7 +557,8 @@ function tJpeg(rng) {
     explain: c + " : " + q + " ≈ " + (c / q).toFixed(2).replace(".", ",") +
       ", округляем до " + lvl + ". Восстановление: " + lvl + " · " + q + " = " +
       (lvl * q) + " вместо " + c + ". Именно здесь JPEG теряет информацию: " +
-      "разницу в " + Math.abs(lvl * q - c) + " назад не вернуть."
+      "разницу в " + Math.abs(lvl * q - c) + " назад не вернуть.",
+    x: {c: c, q: q}
   };
 }
 
@@ -573,7 +586,8 @@ function tMp3(rng) {
       explain: "С потерями сжимают то, что рассчитано на глаз и ухо: JPEG " +
         "(фото), MP3 и AAC (звук), MPEG-4 (видео). Архиваторы (ZIP, RAR, 7z), " +
         "алгоритмы RLE, LZW и Хаффмана, форматы PNG и FLAC восстанавливают данные " +
-        "бит в бит. В списке с потерями: " + hit.join(", ") + " — " + nl + "."
+        "бит в бит. В списке с потерями: " + hit.join(", ") + " — " + nl + ".",
+      x: {items: list}
     };
   }
   const br = tPick(rng, [64, 128, 192, 256, 320]);
@@ -587,7 +601,8 @@ function tMp3(rng) {
     explain: "Битрейт — сколько бит уходит на секунду звучания. " + br +
       " Кбит/с = " + br + " : 8 = " + (br / 8) + " Кбайт/с. За " + t + " с: " +
       (br / 8) + " · " + t + " = " + size + " Кбайт. От частоты дискретизации и " +
-      "разрядности исходной записи размер MP3 уже не зависит."
+      "разрядности исходной записи размер MP3 уже не зависит.",
+    x: {br: br, t: t}
   };
   return {
     type: 5, kind: kind, answer: String(t),
@@ -595,7 +610,8 @@ function tMp3(rng) {
       "Фрагмент сжат с постоянным битрейтом <b>" + br + "</b> Кбит/с (1 Кбит = " +
       "1024 бит). Сколько <b>секунд</b> длится фрагмент?",
     explain: br + " Кбит/с = " + (br / 8) + " Кбайт/с. Длительность: " + size +
-      " : " + (br / 8) + " = " + t + " с."
+      " : " + (br / 8) + " = " + t + " с.",
+    x: {br: br, size: size}
   };
 }
 
@@ -616,6 +632,278 @@ function tCheck(task, raw) {
     .replace(/\s+/g, "");
   if (!/^\d+$/.test(s)) return false;
   return String(Number(s)) === task.answer;
+}
+
+/* Что не так с записью ответа — коротко, без разгадки. */
+function tHint(task, raw) {
+  const s = String(raw === undefined || raw === null ? "" : raw).trim();
+  if (/^\d+$/.test(s)) return null;
+  if (/^\d+\s*\D+$/.test(s)) return "Без единиц измерения — только число.";
+  if (/\d/.test(s)) return "Только число — без пробелов, запятых, точек и знаков.";
+  return "Ответ — целое число.";
+}
+
+/* ==================================================== разбор рисунком
+   Для слайдов-примеров презентации (правило Светы 26.09.2026: разбор —
+   рисунком, текст — подписью). Всё собирается из поля x задачи своим
+   ходом, а не из explain и не через zEncode/zDecode; gen.py --selftest
+   сверяет итог рисунка (<b class="xv">) с ключом. */
+
+function xEsc(s) {
+  return String(s).replace(/[&<>]/g, function (c) {
+    return {"&": "&amp;", "<": "&lt;", ">": "&gt;"}[c];
+  });
+}
+
+function xV(n) { return '<b class="xv">' + n + "</b>"; }
+
+/* Кодирование LZW по шагам: на каждом шаге самая длинная фраза словаря. */
+function xLzwEnc(text, k) {
+  const dict = new Map();
+  for (let j = 0; j < k; j++) dict.set(Z_ABC[j], j + 1);
+  const rows = [];
+  let i = 0;
+  while (i < text.length) {
+    let j = i + 1;
+    while (j < text.length && dict.has(text.slice(i, j + 1))) j++;
+    const ph = text.slice(i, j);
+    const add = j < text.length ? ph + text[j] : "";
+    if (add) dict.set(add, dict.size + 1);
+    rows.push({ph: ph, code: dict.get(ph), add: add, num: add ? dict.size : 0});
+    i = j;
+  }
+  return {rows: rows, size: dict.size};
+}
+
+/* Декодирование: фраза по коду, в словарь — предыдущая + первая буква текущей. */
+function xLzwDec(codes, k) {
+  const dict = Z_ABC.slice(0, k);
+  const rows = [];
+  let prev = "";
+  codes.forEach(function (c) {
+    const ph = dict[c - 1];
+    let add = "";
+    if (prev) { add = prev + ph[0]; dict.push(add); }
+    rows.push({code: c, ph: ph, add: add, num: add ? dict.length : 0});
+    prev = ph;
+  });
+  return rows;
+}
+
+/* Сообщение, разрезанное на фразы: каждая своим цветом. */
+function xPhrases(list, mark) {
+  return '<table class="gm rle"><tr>' + list.map(function (ph, j) {
+    const body = mark ? ph.split("").map(function (ch) {
+      return ch === mark ? '<u class="mk">' + ch + "</u>" : ch;
+    }).join("") : ph;
+    return '<td class="r' + (j % 5) + '">' + body + "</td>";
+  }).join("") + "</tr></table>";
+}
+
+function xEncode(t) {
+  const r = xLzwEnc(t.x.text, t.x.k);
+  const n = r.rows.length;
+  let rows = "";
+  r.rows.forEach(function (w, j) {
+    rows += '<tr><td class="r' + (j % 5) + '">' + w.ph + "</td><td><b>" + w.code + "</b></td><td>" +
+      (w.add ? w.num + " = " + w.add : "—") + "</td></tr>";
+  });
+  const last = r.rows[n - 1].code;
+  let cap;
+  if (t.kind === "codes") cap = "Кодов на выходе — " + xV(n) + " вместо " + t.x.text.length + " символов.";
+  else if (t.kind === "dict") cap = "Начальных фраз " + t.x.k + ", новых — по одной на каждый код, кроме " +
+    "последнего: " + (n - 1) + ". Всего " + t.x.k + " + " + (n - 1) + " = " + xV(t.x.k + n - 1) + ".";
+  else cap = "Последний код — " + xV(last) + ", фраза «" + r.rows[n - 1].ph + "».";
+  return '<table class="gm lz"><tr><th>фраза</th><th>код</th><th>в словарь</th></tr>' + rows + "</table>" +
+    '<p class="xcap">' + cap + "</p>";
+}
+
+function xDecode(t) {
+  const rows = xLzwDec(t.x.codes, t.x.k);
+  let tr = "";
+  rows.forEach(function (w, j) {
+    tr += "<tr><td><b>" + w.code + '</b></td><td class="r' + (j % 5) + '">' + w.ph + "</td><td>" +
+      (w.add ? w.num + " = " + w.add : "—") + "</td></tr>";
+  });
+  const msg = rows.map(function (w) { return w.ph; }).join("");
+  let cap;
+  if (t.kind === "length") cap = "Склеиваем фразы: в сообщении " + xV(msg.length) + " " +
+    tPl(msg.length, "символ", "символа", "символов") + ".";
+  else {
+    const cnt = msg.split(t.x.letter).length - 1;
+    cap = "Буква <b>" + t.x.letter + "</b> подчёркнута — она встречается " + xV(cnt) + " " +
+      tPl(cnt, "раз", "раза", "раз") + ".";
+  }
+  return '<table class="gm lz"><tr><th>код</th><th>фраза</th><th>в словарь</th></tr>' + tr + "</table>" +
+    xPhrases(rows.map(function (w) { return w.ph; }), t.kind === "letter" ? t.x.letter : "") +
+    '<p class="xcap">' + cap + "</p>";
+}
+
+/* Полосы объёма: длина полосы пропорциональна числу бит. */
+function xBars(a, b, la, lb) {
+  const m = Math.max(a, b);
+  return '<div class="vbar"><span>' + la + '</span><i style="width:' + Math.round(100 * a / m) +
+    '%"></i></div><div class="vbar g"><span>' + lb + '</span><i style="width:' +
+    Math.round(100 * b / m) + '%"></i></div>';
+}
+
+function xVolume(t) {
+  const x = t.x;
+  if (t.kind === "saved") {
+    const a = 8 * x.n, b = x.kk * x.b;
+    return xBars(a, b, "исходное: " + x.n + " · 8 = " + a + " бит",
+                 "после LZW: " + x.kk + " · " + x.b + " = " + b + " бит") +
+      '<p class="xcap">Код длиннее символа (' + x.b + " бит против 8), но кодов меньше. Разница " +
+      a + " − " + b + " = " + xV(a - b) + " бит.</p>";
+  }
+  let b = 0;
+  while ((1 << b) < x.d) b++;
+  let top = "<tr><th>бит в коде</th>", bot = "<tr><th>фраз хватит</th>";
+  for (let j = b - 2; j <= b + 1; j++) {
+    const c = j === b ? ' class="ok"' : j < b ? ' class="bad"' : "";
+    top += "<td" + c + ">" + j + "</td>";
+    bot += "<td" + c + ">" + (1 << j) + "</td>";
+  }
+  return '<table class="gm pw">' + top + "</tr>" + bot + "</tr></table>" +
+    '<p class="xcap">Нужно не меньше ' + x.d + " номеров: " + (1 << (b - 1)) + " — мало, " +
+    (1 << b) + " — хватает. Длина кода " + xV(b) + " бит.</p>";
+}
+
+/* Пиксель как ряд клеток-бит; выброшенные — красным. */
+function xPixel(i1, i2) {
+  let h = "";
+  for (let j = 0; j < i1; j++) h += '<td class="' + (j < i2 ? "b" : "d") + '"></td>';
+  return '<table class="seq bits"><tr>' + h + "</tr></table>";
+}
+
+function xColor(t) {
+  const x = t.x, d = x.i1 - x.i2;
+  const px = '<p class="xcap">один пиксель: было ' + x.i1 + " бит, осталось " + x.i2 +
+    ", красные выброшены</p>" + xPixel(x.i1, x.i2);
+  if (t.kind === "colors")
+    return px + '<table class="gm flow"><tr><th>было</th><td>2<sup>' + x.i1 + "</sup> цветов</td></tr>" +
+      "<tr><th>стало</th><td>2<sup>" + x.i2 + "</sup> цветов</td></tr>" +
+      '<tr class="sum"><th>во сколько раз</th><td>2<sup>' + x.i1 + " − " + x.i2 + "</sup> = 2<sup>" + d +
+      "</sup> = " + xV(1 << d) + "</td></tr></table>" +
+      '<p class="xcap">Каждый выброшенный бит вдвое сокращает число цветов.</p>';
+  const bits = x.w * x.h * d;
+  return (t.kind === "palette" ? '<p class="xcap">' + Math.pow(2, x.i1) + " = 2<sup>" + x.i1 +
+      "</sup> цветов — " + x.i1 + " бит, " + Math.pow(2, x.i2) + " = 2<sup>" + x.i2 + "</sup> — " +
+      x.i2 + " бит</p>" : "") + px +
+    '<table class="gm flow"><tr><th>на пиксель</th><td>' + x.i1 + " − " + x.i2 + " = " + d + " бит</td></tr>" +
+    "<tr><th>пикселей</th><td>" + x.w + " · " + x.h + " = " + (x.w * x.h) + "</td></tr>" +
+    "<tr><th>бит</th><td>" + (x.w * x.h) + " · " + d + " = " + bits + "</td></tr>" +
+    "<tr><th>байт</th><td>" + bits + " : 8 = " + (bits / 8) + "</td></tr>" +
+    '<tr class="sum"><th>Кбайт</th><td>' + (bits / 8) + " : 1024 = " + xV(bits / 8192) + "</td></tr></table>";
+}
+
+/* Квадрат 2 × 2: четыре яркости и по одному числу цветности. */
+function xQuad() {
+  return '<table class="gm quad"><tr><td>Y</td><td>Y</td><td rowspan="2" class="c">Cb</td>' +
+    '<td rowspan="2" class="c">Cr</td></tr><tr><td>Y</td><td>Y</td></tr></table>';
+}
+
+function xJpeg(t) {
+  const x = t.x;
+  if (t.kind === "blocks") {
+    const a = x.w / 8, b = x.h / 8;
+    return '<table class="gm flow"><tr><th>по ширине</th><td>' + x.w + " : 8 = " + a + " блоков</td></tr>" +
+      "<tr><th>по высоте</th><td>" + x.h + " : 8 = " + b + " блоков</td></tr>" +
+      '<tr class="sum"><th>всего</th><td>' + a + " · " + b + " = " + xV(a * b) + "</td></tr></table>" +
+      '<p class="xcap">Блоки кладутся сеткой, как плитка: ряды умножаются на столбцы.</p>';
+  }
+  if (t.kind === "subsample") {
+    const px = x.w * x.h, q = (x.w / 2) * (x.h / 2);
+    return xQuad() + '<p class="xcap">на квадрат из 4 пикселей — 4 яркости + Cb + Cr = 6 чисел</p>' +
+      '<table class="gm flow"><tr><th>яркость Y</th><td>' + x.w + " · " + x.h + " = " + px + "</td></tr>" +
+      "<tr><th>квадратов 2 × 2</th><td>" + (x.w / 2) + " · " + (x.h / 2) + " = " + q + "</td></tr>" +
+      "<tr><th>Cb и Cr</th><td>2 · " + q + " = " + (2 * q) + "</td></tr>" +
+      '<tr class="sum"><th>всего</th><td>' + px + " + " + (2 * q) + " = " + xV(px + 2 * q) + "</td></tr></table>";
+  }
+  const lv = Math.round(x.c / x.q);
+  return '<table class="seq big"><tr><td>' + x.c + "</td><td>: " + x.q + "</td><td>≈ " +
+    (x.c / x.q).toFixed(2).replace(".", ",") + '</td><td class="ok">' + lv + "</td><td>· " + x.q +
+    '</td><td class="ok">' + (lv * x.q) + "</td></tr></table>" +
+    '<p class="xcap">делим на шаг → округляем → умножаем обратно. Восстановлено ' + xV(lv * x.q) +
+    " вместо " + x.c + ": разница " + Math.abs(lv * x.q - x.c) + " потеряна.</p>";
+}
+
+function xMp3(t) {
+  const x = t.x;
+  if (t.kind === "lossy") {
+    const v = x.items.map(function (it) { return Z_LOSSY.indexOf(it) >= 0; });
+    const n = v.filter(Boolean).length;
+    return '<ol class="xst">' + x.items.map(function (it, j) {
+      return '<li class="' + (v[j] ? "n" : "y") + '"><b>' + (v[j] ? "с потерями" : "без потерь") +
+        "</b> " + xEsc(it) + "</li>";
+    }).join("") + "</ol>" + '<p class="xcap">Красные — <b>с потерями</b>, их ' + xV(n) + ".</p>";
+  }
+  const kb = x.br / 8;
+  if (t.kind === "size")
+    return '<table class="gm flow"><tr><th>битрейт</th><td>' + x.br + " Кбит/с</td></tr>" +
+      "<tr><th>в Кбайтах</th><td>" + x.br + " : 8 = " + kb + " Кбайт на секунду</td></tr>" +
+      '<tr class="sum"><th>за ' + x.t + " с</th><td>" + kb + " · " + x.t + " = " + xV(kb * x.t) +
+      " Кбайт</td></tr></table>";
+  return '<table class="gm flow"><tr><th>битрейт</th><td>' + x.br + " Кбит/с = " + kb +
+    " Кбайт/с</td></tr>" + "<tr><th>объём</th><td>" + x.size + " Кбайт</td></tr>" +
+    '<tr class="sum"><th>время</th><td>' + x.size + " : " + kb + " = " + xV(x.size / kb) +
+    " с</td></tr></table>" + '<p class="xcap">Делить можно только одинаковое: Кбайты на Кбайты в секунду.</p>';
+}
+
+function xSolution(t) {
+  if (t.type === 0) return xEncode(t);
+  if (t.type === 1) return xDecode(t);
+  if (t.type === 2) return xVolume(t);
+  if (t.type === 3) return xColor(t);
+  if (t.type === 4) return xJpeg(t);
+  return xMp3(t);
+}
+
+/* Ответ класса рядом с эталоном; где можно — откуда могло взяться число. */
+function xCompare(t, given) {
+  const g = String(given === undefined || given === null ? "" : given).trim();
+  const ok = g === t.answer;
+  let h = '<p class="xcmp ' + (ok ? "y" : "n") + '">класс: <b>' + xEsc(g || "—") + "</b>" +
+    (ok ? "" : " · эталон: <b>" + xEsc(t.answer) + "</b>") + "</p>";
+  if (ok || !/^\d+$/.test(g)) return h;
+  const k = Number(g), x = t.x, a = Number(t.answer);
+  let why = "";
+  if (t.type === 0) {
+    const n = xLzwEnc(x.text, x.k).rows.length;
+    if (k === x.text.length) why = "Это число символов, а кодов меньше: один код — целая фраза.";
+    else if (t.kind === "dict" && k === n - 1) why = "Это только новые фразы — начальные буквы тоже в словаре.";
+    else if (t.kind === "dict" && k === x.k + n) why = "Последний код новой фразы не добавляет: за ним нет следующего символа.";
+    else if (t.kind === "codes" && k === x.k + n - 1) why = "Это размер словаря, а спрашивают число кодов.";
+  }
+  if (t.type === 1) {
+    if (t.kind === "length" && k === x.codes.length) why = "Это число кодов, а каждый код — целая фраза.";
+    if (t.kind === "letter" && k === x.codes.filter(function (c) { return Z_ABC[c - 1] === x.letter; }).length)
+      why = "Посчитаны коды буквы, а фразы из словаря тоже её содержат — раскрой их.";
+  }
+  if (t.type === 2 && t.kind === "saved") {
+    if (k === x.kk * x.b) why = "Это объём сжатого, а спрашивают разницу.";
+    if (k === 8 * x.n) why = "Это объём исходного, а спрашивают разницу.";
+  }
+  if (t.type === 2 && t.kind === "codebits" && k === a - 1)
+    why = "2<sup>" + k + "</sup> = " + (1 << k) + " — меньше, чем " + x.d + " фраз.";
+  if (t.type === 3) {
+    if (t.kind === "colors" && k === x.i1 - x.i2) why = "Это разница в битах, а цветов в 2<sup>" + k + "</sup> раз меньше.";
+    if (t.kind !== "colors" && k === a * 1024) why = "Это байты — ещё разделить на 1024.";
+    if (t.kind !== "colors" && k === a * 8192) why = "Это биты — делить на 8 и на 1024.";
+  }
+  if (t.type === 4) {
+    if (t.kind === "blocks" && k === x.w * x.h / 8) why = "Делили на 8 один раз, а блок 8 × 8 — это 64 пикселя.";
+    if (t.kind === "subsample" && k === 3 * x.w * x.h) why = "Это без прореживания: Cb и Cr хранятся по одному на квадрат.";
+    if (t.kind === "subsample" && k === x.w * x.h * 5 / 4) why = "Цветовых составляющих две — Cb и Cr.";
+    if (t.kind === "quant" && k === Math.round(x.c / x.q)) why = "Это номер уровня — при восстановлении его умножают на шаг.";
+    if (t.kind === "quant" && k === x.c) why = "Это исходный коэффициент — после квантования он не возвращается.";
+  }
+  if (t.type === 5) {
+    if (t.kind === "lossy" && k === x.items.length - a) why = "Посчитаны те, что без потерь.";
+    if (t.kind === "size" && k === x.br * x.t) why = "Это Кбиты — разделить на 8.";
+    if (t.kind === "time" && k * x.br === x.size) why = "Кбайты делили на Кбиты — переведи битрейт в Кбайт/с.";
+  }
+  return h + (why ? '<p class="xcap n">' + why + "</p>" : "");
 }
 /* ==== /ЗАДАЧИ ==== */
 
